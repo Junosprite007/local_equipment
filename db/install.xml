@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/equipment/db" VERSION="2024071800" COMMENT="XMLDB file for equipment checkout plugin">
+    <TABLES>
+        <!-- partnerships -->
+        <TABLE NAME="local_equipment_partnership" COMMENT="Stores partnership information">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="pickupid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="liaisonid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="active" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="streetaddress_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="city_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="state_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="country_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="zipcode_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="streetaddress_pickup" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="city_pickup" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="state_pickup" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="country_pickup" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="zipcode_pickup" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="name_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="streetaddress_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="city_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="state_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="country_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="zipcode_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="pickupid" TYPE="foreign" FIELDS="pickupid" REFTABLE="local_equipment_pickup" REFFIELDS="id"/>
+                <KEY NAME="liaisonid" TYPE="foreign" FIELDS="liaisonid" REFTABLE="user" REFFIELDS="id"/>
+            </KEYS>
+        </TABLE>
+        <!-- partnership-course join table -->
+        <TABLE NAME="local_equipment_partnership_course" COMMENT="Links partnerships to courses">
+            <FIELDS>
+                <FIELD NAME="partnershipid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="partnershipid, courseid"/>
+                <KEY NAME="partnershipid" TYPE="foreign" FIELDS="partnershipid" REFTABLE="local_equipment_partnership" REFFIELDS="id"/>
+                <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+            </KEYS>
+        </TABLE>
+        <!-- pickup -->
+        <TABLE NAME="local_equipment_pickup" COMMENT="Stores kit pickup information">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="partnershipid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="flccoordinatorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="partnershipcoordinatorname" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="partnershipcoordinatorphone" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickupstarttime" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickupendtime" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="partnershipid" TYPE="foreign" FIELDS="partnershipid" REFTABLE="local_equipment_partnership" REFFIELDS="id"/>
+                <KEY NAME="flccoordinatorid" TYPE="foreign" FIELDS="flccoordinatorid" REFTABLE="user" REFFIELDS="id"/>
+            </KEYS>
+        </TABLE>
+        <!-- agreements -->
+        <TABLE NAME="local_equipment_agreements" COMMENT="Stores agreements information">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="text" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="activestarttime" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="activeendtime" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="checkboxnames" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="requireelectronicsignature" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+        </TABLE>
+        <!-- parent -->
+        <TABLE NAME="local_equipment_parent" COMMENT="Stores parent information">
+            <FIELDS>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="studentfullnames" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="streetaddress_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="city_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="state_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="country_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="zipcode_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="streetaddress_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="city_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="state_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="country_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="zipcode_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="userid"/>
+            </KEYS>
+        </TABLE>
+        <!-- student -->
+        <TABLE NAME="local_equipment_student" COMMENT="Links students to parents">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="studentid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="parentid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="studentid" TYPE="foreign" FIELDS="studentid" REFTABLE="user" REFFIELDS="id"/>
+                <KEY NAME="parentid" TYPE="foreign" FIELDS="parentid" REFTABLE="local_equipment_parent" REFFIELDS="userid"/>
+            </KEYS>
+        </TABLE>
+        <!-- student-course join table -->
+        <TABLE NAME="local_equipment_student_course" COMMENT="Links students to courses">
+            <FIELDS>
+                <FIELD NAME="studentid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="studentid, courseid"/>
+                <KEY NAME="studentid" TYPE="foreign" FIELDS="studentid" REFTABLE="local_equipment_student" REFFIELDS="studentid"/>
+                <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+            </KEYS>
+        </TABLE>
+        <!-- agreement submission -->
+        <TABLE NAME="local_equipment_agreementsubmission" COMMENT="Stores agreement submissions">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="agreementid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="submissiondate" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="status" TYPE="char" LENGTH="255" NOTNULL="true"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="agreementid" TYPE="foreign" FIELDS="agreementid" REFTABLE="local_equipment_agreement" REFFIELDS="id"/>
+                <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+            </KEYS>
+        </TABLE>
+    </TABLES>
+</XMLDB>
