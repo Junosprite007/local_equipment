@@ -15,10 +15,11 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Equipment checkout page.
+ * View form submissions page.
  *
  * @package     local_equipment
  * @copyright   2024 onward Joshua Kirby <josh@funlearningcompany.com>
  * @author      Joshua Kirby - CTO @ Fun Learning Company - funlearningcompany.com
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+

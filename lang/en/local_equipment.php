@@ -26,23 +26,59 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['active'] = 'Active';
+$string['addmorepartnerships'] = 'Add more partnerships';
+$string['addpartnership'] = 'Add Partnership';
+$string['addpartnerships'] = 'Add Partnerships';
 $string['agreements'] = 'Agreements';
 $string['agreements_desc'] = 'List of agreements that users must accept in order to use this equipment checkout service.';
+$string['billingaddress'] = 'Billing address';
+$string['city_billing'] = 'City (Billing)';
+$string['city_mailing'] = 'City';
+$string['city_pickup'] = 'City (Pickup)';
+$string['country_billing'] = 'Country (Billing)';
+$string['country_mailing'] = 'Country';
+$string['country_pickup'] = 'Country (Pickup)';
 $string['editpartnerships'] = 'Edit partnerships';
 $string['equipment'] = 'Equipment';
 $string['equipmentcheckout'] = 'Equipment checkout';
+$string['erroraddingpartnerships'] = 'Error adding partnerships.';
+$string['invalidliaisonid'] = 'Invalid liaison ID';
+$string['invalidpickupid'] = 'Invalid pickup ID';
+$string['liaisonid'] = 'Liaison ID';
+$string['mailingaddress'] = 'Mailing address';
 $string['manage'] = 'Manage';
-$string['manageequipmentcheckout'] = 'Manage equipment checkout';
+$string['manageagreements'] = 'Manage agreements';
+$string['manageequipment'] = 'Manage equipment';
+$string['managekitpickuptimes'] = 'Manage kit pickup times';
 $string['managepartnerships'] = 'Manage partnerships';
 $string['mediaagreement'] = 'Media agreement';
 $string['mediaagreement_desc'] = 'Description of the media agreement.';
-$string['modulename'] = 'Equipment checkout';
-$string['modulenameplural'] = 'Equipment checkouts';
-$string['partnerships'] = 'Partnerships';
-$string['partnerships_desc'] = 'List any partnerships or agreements that are relevant to this equipment checkout service.';
+$string['name_billing'] = 'Name (Billing)';
 $string['partnershipsettings'] = 'Partnership settings';
+$string['partnership'] = 'Partnership';
+$string['partnerships'] = 'Partnerships';
+$string['partnershipsadded'] = 'Partnerships added successfully.';
+$string['partnerships_desc'] = 'List any partnerships or agreements that are relevant to this equipment checkout service.';
+$string['pickupaddress'] = 'Pickup address';
+$string['pickupid'] = 'Pickup ID';
 $string['pluginadministration'] = 'Equipment checkout administration';
-$string['pluginname'] = 'Equipment checkout';
+$string['pluginname'] = 'Equipment';
+$string['pluginsettings'] = 'Plugin settings';
+$string['state_billing'] = 'State (Billing)';
+$string['state_mailing'] = 'State';
+$string['state_pickup'] = 'State (Pickup)';
+$string['streetaddress_billing'] = 'Street Address (Billing)';
+$string['streetaddress_mailing'] = 'Street Address';
+$string['streetaddress_pickup'] = 'Street Address (Pickup)';
 $string['termsconditions'] = 'Terms & conditions';
 $string['termsconditions_desc'] = 'Terms and conditions for equipment checkout.';
-// $string[''] = '';
+$string['viewformsubmissions'] = 'View form submissions';
+$string['zipcode_billing'] = 'Zip Code (Billing)';
+$string['zipcode_mailing'] = 'Zip Code';
+$string['zipcode_pickup'] = 'Zip Code (Pickup)';
+
+
+
+
+$string[''] = '';
