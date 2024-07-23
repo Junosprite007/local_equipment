@@ -25,6 +25,17 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Callback function to add CSS to the page.
+ *
+ * @param \core\hook\output\before_standard_head_html_generation $hook
+ */
+function local_equipment_before_standard_head_html_generation(\core\hook\output\before_standard_head_html_generation $hook) {
+    global $PAGE;
+
+    $PAGE->requires->css('/local/equipment/styles.css');
+}
+
 // function local_equipment_add_instance($data) {
 //     global $DB;
 

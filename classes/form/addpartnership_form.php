@@ -25,6 +25,8 @@
 
 namespace local_equipment\form;
 
+use stdClass;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
@@ -38,68 +40,48 @@ class addpartnership_form extends \moodleform {
      * Form definition.
      */
     public function definition() {
+        global $PAGE;
+        $PAGE->requires->js_call_amd('local_equipment/amd/src/addpartnership_form', 'init');
         $mform = $this->_form;
 
         $repeatarray = array();
         $repeatoptions = array();
+        $sections = new stdClass();
 
-        $repeatarray[] = $mform->createElement('header', 'partnership', get_string('partnership', 'local_equipment'));
-        $repeatarray[] = $mform->createElement('text', 'name', get_string('name'));
-        $repeatarray[] = $mform->createElement('text', 'pickupid', get_string('pickupid', 'local_equipment'));
-        $repeatarray[] = $mform->createElement('text', 'liaisonid', get_string('liaisonid', 'local_equipment'));
-        $repeatarray[] = $mform->createElement('advcheckbox', 'active', get_string('active'));
+        $repeatarray[] = $mform->createElement('header', 'partnership_header_{no}', get_string('partnership', 'local_equipment'));
 
-
-
+        $repeatarray[] = $mform->createElement('text', 'name_{no}', get_string('name'), array('class' => 'partnership-name-input'));
+        // $repeatarray[] = $mform->createElement('text', 'pickupid', get_string('pickupid', 'local_equipment'));
+        // $repeatarray[] = $mform->createElement('text', 'liaisonid', get_string('liaisonid', 'local_equipment'));
+        $repeatarray[] = $mform->createElement('advcheckbox', 'active_{no}', get_string('active'));
 
         // // Mailing address section
-        $repeatarray[] = $mform->createElement('text', 'streetaddress_mailing', get_string('streetaddress_mailing', 'local_equipment'));
-        $repeatarray[] = $mform->createElement('text', 'city_mailing', get_string('city_mailing', 'local_equipment'));
-        $repeatarray[] = $mform->createElement('text', 'state_mailing', get_string('state_mailing', 'local_equipment'));
-        $repeatarray[] = $mform->createElement('text', 'country_mailing', get_string('country_mailing', 'local_equipment'));
-        $repeatarray[] = $mform->createElement('text', 'zipcode_mailing', get_string('zipcode_mailing', 'local_equipment'));
+        $sections = $this->add_address_block($mform, 'physical');
+        $repeatarray = array_merge($repeatarray, $sections->elements);
+        $repeatoptions = array_merge($repeatoptions, $sections->types);
 
         // Pickup address section
-        $repeatarray[] = $mform->createElement('text', 'streetaddress_pickup', get_string('streetaddress_pickup', 'local_equipment'));
-        $repeatarray[] = $mform->createElement('text', 'city_pickup', get_string('city_pickup', 'local_equipment'));
-        $repeatarray[] = $mform->createElement('text', 'state_pickup', get_string('state_pickup', 'local_equipment'));
-        $repeatarray[] = $mform->createElement('text', 'country_pickup', get_string('country_pickup', 'local_equipment'));
-        $repeatarray[] = $mform->createElement('text', 'zipcode_pickup', get_string('zipcode_pickup', 'local_equipment'));
+        $sections = $this->add_address_block($mform, 'pickup');
+        $repeatarray = array_merge($repeatarray, $sections->elements);
+        $repeatoptions = array_merge($repeatoptions, $sections->types);
 
         // Billing address section
-        $repeatarray[] = $mform->createElement('text', 'streetaddress_billing', get_string('streetaddress_billing', 'local_equipment'));
-        $repeatarray[] = $mform->createElement('text', 'city_billing', get_string('city_billing', 'local_equipment'));
-        $repeatarray[] = $mform->createElement('text', 'state_billing', get_string('state_billing', 'local_equipment'));
-        $repeatarray[] = $mform->createElement('text', 'country_billing', get_string('country_billing', 'local_equipment'));
-        $repeatarray[] = $mform->createElement('text', 'zipcode_billing', get_string('zipcode_billing', 'local_equipment'));
+        $sections = $this->add_address_block($mform, 'billing');
+        $repeatarray = array_merge($repeatarray, $sections->elements);
+        $repeatoptions = array_merge($repeatoptions, $sections->types);
 
+        // $repeatoptions['partnership_header_{no}']['expanded'] = false;
 
         // Set types.
-        $repeatoptions['name']['type'] = PARAM_TEXT;
-        $repeatoptions['pickupid']['type'] = PARAM_INT;
-        $repeatoptions['liaisonid']['type'] = PARAM_INT;
-        $repeatoptions['active']['type'] = PARAM_BOOL;
-        // $repeatoptions['mailing_group[streetaddress_mailing]']['type'] = PARAM_TEXT;
-        $repeatoptions['streetaddress_mailing']['type'] = PARAM_TEXT;
-        $repeatoptions['city_mailing']['type'] = PARAM_TEXT;
-        $repeatoptions['state_mailing']['type'] = PARAM_TEXT;
-        $repeatoptions['country_mailing']['type'] = PARAM_TEXT;
-        $repeatoptions['zipcode_mailing']['type'] = PARAM_TEXT;
-        $repeatoptions['streetaddress_pickup']['type'] = PARAM_TEXT;
-        $repeatoptions['city_pickup']['type'] = PARAM_TEXT;
-        $repeatoptions['state_pickup']['type'] = PARAM_TEXT;
-        $repeatoptions['country_pickup']['type'] = PARAM_TEXT;
-        $repeatoptions['zipcode_pickup']['type'] = PARAM_TEXT;
-        $repeatoptions['name_billing']['type'] = PARAM_TEXT;
-        $repeatoptions['streetaddress_billing']['type'] = PARAM_TEXT;
-        $repeatoptions['city_billing']['type'] = PARAM_TEXT;
-        $repeatoptions['state_billing']['type'] = PARAM_TEXT;
-        $repeatoptions['country_billing']['type'] = PARAM_TEXT;
-        $repeatoptions['zipcode_billing']['type'] = PARAM_TEXT;
-        // $mform->addGroup();
+        // $repeatoptions['header']['expanded'] = false;
+        $repeatoptions['name_{no}']['type'] = PARAM_TEXT;
+        // $repeatoptions['pickupid']['type'] = PARAM_INT;
+        // $repeatoptions['liaisonid']['type'] = PARAM_INT;
+        $repeatoptions['active_{no}']['type'] = PARAM_BOOL;
 
         // $this->add_address_group($mform, 'mailing', get_string('mailingaddress', 'local_equipment'));
-        $this->add_address_group($mform, 'mailing', get_string('mailingaddress', 'local_equipment'));
+        // $this->add_address_group($mform, 'mailing', get_string('mailingaddress', 'local_equipment'));
+
 
         $this->repeat_elements(
             $repeatarray,
@@ -109,8 +91,7 @@ class addpartnership_form extends \moodleform {
             'add_partnership',
             1,
             get_string('addmorepartnerships', 'local_equipment'),
-            true,
-            'delete'
+            false,
         );
 
         $this->add_action_buttons();
@@ -146,17 +127,44 @@ class addpartnership_form extends \moodleform {
     public function add_address_group($mform, $groupname, $label) {
         $group = array();
 
+        // $mform->addElement('header', $groupname . '_header', $label);
+        $mform->addElement('static', 'streetaddress_label_' . $groupname, get_string('streetaddress_' . $groupname, 'local_equipment'), \html_writer::tag('span', get_string('streetaddress_' . $groupname, 'local_equipment')));
+        $mform->addElement('static', 'city_label_' . $groupname, '', \html_writer::tag('label', get_string('city_' . $groupname, 'local_equipment')));
+        $mform->addElement('static', 'state_label_' . $groupname, '', \html_writer::tag('label', get_string('state_' . $groupname, 'local_equipment')));
+        $mform->addElement('static', 'zipcode_label_' . $groupname, '', \html_writer::tag('label', get_string('zipcode_' . $groupname, 'local_equipment')));
         $group[] = $mform->createElement('text', 'streetaddress_' . $groupname, get_string('streetaddress_' . $groupname, 'local_equipment'));
         $group[] = $mform->createElement('text', 'city_' . $groupname, get_string('city_' . $groupname, 'local_equipment'));
         $group[] = $mform->createElement('text', 'state_' . $groupname, get_string('state_' . $groupname, 'local_equipment'));
         $group[] = $mform->createElement('text', 'zipcode_' . $groupname, get_string('zipcode_' . $groupname, 'local_equipment'));
 
-        $mform->addGroup($group, $groupname . '_group', $label, '<br />', true);
+        $mform->addGroup($group, $groupname . '_group', $label, '<br>', false);
 
         // Set types for elements within the group
-        $mform->setType($groupname . '_group[streetaddress_' . $groupname . ']', PARAM_TEXT);
-        $mform->setType($groupname . '_group[city_' . $groupname . ']', PARAM_TEXT);
-        $mform->setType($groupname . '_group[state_' . $groupname . ']', PARAM_TEXT);
-        $mform->setType($groupname . '_group[zipcode_' . $groupname . ']', PARAM_TEXT);
+        $mform->setType('streetaddress_' . $groupname, PARAM_TEXT);
+        $mform->setType('city_' . $groupname, PARAM_TEXT);
+        $mform->setType('state_' . $groupname, PARAM_TEXT);
+        $mform->setType('zipcode_' . $groupname, PARAM_TEXT);
+    }
+    public function add_address_block($mform, $addresstype) {
+        $block = new stdClass();
+
+        $block->elements = array();
+        // $block->elements[] = $mform->createElement('header', $addresstype . '_header', get_string($addresstype . 'address', 'local_equipment'));
+        $block->elements[] = $mform->createElement('static', $addresstype . 'address', \html_writer::tag('label', get_string($addresstype . 'address', 'local_equipment'), ['class' => 'form-input-group-labels']));
+        $block->elements[] = $mform->createElement('text', 'streetaddress_' . $addresstype, get_string('streetaddress', 'local_equipment'));
+        $block->elements[] = $mform->createElement('text', 'city_' . $addresstype, get_string('city', 'local_equipment'));
+        $block->elements[] = $mform->createElement('text', 'state_' . $addresstype, get_string('state', 'local_equipment'));
+        $block->elements[] = $mform->createElement('text', 'country_' . $addresstype, get_string('country', 'local_equipment'));
+        $block->elements[] = $mform->createElement('text', 'zipcode_' . $addresstype, get_string('zipcode', 'local_equipment'));
+
+        $block->types = array();
+        $block->types['streetaddress_' . $addresstype]['type'] = PARAM_TEXT;
+        $block->types['city_' . $addresstype]['type'] = PARAM_TEXT;
+        $block->types['state_' . $addresstype]['type'] = PARAM_TEXT;
+        $block->types['country_' . $addresstype]['type'] = PARAM_TEXT;
+        $block->types['zipcode_' . $addresstype]['type'] = PARAM_TEXT;
+
+
+        return $block;
     }
 }
