@@ -41,16 +41,16 @@ class addpartnership_form extends \moodleform {
      */
     public function definition() {
         global $PAGE;
-        $PAGE->requires->js_call_amd('local_equipment/amd/src/addpartnership_form', 'init');
+        $var = $PAGE->requires;
+        $PAGE->requires->js_call_amd('local_equipment/addpartnership_form', 'init');
         $mform = $this->_form;
 
         $repeatarray = array();
         $repeatoptions = array();
         $sections = new stdClass();
 
-        $repeatarray[] = $mform->createElement('header', 'partnership_header_{no}', get_string('partnership', 'local_equipment'));
-
-        $repeatarray[] = $mform->createElement('text', 'name_{no}', get_string('name'), array('class' => 'partnership-name-input'));
+        $repeatarray[] = $mform->createElement('header', 'partnership_header_{no}', get_string('partnership', 'local_equipment'), ['class' => 'partnership-header']);
+        $repeatarray[] = $mform->createElement('text', 'name_{no}', get_string('name'), ['class' => 'partnership-name-input']);
         // $repeatarray[] = $mform->createElement('text', 'pickupid', get_string('pickupid', 'local_equipment'));
         // $repeatarray[] = $mform->createElement('text', 'liaisonid', get_string('liaisonid', 'local_equipment'));
         $repeatarray[] = $mform->createElement('advcheckbox', 'active_{no}', get_string('active'));
@@ -108,18 +108,18 @@ class addpartnership_form extends \moodleform {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
-        foreach ($data['partnerships'] as $index => $partnership) {
-            if (empty($partnership['name'])) {
-                $errors["partnerships[$index][name]"] = get_string('required');
-            }
-            if (empty($partnership['pickupid']) || !is_numeric($partnership['pickupid'])) {
-                $errors["partnerships[$index][pickupid]"] = get_string('invalidpickupid', 'local_equipment');
-            }
-            if (empty($partnership['liaisonid']) || !is_numeric($partnership['liaisonid'])) {
-                $errors["partnerships[$index][liaisonid]"] = get_string('invalidliaisonid', 'local_equipment');
-            }
-            // Add more specific validations as needed
-        }
+        // foreach ($data['partnerships'] as $index => $partnership) {
+        //     if (empty($partnership['name'])) {
+        //         $errors["partnerships[$index][name]"] = get_string('required');
+        //     }
+        //     if (empty($partnership['pickupid']) || !is_numeric($partnership['pickupid'])) {
+        //         $errors["partnerships[$index][pickupid]"] = get_string('invalidpickupid', 'local_equipment');
+        //     }
+        //     if (empty($partnership['liaisonid']) || !is_numeric($partnership['liaisonid'])) {
+        //         $errors["partnerships[$index][liaisonid]"] = get_string('invalidliaisonid', 'local_equipment');
+        //     }
+        //     // Add more specific validations as needed
+        // }
 
         return $errors;
     }

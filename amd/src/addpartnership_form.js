@@ -22,71 +22,52 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(["jquery", "core/str", "core/log"], function ($, Str, Log) {
-	"use strict";
+import $ from "jquery";
+import * as Str from "core/str";
+import Log from "core/log";
 
-	/**
-	 * Initialize the module.
-	 */
-	function init() {
-		Str.get_string("partnership", "local_equipment")
-			.done(function (partnershipstring) {
-				setupEventListeners(partnershipstring);
-			})
-			.fail(Log.error);
-		console.log("AMD module initialized");
-	}
-	/**
-	 * Set up event listeners for partnership name inputs.
-	 *
-	 * @param {string} partnershipstring The localized string for 'partnership'.
-	 */
-	// function setupEventListeners(partnershipstring) {
-	// 	$(document).on("input", 'input[name^="name"]', function () {
-	// 		updatePartnershipHeader($(this), partnershipstring);
-	// 	});
-	// }
-	function setupEventListeners(partnershipString) {
-		$(document).on("input", ".partnership-name-input", function () {
-			updatePartnershipHeader($(this), partnershipString);
-		});
-	}
+const SELECTORS = {
+    PARTNERSHIP_NAME_INPUT: ".partnership-name-input",
+    PARTNERSHIP_HEADER: ".partnership-header",
+};
 
-	/**
-	 * Update the partnership header based on the input value.
-	 *
-	 * @param {jQuery} $input The input element that triggered the event.
-	 * @param {string} partnershipstring The localized string for 'partnership'.
-	 */
-	// function updatePartnershipHeader($input, partnershipstring) {
-	// 	var index = $input.closest(".fitem").index(".fitem");
-	// 	var $header = $("partnership_header_" + (index + 1));
+/**
+ * Initialize the module.
+ */
+export const init = () => {
+    Str.get_string("partnership", "local_equipment")
+        .then((partnershipString) => {
+            setupEventListeners(partnershipString);
+            Log.debug("AMD module initialized");
+        })
+        .catch((error) => {
+            Log.error("Error initializing AMD module:", error);
+        });
+};
 
-	// 	if ($header.length) {
-	// 		var headerText = $input.val()
-	// 			? partnershipstring + " (" + $input.val() + ")"
-	// 			: partnershipstring + " " + (index + 1);
-	// 		$header.text(headerText);
-	// 	} else {
-	// 		Log.debug("Header element not found for index: " + index);
-	// 	}
-	// }
+/**
+ * Set up event listeners for partnership name inputs.
+ *
+ * @param {string} partnershipString The localized string for 'partnership'.
+ */
+const setupEventListeners = (partnershipString) => {
+    $("body").on("input", SELECTORS.PARTNERSHIP_NAME_INPUT, function () {
+        updatePartnershipHeader($(this), partnershipString);
+    });
+};
 
-	function updatePartnershipHeader($input, partnershipString) {
-		var index = $input.closest(".fitem").index(".fitem");
-		var $header = $("#id_partnership_header_" + (index + 1));
-
-		if ($header.length) {
-			var headerText = $input.val()
-				? $input.val()
-				: partnershipString + " " + (index + 1);
-			$header.text(headerText);
-		} else {
-			Log.debug("Header element not found for index: " + index);
-		}
-	}
-
-	return {
-		init: init,
-	};
-});
+/**
+ * Update the partnership header based on the input value.
+ *
+ * @param {jQuery} $input The input element that triggered the event.
+ * @param {string} partnershipString The localized string for 'partnership'.
+ */
+const updatePartnershipHeader = ($input, partnershipString) => {
+    const $header = $input.closest(".fitem").find(SELECTORS.PARTNERSHIP_HEADER);
+    if ($header.length) {
+        const headerText = $input.val() ? $input.val() : partnershipString;
+        $header.text(headerText);
+    } else {
+        Log.debug("Header element not found for input");
+    }
+};

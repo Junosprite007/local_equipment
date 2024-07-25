@@ -1,0 +1,4 @@
+# This file specifies intentionally untracked files that the Equipment plugin
+# should ignore.
+
+/node_modules
