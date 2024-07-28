@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Plugin strings are defined here.
+ * Language strings for US states in the Equipment plugin.
  *
  * @package     local_equipment
  * @category    string
@@ -26,12 +26,17 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot . '/local/equipment/lang/en/countries.php');
+require_once($CFG->dirroot . '/local/equipment/lang/en/states.php');
+
 $string['active'] = 'Active';
 $string['addmorepartnerships'] = 'Add more partnerships';
 $string['addpartnership'] = 'Add Partnership';
 $string['addpartnerships'] = 'Add Partnerships';
+$string['addressee'] = 'Addressee';
 $string['agreements'] = 'Agreements';
 $string['agreements_desc'] = 'List of agreements that users must accept in order to use this equipment checkout service.';
+$string['attention'] = 'Attention';
 $string['billingaddress'] = 'Billing address';
 $string['city'] = 'City';
 $string['city_billing'] = 'City (Billing)';
@@ -47,9 +52,13 @@ $string['editpartnerships'] = 'Edit partnerships';
 $string['equipment'] = 'Equipment';
 $string['equipmentcheckout'] = 'Equipment checkout';
 $string['erroraddingpartnerships'] = 'Error adding partnerships.';
+$string['ifdifferentfrommailing'] = '(if different from mailing)';
+$string['ifdifferentfromphysical'] = '(if different from physical)';
 $string['invalidliaisonid'] = 'Invalid liaison ID';
 $string['invalidpickupid'] = 'Invalid pickup ID';
 $string['liaisonid'] = 'Liaison ID';
+$string['liaisonname'] = 'Liaison name';
+$string['liaisons'] = 'Liaisons';
 $string['mailingaddress'] = 'Mailing address';
 $string['manage'] = 'Manage';
 $string['manageagreements'] = 'Manage agreements';
@@ -61,15 +70,27 @@ $string['mediaagreement_desc'] = 'Description of the media agreement.';
 $string['name_billing'] = 'Name (Billing)';
 $string['partnershipsettings'] = 'Partnership settings';
 $string['partnership'] = 'Partnership';
+$string['partnershipcourses'] = 'Partnership courses';
+$string['partnershipliaisons'] = 'Partnership liaisons';
+$string['partnershipname'] = 'Partnership name';
 $string['partnerships'] = 'Partnerships';
 $string['partnershipsadded'] = 'Partnerships added successfully.';
 $string['partnerships_desc'] = 'List any partnerships or agreements that are relevant to this equipment checkout service.';
 $string['physicaladdress'] = 'Physical address';
 $string['pickupaddress'] = 'Pickup address';
 $string['pickupid'] = 'Pickup ID';
+$string['pickupinstructions'] = 'Pickup instructions';
 $string['pluginadministration'] = 'Equipment checkout administration';
 $string['pluginname'] = 'Equipment';
 $string['pluginsettings'] = 'Plugin settings';
+$string['removepartnership'] = 'Remove partnership';
+$string['roomareainstruction'] = 'Room/area instructions';
+$string['sameasmailing'] = 'Same as mailing address';
+$string['sameasphysical'] = 'Same as physical address';
+$string['selectcountry'] = 'Select country';
+$string['selectcourses'] = 'Select courses';
+$string['selectliaisons'] = 'Select liaisons';
+$string['selectstate'] = 'Select state';
 $string['state'] = 'State';
 $string['state_billing'] = 'State (Billing)';
 $string['state_mailing'] = 'State';

@@ -39,36 +39,118 @@ $mform = new local_equipment\form\addpartnership_form();
 
 if ($mform->is_cancelled()) {
     redirect(new moodle_url('/local/equipment/partnerships/managepartnerships.php'));
-} else if ($data = $mform->get_data()) {
-    $partnerships = $data->partnerships;
+}
+$data = $mform->get_data();
+if ($data) {
+    $numberofpartnerships = $data->partnerships;
     $success = true;
 
-    foreach ($partnerships as $partnership) {
-        $record = new stdClass();
-        $record->pickupid = $partnership['pickupid'];
-        $record->liaisonid = $partnership['liaisonid'];
-        $record->active = $partnership['active'];
-        $record->name = $partnership['name'];
-        $record->streetaddress_mailing = $partnership['streetaddress_mailing'];
-        $record->city_mailing = $partnership['city_mailing'];
-        $record->state_mailing = $partnership['state_mailing'];
-        $record->country_mailing = $partnership['country_mailing'];
-        $record->zipcode_mailing = $partnership['zipcode_mailing'];
-        $record->streetaddress_pickup = $partnership['streetaddress_pickup'];
-        $record->city_pickup = $partnership['city_pickup'];
-        $record->state_pickup = $partnership['state_pickup'];
-        $record->country_pickup = $partnership['country_pickup'];
-        $record->zipcode_pickup = $partnership['zipcode_pickup'];
-        $record->name_billing = $partnership['name_billing'];
-        $record->streetaddress_billing = $partnership['streetaddress_billing'];
-        $record->city_billing = $partnership['city_billing'];
-        $record->state_billing = $partnership['state_billing'];
-        $record->country_billing = $partnership['country_billing'];
-        $record->zipcode_billing = $partnership['zipcode_billing'];
+    // Inserts each partnership into the database, since you can add multiple partnerships at once.
+    for ($i = 0; $i < $numberofpartnerships; $i++) {
+        $partnership = new stdClass();
+        // Convert the liaison and course IDs to arrays of integers instead of arrays of strings. Make sure you know what datatype is going into the functions below.
+        $liaisonids = local_equipment_convert_array_values_to_int($data->{'liaisons'}[$i]);
+        $courseids = local_equipment_convert_array_values_to_int($data->{'courses'}[$i]);
 
-        if (!$DB->insert_record('local_equipment_partnership', $record)) {
+        // Fill in the partnership table fields.
+        $partnership->name = $data->{'partnershipname'}[$i];
+        $partnership->liaisonids = json_encode($liaisonids);
+        $partnership->courseids = json_encode($courseids);
+        $partnership->active = $data->{'active'}[$i];
+
+        // Physical address specific fields.
+        $partnership->streetaddress_physical = $data->streetaddress_physical[$i];
+        $partnership->city_physical = $data->city_physical[$i];
+        $partnership->state_physical = $data->state_physical[$i];
+        $partnership->country_physical = $data->country_physical[$i];
+        $partnership->zipcode_physical = $data->zipcode_physical[$i];
+
+        // Mailing address specific fields.
+        $partnership->attention_mailing = $data->attention_mailing[$i];
+        $partnership->sameasphysical_mailing = $data->sameasphysical_mailing[$i];
+        if ($partnership->sameasphysical_mailing) {
+            $partnership->streetaddress_mailing = $partnership->streetaddress_physical;
+            $partnership->city_mailing = $partnership->city_physical;
+            $partnership->state_mailing = $partnership->state_physical;
+            $partnership->country_mailing = $partnership->country_physical;
+            $partnership->zipcode_mailing = $partnership->zipcode_physical;
+        } else {
+            $partnership->streetaddress_mailing = $data->streetaddress_mailing[$i];
+            $partnership->city_mailing = $data->city_mailing[$i];
+            $partnership->state_mailing = $data->state_mailing[$i];
+            $partnership->country_mailing = $data->country_mailing[$i];
+            $partnership->zipcode_mailing = $data->zipcode_mailing[$i];
+        }
+
+        // Pickup address specific fields.
+        $partnership->instructions_pickup = $data->instructions_pickup[$i];
+        $partnership->sameasphysical_pickup = $data->sameasphysical_pickup[$i];
+        if ($partnership->sameasphysical_pickup) {
+            $partnership->streetaddress_pickup = $partnership->streetaddress_physical;
+            $partnership->city_pickup = $partnership->city_physical;
+            $partnership->state_pickup = $partnership->state_physical;
+            $partnership->country_pickup = $partnership->country_physical;
+            $partnership->zipcode_pickup = $partnership->zipcode_physical;
+        } else {
+            $partnership->streetaddress_pickup = $data->streetaddress_pickup[$i];
+            $partnership->city_pickup = $data->city_pickup[$i];
+            $partnership->state_pickup = $data->state_pickup[$i];
+            $partnership->country_pickup = $data->country_pickup[$i];
+            $partnership->zipcode_pickup = $data->zipcode_pickup[$i];
+        }
+
+        // Billing address specific fields.
+        $partnership->attention_billing = $data->attention_billing[$i];
+        $partnership->sameasphysical_billing = $data->sameasphysical_billing[$i];
+        if ($partnership->sameasphysical_billing) {
+            $partnership->streetaddress_billing = $partnership->streetaddress_physical;
+            $partnership->city_billing = $partnership->city_physical;
+            $partnership->state_billing = $partnership->state_physical;
+            $partnership->country_billing = $partnership->country_physical;
+            $partnership->zipcode_billing = $partnership->zipcode_physical;
+        } else {
+            $partnership->streetaddress_billing = $data->streetaddress_billing[$i];
+            $partnership->city_billing = $data->city_billing[$i];
+            $partnership->state_billing = $data->state_billing[$i];
+            $partnership->country_billing = $data->country_billing[$i];
+            $partnership->zipcode_billing = $data->zipcode_billing[$i];
+        }
+
+        $partnership->timecreated = time();
+
+        $partnership->id = $DB->insert_record('local_equipment_partnership', $partnership);
+
+        if (!$partnership->id) {
             $success = false;
             break;
+        }
+
+        // Determines the relationship between the partnership and its liaisons by adding records to the partnership-liaison join table.
+        if (!empty($liaisonids)) {
+            $record = new stdClass();
+            foreach ($liaisonids as $liaisonid) {
+                $record->partnershipid = $partnership->id;
+                $record->liaisonid = $liaisonid;
+                $record->timecreated = $partnership->timecreated;
+                if (!$DB->insert_record('local_equipment_partnership_liaison', $record, false)) {
+                    $success = false;
+                    break;
+                }
+            }
+        }
+
+        // Determines the relationship between the partnership and its courses by adding records to the partnership-course join table.
+        if (!empty($courseids)) {
+            $record = new stdClass();
+            foreach ($courseids as $courseid) {
+                $record->partnershipid = $partnership->id;
+                $record->courseid = $courseid;
+                $record->timecreated = $partnership->timecreated;
+                if (!$DB->insert_record('local_equipment_partnership_course', $record)) {
+                    $success = false;
+                    break;
+                }
+            }
         }
     }
 
