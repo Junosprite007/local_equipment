@@ -2,3 +2,6 @@
 # should ignore.
 
 /node_modules
+/styles.css
+/styles.css.map
+/.sass-cache
