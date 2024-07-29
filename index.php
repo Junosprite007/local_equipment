@@ -38,7 +38,6 @@ $PAGE->set_context(context_system::instance());
 $PAGE->set_title($strequipmentcheckouts);
 $PAGE->set_heading($strequipmentcheckouts);
 $PAGE->navbar->add($strequipmentcheckouts);
-$PAGE->requires->js_call_amd('local_equipment/helloworld', 'init');
 // $PAGE->requires->js('/local/equipment/lib/amd/src/helloworld.js');
 // $PAGE->requires->js('/local/equipment/amd/src/helloworld.js');
 
@@ -47,4 +46,5 @@ echo $OUTPUT->heading($strequipmentcheckouts);
 
 // Add code to display list of equipment checkout instances in the course
 
+$PAGE->requires->js_call_amd('local_equipment/helloworld', 'showAlert', ['Message', 'Hello all you people! What is going on?']);
 echo $OUTPUT->footer();

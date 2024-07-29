@@ -1,5 +1,8 @@
 'use strict';
 
+const path = require('path');
+const fs = require('fs');
+
 module.exports = function (grunt) {
     // We need to include the core Moodle grunt file too, otherwise we can't run tasks like "amd".
     require('grunt-load-gruntfile')(grunt);
@@ -13,17 +16,20 @@ module.exports = function (grunt) {
     grunt.initConfig({
         watch: {
             // If any .scss file changes in directory "scss" then run the "sass" task.
-            files: 'scss/*.scss',
-            tasks: ['sass'],
+            styles: {
+                files: ['scss/*.scss'],
+                tasks: ['sass', 'stylelint'],
+            },
+            amd: {
+                files: ['amd/src/**/*.js'],
+                tasks: ['amd'],
+            },
         },
         sass: {
             // Production config is also available.
             development: {
                 options: {
-                    // Saas output style.
                     style: 'expanded',
-                    // Specifies directories to scan for @import directives when parsing.
-                    // Default value is the directory of the source, which is probably what you want.
                     loadPath: ['myOtherImports/'],
                 },
                 files: {
@@ -32,10 +38,7 @@ module.exports = function (grunt) {
             },
             prod: {
                 options: {
-                    // Saas output style.
                     style: 'compressed',
-                    // Specifies directories to scan for @import directives when parsing.
-                    // Default value is the directory of the source, which is probably what you want.
                     loadPath: ['myOtherImports/'],
                 },
                 files: {
@@ -43,9 +46,20 @@ module.exports = function (grunt) {
                 },
             },
         },
+        stylelint: {
+            options: {
+                configFile: '.stylelintrc',
+                failOnError: false,
+                quiet: false,
+            },
+            src: ['**/*.css', '**/*.scss'],
+        },
     });
+
     // The default task (running "grunt" in console).
-    grunt.registerTask('default', ['sass:development']);
+    grunt.registerTask('default', ['sass:development', 'amd']);
     // The production task (running "grunt prod" in console).
-    grunt.registerTask('prod', ['sass:prod']);
+    grunt.registerTask('prod', ['sass:prod', 'amd']);
+    // Register the stylelint task
+    grunt.registerTask('css', ['stylelint', 'sass:development']);
 };

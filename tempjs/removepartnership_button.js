@@ -32,7 +32,7 @@ define(["jquery"], function ($) {
                     var elementIndex = $(this).attr("name").match(/\d+/)[0];
                     if (elementIndex == 0) {
                         alert("You cannot delete the first partnership.");
-                        return;
+                        return event;
                     }
 
                     // Find the parent element to remove.

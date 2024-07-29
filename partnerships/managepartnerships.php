@@ -95,7 +95,7 @@ if ($delete && confirm_sesskey()) {
         \core\notification::error(get_string('errordeletingpartnership', 'local_equipment'));
     }
 }
-
+$PAGE->requires->js_call_amd('local_equipment/main', 'init');
 // Output starts here.
 echo $OUTPUT->header();
 
