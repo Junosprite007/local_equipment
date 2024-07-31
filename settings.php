@@ -43,9 +43,9 @@ if ($hassiteconfig) {
     $ADMIN->add('equipment', $externalpage);
 
     $externalpage = new admin_externalpage(
-        'managepartnerships',
-        new lang_string('managepartnerships', 'local_equipment'),
-        new moodle_url('/local/equipment/partnerships/managepartnerships.php'),
+        'partnerships',
+        new lang_string('partnerships', 'local_equipment'),
+        new moodle_url('/local/equipment/partnerships.php'),
         'moodle/site:config'
     );
     $ADMIN->add('equipment', $externalpage);
@@ -100,9 +100,9 @@ if ($hassiteconfig) {
 
     // Add link to manage partnerships page
     $ADMIN->add('local_equipment_settings', new admin_externalpage(
-        'local_equipment_managepartnerships',
-        get_string('managepartnerships', 'local_equipment'),
-        new moodle_url('/local/equipment/partnerships/managepartnerships.php')
+        'local_equipment_partnerships',
+        get_string('partnerships', 'local_equipment'),
+        new moodle_url('/local/equipment/partnerships.php')
     ));
 
     // Add link to add partnership page
@@ -118,7 +118,7 @@ if ($hassiteconfig) {
 
 // Define capabilities
 $capabilities = array(
-    'local/equipment:managepartnerships' => array(
+    'local/equipment:partnerships' => array(
         'riskbitmask' => RISK_CONFIG,
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,

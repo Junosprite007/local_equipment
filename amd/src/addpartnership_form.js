@@ -25,6 +25,7 @@
 import $ from "jquery";
 import * as Str from "core/str";
 import Log from "core/log";
+import Notification from "core/notification";
 
 const SELECTORS = {
     PARTNERSHIP_NAME_INPUT: ".partnership-name-input",
@@ -70,4 +71,14 @@ const updatePartnershipHeader = ($input, partnershipString) => {
     } else {
         Log.debug("Header element not found for input");
     }
+};
+
+/**
+ * Display an alert box. It's actually working!
+ *
+ * @param {string} title - The title of the alert.
+ * @param {string} message - The message of the alert.
+ */
+export const showAlert = (title, message) => {
+    Notification.alert(title, message);
 };

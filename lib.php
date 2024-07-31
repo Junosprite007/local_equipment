@@ -141,3 +141,31 @@ function local_equipment_convert_array_values_to_int($ids) {
 
     return $ids;
 }
+
+/**
+ * Check if a language string exists in current component.
+ *
+ * @param string $identifier The string identifier.
+ * @param string $component The component name.
+ * @return bool True if the string exists, false otherwise.
+ */
+function local_equipment_lang_string_exists($identifier) {
+    global $CFG;
+    echo '<br />';
+    echo '<br />';
+    echo '<br />';
+    echo '<pre>';
+    $langfile = file_get_contents(__DIR__ . '/lang/en/local_equipment.php');
+    $string = '$string[\'' . $identifier . '\']';
+    $pattern = '/^' . preg_quote($string, '/') . '.*$/m';
+    $matches = [];
+    var_dump(preg_match_all($pattern, $identifier, $matches));
+    var_dump($matches);
+    echo '</pre>';
+    die();
+    if (file_exists($langfile)) {
+        $strings = include($langfile);
+        return array_key_exists($identifier, $strings);
+    }
+    return false;
+}

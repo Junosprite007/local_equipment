@@ -1,65 +1,63 @@
-'use strict';
-
-const path = require('path');
-const fs = require('fs');
+"use strict";
 
 module.exports = function (grunt) {
-    // We need to include the core Moodle grunt file too, otherwise we can't run tasks like "amd".
-    require('grunt-load-gruntfile')(grunt);
-    grunt.loadGruntfile('../../Gruntfile.js');
+    // Load the core Moodle Gruntfile.
+    require("grunt-load-gruntfile")(grunt);
+    grunt.loadGruntfile("../../Gruntfile.js");
 
-    // Load all grunt tasks.
-    grunt.loadNpmTasks('grunt-contrib-sass');
-    grunt.loadNpmTasks('grunt-contrib-watch');
-    grunt.loadNpmTasks('grunt-contrib-clean');
+    // Load necessary grunt tasks.
+    grunt.loadNpmTasks("grunt-contrib-sass");
+    grunt.loadNpmTasks("grunt-contrib-watch");
 
+    // Initialize your custom configuration.
     grunt.initConfig({
         watch: {
-            // If any .scss file changes in directory "scss" then run the "sass" task.
-            styles: {
-                files: ['scss/*.scss'],
-                tasks: ['sass', 'stylelint'],
+            // Watch SCSS files in your plugin's directory.
+            scss: {
+                files: "scss/*.scss",
+                tasks: ["sass:development"]
             },
+            // Watch AMD files in your plugin's directory.
             amd: {
-                files: ['amd/src/**/*.js'],
-                tasks: ['amd'],
+                files: "amd/src/**/*.js",
+                tasks: ["amd"]
+            }
+        },
+        build: {
+            scss: {
+                files: "scss/*.scss",
+                tasks: ["sass:development"]
             },
+            // Watch AMD files in your plugin's directory.
+            amd: {
+                files: "amd/src/**/*.js",
+                tasks: ["amd"]
+            }
         },
         sass: {
-            // Production config is also available.
             development: {
                 options: {
-                    style: 'expanded',
-                    loadPath: ['myOtherImports/'],
+                    style: "expanded"
                 },
                 files: {
-                    'styles.css': 'scss/styles.scss',
-                },
+                    "styles.css": "scss/styles.scss"
+                }
             },
             prod: {
                 options: {
-                    style: 'compressed',
-                    loadPath: ['myOtherImports/'],
+                    style: "compressed" // Minify the CSS.
                 },
                 files: {
-                    'styles-prod.css': 'scss/styles.scss',
-                },
-            },
-        },
-        stylelint: {
-            options: {
-                configFile: '.stylelintrc',
-                failOnError: false,
-                quiet: false,
-            },
-            src: ['**/*.css', '**/*.scss'],
-        },
+                    "styles-prod.css": "scss/styles.scss"
+                }
+            }
+        }
     });
 
-    // The default task (running "grunt" in console).
-    grunt.registerTask('default', ['sass:development', 'amd']);
-    // The production task (running "grunt prod" in console).
-    grunt.registerTask('prod', ['sass:prod', 'amd']);
-    // Register the stylelint task
-    grunt.registerTask('css', ['stylelint', 'sass:development']);
+    // Register your custom tasks.
+    grunt.registerTask("default", ["sass:development"]);
+    grunt.registerTask("prod", ["sass:prod"]);
+
+    // Register a task to watch both SCSS and AMD files.
+    grunt.registerTask("watch-all", ["watch:scss", "watch:amd"]);
 };

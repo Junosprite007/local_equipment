@@ -44,7 +44,7 @@ $PAGE->navbar->add($strequipmentcheckouts);
 echo $OUTPUT->header();
 echo $OUTPUT->heading($strequipmentcheckouts);
 
-// Add code to display list of equipment checkout instances in the course
 
-$PAGE->requires->js_call_amd('local_equipment/helloworld', 'showAlert', ['Message', 'Hello all you people! What is going on?']);
+// This works!
+$PAGE->requires->js_call_amd('local_equipment/addpartnership_form', 'showAlert', ['Message', 'Hello all you people! I\'m self-executing.']);
 echo $OUTPUT->footer();

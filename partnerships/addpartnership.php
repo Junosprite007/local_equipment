@@ -25,7 +25,7 @@
 
 // Ensure only admins can access this page.
 
-require_once(__DIR__ . '/../../../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/local/equipment/classes/form/addpartnership_form.php');
 
@@ -38,7 +38,7 @@ $PAGE->set_heading(get_string('addpartnership', 'local_equipment'));
 $mform = new local_equipment\form\addpartnership_form();
 
 if ($mform->is_cancelled()) {
-    redirect(new moodle_url('/local/equipment/partnerships/managepartnerships.php'));
+    redirect(new moodle_url('/local/equipment/partnerships.php'));
 }
 $data = $mform->get_data();
 if ($data) {
@@ -156,7 +156,7 @@ if ($data) {
 
     if ($success) {
         redirect(
-            new moodle_url('/local/equipment/partnerships/managepartnerships.php'),
+            new moodle_url('/local/equipment/partnerships.php'),
             get_string('partnershipsadded', 'local_equipment'),
             null,
             \core\output\notification::NOTIFY_SUCCESS

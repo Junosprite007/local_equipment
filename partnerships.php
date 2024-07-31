@@ -14,9 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
-require_once(__DIR__ . '../../../../config.php');
+use core\di;
+
+require_once(__DIR__ . '../../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->libdir . '/tablelib.php');
+require_once('./lib.php');
 
 /**
  * Manage partnerships page.
@@ -27,64 +30,23 @@ require_once($CFG->libdir . '/tablelib.php');
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// require_once($CFG->libdir . '/tablelib.php');
-
-// class local_equipment_table extends \flexible_table {
-//     public function __construct($uniqueid) {
-//         parent::__construct($uniqueid);
-
-//         // Define the columns
-//         $columns = array('name', 'version', 'enabled', 'order');
-//         $headers = array(
-//             get_string('name'),
-//             get_string('version'),
-//             get_string('enabled', 'admin'),
-//             get_string('order')
-//         );
-
-//         $this->define_columns($columns);
-//         $this->define_headers($headers);
-
-//         // Make columns sortable
-//         $this->sortable(true, 'name', SORT_ASC);
-//         $this->no_sorting('enabled'); // Example of making a column non-sortable
-
-//         $this->setup();
-//     }
-
-//     public function build_table() {
-//         global $DB;
-
-//         $sort = $this->get_sort_column();
-//         $direction = $this->get_sort_order();
-
-//         // Fetch your data here, applying the sort
-//         $plugins = $DB->get_records('local_equipment_partnership', null, "$sort $direction");
-
-//         foreach ($plugins as $plugin) {
-//             $row = array();
-//             $row[] = $plugin->name;
-//             $row[] = $plugin->version;
-//             $row[] = $plugin->enabled ? '✓' : '✗';
-//             $row[] = $plugin->order;
-
-//             $this->add_data($row);
-//         }
-//     }
-// }
-
-// // Usage
-// $table = new local_equipment_table('unique_table_id');
-// $table->build_table();
-// $table->print_html();
-
-
 // Ensure only admins can access this page.
-admin_externalpage_setup('local_equipment_managepartnerships');
+admin_externalpage_setup('local_equipment_partnerships');
 
-$PAGE->set_url(new moodle_url('/local/equipment/managepartnerships.php'));
-$PAGE->set_title(get_string('managepartnerships', 'local_equipment'));
-$PAGE->set_heading(get_string('managepartnerships', 'local_equipment'));
+$PAGE->set_url(new moodle_url('/local/equipment/partnerships.php'));
+$PAGE->set_title(get_string('partnerships', 'local_equipment'));
+$PAGE->set_heading(get_string('partnerships', 'local_equipment'));
+
+$columns = ['name', 'pickupid', 'liaisonids', 'active', 'actions'];
+$headers = [];
+foreach ($columns as $column) {
+    $headers[] = get_string($column, 'local_equipment');
+}
+
+// local_equipment_lang_string_exists('address_billinga');
+
+// var_dump($headers);
+// die();
 
 // Handle delete action.
 $delete = optional_param('delete', 0, PARAM_INT);
@@ -95,35 +57,30 @@ if ($delete && confirm_sesskey()) {
         \core\notification::error(get_string('errordeletingpartnership', 'local_equipment'));
     }
 }
-$PAGE->requires->js_call_amd('local_equipment/main', 'init');
 // Output starts here.
 echo $OUTPUT->header();
 
 // Add partnership button.
-$addurl = new moodle_url('/local/equipment/addpartnership.php');
+$addurl = new moodle_url('/local/equipment/partnerships/addpartnership.php');
 echo $OUTPUT->single_button($addurl, get_string('addpartnership', 'local_equipment'), 'get');
 
 // Set up the table.
 $table = new flexible_table('local-equipment-partnerships');
 
-$table->define_columns([
-    'name',
-    'pickupid',
-    'liaisonid',
-    'active',
-    'actions'
-]);
+$table->define_columns($columns);
+$table->define_headers($headers);
 
-$table->define_headers([
-    get_string('name'),
-    get_string('pickupid', 'local_equipment'),
-    get_string('liaisonid', 'local_equipment'),
-    get_string('active'),
-    get_string('actions')
-]);
+// $table->define_headers([
+//     get_string('name'),
+//     get_string('pickupid', 'local_equipment'),
+//     get_string('liaisonids', 'local_equipment'),
+//     get_string('active'),
+//     ''
+// ]);
 
 $table->define_baseurl($PAGE->url);
 $table->sortable(true, 'name', SORT_ASC);
+$table->no_sorting('actions');
 $table->collapsible(false);
 $table->initialbars(true);
 
@@ -137,9 +94,9 @@ $sort = $table->get_sql_sort();
 $partnerships = $DB->get_records('local_equipment_partnership', null, $sort);
 
 foreach ($partnerships as $partnership) {
-    $editurl = new moodle_url('/local/equipment/editpartnership.php', ['id' => $partnership->id]);
+    $editurl = new moodle_url('/local/equipment/partnerships/editpartnership.php', ['id' => $partnership->id]);
     $deleteurl = new moodle_url(
-        '/local/equipment/managepartnerships.php',
+        '/local/equipment/partnerships.php',
         ['delete' => $partnership->id, 'sesskey' => sesskey()]
     );
 
