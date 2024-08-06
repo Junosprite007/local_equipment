@@ -14,71 +14,102 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * JavaScript for updating partnership headers in the add partnerships form.
+ * JavaScript for deleting partnerships in the add partnerships form.
  *
  * @module      local_equipment/addpartnership_form
  * @copyright   2024 onward Joshua Kirby <josh@funlearningcompany.com>
  * @author      Joshua Kirby - CTO @ Fun Learning Company - funlearningcompany.com
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+*/
 
-import $ from "jquery";
-import * as Str from "core/str";
-import Log from "core/log";
-import Notification from "core/notification";
+define(["jquery", "core/log", "core/str"], ($, log, Str) => {
+    return {
+        init: () => {
+            log.debug("Add Partnership Form JS initialized");
 
-const SELECTORS = {
-    PARTNERSHIP_NAME_INPUT: ".partnership-name-input",
-    PARTNERSHIP_HEADER: ".partnership-header",
-};
+            const updatePartnershipNumbers = () => {
+                $(".partnership-header").each((index, element) => {
+                    Str.get_string("partnership", "local_equipment", index + 1)
+                        .then((string) => {
+                            $(element).text(string);
+                        })
+                        .catch((error) => {
+                            log.error(
+                                "Error updating partnership header:",
+                                error
+                            );
+                        });
+                });
+            };
 
-/**
- * Initialize the module.
- */
-export const init = () => {
-    Str.get_string("partnership", "local_equipment")
-        .then((partnershipString) => {
-            setupEventListeners(partnershipString);
-            Log.debug("AMD module initialized");
-        })
-        .catch((error) => {
-            Log.error("Error initializing AMD module:", error);
-        });
-};
+            const updateHiddenFields = () => {
+                const partnershipsCount = $("fieldset").length;
+                $('input[name="partnerships"]').val(partnershipsCount);
 
-/**
- * Set up event listeners for partnership name inputs.
- *
- * @param {string} partnershipString The localized string for 'partnership'.
- */
-const setupEventListeners = (partnershipString) => {
-    $("body").on("input", SELECTORS.PARTNERSHIP_NAME_INPUT, function () {
-        updatePartnershipHeader($(this), partnershipString);
-    });
-};
+                // Update the URL if necessary
+                const url = new URL(window.location.href);
+                url.searchParams.set("repeatno", partnershipsCount);
+                window.history.replaceState({}, "", url);
+            };
 
-/**
- * Update the partnership header based on the input value.
- *
- * @param {jQuery} $input The input element that triggered the event.
- * @param {string} partnershipString The localized string for 'partnership'.
- */
-const updatePartnershipHeader = ($input, partnershipString) => {
-    const $header = $input.closest(".fitem").find(SELECTORS.PARTNERSHIP_HEADER);
-    if ($header.length) {
-        const headerText = $input.val() ? $input.val() : partnershipString;
-        $header.text(headerText);
-    } else {
-        Log.debug("Header element not found for input");
-    }
-};
+            const renumberFormElements = () => {
+                $("fieldset").each((index, fieldset) => {
+                    $(fieldset)
+                        .find("input, select, textarea")
+                        .each((_, element) => {
+                            const name = $(element).attr("name");
+                            if (name) {
+                                const newName = name.replace(
+                                    /\[\d+\]/,
+                                    `[${index}]`
+                                );
+                                $(element).attr("name", newName);
+                            }
+                            const id = $(element).attr("id");
+                            if (id) {
+                                const newId = id.replace(/_\d+_/, `_${index}_`);
+                                $(element).attr("id", newId);
+                            }
+                        });
+                });
+            };
 
-/**
- * Display an alert box. It's actually working!
- *
- * @param {string} title - The title of the alert.
- * @param {string} message - The message of the alert.
- */
-export const showAlert = (title, message) => {
-    Notification.alert(title, message);
-};
+            const updateTrashIcons = () => {
+                const partnerships = $("fieldset");
+                if (partnerships.length > 1) {
+                    $(".remove-partnership").show();
+                } else {
+                    $(".remove-partnership").hide();
+                }
+            };
+
+            updateTrashIcons();
+
+            $(document).on("click", ".remove-partnership", function () {
+                const $fieldset = $(this).closest("fieldset");
+                // const isFirstPartnership = $fieldset.is(":first-of-type");
+
+                // if (isFirstPartnership) {
+                //     Str.get_string(
+                //         "cannotremovefirstpartnership",
+                //         "local_equipment"
+                //     )
+                //         .then((string) => {
+                //             alert(string);
+                //         })
+                //         .catch((error) => {
+                //             log.error("Error getting string:", error);
+                //         });
+                //     return;
+                // }
+
+                $fieldset.remove();
+                updatePartnershipNumbers();
+                updateHiddenFields();
+                renumberFormElements();
+                updateTrashIcons();
+            });
+        },
+    };
+});
+

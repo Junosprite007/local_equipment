@@ -25,17 +25,31 @@
 
 // Ensure only admins can access this page.
 
-require_once(__DIR__ . '/../../config.php');
+require_once('../../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/local/equipment/classes/form/addpartnership_form.php');
 
 admin_externalpage_setup('local_equipment_addpartnership');
 
+require_login();
+$context = context_system::instance();
+$PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/equipment/partnerships/addpartnership.php'));
 $PAGE->set_title(get_string('addpartnership', 'local_equipment'));
 $PAGE->set_heading(get_string('addpartnership', 'local_equipment'));
+$PAGE->requires->js_call_amd('local_equipment/addpartnership_form', 'init');
 
+// $PAGE->requires->js_call_amd('local_equipment/addpartnership_form', 'showAlert', ['Message', 'Hello all you people! I\'m self-executing.']);
 $mform = new local_equipment\form\addpartnership_form();
+
+// $deletefields = optional_param('delete_partnership', '', PARAM_TEXT);
+
+// if (!empty($deletefields)) {
+//     $mform->setConstant('repeatno', $mform->getRepeatsCount() - 1);
+//     $data = $mform->get_submitted_data();
+//     unset($data->{'field_' . $mform->getRepeatsCount()});
+//     $mform->set_data($data);
+// }
 
 if ($mform->is_cancelled()) {
     redirect(new moodle_url('/local/equipment/partnerships.php'));

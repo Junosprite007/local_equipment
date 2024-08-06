@@ -78,10 +78,14 @@ class addpartnership_form extends \moodleform {
             $courses_formatted[$course->id] = $course->fullname;
         }
 
-        // Add a delete button for each repeated element (except the first one).
-        // $repeatarray['removepartnershipbutton'] = $mform->createElement('button', 'removepartnershipbutton', get_string('removepartnership', 'local_equipment'), ['class' => 'delete-button']);
-
         $repeatarray['partnershipheader'] = $mform->createElement('header', 'partnershipheader', get_string('partnership', 'local_equipment'), ['class' => 'partnership-header']);
+
+        $repeatno = optional_param('repeatno', 1, PARAM_INT);
+        $mform->addElement('hidden', 'partnerships', $repeatno);
+        // Add a delete button for each repeated element (except the first one).
+        $repeatarray['delete'] = $mform->createElement('html', '<button type="button" class="remove-partnership btn btn-danger"><i class="fa fa-trash"></i></button>');
+        // $mform->setDefault('delete', '<i class="fa fa-trash"></i>');
+
         $repeatarray['partnershipname'] = $mform->createElement('text', 'partnershipname', get_string('partnershipname', 'local_equipment'), ['class' => 'partnership-name-input']);
         $repeatarray['liaisons'] = $mform->createElement('autocomplete', 'liaisons', get_string('selectliaisons', 'local_equipment'), [], $users);
         $repeatarray['courses'] = $mform->createElement('select', 'courses', get_string('selectcourses', 'local_equipment'), $courses_formatted, ['multiple' => 'multiple', 'size' => 10]);
@@ -109,6 +113,7 @@ class addpartnership_form extends \moodleform {
 
 
         // Set options.
+        $repeatoptions['partnerships']['type'] = PARAM_INT;
         $repeatoptions['partnershipheader']['header'] = true;
         $repeatoptions['partnershipname']['type'] = PARAM_TEXT;
         $repeatoptions['partnershipname']['rule'] = 'required';
@@ -116,22 +121,34 @@ class addpartnership_form extends \moodleform {
         $repeatoptions['courses']['type'] = PARAM_TEXT;
         $repeatoptions['active']['type'] = PARAM_BOOL;
         $repeatoptions['active']['default'] = 1;
+        // $repeatoptions['delete']['type'] = 'button';
+        // $repeatoptions['delete']['default'] = '<i class="fa fa-trash"></i>';
+
+
+        // $addfields = optional_param('add_partnership', '', PARAM_TEXT);
+        // $deletefields = optional_param('delete_partnership', '', PARAM_TEXT);
+
+        // if (!empty($deletefields)) {
+        //     $repeatno--;
+        // }
+
+        // $this->repeat_elements($repeatarray, $repeatno, $repeatedoptions, 'option_repeats', 'option_add_fields', 3, get_string('addmorefields', 'form'), true);
 
         // Use this later if it helps.
         // $numberofrepeats = $this->repeat_elements(
         $this->repeat_elements(
             $repeatarray,
-            1,
+            $repeatno,
             $repeatoptions,
             'partnerships',
             'add_partnership',
             1,
             get_string('addmorepartnerships', 'local_equipment'),
             false,
-            'removepartnershipbutton'
+            'delete_partnership'
         );
 
-        $PAGE->requires->js_call_amd('local_equipment/deletepartnership_button', 'init');
+        // $PAGE->requires->js_call_amd('local_equipment/deletepartnership_button', 'init');
         $this->add_action_buttons(true, get_string('submit'));
     }
 

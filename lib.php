@@ -169,3 +169,147 @@ function local_equipment_lang_string_exists($identifier) {
     }
     return false;
 }
+
+/**
+ * Get all relevant addresses from a partnerships database record.
+ *
+ * @param stdClass $$dbrecord A database record that contains multiple types of addresses.
+ * @return string Each addresses type, plus the actual address, joined by a <br /> tag.
+ */
+function local_equipment_get_addresses($dbrecord) {
+    $address = [];
+    $addresstypes = [
+        'physical',
+        'mailing',
+        'pickup',
+        'billing'
+    ];
+    foreach ($addresstypes as $type) {
+        if ("{$dbrecord->{"streetaddress_$type"}}") {
+            $address[] = html_writer::tag('strong', s(get_string($type, 'local_equipment'))) . ": {$dbrecord->{"streetaddress_$type"}}, {$dbrecord->{"city_$type"}}, {$dbrecord->{"state_$type"}} {$dbrecord->{"zipcode_$type"}} {$dbrecord->{"country_$type"}}";
+        }
+    }
+
+
+    return implode('<br />', $address);
+}
+
+/**
+ * Get all liaison names, emails, and contact phones for a given partnership.
+ * Liaisons are simply users on the system, so they must of accounts.
+ * Emails and phones will be taken from the user's profile, but admins will have the option to add phone numbers for them if they don't do it themselves.
+ *
+ * @param stdClass $$dbrecord A database record that contains multiple types of addresses.
+ * @return string True if the string exists, false otherwise.
+ */
+function local_equipment_get_liaison_info($partnership) {
+    // $liaisons = user_get_users_by_id(json_decode($partnership->liaisonids));
+    $liaisonids = json_decode($partnership->liaisonids);
+
+    foreach ($liaisonids as $id) {
+        $user = core_user::get_user($id);
+        $userurl = new moodle_url('/user/profile.php', array('id' => $user->id));
+        $userlink = html_writer::link($userurl, fullname($user));
+
+        $phone = '';
+        // These if/elseif statements seem inefficient, but I wanted to add a <br /> tag only if a phone number exists, so if you can find a better way, feel free.
+        if ($user->phone1) {
+            $phone = local_equipment_parse_phone_number($user->phone1);
+            $phone = local_equipment_format_phone_number($phone);
+            $phone .= ' <br />';
+        } elseif ($user->phone2) {
+            $phone = local_equipment_parse_phone_number($user->phone2);
+            $phone = local_equipment_format_phone_number($phone);
+            $phone .= ' <br />';
+        }
+        $userlinks[] = $userlink;
+        $liaisoninfo[] = html_writer::tag('strong', $userlink)
+            . '<br />' . $user->email . '<br />' . $phone;
+    }
+
+    return implode('<br />', $liaisoninfo);
+}
+
+/**
+ * Get all liaison names, emails, and contact phones for a given partnership.
+ * Liaisons are simply users on the system, so they must of accounts.
+ * Emails and phones will be taken from the user's profile, but admins will have the option to add phone numbers for them if they don't do it themselves.
+ *
+ * @param stdClass $$dbrecord A database record that contains multiple types of addresses.
+ * @return string True if the string exists, false otherwise.
+ */
+function local_equipment_get_courses($partnership) {
+    $courseids = json_decode($partnership->courseids);
+    $courseinfo = [];
+
+    // echo '<pre>';
+    // var_dump($courses);
+    // echo '</pre>';
+    // die();
+    foreach ($courseids as $id) {
+        $course = get_course($id);
+        $courseurl = new moodle_url('/course/view.php', array('id' => $course->id));
+        $courselink = html_writer::link($courseurl, $course->fullname);
+        $courseinfo[] = $courselink;
+    }
+    return implode('<br />', $courseinfo);
+}
+
+/**
+ * Validates a mobile phone number to make sure it makes sense.
+ *
+ * @param string $phonenumber The mobile phone number to validate.
+ * @param string $country The country code to use.
+ * @return string
+ */
+function local_equipment_parse_phone_number($phonenumber, $country = 'US') {
+    // Remove commonly used characters from the phone number that are not numbers: ().-+ and the white space char.
+    $parsedphonenumber = preg_replace("/[\(\)\-\s+\.]/", "", $phonenumber);
+
+    try {
+        if (!ctype_digit($parsedphonenumber)) {
+            throw new \Exception(get_string('invalidphonenumberformat', 'local_equipment') . get_string('wecurrentlyonlyacceptusnumbers', 'local_equipment'));
+        }
+    } catch (\Exception $e) {
+        return $e->getMessage();
+    }
+
+    switch ($country) {
+        case 'US':
+            // Check if the number is not empty, if it only contains digits, and if it is a valid 10 or 11 digit United States phone number.
+            try {
+                if ((strlen($parsedphonenumber) == 10) && $phonenumber[0] != 1) {
+                    $parsedphonenumber = "+1" . $parsedphonenumber;
+                } elseif ((strlen($parsedphonenumber) == 11) && $phonenumber[0] == 1) {
+                    $parsedphonenumber = "+" . $parsedphonenumber;
+                } else {
+                    throw new \Exception(new lang_string('invalidphonenumber', 'local_equipment') . new lang_string('wecurrentlyonlyacceptusnumbers', 'local_equipment'));
+                }
+            } catch (\Exception $e) {
+                return $e->getMessage();
+            }
+            break;
+        default:
+            return new lang_string('notasupportedcountry', 'local_equipment', $country);
+    }
+    return $parsedphonenumber;
+}
+
+/**
+ * Validates a cell phone number to make sure it makes sense.
+ *
+ * @param string $parsedphonenumber The already parsed phone number. This must follow the exact form as follows: +12345678910
+ * @return string
+ */
+function local_equipment_format_phone_number($parsedphonenumber) {
+    $formattedphonenumber = preg_replace("/^\+(\d{1})(\d{3})(\d{3})(\d{4})$/", "+$1 ($2) $3-$4", $parsedphonenumber);
+    try {
+        if ($parsedphonenumber == $formattedphonenumber) {
+            throw new \Exception(get_string('invalidphonenumberformat', 'local_equipment') . get_string('wecurrentlyonlyacceptusphonenumbers', 'local_equipment'));
+        }
+    } catch (\Exception $e) {
+        return $e->getMessage();
+    }
+
+    return $formattedphonenumber;
+}

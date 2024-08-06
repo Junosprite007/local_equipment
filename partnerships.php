@@ -33,20 +33,38 @@ require_once('./lib.php');
 // Ensure only admins can access this page.
 admin_externalpage_setup('local_equipment_partnerships');
 
+require_login();
+$context = context_system::instance();
+$PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/equipment/partnerships.php'));
 $PAGE->set_title(get_string('partnerships', 'local_equipment'));
 $PAGE->set_heading(get_string('partnerships', 'local_equipment'));
 
-$columns = ['name', 'pickupid', 'liaisonids', 'active', 'actions'];
+$columns = [
+    'name',
+    'pickups',
+    'instructions_pickup',
+    'liaisons',
+    'courses',
+    'active',
+    'address',
+    'timecreated',
+    'actions'
+];
+// Columns of the database that should not be sortable.
+$dontsortby = [
+    'pickups',
+    'liaisons',
+    'courses',
+    'address',
+    'timecreated',
+    'actions'
+];
+
 $headers = [];
 foreach ($columns as $column) {
     $headers[] = get_string($column, 'local_equipment');
 }
-
-// local_equipment_lang_string_exists('address_billinga');
-
-// var_dump($headers);
-// die();
 
 // Handle delete action.
 $delete = optional_param('delete', 0, PARAM_INT);
@@ -57,6 +75,9 @@ if ($delete && confirm_sesskey()) {
         \core\notification::error(get_string('errordeletingpartnership', 'local_equipment'));
     }
 }
+
+
+// $PAGE->requires->js_call_amd('local_equipment/addpartnership_form', 'showAlert', ['Message', 'Hello all you people! I\'m self-executing.']);
 // Output starts here.
 echo $OUTPUT->header();
 
@@ -80,20 +101,21 @@ $table->define_headers($headers);
 
 $table->define_baseurl($PAGE->url);
 $table->sortable(true, 'name', SORT_ASC);
-$table->no_sorting('actions');
-$table->collapsible(false);
+foreach ($dontsortby as $column) {
+    $table->no_sorting($column);
+}
+$table->collapsible(true);
 $table->initialbars(true);
-
 $table->set_attribute('id', 'partnerships');
 $table->set_attribute('class', 'admintable generaltable');
-
+$table->column_style(6, 'overflow-x', 'auto');
 $table->setup();
 
-// Fetch partnerships.
 $sort = $table->get_sql_sort();
 $partnerships = $DB->get_records('local_equipment_partnership', null, $sort);
 
 foreach ($partnerships as $partnership) {
+    $row = [];
     $editurl = new moodle_url('/local/equipment/partnerships/editpartnership.php', ['id' => $partnership->id]);
     $deleteurl = new moodle_url(
         '/local/equipment/partnerships.php',
@@ -107,13 +129,78 @@ foreach ($partnerships as $partnership) {
         new confirm_action(get_string('confirmdelete', 'local_equipment'))
     );
 
-    $row = [
-        $partnership->name,
-        $partnership->pickupid,
-        $partnership->liaisonids,
-        $partnership->active ? get_string('yes') : get_string('no'),
-        $actions
-    ];
+    foreach ($columns as $column) {
+        switch ($column) {
+            case 'pickups':
+                $row[] = $partnership->pickupid;
+
+                break;
+            case 'instructions_pickup':
+                $row[] = $partnership->instructions_pickup;
+
+                break;
+            case 'liaisons':
+                $row[] = html_writer::tag(
+                    'div',
+                    local_equipment_get_liaison_info($partnership),
+                    ['class' => 'scrollable-content']
+                );
+                // $row[] = $partnership->liaisonids;
+                break;
+            case 'courses':
+                $row[] = html_writer::tag(
+                    'div',
+                    local_equipment_get_courses($partnership),
+                    ['class' => 'scrollable-content']
+                );
+                // $row[] = $partnership->courseids;
+
+                break;
+            case 'address':
+
+                // $table->set_columnsattributes(['style' => 'text-align: center;']);
+
+
+                // $row[] = "{$partnership->{"streetaddress_$addresstypes[0]"}}";
+                // $row[] = $partnership->streetaddress_physical;
+                // $row[] = $partnership->streetaddress_physical . '<br>' . $partnership->city_physical . ', ' . $partnership->state_physical . ' ' . $partnership->zipcode_physical . '<br>' . $partnership->country_physical;
+                $row[] = html_writer::tag(
+                    'div',
+                    local_equipment_get_addresses($partnership),
+                    ['class' => 'scrollable-content']
+                );
+                // foreach ($addresstypes as $type) {
+                //     if ("{$partnership->{"streetaddress_$type"}}") {
+                //         $address[] = html_writer::tag('strong', s(get_string($type, 'local_equipment'))) . ": {$partnership->{"streetaddress_$type"}}, {$partnership->{"city_$type"}}, {$partnership->{"state_$type"}} {$partnership->{"zipcode_$type"}} {$partnership->{"country_$type"}}<br />";
+                //     }
+
+                //     // $row[] = "{$partnership->{"streetaddress_$type"}}<br>{$partnership->{"city_$type"}}, {$partnership->{"state_$type"}} {$partnership->{"zipcode_$type"}}<br>{$partnership->{"country_$type"}}";
+                //     // $row[] = $partnership->{"streetaddress_$type"};
+                // }
+                // $row[] =
+                // $row[] = $partnership->streetaddress . '<br>' . $partnership->city . ', ' . $partnership->state . ' ' . $partnership->zipcode . '<br>' . $partnership->country;
+
+                break;
+            case 'actions':
+                $row[] = $actions;
+
+                break;
+            default:
+                $row[] = $partnership->$column;
+                break;
+        }
+    }
+
+
+    // $row[] = $partnership->active ? get_string('yes') : get_string('no');
+    // $row[] = $actions;
+    // $row = [
+    //     $partnership->name,
+    //     $partnership->pickupid,
+    //     $partnership->liaisonids,
+    //     $partnership->active ? get_string('yes') : get_string('no'),
+    //     $actions
+    // ];
 
     $table->add_data($row);
 }

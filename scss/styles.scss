@@ -4,3 +4,20 @@
     margin-top: 25px;
     font-weight: bold;
 }
+
+#page-admin-local-equipment-partnerships .cell.c6 {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    background-color: red;
+}
+
+// .scrollable-content {
+//     display: block;
+//     overflow-x: auto;
+//     white-space: nowrap;
+// }
+
+.scrollable-content {
+    width: 500px;
+}
