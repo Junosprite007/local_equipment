@@ -39,6 +39,8 @@ $PAGE->set_title(get_string('addpartnership', 'local_equipment'));
 $PAGE->set_heading(get_string('addpartnership', 'local_equipment'));
 $PAGE->requires->js_call_amd('local_equipment/addpartnership_form', 'init');
 
+require_capability('local/equipment:managepartnerships', $context);
+
 // $PAGE->requires->js_call_amd('local_equipment/addpartnership_form', 'showAlert', ['Message', 'Hello all you people! I\'m self-executing.']);
 $mform = new local_equipment\form\addpartnership_form();
 

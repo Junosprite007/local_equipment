@@ -24,20 +24,28 @@
  */
 
 require_once('../../config.php');
+require_once($CFG->libdir . '/adminlib.php');
 
 // $id = required_param('id', PARAM_INT);
+$context = context_system::instance();
+$url = new moodle_url('/local/equipment/index.php');
+$redirecturl = new moodle_url('/local/equipment/index.php');
+$strequipmentcheckouts = get_string('pluginname', 'local_equipment');
 
 // $course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
 // require_course_login($course);
 // $PAGE->requires->js_call_amd('local_equipment/helloworld', 'init');
-$strequipmentcheckouts = get_string('pluginname', 'local_equipment');
 // $PAGE->set_pagelayout('incourse');
 // $PAGE->set_url('/local/equipment/index.php', array('id' => $id));
-$PAGE->set_url('/local/equipment/index.php');
-$PAGE->set_context(context_system::instance());
+require_login();
+$PAGE->set_url($url);
+$PAGE->set_context($context);
 $PAGE->set_title($strequipmentcheckouts);
 $PAGE->set_heading($strequipmentcheckouts);
 $PAGE->navbar->add($strequipmentcheckouts);
+
+require_capability('local/equipment:managepartnerships', $context);
+require_capability('local/equipment:seedetails', $context);
 // $PAGE->requires->js('/local/equipment/lib/amd/src/helloworld.js');
 // $PAGE->requires->js('/local/equipment/amd/src/helloworld.js');
 

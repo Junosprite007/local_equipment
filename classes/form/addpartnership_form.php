@@ -51,32 +51,8 @@ class addpartnership_form extends \moodleform {
         $repeatoptions = [];
         $address = new stdClass();
 
-        // Autocomplete users.
-        $users = [
-            'ajax' => 'core_user/form_user_selector',
-            'multiple' => true,
-            'casesensitive' => false,
-            // 'valuehtmlcallback' => function ($value) {
-            //     global $OUTPUT;
-            //     $user = \core_user::get_user($value);
-            //     return $OUTPUT->user_picture($user, array('size' => 24)) . ' ' . fullname($user);
-            // }
-        ];
-
-
-
-        // Make this an admin setting later on.
-        $categoryname = 'ALL_COURSES_CURRENT';
-
-        // Fetch the course categories by name.
-        $categories = $DB->get_records('course_categories', array('name' => $categoryname));
-        $category = array_values($categories)[0];
-        $courses = $DB->get_records('course', array('category' => $category->id));
-
-        $courses_formatted = [];
-        foreach ($courses as $course) {
-            $courses_formatted[$course->id] = $course->fullname;
-        }
+        $users = local_equipment_auto_complete_users();
+        $courses_formatted = local_equipment_get_master_courses('ALL_COURSES_CURRENT');
 
         $repeatarray['partnershipheader'] = $mform->createElement('header', 'partnershipheader', get_string('partnership', 'local_equipment'), ['class' => 'partnership-header']);
 
@@ -92,22 +68,22 @@ class addpartnership_form extends \moodleform {
         $repeatarray['active'] = $mform->createElement('advcheckbox', 'active', get_string('active'));
 
         // Physical address section
-        $address = $this->add_address_block($mform, 'physical');
+        $address = local_equipment_add_address_block($mform, 'physical');
         $repeatarray = array_merge($repeatarray, $address->elements);
         $repeatoptions = array_merge($repeatoptions, $address->options);
 
         // Mailing address section
-        $address = $this->add_address_block($mform, 'mailing');
+        $address = local_equipment_add_address_block($mform, 'mailing');
         $repeatarray = array_merge($repeatarray, $address->elements);
         $repeatoptions = array_merge($repeatoptions, $address->options);
 
         // Pickup address section
-        $address = $this->add_address_block($mform, 'pickup');
+        $address = local_equipment_add_address_block($mform, 'pickup');
         $repeatarray = array_merge($repeatarray, $address->elements);
         $repeatoptions = array_merge($repeatoptions, $address->options);
 
         // Billing address section
-        $address = $this->add_address_block($mform, 'billing');
+        $address = local_equipment_add_address_block($mform, 'billing');
         $repeatarray = array_merge($repeatarray, $address->elements);
         $repeatoptions = array_merge($repeatoptions, $address->options);
 
@@ -166,100 +142,5 @@ class addpartnership_form extends \moodleform {
         // No custom validation yet.
 
         return $errors;
-    }
-
-
-    /**
-     * Add an address group for if I want each address to appear in a line,
-     * though the text boxes currently doesn't have labels doing it this way.
-     * I'd have to figure that out, and I don't want to....
-     *
-     * @param moodleform $mform a standard moodle form, probably will be '$this->_form'.
-     * @param string $groupname the name of the group to add.
-     * @param string $label the label for the group.
-     */
-    public function add_address_group($mform, $groupname, $label) {
-        $group = array();
-
-        // $mform->addElement('header', $groupname . '_header', $label);
-        $mform->addElement('static', 'streetaddress_label_' . $groupname, get_string('streetaddress_' . $groupname, 'local_equipment'), \html_writer::tag('span', get_string('streetaddress_' . $groupname, 'local_equipment')));
-        $mform->addElement('static', 'city_label_' . $groupname, '', \html_writer::tag('label', get_string('city_' . $groupname, 'local_equipment')));
-        $mform->addElement('static', 'state_label_' . $groupname, '', \html_writer::tag('label', get_string('state_' . $groupname, 'local_equipment')));
-        $mform->addElement('static', 'zipcode_label_' . $groupname, '', \html_writer::tag('label', get_string('zipcode_' . $groupname, 'local_equipment')));
-        $group[] = $mform->createElement('text', 'streetaddress_' . $groupname, get_string('streetaddress_' . $groupname, 'local_equipment'));
-        $group[] = $mform->createElement('text', 'city_' . $groupname, get_string('city_' . $groupname, 'local_equipment'));
-        $group[] = $mform->createElement('text', 'state_' . $groupname, get_string('state_' . $groupname, 'local_equipment'));
-        $group[] = $mform->createElement('text', 'zipcode_' . $groupname, get_string('zipcode_' . $groupname, 'local_equipment'));
-
-        $mform->addGroup($group, $groupname . '_group', $label, '<br>', false);
-
-        // Set types for elements within the group
-        $mform->setType('streetaddress_' . $groupname, PARAM_TEXT);
-        $mform->setType('city_' . $groupname, PARAM_TEXT);
-        $mform->setType('state_' . $groupname, PARAM_TEXT);
-        $mform->setType('zipcode_' . $groupname, PARAM_TEXT);
-    }
-
-    /**
-     * Add an address block.
-     *
-     * @param moodleform $mform a standard moodle form, probably will be '$this->_form'.
-     * @param string $addresstype the type of address block to add: 'mailing', 'physical', 'pickup', or 'billing'.
-     * @return object $block a block of elements to be added to the form.
-     */
-    public function add_address_block($mform, $addresstype) {
-        $block = new stdClass();
-
-        $block->elements = array();
-        $block->options = array();
-        $block->elements[$addresstype . 'address'] = $mform->createElement('static', $addresstype . 'address', \html_writer::tag('label', get_string($addresstype . 'address', 'local_equipment'), ['class' => 'form-input-group-labels']));
-
-        switch ($addresstype) {
-            case 'mailing':
-                $block->elements['attention_' . $addresstype] = $mform->createElement('text', 'attention_' . $addresstype, get_string('attention', 'local_equipment'));
-                $block->options['attention_' . $addresstype]['type'] = PARAM_TEXT;
-                break;
-            case 'pickup':
-                $block->elements['instructions_' . $addresstype] = $mform->createElement('textarea', 'instructions_' . $addresstype, get_string('pickupinstructions', 'local_equipment'));
-                $block->options['instructions_' . $addresstype]['type'] = PARAM_TEXT;
-                break;
-            case 'billing':
-                $block->elements['attention_' . $addresstype] = $mform->createElement('text', 'attention_' . $addresstype, get_string('attention', 'local_equipment'));
-                $block->options['attention_' . $addresstype]['type'] = PARAM_TEXT;
-                break;
-            default:
-                break;
-        }
-
-        if ($addresstype !== 'physical') {
-            $block->elements['sameasphysical_' . $addresstype] = $mform->createElement('advcheckbox', 'sameasphysical_' . $addresstype, get_string('sameasphysical', 'local_equipment'));
-            $block->options['sameasphysical_' . $addresstype]['type'] = PARAM_BOOL;
-        }
-
-        $block->elements['streetaddress_' . $addresstype] = $mform->createElement('text', 'streetaddress_' . $addresstype, get_string('streetaddress', 'local_equipment'));
-        $block->elements['city_' . $addresstype] = $mform->createElement('text', 'city_' . $addresstype, get_string('city', 'local_equipment'));
-        $block->elements['state_' . $addresstype] = $mform->createElement('select', 'state_' . $addresstype, get_string('state', 'local_equipment'), local_equipment_get_states());
-        $block->elements['country_' . $addresstype] = $mform->createElement('select', 'country_' . $addresstype, get_string('country', 'local_equipment'), local_equipment_get_countries());
-        $block->elements['zipcode_' . $addresstype] = $mform->createElement('text', 'zipcode_' . $addresstype, get_string('zipcode', 'local_equipment'));
-
-        $block->options['streetaddress_' . $addresstype]['type'] = PARAM_TEXT;
-        $block->options['city_' . $addresstype]['type'] = PARAM_TEXT;
-        $block->options['state_' . $addresstype]['type'] = PARAM_TEXT;
-        $block->options['country_' . $addresstype]['type'] = PARAM_TEXT;
-        $block->options['zipcode_' . $addresstype]['type'] = PARAM_TEXT;
-
-        // The physical address is required, but none of the others are.
-        if ($addresstype === 'physical') {
-            $block->options['streetaddress_' . $addresstype]['rule'] = 'required';
-            $block->options['city_' . $addresstype]['rule'] = 'required';
-            $block->options['state_' . $addresstype]['rule'] = 'required';
-            $block->options['country_' . $addresstype]['rule'] = 'required';
-            $block->options['zipcode_' . $addresstype]['rule'] = 'required';
-        }
-
-        $block->options['state_' . $addresstype]['default'] = 'MI';
-        $block->options['country_' . $addresstype]['default'] = 'USA';
-
-        return $block;
     }
 }

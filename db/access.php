@@ -25,29 +25,15 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-// $capabilities = array(
-//     'local/equipment:managepartnership' => array(
-//         'riskbitmask' => RISK_CONFIG,
-//         'captype' => 'write',
-//         'contextlevel' => CONTEXT_SYSTEM,
-//         'archetypes' => array(
-//             'manager' => CAP_ALLOW
-//         )
-//     ),
-//     'local/equipment:managepartnerships' => [
-//         'captype' => 'write',
-//         'contextlevel' => CONTEXT_SYSTEM,
-//         'archetypes' => [
-//             'manager' => CAP_ALLOW
-//         ],
-//     ],
-
-//     // Existing capabilities...
-// );
-
-
 $capabilities = [
     'local/equipment:managepartnerships' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => [
+            'manager' => CAP_ALLOW
+        ],
+    ],
+    'local/equipment:seedetails' => [
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => [

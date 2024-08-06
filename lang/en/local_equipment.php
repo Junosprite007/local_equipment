@@ -100,6 +100,7 @@ $string['physicaladdress'] = 'Physical address';
 $string['pickup'] = 'Pickup';
 $string['pickupaddress'] = 'Pickup address';
 $string['pickupid'] = 'Pickup ID';
+$string['pickupinstructions'] = 'Pickup instructions';
 $string['pickups'] = 'Pickups';
 $string['pluginadministration'] = 'Equipment checkout administration';
 $string['pluginname'] = 'Equipment';

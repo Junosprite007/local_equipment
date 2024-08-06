@@ -32,13 +32,17 @@ require_once('./lib.php');
 
 // Ensure only admins can access this page.
 admin_externalpage_setup('local_equipment_partnerships');
-
 require_login();
+
 $context = context_system::instance();
+$url = new moodle_url('/local/equipment/partnerships.php');
+
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/equipment/partnerships.php'));
+$PAGE->set_url($url);
 $PAGE->set_title(get_string('partnerships', 'local_equipment'));
 $PAGE->set_heading(get_string('partnerships', 'local_equipment'));
+
+require_capability('local/equipment:managepartnerships', $context);
 
 $columns = [
     'name',
@@ -48,7 +52,7 @@ $columns = [
     'courses',
     'active',
     'address',
-    'timecreated',
+    // 'timecreated',
     'actions'
 ];
 // Columns of the database that should not be sortable.
@@ -57,7 +61,7 @@ $dontsortby = [
     'liaisons',
     'courses',
     'address',
-    'timecreated',
+    // 'timecreated',
     'actions'
 ];
 

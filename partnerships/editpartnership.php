@@ -17,6 +17,7 @@
 require_once('../../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/local/equipment/classes/form/editpartnership_form.php');
+global $DB;
 
 $id = required_param('id', PARAM_INT); // Partnership ID
 $context = context_system::instance();
@@ -30,7 +31,6 @@ $PAGE->set_url($url, array('id' => $id));
 $PAGE->set_title(get_string('editpartnership', 'local_equipment'));
 $PAGE->set_heading(get_string('editpartnership', 'local_equipment'));
 
-// Check capabilities.
 require_capability('local/equipment:managepartnerships', $context);
 
 
@@ -46,8 +46,24 @@ if ($mform->is_cancelled()) {
     redirect($redirecturl);
 } else if ($data = $mform->get_data()) {
     // Update the partnership in the database.
+    $partnership = $data;
+    $partnership->id = $data->partnershipid;
     $partnership->name = $data->name;
+    $partnership->liaisonids = json_encode(local_equipment_convert_array_values_to_int($data->liaisons));
+    $partnership->courseids = json_encode(local_equipment_convert_array_values_to_int($data->courses));
+    $partnership->active = $data->active;
+
+    // json_encode($data->pickups);
+
+    // $partnership->name = $data->name;
+    // $partnership->courses = $data->courses;
     // Add other fields as necessary.
+    // die('Data: ' . json_encode($partnership));
+    // echo '<pre>';
+    // var_dump($partnership);
+    // echo '</pre>';
+
+    // die();
 
     $DB->update_record('local_equipment_partnership', $partnership);
 
