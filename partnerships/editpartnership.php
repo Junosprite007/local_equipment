@@ -33,9 +33,6 @@ $PAGE->set_heading(get_string('editpartnership', 'local_equipment'));
 
 require_capability('local/equipment:managepartnerships', $context);
 
-
-// Include the JavaScript module
-
 // Fetch existing partnership data.
 $partnership = $DB->get_record('local_equipment_partnership', array('id' => $id), '*', MUST_EXIST);
 
@@ -53,17 +50,32 @@ if ($mform->is_cancelled()) {
     $partnership->courseids = json_encode(local_equipment_convert_array_values_to_int($data->courses));
     $partnership->active = $data->active;
 
-    // json_encode($data->pickups);
+    // Mailing address specific fields.
+    if ($partnership->sameasphysical_mailing) {
+        $partnership->streetaddress_mailing = $partnership->streetaddress_physical;
+        $partnership->city_mailing = $partnership->city_physical;
+        $partnership->state_mailing = $partnership->state_physical;
+        $partnership->country_mailing = $partnership->country_physical;
+        $partnership->zipcode_mailing = $partnership->zipcode_physical;
+    }
 
-    // $partnership->name = $data->name;
-    // $partnership->courses = $data->courses;
-    // Add other fields as necessary.
-    // die('Data: ' . json_encode($partnership));
-    // echo '<pre>';
-    // var_dump($partnership);
-    // echo '</pre>';
+    // Pickup address specific fields.
+    if ($partnership->sameasphysical_pickup) {
+        $partnership->streetaddress_pickup = $partnership->streetaddress_physical;
+        $partnership->city_pickup = $partnership->city_physical;
+        $partnership->state_pickup = $partnership->state_physical;
+        $partnership->country_pickup = $partnership->country_physical;
+        $partnership->zipcode_pickup = $partnership->zipcode_physical;
+    }
 
-    // die();
+    // Billing address specific fields.
+    if ($partnership->sameasphysical_billing) {
+        $partnership->streetaddress_billing = $partnership->streetaddress_physical;
+        $partnership->city_billing = $partnership->city_physical;
+        $partnership->state_billing = $partnership->state_physical;
+        $partnership->country_billing = $partnership->country_physical;
+        $partnership->zipcode_billing = $partnership->zipcode_physical;
+    }
 
     $DB->update_record('local_equipment_partnership', $partnership);
 
@@ -73,6 +85,5 @@ if ($mform->is_cancelled()) {
 
 // Output everything.
 echo $OUTPUT->header();
-// echo $OUTPUT->heading(get_string('editpartnership', 'local_equipment'));
 $mform->display();
 echo $OUTPUT->footer();

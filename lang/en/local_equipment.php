@@ -135,5 +135,3 @@ $string['zipcode_billing'] = 'Zip Code (Billing)';
 $string['zipcode_mailing'] = 'Zip Code';
 $string['zipcode_physical'] = 'Zip Code (Physical)';
 $string['zipcode_pickup'] = 'Zip Code (Pickup)';
-
-$string[''] = '';

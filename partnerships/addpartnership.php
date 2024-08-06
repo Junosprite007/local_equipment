@@ -41,17 +41,7 @@ $PAGE->requires->js_call_amd('local_equipment/addpartnership_form', 'init');
 
 require_capability('local/equipment:managepartnerships', $context);
 
-// $PAGE->requires->js_call_amd('local_equipment/addpartnership_form', 'showAlert', ['Message', 'Hello all you people! I\'m self-executing.']);
 $mform = new local_equipment\form\addpartnership_form();
-
-// $deletefields = optional_param('delete_partnership', '', PARAM_TEXT);
-
-// if (!empty($deletefields)) {
-//     $mform->setConstant('repeatno', $mform->getRepeatsCount() - 1);
-//     $data = $mform->get_submitted_data();
-//     unset($data->{'field_' . $mform->getRepeatsCount()});
-//     $mform->set_data($data);
-// }
 
 if ($mform->is_cancelled()) {
     redirect(new moodle_url('/local/equipment/partnerships.php'));

@@ -281,10 +281,6 @@ function local_equipment_get_courses($partnership) {
     $courseids = json_decode($partnership->courseids);
     $courseinfo = [];
 
-    // echo '<pre>';
-    // var_dump($courses);
-    // echo '</pre>';
-    // die();
     foreach ($courseids as $id) {
         $course = get_course($id);
         $courseurl = new moodle_url('/course/view.php', array('id' => $course->id));
@@ -506,52 +502,4 @@ function local_equipment_add_edit_address_block($mform, $addresstype, $data) {
         $mform->addRule('country_' . $addresstype, get_string('required'), 'required', null, 'client');
         $mform->addRule('zipcode_' . $addresstype, get_string('required'), 'required', null, 'client');
     }
-
-    // $block->elements = array();
-    // $block->options = array();
-    // $block->elements[$addresstype . 'address'] = $mform->createElement('static', $addresstype . 'address', \html_writer::tag('label', get_string($addresstype . 'address', 'local_equipment'), ['class' => 'form-input-group-labels']));
-
-    // switch ($addresstype) {
-    //     case 'mailing':
-    //         $block->elements['attention_' . $addresstype] = $mform->createElement('text', 'attention_' . $addresstype, get_string('attention', 'local_equipment'));
-    //         $block->options['attention_' . $addresstype]['type'] = PARAM_TEXT;
-    //         break;
-    //     case 'pickup':
-    //         $block->elements['instructions_' . $addresstype] = $mform->createElement('textarea', 'instructions_' . $addresstype, get_string('pickupinstructions', 'local_equipment'));
-    //         $block->options['instructions_' . $addresstype]['type'] = PARAM_TEXT;
-    //         break;
-    //     case 'billing':
-    //         $block->elements['attention_' . $addresstype] = $mform->createElement('text', 'attention_' . $addresstype, get_string('attention', 'local_equipment'));
-    //         $block->options['attention_' . $addresstype]['type'] = PARAM_TEXT;
-    //         break;
-    //     default:
-    //         break;
-    // }
-
-
-    // $block->elements['streetaddress_' . $addresstype] = $mform->createElement('text', 'streetaddress_' . $addresstype, get_string('streetaddress', 'local_equipment'));
-    // $block->elements['city_' . $addresstype] = $mform->createElement('text', 'city_' . $addresstype, get_string('city', 'local_equipment'));
-    // $block->elements['state_' . $addresstype] = $mform->createElement('select', 'state_' . $addresstype, get_string('state', 'local_equipment'), local_equipment_get_states());
-    // $block->elements['country_' . $addresstype] = $mform->createElement('select', 'country_' . $addresstype, get_string('country', 'local_equipment'), local_equipment_get_countries());
-    // $block->elements['zipcode_' . $addresstype] = $mform->createElement('text', 'zipcode_' . $addresstype, get_string('zipcode', 'local_equipment'));
-
-    // $block->options['streetaddress_' . $addresstype]['type'] = PARAM_TEXT;
-    // $block->options['city_' . $addresstype]['type'] = PARAM_TEXT;
-    // $block->options['state_' . $addresstype]['type'] = PARAM_TEXT;
-    // $block->options['country_' . $addresstype]['type'] = PARAM_TEXT;
-    // $block->options['zipcode_' . $addresstype]['type'] = PARAM_TEXT;
-
-    // // The physical address is required, but none of the others are.
-    // if ($addresstype === 'physical') {
-    //     $block->options['streetaddress_' . $addresstype]['rule'] = 'required';
-    //     $block->options['city_' . $addresstype]['rule'] = 'required';
-    //     $block->options['state_' . $addresstype]['rule'] = 'required';
-    //     $block->options['country_' . $addresstype]['rule'] = 'required';
-    //     $block->options['zipcode_' . $addresstype]['rule'] = 'required';
-    // }
-
-    // $block->options['state_' . $addresstype]['default'] = 'MI';
-    // $block->options['country_' . $addresstype]['default'] = 'USA';
-
-    // return $block;
 }

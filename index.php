@@ -32,11 +32,6 @@ $url = new moodle_url('/local/equipment/index.php');
 $redirecturl = new moodle_url('/local/equipment/index.php');
 $strequipmentcheckouts = get_string('pluginname', 'local_equipment');
 
-// $course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
-// require_course_login($course);
-// $PAGE->requires->js_call_amd('local_equipment/helloworld', 'init');
-// $PAGE->set_pagelayout('incourse');
-// $PAGE->set_url('/local/equipment/index.php', array('id' => $id));
 require_login();
 $PAGE->set_url($url);
 $PAGE->set_context($context);
@@ -46,13 +41,9 @@ $PAGE->navbar->add($strequipmentcheckouts);
 
 require_capability('local/equipment:managepartnerships', $context);
 require_capability('local/equipment:seedetails', $context);
-// $PAGE->requires->js('/local/equipment/lib/amd/src/helloworld.js');
-// $PAGE->requires->js('/local/equipment/amd/src/helloworld.js');
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading($strequipmentcheckouts);
 
-
-// This works!
 $PAGE->requires->js_call_amd('local_equipment/addpartnership_form', 'showAlert', ['Message', 'Hello all you people! I\'m self-executing.']);
 echo $OUTPUT->footer();

@@ -30,10 +30,6 @@ if ($hassiteconfig) {
         'equipment',
         new lang_string('equipment', 'local_equipment')
     ));
-    // $settingspage = new admin_settingpage(
-    //     'manageequipment',
-    //     new lang_string('manageequipment', 'local_equipment')
-    // );
     $externalpage = new admin_externalpage(
         'manageequipment',
         new lang_string('manageequipment', 'local_equipment'),
@@ -77,24 +73,10 @@ if ($hassiteconfig) {
     if ($ADMIN->fulltree) {
     }
 
-    // $ADMIN->add('equipment', $settingspage);
-
-
-
-
-
-
-
-
-
-
-
-    // Fix this before moving on
     $ADMIN->add('localplugins', new admin_category('local_equipment_settings', get_string('pluginname', 'local_equipment')));
     $settings = new admin_settingpage('local_equipment', get_string('pluginsettings', 'local_equipment'));
 
     // Add any global settings here
-    // $settings->add(new admin_setting_configtext(...));
 
     $ADMIN->add('local_equipment_settings', $settings);
 
@@ -116,14 +98,4 @@ if ($hassiteconfig) {
     // as it will be accessed from the manage partnerships page
 }
 
-// Define capabilities
-$capabilities = array(
-    'local/equipment:partnerships' => array(
-        'riskbitmask' => RISK_CONFIG,
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-            'manager' => CAP_ALLOW
-        )
-    ),
-);
+// Define capabilities in access.php.

@@ -41,12 +41,8 @@ class addpartnership_form extends \moodleform {
      * Form definition.
      */
     public function definition() {
-        global $PAGE, $DB;
-
-        // $PAGE->requires->js_call_amd('local_equipment/addpartnership_form', 'init');
         $mform = $this->_form;
-
-        $numberofrepeats = 0;
+        // $numberofrepeats = 0;
         $repeatarray = [];
         $repeatoptions = [];
         $address = new stdClass();
@@ -60,8 +56,6 @@ class addpartnership_form extends \moodleform {
         $mform->addElement('hidden', 'partnerships', $repeatno);
         // Add a delete button for each repeated element (except the first one).
         $repeatarray['delete'] = $mform->createElement('html', '<button type="button" class="remove-partnership btn btn-danger"><i class="fa fa-trash"></i></button>');
-        // $mform->setDefault('delete', '<i class="fa fa-trash"></i>');
-
         $repeatarray['partnershipname'] = $mform->createElement('text', 'partnershipname', get_string('partnershipname', 'local_equipment'), ['class' => 'partnership-name-input']);
         $repeatarray['liaisons'] = $mform->createElement('autocomplete', 'liaisons', get_string('selectliaisons', 'local_equipment'), [], $users);
         $repeatarray['courses'] = $mform->createElement('select', 'courses', get_string('selectcourses', 'local_equipment'), $courses_formatted, ['multiple' => 'multiple', 'size' => 10]);
@@ -87,7 +81,6 @@ class addpartnership_form extends \moodleform {
         $repeatarray = array_merge($repeatarray, $address->elements);
         $repeatoptions = array_merge($repeatoptions, $address->options);
 
-
         // Set options.
         $repeatoptions['partnerships']['type'] = PARAM_INT;
         $repeatoptions['partnershipheader']['header'] = true;
@@ -97,19 +90,6 @@ class addpartnership_form extends \moodleform {
         $repeatoptions['courses']['type'] = PARAM_TEXT;
         $repeatoptions['active']['type'] = PARAM_BOOL;
         $repeatoptions['active']['default'] = 1;
-        // $repeatoptions['delete']['type'] = 'button';
-        // $repeatoptions['delete']['default'] = '<i class="fa fa-trash"></i>';
-
-
-        // $addfields = optional_param('add_partnership', '', PARAM_TEXT);
-        // $deletefields = optional_param('delete_partnership', '', PARAM_TEXT);
-
-        // if (!empty($deletefields)) {
-        //     $repeatno--;
-        // }
-
-        // $this->repeat_elements($repeatarray, $repeatno, $repeatedoptions, 'option_repeats', 'option_add_fields', 3, get_string('addmorefields', 'form'), true);
-
         // Use this later if it helps.
         // $numberofrepeats = $this->repeat_elements(
         $this->repeat_elements(

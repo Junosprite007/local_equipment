@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
-use core\di;
-
 require_once(__DIR__ . '../../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->libdir . '/tablelib.php');
@@ -52,7 +50,6 @@ $columns = [
     'courses',
     'active',
     'address',
-    // 'timecreated',
     'actions'
 ];
 // Columns of the database that should not be sortable.
@@ -61,7 +58,6 @@ $dontsortby = [
     'liaisons',
     'courses',
     'address',
-    // 'timecreated',
     'actions'
 ];
 
@@ -80,8 +76,6 @@ if ($delete && confirm_sesskey()) {
     }
 }
 
-
-// $PAGE->requires->js_call_amd('local_equipment/addpartnership_form', 'showAlert', ['Message', 'Hello all you people! I\'m self-executing.']);
 // Output starts here.
 echo $OUTPUT->header();
 
@@ -94,14 +88,6 @@ $table = new flexible_table('local-equipment-partnerships');
 
 $table->define_columns($columns);
 $table->define_headers($headers);
-
-// $table->define_headers([
-//     get_string('name'),
-//     get_string('pickupid', 'local_equipment'),
-//     get_string('liaisonids', 'local_equipment'),
-//     get_string('active'),
-//     ''
-// ]);
 
 $table->define_baseurl($PAGE->url);
 $table->sortable(true, 'name', SORT_ASC);
@@ -137,74 +123,45 @@ foreach ($partnerships as $partnership) {
         switch ($column) {
             case 'pickups':
                 $row[] = $partnership->pickupid;
-
                 break;
+
             case 'instructions_pickup':
                 $row[] = $partnership->instructions_pickup;
-
                 break;
+
             case 'liaisons':
                 $row[] = html_writer::tag(
                     'div',
                     local_equipment_get_liaison_info($partnership),
                     ['class' => 'scrollable-content']
                 );
-                // $row[] = $partnership->liaisonids;
                 break;
+
             case 'courses':
                 $row[] = html_writer::tag(
                     'div',
                     local_equipment_get_courses($partnership),
                     ['class' => 'scrollable-content']
                 );
-                // $row[] = $partnership->courseids;
-
                 break;
+
             case 'address':
-
-                // $table->set_columnsattributes(['style' => 'text-align: center;']);
-
-
-                // $row[] = "{$partnership->{"streetaddress_$addresstypes[0]"}}";
-                // $row[] = $partnership->streetaddress_physical;
-                // $row[] = $partnership->streetaddress_physical . '<br>' . $partnership->city_physical . ', ' . $partnership->state_physical . ' ' . $partnership->zipcode_physical . '<br>' . $partnership->country_physical;
                 $row[] = html_writer::tag(
                     'div',
                     local_equipment_get_addresses($partnership),
                     ['class' => 'scrollable-content']
                 );
-                // foreach ($addresstypes as $type) {
-                //     if ("{$partnership->{"streetaddress_$type"}}") {
-                //         $address[] = html_writer::tag('strong', s(get_string($type, 'local_equipment'))) . ": {$partnership->{"streetaddress_$type"}}, {$partnership->{"city_$type"}}, {$partnership->{"state_$type"}} {$partnership->{"zipcode_$type"}} {$partnership->{"country_$type"}}<br />";
-                //     }
-
-                //     // $row[] = "{$partnership->{"streetaddress_$type"}}<br>{$partnership->{"city_$type"}}, {$partnership->{"state_$type"}} {$partnership->{"zipcode_$type"}}<br>{$partnership->{"country_$type"}}";
-                //     // $row[] = $partnership->{"streetaddress_$type"};
-                // }
-                // $row[] =
-                // $row[] = $partnership->streetaddress . '<br>' . $partnership->city . ', ' . $partnership->state . ' ' . $partnership->zipcode . '<br>' . $partnership->country;
-
                 break;
+
             case 'actions':
                 $row[] = $actions;
-
                 break;
+
             default:
                 $row[] = $partnership->$column;
                 break;
         }
     }
-
-
-    // $row[] = $partnership->active ? get_string('yes') : get_string('no');
-    // $row[] = $actions;
-    // $row = [
-    //     $partnership->name,
-    //     $partnership->pickupid,
-    //     $partnership->liaisonids,
-    //     $partnership->active ? get_string('yes') : get_string('no'),
-    //     $actions
-    // ];
 
     $table->add_data($row);
 }

@@ -40,4 +40,12 @@ $capabilities = [
             'manager' => CAP_ALLOW
         ],
     ],
+    'local/equipment:partnerships' => [
+        'riskbitmask' => RISK_CONFIG,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => [
+            'manager' => CAP_ALLOW
+        ]
+    ],
 ];
