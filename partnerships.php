@@ -39,6 +39,7 @@ $PAGE->set_context($context);
 $PAGE->set_url($url);
 $PAGE->set_title(get_string('partnerships', 'local_equipment'));
 $PAGE->set_heading(get_string('partnerships', 'local_equipment'));
+$PAGE->requires->js_call_amd('local_equipment/partnerships_table', 'init');
 
 require_capability('local/equipment:managepartnerships', $context);
 
@@ -121,40 +122,61 @@ foreach ($partnerships as $partnership) {
 
     foreach ($columns as $column) {
         switch ($column) {
+            case 'name':
+                // $row[] = local_equipment_get_liaison_info($partnership);
+                $row[] = html_writer::tag(
+                    'div',
+                    $partnership->name,
+                    ['class' => 'nowrap']
+                );
+                break;
             case 'pickups':
                 $row[] = $partnership->pickupid;
                 break;
 
             case 'instructions_pickup':
-                $row[] = $partnership->instructions_pickup;
+                // $row[] = $partnership->instructions_pickup;
+                $row[] = html_writer::tag(
+                    'div',
+                    $partnership->instructions_pickup,
+                    ['class' => 'pickup-instructions']
+                );
                 break;
 
             case 'liaisons':
+                // $row[] = local_equipment_get_liaison_info($partnership);
                 $row[] = html_writer::tag(
                     'div',
                     local_equipment_get_liaison_info($partnership),
-                    ['class' => 'scrollable-content']
+                    ['class' => 'nowrap']
                 );
                 break;
 
             case 'courses':
+                // $row[] = local_equipment_get_courses($partnership);
                 $row[] = html_writer::tag(
                     'div',
                     local_equipment_get_courses($partnership),
-                    ['class' => 'scrollable-content']
+                    ['class' => 'nowrap']
                 );
                 break;
 
             case 'address':
+                // $row[] = local_equipment_get_addresses($partnership);
                 $row[] = html_writer::tag(
                     'div',
                     local_equipment_get_addresses($partnership),
-                    ['class' => 'scrollable-content']
+                    ['class' => 'nowrap']
                 );
                 break;
 
             case 'actions':
-                $row[] = $actions;
+                // $row[] = $actions;
+                $row[] = html_writer::tag(
+                    'div',
+                    $actions,
+                    ['class' => 'nowrap']
+                );
                 break;
 
             default:

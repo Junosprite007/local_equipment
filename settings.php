@@ -25,77 +25,79 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-if ($hassiteconfig) {
-    $ADMIN->add('modules', new admin_category(
-        'equipment',
-        new lang_string('equipment', 'local_equipment')
-    ));
-    $externalpage = new admin_externalpage(
-        'manageequipment',
-        new lang_string('manageequipment', 'local_equipment'),
-        new moodle_url('/local/equipment/manageequipment.php'),
-        'moodle/site:config'
-    );
-    $ADMIN->add('equipment', $externalpage);
+$ADMIN->add('modules', new admin_category(
+    'local_equipment',
+    new lang_string('equipment', 'local_equipment')
+));
 
-    $externalpage = new admin_externalpage(
-        'partnerships',
-        new lang_string('partnerships', 'local_equipment'),
-        new moodle_url('/local/equipment/partnerships.php'),
-        'moodle/site:config'
-    );
-    $ADMIN->add('equipment', $externalpage);
+$settings = new admin_settingpage(
+    'local_equipment_settings',
+    new lang_string('pluginsettings', 'local_equipment')
+);
+$ADMIN->add('local_equipment', $settings);
 
-    $externalpage = new admin_externalpage(
-        'managepickuptimes',
-        new lang_string('managekitpickuptimes', 'local_equipment'),
-        new moodle_url('/local/equipment/managepickuptimes.php'),
-        'moodle/site:config'
-    );
-    $ADMIN->add('equipment', $externalpage);
+// Add link to manage partnerships page
+$externalpage = new admin_externalpage(
+    'local_equipment_partnerships',
+    new lang_string('partnerships', 'local_equipment'),
+    new moodle_url('/local/equipment/partnerships.php')
+);
+$ADMIN->add('local_equipment', $externalpage);
 
-    $externalpage = new admin_externalpage(
-        'manageagreements',
-        new lang_string('manageagreements', 'local_equipment'),
-        new moodle_url('/local/equipment/manageagreements.php'),
-        'moodle/site:config'
-    );
-    $ADMIN->add('equipment', $externalpage);
+// Add link to add partnership page
+$externalpage = new admin_externalpage(
+    'local_equipment_addpartnership',
+    new lang_string(
+        'addpartnership',
+        'local_equipment'
+    ),
+    new moodle_url('/local/equipment/partnerships/addpartnership.php')
+);
+$ADMIN->add('local_equipment', $externalpage);
 
-    $externalpage = new admin_externalpage(
-        'viewformsubmissions',
-        new lang_string('viewformsubmissions', 'local_equipment'),
-        new moodle_url('/local/equipment/viewformsubmissions.php'),
-        'moodle/site:config'
-    );
-    $ADMIN->add('equipment', $externalpage);
+// We don't need to add a separate menu item for edit partnership,
+// as it will be accessed from the manage partnerships page
 
-    if ($ADMIN->fulltree) {
-    }
+// $externalpage = new admin_externalpage(
+//     'manageequipment',
+//     new lang_string('manageequipment', 'local_equipment'),
+//     new moodle_url('/local/equipment/manageequipment.php'),
+//     'moodle/site:config'
+// );
+// $ADMIN->add('equipment', $externalpage);
 
-    $ADMIN->add('localplugins', new admin_category('local_equipment_settings', get_string('pluginname', 'local_equipment')));
-    $settings = new admin_settingpage('local_equipment', get_string('pluginsettings', 'local_equipment'));
+// $externalpage = new admin_externalpage(
+//     'managepickuptimes',
+//     new lang_string('managekitpickuptimes', 'local_equipment'),
+//     new moodle_url('/local/equipment/managepickuptimes.php'),
+//     'moodle/site:config'
+// );
+// $ADMIN->add('equipment', $externalpage);
 
-    // Add any global settings here
+// $externalpage = new admin_externalpage(
+//     'manageagreements',
+//     new lang_string('manageagreements', 'local_equipment'),
+//     new moodle_url('/local/equipment/manageagreements.php'),
+//     'moodle/site:config'
+// );
+// $ADMIN->add('equipment', $externalpage);
 
-    $ADMIN->add('local_equipment_settings', $settings);
+// $externalpage = new admin_externalpage(
+//     'viewformsubmissions',
+//     new lang_string('viewformsubmissions', 'local_equipment'),
+//     new moodle_url('/local/equipment/viewformsubmissions.php'),
+//     'moodle/site:config'
+// );
+// $ADMIN->add('equipment', $externalpage);
 
-    // Add link to manage partnerships page
-    $ADMIN->add('local_equipment_settings', new admin_externalpage(
-        'local_equipment_partnerships',
-        get_string('partnerships', 'local_equipment'),
-        new moodle_url('/local/equipment/partnerships.php')
-    ));
+// if ($ADMIN->fulltree) {
+// }
 
-    // Add link to add partnership page
-    $ADMIN->add('local_equipment_settings', new admin_externalpage(
-        'local_equipment_addpartnership',
-        get_string('addpartnership', 'local_equipment'),
-        new moodle_url('/local/equipment/partnerships/addpartnership.php')
-    ));
+// $ADMIN->add('localplugins', new admin_category('local_equipment_settings', get_string('pluginname', 'local_equipment')));
 
-    // We don't need to add a separate menu item for edit partnership,
-    // as it will be accessed from the manage partnerships page
-}
+// Add any global settings here
 
 // Define capabilities in access.php.
+
+$settings = null; // We do not want standard settings link.
+$externalpage = null;

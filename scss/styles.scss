@@ -1,17 +1,15 @@
 @charset "UTF-8";
 
-.local-equipment .form-input-group-labels {
+#page-admin-local-equipment-partnerships .nowrap {
+    white-space: nowrap;
+}
+#page-admin-local-equipment-partnerships-addpartnership .form-input-group-labels,
+#page-local-equipment-partnerships-editpartnership .form-input-group-labels {
     margin-top: 25px;
     font-weight: bold;
 }
 
-#page-admin-local-equipment-partnerships .cell.c6 {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-    background-color: red;
-}
-
-.scrollable-content {
-    width: 500px;
+#page-admin-local-equipment-partnerships .pickup-instructions {
+    white-space: wrap;
+    min-width: 300px;
 }
