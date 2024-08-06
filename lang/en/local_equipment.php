@@ -111,6 +111,7 @@ $string['roomareainstruction'] = 'Room/area instructions';
 $string['sameasmailing'] = 'Same as mailing address';
 $string['sameasphysical'] = 'Same as physical address';
 $string['savechanges'] = 'Save changes';
+$string['equipment:seedetails'] = 'See equipment plugin menus and details';
 $string['selectcountry'] = 'Select country';
 $string['selectcourses'] = 'Select courses';
 $string['selectliaisons'] = 'Select liaisons';

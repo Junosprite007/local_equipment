@@ -39,7 +39,7 @@ $PAGE->set_title($strequipmentcheckouts);
 $PAGE->set_heading($strequipmentcheckouts);
 $PAGE->navbar->add($strequipmentcheckouts);
 
-require_capability('local/equipment:managepartnerships', $context);
+// require_capability('local/equipment:managepartnerships', $context);
 require_capability('local/equipment:seedetails', $context);
 
 echo $OUTPUT->header();
