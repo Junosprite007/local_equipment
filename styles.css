@@ -1,0 +1,13 @@
+#page-admin-local-equipment-partnerships .nowrap {
+  white-space: nowrap; }
+
+#page-admin-local-equipment-partnerships-addpartnership .form-input-group-labels,
+#page-local-equipment-partnerships-editpartnership .form-input-group-labels {
+  margin-top: 25px;
+  font-weight: bold; }
+
+#page-admin-local-equipment-partnerships .pickup-instructions {
+  white-space: wrap;
+  min-width: 300px; }
+
+/*# sourceMappingURL=styles.css.map */
