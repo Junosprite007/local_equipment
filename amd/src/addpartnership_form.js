@@ -25,27 +25,28 @@
 define(["jquery", "core/log", "core/str"], ($, log, Str) => {
     return {
         init: () => {
-            log.debug("DOM ready state:", document.readyState);
             $(document).ready(function () {
-                log.debug("jQuery document ready");
                 log.debug("Add Partnership Form JS initialized");
+
                 const updatePartnershipNumbers = () => {
-                    $(".partnership-header").each((index, element) => {
-                        Str.get_string(
-                            "partnership",
-                            "local_equipment",
-                            index + 1
-                        )
-                            .then((string) => {
-                                $(element).text(string);
-                            })
-                            .catch((error) => {
-                                log.error(
-                                    "Error updating partnership header:",
-                                    error
-                                );
-                            });
-                    });
+                    $(".local-equipment-partnership-header").each(
+                        (index, element) => {
+                            Str.get_string(
+                                "partnership",
+                                "local_equipment",
+                                index + 1
+                            )
+                                .then((string) => {
+                                    $(element).text(string);
+                                })
+                                .catch((error) => {
+                                    log.error(
+                                        "Error updating partnership header:",
+                                        error
+                                    );
+                                });
+                        }
+                    );
                 };
 
                 const updateHiddenFields = () => {
@@ -89,41 +90,46 @@ define(["jquery", "core/log", "core/str"], ($, log, Str) => {
                     log.debug("updateTrashIcons");
                     const partnerships = $("fieldset");
                     if (partnerships.length > 1) {
-                        $(".remove-partnership").show();
+                        $(".local-equipment-remove-partnership").show();
                     } else {
-                        $(".remove-partnership").hide();
+                        $(".local-equipment-remove-partnership").hide();
                     }
                 };
 
                 updateTrashIcons();
 
-                $(document).on("click", ".remove-partnership", function () {
-                    log.debug("Event triggered");
-                    const $fieldset = $(this).closest("fieldset");
-                    log.debug($fieldset);
-                    // const isFirstPartnership = $fieldset.is(":first-of-type");
+                $(document).on(
+                    "click",
+                    ".local-equipment-remove-partnership",
+                    function () {
+                        log.debug("Event triggered");
+                        const $fieldset = $(this).closest("fieldset");
+                        log.debug($fieldset);
+                        const isFirstPartnership =
+                            $fieldset.is(":first-of-type");
 
-                    // if (isFirstPartnership) {
-                    //     Str.get_string(
-                    //         "cannotremovefirstpartnership",
-                    //         "local_equipment"
-                    //     )
-                    //         .then((string) => {
-                    //             alert(string);
-                    //         })
-                    //         .catch((error) => {
-                    //             log.error("Error getting string:", error);
-                    //         });
-                    //     return;
-                    // }
+                        if (isFirstPartnership) {
+                            Str.get_string(
+                                "cannotremovefirstpartnership",
+                                "local_equipment"
+                            )
+                                .then((string) => {
+                                    alert(string);
+                                })
+                                .catch((error) => {
+                                    log.error("Error getting string:", error);
+                                });
+                            return;
+                        }
 
-                    $fieldset.remove();
-                    log.debug($fieldset);
-                    updatePartnershipNumbers();
-                    updateHiddenFields();
-                    renumberFormElements();
-                    updateTrashIcons();
-                });
+                        $fieldset.remove();
+                        log.debug($fieldset);
+                        updatePartnershipNumbers();
+                        updateHiddenFields();
+                        renumberFormElements();
+                        updateTrashIcons();
+                    }
+                );
             });
         },
     };

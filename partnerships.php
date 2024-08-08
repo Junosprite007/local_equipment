@@ -39,7 +39,6 @@ $PAGE->set_context($context);
 $PAGE->set_url($url);
 $PAGE->set_title(get_string('partnerships', 'local_equipment'));
 $PAGE->set_heading(get_string('partnerships', 'local_equipment'));
-$PAGE->requires->js_call_amd('local_equipment/partnerships_table', 'init');
 
 require_capability('local/equipment:managepartnerships', $context);
 

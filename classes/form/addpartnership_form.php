@@ -57,12 +57,12 @@ class addpartnership_form extends \moodleform {
         $createcoursesurl = new \moodle_url('/course/edit.php?category=92&returnto=catmanage', ['category' => $mastercourses->categoryid]);
         $createcourseslink = \html_writer::link($createcoursesurl, get_string('createcoursehere', 'local_equipment'));
 
-        $repeatarray['partnershipheader'] = $mform->createElement('header', 'partnershipheader', get_string('partnership', 'local_equipment'), ['class' => 'partnership-header']);
+        $repeatarray['partnershipheader'] = $mform->createElement('header', 'partnershipheader', get_string('partnership', 'local_equipment'), ['class' => 'local-equipment-partnership-header']);
 
         $repeatno = optional_param('repeatno', 1, PARAM_INT);
         $mform->addElement('hidden', 'partnerships', $repeatno);
         // Add a delete button for each repeated element (except the first one).
-        $repeatarray['delete'] = $mform->createElement('html', '<button type="button" class="remove-partnership btn btn-danger"><i class="fa fa-trash"></i></button>');
+        $repeatarray['delete'] = $mform->createElement('html', '<button type="button" class="local-equipment-remove-partnership btn btn-danger"><i class="fa fa-trash"></i></button>');
         $repeatarray['partnershipname'] = $mform->createElement('text', 'partnershipname', get_string('partnershipname', 'local_equipment'), ['class' => 'partnership-name-input']);
         $repeatarray['liaisons'] = $mform->createElement('autocomplete', 'liaisons', get_string('selectliaisons', 'local_equipment'), [], $users);
         if ($nomastercategory) {
