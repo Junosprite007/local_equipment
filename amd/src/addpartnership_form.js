@@ -63,6 +63,7 @@ define(["jquery", "core/log", "core/str"], ($, log, Str) => {
                 const renumberFormElements = () => {
                     log.debug("renumberFormElements");
                     $("fieldset").each((index, fieldset) => {
+                        log.debug(fieldset);
                         $(fieldset)
                             .find("input, select, textarea")
                             .each((_, element) => {
