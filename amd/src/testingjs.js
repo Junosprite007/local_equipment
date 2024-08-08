@@ -45,7 +45,7 @@ export const init = () => {
         const updateHiddenFields = () => {
             log.debug("updateHiddenFields");
             const partnershipsCount = $("fieldset").length;
-            log.debug(`Number of fieldsets: ${partnershipsCount}`);
+            log.debug(`Number of partnerships: ${partnershipsCount}`);
             $('input[name="partnerships"]').val(partnershipsCount);
 
             // Update the URL if necessary
@@ -98,25 +98,6 @@ export const init = () => {
             function () {
                 log.debug("Event triggered");
                 const $fieldset = $(this).closest("fieldset");
-                // log.debug($fieldset);
-                // log.debug($fieldset.is(":first-of-type"));
-
-                // const isFirstPartnership =
-                //     $fieldset.is(":first-of-type");
-
-                // if (isFirstPartnership) {
-                //     Str.get_string(
-                //         "cannotremovefirstpartnership",
-                //         "local_equipment"
-                //     )
-                //         .then((string) => {
-                //             alert(string);
-                //         })
-                //         .catch((error) => {
-                //             log.error("Error getting string:", error);
-                //         });
-                //     return;
-                // }
 
                 log.debug($fieldset);
                 const removedfieldset = $fieldset.remove();
