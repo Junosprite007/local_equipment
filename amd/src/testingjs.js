@@ -107,9 +107,9 @@ export const init = () => {
                 const removedfieldset = $fieldset.remove();
                 log.debug("Fieldset removed");
                 log.debug(
-                    "Here's what returned from the '$fieldset.remove()' command:",
-                    removedfieldset
+                    "Here's what returned from the '$fieldset.remove()' command:"
                 );
+                log.debug(removedfieldset);
                 updatePartnershipNumbers();
                 updateHiddenFields();
                 renumberFormElements();

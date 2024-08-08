@@ -98,8 +98,8 @@ define(["jquery", "core/log", "core/str"], ($, log, Str) => {
                     }
                 };
 
-                updatePartnershipNumbers();
-                updateHiddenFields();
+                // updatePartnershipNumbers();
+                // updateHiddenFields();
                 updateTrashIcons();
 
                 $(document).on(
@@ -132,9 +132,9 @@ define(["jquery", "core/log", "core/str"], ($, log, Str) => {
                         const removedfieldset = $fieldset.remove();
                         log.debug("Fieldset removed");
                         log.debug(
-                            "Here's what returned from the '$fieldset.remove()' command:",
-                            removedfieldset
+                            "Here's what returned from the '$fieldset.remove()' command:"
                         );
+                        log.debug(removedfieldset);
                         updatePartnershipNumbers();
                         updateHiddenFields();
                         renumberFormElements();
