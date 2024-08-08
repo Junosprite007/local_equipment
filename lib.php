@@ -254,19 +254,42 @@ function local_equipment_get_liaison_info($partnership) {
 function local_equipment_get_master_courses($categoryname = 'ALL_COURSES_CURRENT') {
     global $DB;
 
+    // Set variables to be used for error checking in ./partnerships/addpartnership.php.
+    $responseobject = new stdClass();
+    $responseobject->courses_formatted = [];
+    $responseobject->categoryname = $categoryname;
+    $responseobject->nomastercategory = false;
+    $responseobject->nomastercourses = false;
+    $responseobject->categoryid = '';
+
     // Make this an admin setting later on.
     // $categoryname = 'ALL_COURSES_CURRENT';
 
     // Fetch the course categories by name.
-    $categories = $DB->get_records('course_categories', array('name' => $categoryname));
-    $category = array_values($categories)[0];
-    $courses = $DB->get_records('course', array('category' => $category->id));
+    try {
+        $categories = $DB->get_records('course_categories', array('name' => $categoryname));
+        if (empty($categories)) {
+            $responseobject->nomastercategory = true;
+            throw new moodle_exception(get_string('nocategoryfound', 'local_equipment', $categoryname));
+        }
 
-    $courses_formatted = [];
-    foreach ($courses as $course) {
-        $courses_formatted[$course->id] = $course->fullname;
+        $category = array_values($categories)[0];
+        $courses = $DB->get_records('course', array('category' => $category->id));
+
+        if (empty($courses)) {
+            $responseobject->nomastercourses = true;
+            $responseobject->categoryid = $category->id;
+            throw new moodle_exception(get_string('nocoursesfoundincategory', 'local_equipment', $categoryname));
+        }
+
+        foreach ($courses as $course) {
+            $responseobject->courses_formatted[$course->id] = $course->fullname;
+        }
+    } catch (moodle_exception $e) {
+        // Handle the exception according to Moodle Coding Standards.
+        $responseobject->errors = $e->getMessage();
     }
-    return $courses_formatted;
+    return $responseobject;
 }
 
 /**
