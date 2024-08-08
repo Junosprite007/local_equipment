@@ -81,6 +81,8 @@ export const init = () => {
         const updateTrashIcons = () => {
             log.debug("updateTrashIcons");
             const partnerships = $("fieldset");
+            log.debug("partnerships: ");
+            log.debug(partnerships);
             if (partnerships.length > 1) {
                 log.debug("show");
                 $(".local-equipment-remove-partnership").show();
