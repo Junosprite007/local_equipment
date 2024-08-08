@@ -49,6 +49,7 @@ define(["jquery", "core/log", "core/str"], ($, log, Str) => {
                 };
 
                 const updateHiddenFields = () => {
+                    log.debug("updateHiddenFields");
                     const partnershipsCount = $("fieldset").length;
                     $('input[name="partnerships"]').val(partnershipsCount);
 
@@ -59,6 +60,7 @@ define(["jquery", "core/log", "core/str"], ($, log, Str) => {
                 };
 
                 const renumberFormElements = () => {
+                    log.debug("renumberFormElements");
                     $("fieldset").each((index, fieldset) => {
                         $(fieldset)
                             .find("input, select, textarea")
@@ -84,6 +86,7 @@ define(["jquery", "core/log", "core/str"], ($, log, Str) => {
                 };
 
                 const updateTrashIcons = () => {
+                    log.debug("updateTrashIcons");
                     const partnerships = $("fieldset");
                     if (partnerships.length > 1) {
                         $(".remove-partnership").show();
@@ -95,7 +98,9 @@ define(["jquery", "core/log", "core/str"], ($, log, Str) => {
                 updateTrashIcons();
 
                 $(document).on("click", ".remove-partnership", function () {
+                    log.debug("Event triggered");
                     const $fieldset = $(this).closest("fieldset");
+                    log.debug($fieldset);
                     // const isFirstPartnership = $fieldset.is(":first-of-type");
 
                     // if (isFirstPartnership) {
@@ -113,6 +118,7 @@ define(["jquery", "core/log", "core/str"], ($, log, Str) => {
                     // }
 
                     $fieldset.remove();
+                    log.debug($fieldset);
                     updatePartnershipNumbers();
                     updateHiddenFields();
                     renumberFormElements();
