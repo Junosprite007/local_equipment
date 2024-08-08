@@ -82,14 +82,16 @@ export const init = () => {
             log.debug("updateTrashIcons");
             const partnerships = $("fieldset");
             if (partnerships.length > 1) {
+                log.debug("show");
                 $(".local-equipment-remove-partnership").show();
             } else {
+                log.debug("hide");
                 $(".local-equipment-remove-partnership").hide();
             }
         };
 
-        updatePartnershipNumbers();
-        updateHiddenFields();
+        // updatePartnershipNumbers();
+        // updateHiddenFields();
         updateTrashIcons();
 
         $(document).on(
