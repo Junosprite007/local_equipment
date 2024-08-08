@@ -27,8 +27,6 @@ namespace local_equipment\form;
 
 use stdClass;
 
-use function DI\get;
-
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
