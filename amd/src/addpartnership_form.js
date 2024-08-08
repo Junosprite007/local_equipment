@@ -96,6 +96,8 @@ define(["jquery", "core/log", "core/str"], ($, log, Str) => {
                     }
                 };
 
+                updatePartnershipNumbers();
+                updateHiddenFields();
                 updateTrashIcons();
 
                 $(document).on(
