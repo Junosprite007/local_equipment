@@ -107,8 +107,8 @@ define(["jquery", "core/log", "core/str"], ($, log, Str) => {
                     function () {
                         log.debug("Event triggered");
                         const $fieldset = $(this).closest("fieldset");
-                        log.debug($fieldset);
-                        log.debug($fieldset.is(":first-of-type"));
+                        // log.debug($fieldset);
+                        // log.debug($fieldset.is(":first-of-type"));
 
                         // const isFirstPartnership =
                         //     $fieldset.is(":first-of-type");
@@ -127,6 +127,7 @@ define(["jquery", "core/log", "core/str"], ($, log, Str) => {
                         //     return;
                         // }
 
+                        log.debug($fieldset);
                         $fieldset.remove();
                         log.debug($fieldset);
                         updatePartnershipNumbers();
