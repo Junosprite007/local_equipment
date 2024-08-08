@@ -107,22 +107,24 @@ define(["jquery", "core/log", "core/str"], ($, log, Str) => {
                         log.debug("Event triggered");
                         const $fieldset = $(this).closest("fieldset");
                         log.debug($fieldset);
-                        const isFirstPartnership =
-                            $fieldset.is(":first-of-type");
+                        log.debug($fieldset.is(":first-of-type"));
 
-                        if (isFirstPartnership) {
-                            Str.get_string(
-                                "cannotremovefirstpartnership",
-                                "local_equipment"
-                            )
-                                .then((string) => {
-                                    alert(string);
-                                })
-                                .catch((error) => {
-                                    log.error("Error getting string:", error);
-                                });
-                            return;
-                        }
+                        // const isFirstPartnership =
+                        //     $fieldset.is(":first-of-type");
+
+                        // if (isFirstPartnership) {
+                        //     Str.get_string(
+                        //         "cannotremovefirstpartnership",
+                        //         "local_equipment"
+                        //     )
+                        //         .then((string) => {
+                        //             alert(string);
+                        //         })
+                        //         .catch((error) => {
+                        //             log.error("Error getting string:", error);
+                        //         });
+                        //     return;
+                        // }
 
                         $fieldset.remove();
                         log.debug($fieldset);
