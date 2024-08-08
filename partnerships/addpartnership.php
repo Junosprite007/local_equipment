@@ -180,3 +180,4 @@ if ($data) {
 echo $OUTPUT->header();
 $mform->display();
 echo $OUTPUT->footer();
+echo $OUTPUT->standard_end_of_body_html();
