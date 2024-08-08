@@ -27,7 +27,7 @@ import log from "core/log";
 import * as Str from "core/str";
 
 export const init = () => {
-    $(document).ready(function () {
+    $(function () {
         log.debug("Add Partnership Form JS initialized");
 
         const updatePartnershipNumbers = () => {
