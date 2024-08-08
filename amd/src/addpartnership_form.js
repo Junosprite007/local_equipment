@@ -25,89 +25,99 @@
 define(["jquery", "core/log", "core/str"], ($, log, Str) => {
     return {
         init: () => {
-            log.debug("Add Partnership Form JS initialized");
-
-            const updatePartnershipNumbers = () => {
-                $(".partnership-header").each((index, element) => {
-                    Str.get_string("partnership", "local_equipment", index + 1)
-                        .then((string) => {
-                            $(element).text(string);
-                        })
-                        .catch((error) => {
-                            log.error(
-                                "Error updating partnership header:",
-                                error
-                            );
-                        });
-                });
-            };
-
-            const updateHiddenFields = () => {
-                const partnershipsCount = $("fieldset").length;
-                $('input[name="partnerships"]').val(partnershipsCount);
-
-                // Update the URL if necessary
-                const url = new URL(window.location.href);
-                url.searchParams.set("repeatno", partnershipsCount);
-                window.history.replaceState({}, "", url);
-            };
-
-            const renumberFormElements = () => {
-                $("fieldset").each((index, fieldset) => {
-                    $(fieldset)
-                        .find("input, select, textarea")
-                        .each((_, element) => {
-                            const name = $(element).attr("name");
-                            if (name) {
-                                const newName = name.replace(
-                                    /\[\d+\]/,
-                                    `[${index}]`
+            log.debug("DOM ready state:", document.readyState);
+            $(document).ready(function () {
+                log.debug("jQuery document ready");
+                log.debug("Add Partnership Form JS initialized");
+                const updatePartnershipNumbers = () => {
+                    $(".partnership-header").each((index, element) => {
+                        Str.get_string(
+                            "partnership",
+                            "local_equipment",
+                            index + 1
+                        )
+                            .then((string) => {
+                                $(element).text(string);
+                            })
+                            .catch((error) => {
+                                log.error(
+                                    "Error updating partnership header:",
+                                    error
                                 );
-                                $(element).attr("name", newName);
-                            }
-                            const id = $(element).attr("id");
-                            if (id) {
-                                const newId = id.replace(/_\d+_/, `_${index}_`);
-                                $(element).attr("id", newId);
-                            }
-                        });
-                });
-            };
+                            });
+                    });
+                };
 
-            const updateTrashIcons = () => {
-                const partnerships = $("fieldset");
-                if (partnerships.length > 1) {
-                    $(".remove-partnership").show();
-                } else {
-                    $(".remove-partnership").hide();
-                }
-            };
+                const updateHiddenFields = () => {
+                    const partnershipsCount = $("fieldset").length;
+                    $('input[name="partnerships"]').val(partnershipsCount);
 
-            updateTrashIcons();
+                    // Update the URL if necessary
+                    const url = new URL(window.location.href);
+                    url.searchParams.set("repeatno", partnershipsCount);
+                    window.history.replaceState({}, "", url);
+                };
 
-            $(document).on("click", ".remove-partnership", function () {
-                const $fieldset = $(this).closest("fieldset");
-                // const isFirstPartnership = $fieldset.is(":first-of-type");
+                const renumberFormElements = () => {
+                    $("fieldset").each((index, fieldset) => {
+                        $(fieldset)
+                            .find("input, select, textarea")
+                            .each((_, element) => {
+                                const name = $(element).attr("name");
+                                if (name) {
+                                    const newName = name.replace(
+                                        /\[\d+\]/,
+                                        `[${index}]`
+                                    );
+                                    $(element).attr("name", newName);
+                                }
+                                const id = $(element).attr("id");
+                                if (id) {
+                                    const newId = id.replace(
+                                        /_\d+_/,
+                                        `_${index}_`
+                                    );
+                                    $(element).attr("id", newId);
+                                }
+                            });
+                    });
+                };
 
-                // if (isFirstPartnership) {
-                //     Str.get_string(
-                //         "cannotremovefirstpartnership",
-                //         "local_equipment"
-                //     )
-                //         .then((string) => {
-                //             alert(string);
-                //         })
-                //         .catch((error) => {
-                //             log.error("Error getting string:", error);
-                //         });
-                //     return;
-                // }
+                const updateTrashIcons = () => {
+                    const partnerships = $("fieldset");
+                    if (partnerships.length > 1) {
+                        $(".remove-partnership").show();
+                    } else {
+                        $(".remove-partnership").hide();
+                    }
+                };
 
-                $fieldset.remove();
-                updatePartnershipNumbers();
-                updateHiddenFields();
-                renumberFormElements();
                 updateTrashIcons();
+
+                $(document).on("click", ".remove-partnership", function () {
+                    const $fieldset = $(this).closest("fieldset");
+                    // const isFirstPartnership = $fieldset.is(":first-of-type");
+
+                    // if (isFirstPartnership) {
+                    //     Str.get_string(
+                    //         "cannotremovefirstpartnership",
+                    //         "local_equipment"
+                    //     )
+                    //         .then((string) => {
+                    //             alert(string);
+                    //         })
+                    //         .catch((error) => {
+                    //             log.error("Error getting string:", error);
+                    //         });
+                    //     return;
+                    // }
+
+                    $fieldset.remove();
+                    updatePartnershipNumbers();
+                    updateHiddenFields();
+                    renumberFormElements();
+                    updateTrashIcons();
+                });
             });
         },
     };
