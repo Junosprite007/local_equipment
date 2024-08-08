@@ -37,7 +37,7 @@ $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/equipment/partnerships/addpartnership.php'));
 $PAGE->set_title(get_string('addpartnership', 'local_equipment'));
 $PAGE->set_heading(get_string('addpartnership', 'local_equipment'));
-$PAGE->requires->js_call_amd('local_equipment/addpartnership_form', 'init');
+// $PAGE->requires->js_call_amd('local_equipment/addpartnership_form', 'init');
 $PAGE->requires->js_call_amd('local_equipment/testingjs', 'init');
 
 require_capability('local/equipment:managepartnerships', $context);
