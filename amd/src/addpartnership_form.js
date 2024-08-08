@@ -20,7 +20,7 @@
  * @copyright   2024 onward Joshua Kirby <josh@funlearningcompany.com>
  * @author      Joshua Kirby - CTO @ Fun Learning Company - funlearningcompany.com
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
-*/
+ */
 
 define(["jquery", "core/log", "core/str"], ($, log, Str) => {
     return {
@@ -52,6 +52,7 @@ define(["jquery", "core/log", "core/str"], ($, log, Str) => {
                 const updateHiddenFields = () => {
                     log.debug("updateHiddenFields");
                     const partnershipsCount = $("fieldset").length;
+                    log.debug(`Number of fieldsets: ${partnershipsCount}`);
                     $('input[name="partnerships"]').val(partnershipsCount);
 
                     // Update the URL if necessary
@@ -63,7 +64,7 @@ define(["jquery", "core/log", "core/str"], ($, log, Str) => {
                 const renumberFormElements = () => {
                     log.debug("renumberFormElements");
                     $("fieldset").each((index, fieldset) => {
-                        log.debug(fieldset);
+                        log.debug(`Renumbering fieldset ${index}`);
                         $(fieldset)
                             .find("input, select, textarea")
                             .each((_, element) => {
@@ -128,8 +129,12 @@ define(["jquery", "core/log", "core/str"], ($, log, Str) => {
                         // }
 
                         log.debug($fieldset);
-                        $fieldset.remove();
-                        log.debug($fieldset);
+                        const removedfieldset = $fieldset.remove();
+                        log.debug("Fieldset removed");
+                        log.debug(
+                            "Here's what returned from the '$fieldset.remove()' command:",
+                            removedfieldset
+                        );
                         updatePartnershipNumbers();
                         updateHiddenFields();
                         renumberFormElements();
