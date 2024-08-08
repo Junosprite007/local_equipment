@@ -48,7 +48,7 @@ class addpartnership_form extends \moodleform {
         $address = new stdClass();
 
         $users = local_equipment_auto_complete_users();
-        $mastercourses = local_equipment_get_master_courses('ALL_COURSES_CURRENT_1');
+        $mastercourses = local_equipment_get_master_courses('ALL_COURSES_CURRENT');
         $courses_formatted = $mastercourses->courses_formatted;
         $nomastercategory = $mastercourses->nomastercategory;
         $nomastercourses = $mastercourses->nomastercourses;
