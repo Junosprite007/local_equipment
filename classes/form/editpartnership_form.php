@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Add partnerships form.
+ * Edit partnership form.
  *
  * @package     local_equipment
  * @copyright   2024 onward Joshua Kirby <josh@funlearningcompany.com>
@@ -31,6 +31,9 @@ require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/local/equipment/lib.php');
 require_once($CFG->dirroot . '/user/lib.php');
 
+/**
+ * Folder conversion handler. This resource handler is called by moodle1_mod_resource_handler
+ */
 class editpartnership_form extends \moodleform {
     public function definition() {
         $mform = $this->_form;
@@ -39,14 +42,14 @@ class editpartnership_form extends \moodleform {
             'physical',
             'mailing',
             'pickup',
-            'billing'
+            'billing',
         ];
 
         $users = user_get_users_by_id(json_decode($data->liaisonids));
 
         // Autocomplete users.
         $users = local_equipment_auto_complete_users();
-        $courses_formatted = local_equipment_get_master_courses('ALL_COURSES_CURRENT');
+        $coursesformatted = local_equipment_get_master_courses('ALL_COURSES_CURRENT');
 
         // Add form elements.
         $mform->addElement('hidden', 'partnershipid', $data->id);
@@ -60,7 +63,7 @@ class editpartnership_form extends \moodleform {
         $mform->setType('liaisons', PARAM_RAW);
         $mform->setDefault('liaisons', json_decode($data->liaisonids));
 
-        $mform->addElement('select', 'courses', get_string('selectcourses', 'local_equipment'), $courses_formatted, ['multiple' => 'multiple', 'size' => 10]);
+        $mform->addElement('select', 'courses', get_string('selectcourses', 'local_equipment'), $coursesformatted, ['multiple' => 'multiple', 'size' => 10]);
         $mform->setType('courses', PARAM_RAW);
         $mform->setDefault('courses', json_decode($data->courseids));
 

@@ -14,11 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
-require_once(__DIR__ . '../../../config.php');
-require_once($CFG->libdir . '/adminlib.php');
-require_once($CFG->libdir . '/tablelib.php');
-require_once('./lib.php');
-
 /**
  * Manage partnerships page.
  *
@@ -27,6 +22,11 @@ require_once('./lib.php');
  * @author      Joshua Kirby - CTO @ Fun Learning Company - funlearningcompany.com
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+require_once(__DIR__ . '../../../config.php');
+require_once($CFG->libdir . '/adminlib.php');
+require_once($CFG->libdir . '/tablelib.php');
+require_once('./lib.php');
 
 // Ensure only admins can access this page.
 admin_externalpage_setup('local_equipment_partnerships');
@@ -50,7 +50,7 @@ $columns = [
     'courses',
     'active',
     'address',
-    'actions'
+    'actions',
 ];
 // Columns of the database that should not be sortable.
 $dontsortby = [
@@ -58,7 +58,7 @@ $dontsortby = [
     'liaisons',
     'courses',
     'address',
-    'actions'
+    'actions',
 ];
 
 $headers = [];

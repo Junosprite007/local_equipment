@@ -36,7 +36,7 @@ $settings = new admin_settingpage(
 );
 $ADMIN->add('local_equipment', $settings);
 
-// Add link to manage partnerships page
+// Add link to manage partnerships page.
 $externalpage = new admin_externalpage(
     'local_equipment_partnerships',
     new lang_string('partnerships', 'local_equipment'),
@@ -44,7 +44,7 @@ $externalpage = new admin_externalpage(
 );
 $ADMIN->add('local_equipment', $externalpage);
 
-// Add link to add partnership page
+// Add link to add partnership page.
 $externalpage = new admin_externalpage(
     'local_equipment_addpartnership',
     new lang_string(
@@ -59,34 +59,34 @@ $ADMIN->add('local_equipment', $externalpage);
 // as it will be accessed from the manage partnerships page
 
 // $externalpage = new admin_externalpage(
-//     'manageequipment',
-//     new lang_string('manageequipment', 'local_equipment'),
-//     new moodle_url('/local/equipment/manageequipment.php'),
-//     'moodle/site:config'
+// 'manageequipment',
+// new lang_string('manageequipment', 'local_equipment'),
+// new moodle_url('/local/equipment/manageequipment.php'),
+// 'moodle/site:config'
 // );
 // $ADMIN->add('equipment', $externalpage);
 
 // $externalpage = new admin_externalpage(
-//     'managepickuptimes',
-//     new lang_string('managekitpickuptimes', 'local_equipment'),
-//     new moodle_url('/local/equipment/managepickuptimes.php'),
-//     'moodle/site:config'
+// 'managepickuptimes',
+// new lang_string('managekitpickuptimes', 'local_equipment'),
+// new moodle_url('/local/equipment/managepickuptimes.php'),
+// 'moodle/site:config'
 // );
 // $ADMIN->add('equipment', $externalpage);
 
 // $externalpage = new admin_externalpage(
-//     'manageagreements',
-//     new lang_string('manageagreements', 'local_equipment'),
-//     new moodle_url('/local/equipment/manageagreements.php'),
-//     'moodle/site:config'
+// 'manageagreements',
+// new lang_string('manageagreements', 'local_equipment'),
+// new moodle_url('/local/equipment/manageagreements.php'),
+// 'moodle/site:config'
 // );
 // $ADMIN->add('equipment', $externalpage);
 
 // $externalpage = new admin_externalpage(
-//     'viewformsubmissions',
-//     new lang_string('viewformsubmissions', 'local_equipment'),
-//     new moodle_url('/local/equipment/viewformsubmissions.php'),
-//     'moodle/site:config'
+// 'viewformsubmissions',
+// new lang_string('viewformsubmissions', 'local_equipment'),
+// new moodle_url('/local/equipment/viewformsubmissions.php'),
+// 'moodle/site:config'
 // );
 // $ADMIN->add('equipment', $externalpage);
 

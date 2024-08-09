@@ -99,7 +99,7 @@ function local_equipment_get_states($country = 'USA') {
                 'WA' => get_string('WA', 'local_equipment'),
                 'WV' => get_string('WV', 'local_equipment'),
                 'WI' => get_string('WI', 'local_equipment'),
-                'WY' => get_string('WY', 'local_equipment')
+                'WY' => get_string('WY', 'local_equipment'),
             ];
             break;
         default:
@@ -134,7 +134,7 @@ function local_equipment_convert_array_values_to_int($ids) {
     foreach ($ids as $key => $value) {
         if (is_array($value)) {
             $ids[$key] = local_equipment_convert_array_values_to_int($value);
-        } elseif (is_string($value) && is_numeric($value)) {
+        } else if (is_string($value) && is_numeric($value)) {
             $ids[$key] = (int)$value;
         }
     }
@@ -146,7 +146,6 @@ function local_equipment_convert_array_values_to_int($ids) {
  * Check if a language string exists in current component.
  *
  * @param string $identifier The string identifier.
- * @param string $component The component name.
  * @return bool True if the string exists, false otherwise.
  */
 function local_equipment_lang_string_exists($identifier) {
@@ -161,7 +160,7 @@ function local_equipment_lang_string_exists($identifier) {
 /**
  * Get all relevant addresses from a partnerships database record.
  *
- * @param stdClass $$dbrecord A database record that contains multiple types of addresses.
+ * @param stdClass $dbrecord A database record that contains multiple types of addresses.
  * @return string Each addresses type, plus the actual address, joined by a <br /> tag.
  */
 function local_equipment_get_addresses($dbrecord) {
@@ -170,14 +169,13 @@ function local_equipment_get_addresses($dbrecord) {
         'physical',
         'mailing',
         'pickup',
-        'billing'
+        'billing',
     ];
     foreach ($addresstypes as $type) {
         if ("{$dbrecord->{"streetaddress_$type"}}") {
             $address[] = html_writer::tag('strong', s(get_string($type, 'local_equipment'))) . ": {$dbrecord->{"streetaddress_$type"}}, {$dbrecord->{"city_$type"}}, {$dbrecord->{"state_$type"}} {$dbrecord->{"zipcode_$type"}} {$dbrecord->{"country_$type"}}";
         }
     }
-
 
     return implode('<br />', $address);
 }
@@ -192,7 +190,7 @@ function local_equipment_auto_complete_users() {
         'ajax' => 'core_user/form_user_selector',
         'multiple' => true,
         'casesensitive' => false,
-        'valuehtmlcallback' => 'local_equipment_user_selector_callback'
+        'valuehtmlcallback' => 'local_equipment_user_selector_callback',
     ];
 }
 
@@ -205,14 +203,14 @@ function local_equipment_auto_complete_users() {
 function local_equipment_user_selector_callback($id) {
     global $OUTPUT;
     $user = \core_user::get_user($id);
-    return $OUTPUT->user_picture($user, array('size' => 24)) . ' ' . fullname($user);
+    return $OUTPUT->user_picture($user, ['size' => 24]) . ' ' . fullname($user);
 }
 /**
  * Get all liaison names, emails, and contact phones for a given partnership.
  * Liaisons are simply users on the system, so they must of accounts.
  * Emails and phones will be taken from the user's profile, but admins will have the option to add phone numbers for them if they don't do it themselves.
  *
- * @param stdClass $$dbrecord A database record that contains multiple types of addresses.
+ * @param stdClass $partnership A database record that contains multiple types of addresses.
  * @return string True if the string exists, false otherwise.
  */
 function local_equipment_get_liaison_info($partnership) {
@@ -223,7 +221,7 @@ function local_equipment_get_liaison_info($partnership) {
 
     foreach ($liaisonids as $id) {
         $user = core_user::get_user($id);
-        $userurl = new moodle_url('/user/profile.php', array('id' => $user->id));
+        $userurl = new moodle_url('/user/profile.php', ['id' => $user->id]);
         $userlink = html_writer::link($userurl, fullname($user));
 
         $phone = '';
@@ -232,7 +230,7 @@ function local_equipment_get_liaison_info($partnership) {
             $phone = local_equipment_parse_phone_number($user->phone1);
             $phone = local_equipment_format_phone_number($phone);
             $phone .= ' <br />';
-        } elseif ($user->phone2) {
+        } else if ($user->phone2) {
             $phone = local_equipment_parse_phone_number($user->phone2);
             $phone = local_equipment_format_phone_number($phone);
             $phone .= ' <br />';
@@ -267,14 +265,14 @@ function local_equipment_get_master_courses($categoryname = 'ALL_COURSES_CURRENT
 
     // Fetch the course categories by name.
     try {
-        $categories = $DB->get_records('course_categories', array('name' => $categoryname));
+        $categories = $DB->get_records('course_categories', ['name' => $categoryname]);
         if (empty($categories)) {
             $responseobject->nomastercategory = true;
             throw new moodle_exception(get_string('nocategoryfound', 'local_equipment', $categoryname));
         }
 
         $category = array_values($categories)[0];
-        $courses = $DB->get_records('course', array('category' => $category->id));
+        $courses = $DB->get_records('course', ['category' => $category->id]);
 
         if (empty($courses)) {
             $responseobject->nomastercourses = true;
@@ -297,7 +295,7 @@ function local_equipment_get_master_courses($categoryname = 'ALL_COURSES_CURRENT
  * Liaisons are simply users on the system, so they must of accounts.
  * Emails and phones will be taken from the user's profile, but admins will have the option to add phone numbers for them if they don't do it themselves.
  *
- * @param stdClass $$dbrecord A database record that contains multiple types of addresses.
+ * @param stdClass $partnership A database record that contains multiple types of addresses.
  * @return string True if the string exists, false otherwise.
  */
 function local_equipment_get_courses($partnership) {
@@ -306,7 +304,7 @@ function local_equipment_get_courses($partnership) {
 
     foreach ($courseids as $id) {
         $course = get_course($id);
-        $courseurl = new moodle_url('/course/view.php', array('id' => $course->id));
+        $courseurl = new moodle_url('/course/view.php', ['id' => $course->id]);
         $courselink = html_writer::link($courseurl, $course->fullname);
         $courseinfo[] = $courselink;
     }
@@ -338,7 +336,7 @@ function local_equipment_parse_phone_number($phonenumber, $country = 'US') {
             try {
                 if ((strlen($parsedphonenumber) == 10) && $phonenumber[0] != 1) {
                     $parsedphonenumber = "+1" . $parsedphonenumber;
-                } elseif ((strlen($parsedphonenumber) == 11) && $phonenumber[0] == 1) {
+                } else if ((strlen($parsedphonenumber) == 11) && $phonenumber[0] == 1) {
                     $parsedphonenumber = "+" . $parsedphonenumber;
                 } else {
                     throw new \Exception(new lang_string('invalidphonenumber', 'local_equipment') . new lang_string('wecurrentlyonlyacceptusnumbers', 'local_equipment'));
@@ -382,7 +380,7 @@ function local_equipment_format_phone_number($parsedphonenumber) {
  * @param string $label the label for the group.
  */
 function local_equipment_add_address_group($mform, $groupname, $label) {
-    $group = array();
+    $group = [];
 
     // $mform->addElement('header', $groupname . '_header', $label);
     $mform->addElement('static', 'streetaddress_label_' . $groupname, get_string('streetaddress_' . $groupname, 'local_equipment'), \html_writer::tag('span', get_string('streetaddress_' . $groupname, 'local_equipment')));
@@ -413,8 +411,8 @@ function local_equipment_add_address_group($mform, $groupname, $label) {
 function local_equipment_add_address_block($mform, $addresstype) {
     $block = new stdClass();
 
-    $block->elements = array();
-    $block->options = array();
+    $block->elements = [];
+    $block->options = [];
     $block->elements[$addresstype . 'address'] = $mform->createElement('static', $addresstype . 'address', \html_writer::tag('label', get_string($addresstype . 'address', 'local_equipment'), ['class' => 'form-input-group-labels']));
 
     switch ($addresstype) {
@@ -471,6 +469,7 @@ function local_equipment_add_address_block($mform, $addresstype) {
  *
  * @param moodleform $mform a standard moodle form, probably will be '$this->_form'.
  * @param string $addresstype the type of address block to add: 'mailing', 'physical', 'pickup', or 'billing'.
+ * @param stdClass $data the existing data to populate the form with.
  * @return object $block a block of elements to be added to the form.
  */
 function local_equipment_add_edit_address_block($mform, $addresstype, $data) {
@@ -483,7 +482,7 @@ function local_equipment_add_edit_address_block($mform, $addresstype, $data) {
         $mform->addElement('text', 'attention_' . $addresstype, get_string('attention', 'local_equipment'));
         $mform->setType('attention_' . $addresstype, PARAM_TEXT);
         $mform->setDefault('attention_' . $addresstype, $data->{"attention_$addresstype"});
-    } elseif ($addresstype == 'pickup') {
+    } else if ($addresstype == 'pickup') {
         // Instructions element
         $mform->addElement('textarea', 'instructions_' . $addresstype, get_string('pickupinstructions', 'local_equipment'));
         $mform->setType('instructions_' . $addresstype, PARAM_TEXT);

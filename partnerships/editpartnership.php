@@ -21,23 +21,23 @@ global $DB;
 
 $id = required_param('id', PARAM_INT); // Partnership ID
 $context = context_system::instance();
-$url = new moodle_url('/local/equipment/partnerships/editpartnership.php', array('id' => $id));
+$url = new moodle_url('/local/equipment/partnerships/editpartnership.php', ['id' => $id]);
 $redirecturl = new moodle_url('/local/equipment/partnerships.php');
 
 // Set up the page.
 require_login();
 $PAGE->set_context($context);
-$PAGE->set_url($url, array('id' => $id));
+$PAGE->set_url($url, ['id' => $id]);
 $PAGE->set_title(get_string('editpartnership', 'local_equipment'));
 $PAGE->set_heading(get_string('editpartnership', 'local_equipment'));
 
 require_capability('local/equipment:managepartnerships', $context);
 
 // Fetch existing partnership data.
-$partnership = $DB->get_record('local_equipment_partnership', array('id' => $id), '*', MUST_EXIST);
+$partnership = $DB->get_record('local_equipment_partnership', ['id' => $id], '*', MUST_EXIST);
 
 // Initialize the form.
-$mform = new local_equipment\form\editpartnership_form($url, array('id' => $id, 'data' => $partnership));
+$mform = new local_equipment\form\editpartnership_form($url, ['id' => $id, 'data' => $partnership]);
 
 if ($mform->is_cancelled()) {
     redirect($redirecturl);

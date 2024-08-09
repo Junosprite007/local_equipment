@@ -29,12 +29,12 @@ require_once('lib.php');
 $id = required_param('id', PARAM_INT);
 
 $cm = get_coursemodule_from_id('equipmentcheckout', $id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-$equipmentcheckout = $DB->get_record('equipmentcheckout', array('id' => $cm->instance), '*', MUST_EXIST);
+$course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
+$equipmentcheckout = $DB->get_record('equipmentcheckout', ['id' => $cm->instance], '*', MUST_EXIST);
 
 require_login($course, true, $cm);
 
-$PAGE->set_url('/local/equipment/view.php', array('id' => $cm->id));
+$PAGE->set_url('/local/equipment/view.php', ['id' => $cm->id]);
 $PAGE->set_title($course->shortname . ': ' . $equipmentcheckout->name);
 $PAGE->set_heading($course->fullname);
 $PAGE->set_activity_record($equipmentcheckout);
