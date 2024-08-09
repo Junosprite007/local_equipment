@@ -2,3 +2,4 @@
 # should ignore.
 
 /node_modules
+/amd/src/addpartnership_form.js.correct
