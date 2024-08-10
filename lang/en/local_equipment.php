@@ -32,10 +32,7 @@ require_once($CFG->dirroot . '/local/equipment/lang/en/states.php');
 $string['actions'] = 'Actions';
 $string['active'] = 'Active';
 $string['addmorepartnerships'] = 'Add more partnerships';
-$string['addmorepickups'] = 'Add more pickups';
-$string['addpartnership'] = 'Add Partnership';
-$string['addpartnerships'] = 'Add Partnerships';
-$string['addpickups'] = 'Add pickups';
+$string['addpartnerships'] = 'Add partnerships';
 $string['address'] = 'Address';
 $string['addressee'] = 'Addressee';
 $string['agreements'] = 'Agreements';
@@ -45,16 +42,17 @@ $string['billing'] = 'Billing';
 $string['billingaddress'] = 'Billing address';
 $string['changessaved'] = 'Changes saved';
 $string['city'] = 'City';
-$string['city_billing'] = 'City (Billing)';
+$string['city_billing'] = 'City (billing)';
 $string['city_mailing'] = 'City';
-$string['city_physical'] = 'City (Physical)';
-$string['city_pickup'] = 'City (Pickup)';
+$string['city_physical'] = 'City (physical)';
+$string['city_pickup'] = 'City (pickup)';
 $string['confirmdelete'] = 'Confirm delete';
+$string['consentform'] = 'Consent form';
 $string['country'] = 'Country';
-$string['country_billing'] = 'Country (Billing)';
+$string['country_billing'] = 'Country (billing)';
 $string['country_mailing'] = 'Country';
-$string['country_physical'] = 'Country (Physical)';
-$string['country_pickup'] = 'Country (Pickup)';
+$string['country_physical'] = 'Country (physical)';
+$string['country_pickup'] = 'Country (pickup)';
 $string['courseids'] = 'Course IDs';
 $string['courses'] = 'Courses';
 $string['createcategoryhere'] = 'Create a category here.';
@@ -67,8 +65,8 @@ $string['equipment:managepartnerships'] = 'Allows user to manage partnerships';
 $string['equipment:seedetails'] = 'See equipment plugin menus and details';
 $string['equipmentcheckout'] = 'Equipment checkout';
 $string['erroraddingpartnerships'] = 'Error adding partnerships';
-$string['erroraddingpickups'] = 'Error adding pickups';
 $string['errordeletingpartnership'] = 'Error deleting partnerships';
+$string['flccoordinator'] = 'FLC coordinator';
 $string['ifdifferentfrommailing'] = '(if different from mailing)';
 $string['ifdifferentfromphysical'] = '(if different from physical)';
 $string['instructions_pickup'] = 'Pickup instructions';
@@ -83,22 +81,6 @@ $string['liaisons'] = 'Liaisons';
 $string['mailing'] = 'Mailing';
 $string['mailingaddress'] = 'Mailing address';
 $string['manage'] = 'Manage';
-
-
-
-
-$string['pickupsadded'] = 'Pickups added successfully';
-$string['removepickup'] = 'Remove pickup';
-
-
-
-
-
-
-
-
-
-
 $string['manageagreements'] = 'Manage agreements';
 $string['manageequipment'] = 'Manage equipment';
 $string['managekitpickuptimes'] = 'Manage kit pickup times';
@@ -128,11 +110,12 @@ $string['pickupaddress'] = 'Pickup address';
 $string['pickupid'] = 'Pickup ID';
 $string['pickupinstructions'] = 'Pickup instructions';
 $string['pickups'] = 'Pickups';
+$string['pickupsadded'] = 'Pickups added successfully';
 $string['pluginadministration'] = 'Equipment checkout administration';
 $string['pluginname'] = 'Equipment';
 $string['pluginsettings'] = 'Plugin settings';
 $string['removepartnership'] = 'Remove partnership';
-$string['returntoaddpartnership'] = 'addpartnership';
+$string['returntoaddpartnerships'] = 'addpartnerships';
 $string['roomareainstruction'] = 'Room/area instructions';
 $string['sameasmailing'] = 'Same as mailing address';
 $string['sameasphysical'] = 'Same as physical address';
@@ -146,6 +129,10 @@ $string['state_billing'] = 'State (Billing)';
 $string['state_mailing'] = 'State';
 $string['state_physical'] = 'State (Physical)';
 $string['state_pickup'] = 'State (Pickup)';
+$string['status_cancelled'] = 'Cancelled';
+$string['status_completed'] = 'Completed';
+$string['status_confirmed'] = 'Confirmed';
+$string['status_pending'] = 'Pending';
 $string['streetaddress'] = 'Street address';
 $string['streetaddress_billing'] = 'Street Address (Billing)';
 $string['streetaddress_mailing'] = 'Street Address';
@@ -155,9 +142,33 @@ $string['termsconditions'] = 'Terms & conditions';
 $string['termsconditions_desc'] = 'Terms and conditions for equipment checkout.';
 $string['timecreated'] = 'Time created';
 $string['viewformsubmissions'] = 'View form submissions';
+$string['viewmanagepartnerships'] = 'View/manage partnerships';
+$string['viewpartnerships'] = 'View partnerships';
 $string['wecurrentlyonlyacceptusphonenumbers'] = 'We currently only accept U.S. phone numbers. You can use most standard ways of typing a phone number like 2345678910 or +1 (234) 567-8910.';
 $string['zipcode'] = 'ZIP Code';
-$string['zipcode_billing'] = 'Zip Code (Billing)';
+$string['zipcode_billing'] = 'Zip Code (billing)';
 $string['zipcode_mailing'] = 'Zip Code';
-$string['zipcode_physical'] = 'Zip Code (Physical)';
-$string['zipcode_pickup'] = 'Zip Code (Pickup)';
+$string['zipcode_physical'] = 'Zip Code (physical)';
+$string['zipcode_pickup'] = 'Zip Code (pickup)';
+
+
+// Pickups pages strings
+$string['addpickup'] = 'Add pickup';
+$string['addpickups'] = 'Add pickups';
+$string['addmorepickups'] = 'Add more pickups';
+$string['confirmdeletepickup'] = 'Are you sure you want to delete this pickup?';
+$string['deletepickup'] = 'Delete pickup';
+$string['editpickup'] = 'Edit pickup';
+$string['erroraddingpickups'] = 'Error adding pickups';
+$string['errordeletingpickup'] = 'Error deleting pickup';
+$string['partnershipcoordinatorname'] = 'Partnership coordinator name';
+$string['partnershipcoordinatorphone'] = 'Partnership coordinator phone';
+$string['pickupdeleted'] = 'Pickup deleted';
+$string['pickupendtime'] = 'Pickup end time';
+$string['pickupstarttime'] = 'Pickup start time';
+$string['pickups'] = 'Pickups';
+$string['pickupsadded'] = 'Pickups added';
+$string['selectflccoordinator'] = 'Select FLC coordinator';
+$string['status'] = 'Status';
+$string['viewmanagepickups'] = 'View/manage pickups';
+$string['removepickup'] = 'Remove pickup';

@@ -45,11 +45,17 @@ class editpartnership_form extends \moodleform {
             'billing',
         ];
 
+
+        // var_dump($data);
+        // die();
+
+
         $users = user_get_users_by_id(json_decode($data->liaisonids));
 
         // Autocomplete users.
         $users = local_equipment_auto_complete_users();
-        $coursesformatted = local_equipment_get_master_courses('ALL_COURSES_CURRENT');
+        $mastercourses = local_equipment_get_master_courses('ALL_COURSES_CURRENT');
+        $coursesformatted = $mastercourses->courses_formatted;
 
         // Add form elements.
         $mform->addElement('hidden', 'partnershipid', $data->id);

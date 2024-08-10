@@ -43,11 +43,12 @@ $PAGE->set_heading(get_string('pickups', 'local_equipment'));
 require_capability('local/equipment:managepickups', $context);
 
 $columns = [
-    'name',
+    'pickupstarttime',
+    'pickupendtime',
     'partnership',
-    'pickupdate',
-    'dropoffdate',
-    'status',
+    'flccoordinator',
+    'partnershipcoordinatorname',
+    'partnershipcoordinatorphone',
     'actions',
 ];
 
@@ -70,7 +71,7 @@ if ($delete && confirm_sesskey()) {
 echo $OUTPUT->header();
 
 // Add pickup button.
-$addurl = new moodle_url('/local/equipment/pickups/addpickup.php');
+$addurl = new moodle_url('/local/equipment/pickups/addpickups.php');
 echo $OUTPUT->single_button($addurl, get_string('addpickup', 'local_equipment'), 'get');
 
 // Set up the table.

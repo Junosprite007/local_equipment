@@ -27,16 +27,16 @@
 
 require_once('../../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
-require_once($CFG->dirroot . '/local/equipment/classes/form/addpartnership_form.php');
+require_once($CFG->dirroot . '/local/equipment/classes/form/addpartnerships_form.php');
 
-admin_externalpage_setup('local_equipment_addpartnership');
+admin_externalpage_setup('local_equipment_addpartnerships');
 
 require_login();
 $context = context_system::instance();
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/equipment/partnerships/addpartnership.php'));
-$PAGE->set_title(get_string('addpartnership', 'local_equipment'));
-$PAGE->set_heading(get_string('addpartnership', 'local_equipment'));
+$PAGE->set_url(new moodle_url('/local/equipment/partnerships/addpartnerships.php'));
+$PAGE->set_title(get_string('addpartnerships', 'local_equipment'));
+$PAGE->set_heading(get_string('addpartnerships', 'local_equipment'));
 $PAGE->requires->js_call_amd('local_equipment/addpartnership_form', 'init');
 // $PAGE->requires->js_call_amd('local_equipment/testingjs', 'init');
 
@@ -170,7 +170,7 @@ if ($data) {
         );
     } else {
         redirect(
-            new moodle_url('/local/equipment/partnerships/addpartnership.php'),
+            new moodle_url('/local/equipment/partnerships/addpartnerships.php'),
             get_string('erroraddingpartnerships', 'local_equipment'),
             null,
             \core\output\notification::NOTIFY_ERROR

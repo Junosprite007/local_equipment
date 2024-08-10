@@ -25,14 +25,14 @@
 
 require_once('../../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
-require_once($CFG->dirroot . '/local/equipment/classes/form/addpickup_form.php');
+require_once($CFG->dirroot . '/local/equipment/classes/form/addpickups_form.php');
 
-admin_externalpage_setup('local_equipment_addpickup');
+admin_externalpage_setup('local_equipment_addpickups');
 
 require_login();
 $context = context_system::instance();
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/equipment/pickups/addpickup.php'));
+$PAGE->set_url(new moodle_url('/local/equipment/pickups/addpickups.php'));
 $PAGE->set_title(get_string('addpickups', 'local_equipment'));
 $PAGE->set_heading(get_string('addpickups', 'local_equipment'));
 
@@ -71,7 +71,7 @@ if ($mform->is_cancelled()) {
         );
     } else {
         redirect(
-            new moodle_url('/local/equipment/pickups/addpickup.php'),
+            new moodle_url('/local/equipment/pickups/addpickups.php'),
             get_string('erroraddingpickups', 'local_equipment'),
             null,
             \core\output\notification::NOTIFY_ERROR

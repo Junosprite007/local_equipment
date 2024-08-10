@@ -80,8 +80,8 @@ if ($delete && confirm_sesskey()) {
 echo $OUTPUT->header();
 
 // Add partnership button.
-$addurl = new moodle_url('/local/equipment/partnerships/addpartnership.php');
-echo $OUTPUT->single_button($addurl, get_string('addpartnership', 'local_equipment'), 'get');
+$addurl = new moodle_url('/local/equipment/partnerships/addpartnerships.php');
+echo $OUTPUT->single_button($addurl, get_string('addpartnerships', 'local_equipment'), 'get');
 
 // Set up the table.
 $table = new flexible_table('local-equipment-partnerships');

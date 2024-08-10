@@ -252,7 +252,7 @@ function local_equipment_get_liaison_info($partnership) {
 function local_equipment_get_master_courses($categoryname = 'ALL_COURSES_CURRENT') {
     global $DB;
 
-    // Set variables to be used for error checking in ./partnerships/addpartnership.php.
+    // Set variables to be used for error checking in ./partnerships/addpartnerships.php.
     $responseobject = new stdClass();
     $responseobject->courses_formatted = [];
     $responseobject->categoryname = $categoryname;
