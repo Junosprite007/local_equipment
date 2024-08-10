@@ -32,8 +32,10 @@ require_once($CFG->dirroot . '/local/equipment/lang/en/states.php');
 $string['actions'] = 'Actions';
 $string['active'] = 'Active';
 $string['addmorepartnerships'] = 'Add more partnerships';
+$string['addmorepickups'] = 'Add more pickups';
 $string['addpartnership'] = 'Add Partnership';
 $string['addpartnerships'] = 'Add Partnerships';
+$string['addpickups'] = 'Add pickups';
 $string['address'] = 'Address';
 $string['addressee'] = 'Addressee';
 $string['agreements'] = 'Agreements';
@@ -57,6 +59,7 @@ $string['courseids'] = 'Course IDs';
 $string['courses'] = 'Courses';
 $string['createcategoryhere'] = 'Create a category here.';
 $string['createcoursehere'] = 'Create a course here.';
+$string['dropoffdateafterwarning'] = 'Drop-off date must be after pickup date';
 $string['editpartnership'] = 'Edit partnership';
 $string['editpartnerships'] = 'Edit partnerships';
 $string['equipment'] = 'Equipment';
@@ -64,6 +67,7 @@ $string['equipment:managepartnerships'] = 'Allows user to manage partnerships';
 $string['equipment:seedetails'] = 'See equipment plugin menus and details';
 $string['equipmentcheckout'] = 'Equipment checkout';
 $string['erroraddingpartnerships'] = 'Error adding partnerships';
+$string['erroraddingpickups'] = 'Error adding pickups';
 $string['errordeletingpartnership'] = 'Error deleting partnerships';
 $string['ifdifferentfrommailing'] = '(if different from mailing)';
 $string['ifdifferentfromphysical'] = '(if different from physical)';
@@ -79,6 +83,22 @@ $string['liaisons'] = 'Liaisons';
 $string['mailing'] = 'Mailing';
 $string['mailingaddress'] = 'Mailing address';
 $string['manage'] = 'Manage';
+
+
+
+
+$string['pickupsadded'] = 'Pickups added successfully';
+$string['removepickup'] = 'Remove pickup';
+
+
+
+
+
+
+
+
+
+
 $string['manageagreements'] = 'Manage agreements';
 $string['manageequipment'] = 'Manage equipment';
 $string['managekitpickuptimes'] = 'Manage kit pickup times';
