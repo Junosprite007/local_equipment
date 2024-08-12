@@ -26,15 +26,18 @@
 require_once('../../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/local/equipment/classes/form/editpickup_form.php');
+global $DB;
 
 $id = required_param('id', PARAM_INT);
+$context = context_system::instance();
+$url = new moodle_url('/local/equipment/pickups/editpickup.php', ['id' => $id]);
+$redirecturl = new moodle_url('/local/equipment/pickups.php');
 
-admin_externalpage_setup('local_equipment_editpickup');
+// admin_externalpage_setup('local_equipment_editpickup');
 
 require_login();
-$context = context_system::instance();
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/equipment/pickups/editpickup.php', ['id' => $id]));
+$PAGE->set_url($url);
 $PAGE->set_title(get_string('editpickup', 'local_equipment'));
 $PAGE->set_heading(get_string('editpickup', 'local_equipment'));
 

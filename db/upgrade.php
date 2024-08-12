@@ -35,7 +35,7 @@ function xmldb_local_equipment_upgrade($oldversion) {
     global $DB;
     $dbman = $DB->get_manager();
 
-    if ($oldversion < 2024071800) {
+    if ($oldversion < 2024081201) {
         // Define table local_equipment_partnership.
         $table = new xmldb_table('local_equipment_partnership');
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
@@ -83,6 +83,17 @@ function xmldb_local_equipment_upgrade($oldversion) {
 
         // Define table local_equipment_pickup.
         $table = new xmldb_table('local_equipment_pickup');
+        $fields = [
+            new xmldb_field(
+                'status',
+                XMLDB_TYPE_CHAR,
+                '255',
+                null,
+                XMLDB_NOTNULL,
+                null,
+                null
+            ),
+        ];
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('partnershipid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('flccoordinatorid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
@@ -90,6 +101,7 @@ function xmldb_local_equipment_upgrade($oldversion) {
         $table->add_field('partnershipcoordinatorphone', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
         $table->add_field('pickupstarttime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('pickupendtime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        // $table->add_field('status', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
 
         $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
         $table->add_key('partnershipid', XMLDB_KEY_FOREIGN, ['partnershipid'], 'local_equipment_partnership', ['id']);
@@ -97,6 +109,11 @@ function xmldb_local_equipment_upgrade($oldversion) {
 
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
+        }
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
         }
 
         // Define table local_equipment_agreements.

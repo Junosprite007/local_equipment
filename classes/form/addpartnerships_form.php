@@ -35,12 +35,11 @@ require_once($CFG->dirroot . '/local/equipment/lib.php');
 /**
  * Form for adding partnerships.
  */
-class addpartnership_form extends \moodleform {
+class addpartnerships_form extends \moodleform {
     public function definition() {
-        global $OUTPUT;
+        // global $OUTPUT;
 
         $mform = $this->_form;
-        // $numberofrepeats = 0;
         $repeatarray = [];
         $repeatoptions = [];
         $address = new stdClass();
@@ -129,7 +128,7 @@ class addpartnership_form extends \moodleform {
         );
 
         // $PAGE->requires->js_call_amd('local_equipment/deletepartnership_button', 'init');
-        $this->add_action_buttons(true, get_string('submit'));
+        $this->add_action_buttons();
     }
 
     /**
@@ -142,6 +141,10 @@ class addpartnership_form extends \moodleform {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
+        echo '<pre>';
+        var_dump($data);
+        echo '</pre>';
+        die();
 
         // No custom validation yet.
 

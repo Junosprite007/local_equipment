@@ -14,6 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+/**
+ * Edit partnership page.
+ *
+ * @package     local_equipment
+ * @copyright   2024 onward Joshua Kirby <josh@funlearningcompany.com>
+ * @author      Joshua Kirby - CTO @ Fun Learning Company - funlearningcompany.com
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once('../../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/local/equipment/classes/form/editpartnership_form.php');

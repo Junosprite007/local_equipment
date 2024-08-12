@@ -33,6 +33,7 @@ $string['actions'] = 'Actions';
 $string['active'] = 'Active';
 $string['addmorepartnerships'] = 'Add more partnerships';
 $string['addpartnerships'] = 'Add partnerships';
+$string['addpartnershipshere'] = 'Add partnerships here.';
 $string['address'] = 'Address';
 $string['addressee'] = 'Addressee';
 $string['agreements'] = 'Agreements';

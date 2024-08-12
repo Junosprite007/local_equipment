@@ -37,18 +37,16 @@ $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/equipment/partnerships/addpartnerships.php'));
 $PAGE->set_title(get_string('addpartnerships', 'local_equipment'));
 $PAGE->set_heading(get_string('addpartnerships', 'local_equipment'));
-$PAGE->requires->js_call_amd('local_equipment/addpartnership_form', 'init');
+$PAGE->requires->js_call_amd('local_equipment/addpartnerships_form', 'init');
 // $PAGE->requires->js_call_amd('local_equipment/testingjs', 'init');
 
 require_capability('local/equipment:managepartnerships', $context);
 
-$mform = new local_equipment\form\addpartnership_form();
+$mform = new local_equipment\form\addpartnerships_form();
 
 if ($mform->is_cancelled()) {
     redirect(new moodle_url('/local/equipment/partnerships.php'));
-}
-$data = $mform->get_data();
-if ($data) {
+} else if ($data = $mform->get_data()) {
     $numberofpartnerships = $data->partnerships;
     $success = true;
 

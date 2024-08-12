@@ -193,6 +193,19 @@ function local_equipment_auto_complete_users() {
         'valuehtmlcallback' => 'local_equipment_user_selector_callback',
     ];
 }
+/**
+ * Generate a user selector with autocomplete for the user's liaison.
+ *
+ * @return array An array with the proper parameters for a user select field with autocomplete.
+ */
+function local_equipment_auto_complete_users_single() {
+    return [
+        'ajax' => 'core_user/form_user_selector',
+        'multiple' => false,
+        'casesensitive' => false,
+        'valuehtmlcallback' => 'local_equipment_user_selector_callback',
+    ];
+}
 
 /**
  * Custom user selector callback. This is where the selected users' full names (and profile pics if exists) are generated on reload.
@@ -202,9 +215,25 @@ function local_equipment_auto_complete_users() {
  */
 function local_equipment_user_selector_callback($id) {
     global $OUTPUT;
-    $user = \core_user::get_user($id);
-    return $OUTPUT->user_picture($user, ['size' => 24]) . ' ' . fullname($user);
+    if (!$id || $id == 'qfforcemultiselectsubmission') {
+        return ''; // Return empty for invalid or placeholder IDs
+    }
+
+    try {
+        $user = \core_user::get_user($id, '*', MUST_EXIST);
+        return $OUTPUT->user_picture($user, ['size' => 24]) . ' ' . fullname($user);
+    } catch (dml_missing_record_exception $e) {
+        debugging("User with ID $id not found in user_selector_callback", DEBUG_DEVELOPER);
+        return ''; // Return empty string if user not found
+    }
+    // $user = \core_user::get_user($id);
+    // This showing the selected user as 'qfforcemultiselectsubmission' for some reason. That's not a user, lol.
+    // if (!$user) {
+    //     return ''; // Return an empty string or a placeholder if the user does not exist.
+    // }
+    // return $OUTPUT->user_picture($user, ['size' => 24]) . ' ' . fullname($user);
 }
+
 /**
  * Get all liaison names, emails, and contact phones for a given partnership.
  * Liaisons are simply users on the system, so they must of accounts.
@@ -239,6 +268,43 @@ function local_equipment_get_liaison_info($partnership) {
         $liaisoninfo[] = html_writer::tag('strong', $userlink)
             . '<br />' . $user->email . '<br />' . $phone;
     }
+
+    return implode('<br />', $liaisoninfo);
+}
+
+/**
+ * Get the FLC coordinator name, email, and contact phone for a given pickup location and time.
+ * Emails and phones will be taken from the user's profile, but admins will have the option to add phone numbers for them if they don't do it themselves.
+ *
+ * @param stdClass $flccoordinator A database record that contains multiple types of addresses.
+ * @return string True if the string exists, false otherwise.
+ */
+function local_equipment_get_coordinator_info($id) {
+    // $userid = json_decode($flccoordinator->id);
+
+    $userlinks = [];
+    $liaisoninfo = [];
+
+    // foreach ($userid as $id) {
+    $user = core_user::get_user($id);
+    $userurl = new moodle_url('/user/profile.php', ['id' => $user->id]);
+    $userlink = html_writer::link($userurl, fullname($user));
+
+    $phone = '';
+    // These if/elseif statements seem inefficient, but I wanted to add a <br /> tag only if a phone number exists, so if you can find a better way, feel free.
+    if ($user->phone1) {
+        $phone = local_equipment_parse_phone_number($user->phone1);
+        $phone = local_equipment_format_phone_number($phone);
+        $phone .= ' <br />';
+    } else if ($user->phone2) {
+        $phone = local_equipment_parse_phone_number($user->phone2);
+        $phone = local_equipment_format_phone_number($phone);
+        $phone .= ' <br />';
+    }
+    $userlinks[] = $userlink;
+    $liaisoninfo[] = html_writer::tag('strong', $userlink)
+        . '<br />' . $user->email . '<br />' . $phone;
+    // }
 
     return implode('<br />', $liaisoninfo);
 }

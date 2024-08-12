@@ -134,4 +134,3 @@ define(["jquery", "core/log", "core/str"], ($, log, Str) => {
         },
     };
 });
-

@@ -104,21 +104,21 @@ $ADMIN->add(
         new moodle_url('/local/equipment/partnerships/addpartnerships.php')
     )
 );
-// // Add the manage pickups page.
-// $ADMIN->add(
-//     "{$component}_pickups_cat",
-//     new admin_externalpage(
-//         "{$component}_pickups",
-//         new lang_string('viewmanagepickups', 'local_equipment'),
-//         new moodle_url('/local/equipment/pickups.php'),
-//     )
-// );
-// // Add a link to the add partnership page.
-// $ADMIN->add(
-//     "{$component}_pickups_cat",
-//     new admin_externalpage(
-//         "{$component}_addpickups",
-//         new lang_string('addpickups', 'local_equipment'),
-//         new moodle_url('/local/equipment/pickups/addpickups.php')
-//     )
-// );
+// Add the manage pickups page.
+$ADMIN->add(
+    "{$component}_pickups_cat",
+    new admin_externalpage(
+        "{$component}_pickups",
+        new lang_string('viewmanagepickups', 'local_equipment'),
+        new moodle_url('/local/equipment/pickups.php'),
+    )
+);
+// Add a link to the add partnership page.
+$ADMIN->add(
+    "{$component}_pickups_cat",
+    new admin_externalpage(
+        "{$component}_addpickups",
+        new lang_string('addpickups', 'local_equipment'),
+        new moodle_url('/local/equipment/pickups/addpickups.php')
+    )
+);

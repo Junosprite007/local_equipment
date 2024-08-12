@@ -35,28 +35,35 @@ $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/equipment/pickups/addpickups.php'));
 $PAGE->set_title(get_string('addpickups', 'local_equipment'));
 $PAGE->set_heading(get_string('addpickups', 'local_equipment'));
+$PAGE->requires->js_call_amd('local_equipment/addpickups_form', 'init');
 
 require_capability('local/equipment:managepickups', $context);
 
-$mform = new local_equipment\form\addpickup_form();
+$mform = new local_equipment\form\addpickups_form();
 
 if ($mform->is_cancelled()) {
     redirect(new moodle_url('/local/equipment/pickups.php'));
 } else if ($data = $mform->get_data()) {
     $numberofpickups = $data->pickups;
     $success = true;
+    // echo '<pre>';
+    // var_dump($data);
+    // echo '</pre>';
+    // die();
 
     for ($i = 0; $i < $numberofpickups; $i++) {
         $pickup = new stdClass();
-        $pickup->name = $data->name[$i];
+        $pickup->pickupstarttime = $data->pickupstarttime[$i];
+        $pickup->pickupendtime = $data->pickupendtime[$i];
         $pickup->partnershipid = $data->partnershipid[$i];
-        $pickup->pickupdate = $data->pickupdate[$i];
-        $pickup->dropoffdate = $data->dropoffdate[$i];
+        $pickup->flccoordinatorid = $data->flccoordinatorid[$i];
+        $pickup->partnershipcoordinatorname = $data->partnershipcoordinatorname[$i];
+        $pickup->partnershipcoordinatorphone = $data->partnershipcoordinatorphone[$i];
         $pickup->status = $data->status[$i];
-        $pickup->timecreated = time();
-        $pickup->timemodified = time();
 
-        if (!$DB->insert_record('local_equipment_pickup', $pickup)) {
+        $pickup->id = $DB->insert_record('local_equipment_pickup', $pickup);
+
+        if (!$pickup->id) {
             $success = false;
             break;
         }

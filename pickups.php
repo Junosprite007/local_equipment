@@ -45,10 +45,15 @@ require_capability('local/equipment:managepickups', $context);
 $columns = [
     'pickupstarttime',
     'pickupendtime',
+    'status',
     'partnership',
     'flccoordinator',
     'partnershipcoordinatorname',
     'partnershipcoordinatorphone',
+    'actions',
+];
+// Columns of the database that should not be sortable.
+$dontsortby = [
     'actions',
 ];
 
@@ -81,12 +86,15 @@ $table->define_columns($columns);
 $table->define_headers($headers);
 
 $table->define_baseurl($PAGE->url);
-$table->sortable(true, 'pickupdate', SORT_DESC);
-$table->no_sorting('actions');
+$table->sortable(true, 'pickupstarttime', SORT_DESC);
+foreach ($dontsortby as $column) {
+    $table->no_sorting($column);
+}
 $table->collapsible(true);
 $table->initialbars(true);
 $table->set_attribute('id', 'pickups');
 $table->set_attribute('class', 'admintable generaltable');
+$table->column_style(6, 'overflow-x', 'auto');
 $table->setup();
 
 $sort = $table->get_sql_sort();
@@ -105,12 +113,21 @@ foreach ($pickups as $pickup) {
     );
 
     $partnership = $DB->get_record('local_equipment_partnership', ['id' => $pickup->partnershipid]);
+    $partnershipinfo = $partnership->name;
+    // . ', ' . $partnership->city_physical . ', ' . $partnership->state_physical;
 
-    $row[] = $pickup->name;
-    $row[] = $partnership ? $partnership->name : '';
-    $row[] = userdate($pickup->pickupdate);
-    $row[] = userdate($pickup->dropoffdate);
+    $row[] = userdate($pickup->pickupstarttime);
+    $row[] = userdate($pickup->pickupendtime);
+    // $row[] = $pickup->status;
     $row[] = get_string('status_' . $pickup->status, 'local_equipment');
+    $row[] = $partnership ? $partnershipinfo : '';
+    $row[] = html_writer::tag(
+        'div',
+        local_equipment_get_coordinator_info($pickup->flccoordinatorid),
+        ['class' => 'nowrap']
+    );
+    $row[] = $pickup->partnershipcoordinatorname;
+    $row[] = $pickup->partnershipcoordinatorphone;
     $row[] = $actions;
 
     $table->add_data($row);
