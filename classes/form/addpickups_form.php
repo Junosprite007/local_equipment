@@ -27,6 +27,8 @@ namespace local_equipment\form;
 
 defined('MOODLE_INTERNAL') || die();
 
+global $CFG;
+
 require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/local/equipment/lib.php');
 
@@ -49,6 +51,8 @@ class addpickups_form extends \moodleform {
 
         $partnerships = $DB->get_records_menu('local_equipment_partnership', null, 'name ASC', 'id,name');
 
+        $hours = array_combine(range(0, 23), range(0, 23));
+        $minutes = array_combine(range(0, 59, 5), range(0, 59, 5)); // 5-minute intervals
         $statuses = [
             'pending' => get_string('status_pending', 'local_equipment'),
             'confirmed' => get_string('status_confirmed', 'local_equipment'),
@@ -56,18 +60,32 @@ class addpickups_form extends \moodleform {
             'cancelled' => get_string('status_cancelled', 'local_equipment'),
         ];
 
+
+
         $mform->addElement('hidden', 'pickups', $repeatno);
 
         $repeatarray = [
-            'pickupheader' => $mform->createElement('header', 'pickupheader', get_string('pickup', 'local_equipment')),
-            'pickupstarttime' => $mform->createElement('date_time_selector', 'pickupstarttime', get_string('pickupstarttime', 'local_equipment')),
-            'pickupendtime' => $mform->createElement('date_time_selector', 'pickupendtime', get_string('pickupendtime', 'local_equipment')),
+            'pickupheader' => $mform->createElement('header', 'pickupheader', get_string('pickup', 'local_equipment'), ['class' => 'local-equipment-pickups-addpickups-time-selectors']),
+            'pickupdate' => $mform->createElement('date_selector', 'pickupdate', get_string('pickupdate', 'local_equipment')),
+            'starttime' => create_time_selector($mform, 'starttime', get_string('starttime', 'local_equipment')),
+            'endtime' => create_time_selector($mform, 'endtime', get_string('endtime', 'local_equipment')),
+
+            // 'starttime' => $mform->createElement('group', 'starttime', get_string('starttime', 'local_equipment'), [
+            //     $mform->createElement('label', 'starthour', get_string('hour')),
+            //     $mform->createElement('select', 'starthour', get_string('hour'), $hours),
+            //     $mform->createElement('select', 'startminute', get_string('minute'), $minutes)
+            // ]),
+            // 'endtime' => $mform->createElement('group', 'endtime', get_string('endtime', 'local_equipment'), [
+            //     $mform->createElement('select', 'endhour', get_string('hour'), $hours),
+            //     $mform->createElement('select', 'endminute', get_string('minute'), $minutes)
+            // ]),
+
             'partnershipid' => $mform->createElement('select', 'partnershipid', get_string('partnership', 'local_equipment'), $partnerships),
             'flccoordinatorid' => $mform->createElement('autocomplete', 'flccoordinatorid', get_string('selectflccoordinator', 'local_equipment'), [], $users),
             'partnershipcoordinatorname' => $mform->createElement('text', 'partnershipcoordinatorname', get_string('partnershipcoordinatorname', 'local_equipment')),
             'partnershipcoordinatorphone' => $mform->createElement('text', 'partnershipcoordinatorphone', get_string('partnershipcoordinatorphone', 'local_equipment')),
             'status' => $mform->createElement('select', 'status', get_string('status', 'local_equipment'), $statuses),
-            '' => $mform->createElement(
+            'removepickup' => $mform->createElement(
                 'button',
                 'removepickup',
                 get_string('removepickup', 'local_equipment'),
@@ -79,8 +97,9 @@ class addpickups_form extends \moodleform {
         $repeatoptions['pickupheader']['header'] = true;
 
         // Set element types.
-        $repeatoptions['pickupstarttime']['type'] = PARAM_INT;
-        $repeatoptions['pickupendtime']['type'] = PARAM_INT;
+        $repeatoptions['pickupdate']['type'] = PARAM_INT;
+        $repeatoptions['starttime']['type'] = PARAM_INT;
+        $repeatoptions['endtime']['type'] = PARAM_INT;
         $repeatoptions['partnershipid']['type'] = PARAM_TEXT;
         $repeatoptions['flccoordinatorid']['type'] = PARAM_TEXT;
         $repeatoptions['partnershipcoordinatorname']['type'] = PARAM_TEXT;
@@ -88,8 +107,9 @@ class addpickups_form extends \moodleform {
         $repeatoptions['status']['type'] = PARAM_TEXT;
 
         // Set element rules.
-        $repeatoptions['pickupstarttime']['rule'] = 'required';
-        $repeatoptions['pickupendtime']['rule'] = 'required';
+        $repeatoptions['pickupdate']['rule'] = 'required';
+        $repeatoptions['starttime']['rule'] = 'required';
+        $repeatoptions['endtime']['rule'] = 'required';
         $repeatoptions['partnershipid']['rule'] = 'required';
         $repeatoptions['flccoordinatorid']['rule'] = 'required';
 
@@ -122,6 +142,7 @@ class addpickups_form extends \moodleform {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
+        
 
         // for ($i = 0; $i < $data['pickups']; $i++) {
         //     if ($data['pickupendtime'][$i] >= $data['pickupstarttime'][$i]) {

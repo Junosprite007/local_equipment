@@ -45,7 +45,9 @@ require_capability('local/equipment:managepickups', $context);
 
 $pickup = $DB->get_record('local_equipment_pickup', ['id' => $id], '*', MUST_EXIST);
 
-$mform = new local_equipment\form\editpickup_form(null, ['pickup' => $pickup]);
+// The 'data' key is used to pass the existing data to the form, 'editpickup_form.php',
+// which can be accessed with '$this->_customdata['data']'.
+$mform = new local_equipment\form\editpickup_form($url, ['id' => $id, 'data' => $pickup]);
 
 if ($mform->is_cancelled()) {
     redirect(new moodle_url('/local/equipment/pickups.php'));

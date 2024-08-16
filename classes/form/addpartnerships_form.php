@@ -141,10 +141,6 @@ class addpartnerships_form extends \moodleform {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
-        echo '<pre>';
-        var_dump($data);
-        echo '</pre>';
-        die();
 
         // No custom validation yet.
 

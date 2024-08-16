@@ -53,8 +53,14 @@ if ($mform->is_cancelled()) {
 
     for ($i = 0; $i < $numberofpickups; $i++) {
         $pickup = new stdClass();
-        $pickup->pickupstarttime = $data->pickupstarttime[$i];
-        $pickup->pickupendtime = $data->pickupendtime[$i];
+        $pickup->pickupdate = $data->pickupdate[$i];
+
+        // Combine hours and minutes into a single timestamp
+        $pickup->starttime = $data->pickupdate[$i] + ($data->starttimehour[$i] * 3600) + ($data->starttimeminute[$i] * 60);
+        $pickup->endtime = $data->pickupdate[$i] + ($data->endtimehour[$i] * 3600) + ($data->endtimeminute[$i] * 60);
+
+        // $pickup->starttime = $data->starttime[$i];
+        // $pickup->endtime = $data->endtime[$i];
         $pickup->partnershipid = $data->partnershipid[$i];
         $pickup->flccoordinatorid = $data->flccoordinatorid[$i];
         $pickup->partnershipcoordinatorname = $data->partnershipcoordinatorname[$i];

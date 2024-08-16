@@ -1,13 +1,20 @@
 #page-admin-local-equipment-partnerships .nowrap {
-  white-space: nowrap; }
+  white-space: nowrap;
+}
 
 #page-admin-local-equipment-partnerships-addpartnerships .form-input-group-labels,
 #page-local-equipment-partnerships-editpartnership .form-input-group-labels {
   margin-top: 25px;
-  font-weight: bold; }
+  font-weight: bold;
+}
 
 #page-admin-local-equipment-partnerships .pickup-instructions {
   white-space: wrap;
-  min-width: 300px; }
+  min-width: 300px;
+}
+
+.local-equipment-pickups-addpickups-time-selectors {
+  display: block;
+}
 
 /*# sourceMappingURL=styles.css.map */

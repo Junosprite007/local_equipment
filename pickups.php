@@ -28,6 +28,8 @@ require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->libdir . '/tablelib.php');
 require_once('./lib.php');
 
+
+global $DB;
 // Ensure only admins can access this page.
 admin_externalpage_setup('local_equipment_pickups');
 require_login();
@@ -42,9 +44,24 @@ $PAGE->set_heading(get_string('pickups', 'local_equipment'));
 
 require_capability('local/equipment:managepickups', $context);
 
+// The names of each column should match the database column names.
+// The 'actions' column is not a database column, but is used for edit/delete buttons.
+// Define columns and their corresponding database fields
 $columns = [
-    'pickupstarttime',
-    'pickupendtime',
+    'pickupdate',
+    'starttime',
+    'endtime',
+    'status',
+    'partnershipid',
+    'flccoordinatorid',
+    'partnershipcoordinatorname',
+    'partnershipcoordinatorphone',
+    'actions',
+];
+$headers = [
+    'pickupdate',
+    'starttime',
+    'endtime',
     'status',
     'partnership',
     'flccoordinator',
@@ -54,13 +71,13 @@ $columns = [
 ];
 // Columns of the database that should not be sortable.
 $dontsortby = [
+    'partnershipcoordinatorphone',
     'actions',
 ];
 
-$headers = [];
-foreach ($columns as $column) {
-    $headers[] = get_string($column, 'local_equipment');
-}
+$headers = array_map(function ($strkey) {
+    return get_string($strkey, 'local_equipment');
+}, $headers);
 
 // Handle delete action.
 $delete = optional_param('delete', 0, PARAM_INT);
@@ -81,12 +98,10 @@ echo $OUTPUT->single_button($addurl, get_string('addpickup', 'local_equipment'),
 
 // Set up the table.
 $table = new flexible_table('local-equipment-pickups');
-
 $table->define_columns($columns);
 $table->define_headers($headers);
-
 $table->define_baseurl($PAGE->url);
-$table->sortable(true, 'pickupstarttime', SORT_DESC);
+$table->sortable(true, 'starttime');
 foreach ($dontsortby as $column) {
     $table->no_sorting($column);
 }
@@ -97,8 +112,33 @@ $table->set_attribute('class', 'admintable generaltable');
 $table->column_style(6, 'overflow-x', 'auto');
 $table->setup();
 
+// Construct the SQL query
+$fields = "ep.*, p.name AS partnership, " . $DB->sql_concat('u.firstname', "' '", 'u.lastname') . " AS flccoordinator";
+$from = "{local_equipment_pickup} ep
+         LEFT JOIN {local_equipment_partnership} p ON ep.partnershipid = p.id
+         LEFT JOIN {user} u ON ep.flccoordinatorid = u.id";
+
+$where = "";
+$params = [];
+
+// Get sorting parameters
 $sort = $table->get_sql_sort();
-$pickups = $DB->get_records('local_equipment_pickup', null, $sort);
+
+
+// Construct the final SQL query
+$sql = "SELECT $fields FROM $from";
+if ($where) {
+    $sql .= " WHERE $where";
+}
+// // Replace 'partnership' with 'p.name' in the sort string
+if ($sort) {
+    $sort = preg_replace('/\bpartnershipid\b/', 'p.name', $sort);
+    $sort = preg_replace('/\bflccoordinatorid\b/', $DB->sql_concat('u.firstname', "' '", 'u.lastname'), $sort);
+    $sql .= " ORDER BY $sort";
+}
+
+// Fetch the data
+$pickups = $DB->get_records_sql($sql, $params);
 
 foreach ($pickups as $pickup) {
     $row = [];
@@ -116,16 +156,14 @@ foreach ($pickups as $pickup) {
     $partnershipinfo = $partnership->name;
     // . ', ' . $partnership->city_physical . ', ' . $partnership->state_physical;
 
-    $row[] = userdate($pickup->pickupstarttime);
-    $row[] = userdate($pickup->pickupendtime);
+    $row[] = userdate($pickup->pickupdate, get_string('strftimedate', 'local_equipment'));
+    $row[] = userdate($pickup->starttime, get_string('strftimetime'));
+    $row[] = userdate($pickup->endtime, get_string('strftimetime'));
     // $row[] = $pickup->status;
     $row[] = get_string('status_' . $pickup->status, 'local_equipment');
     $row[] = $partnership ? $partnershipinfo : '';
-    $row[] = html_writer::tag(
-        'div',
-        local_equipment_get_coordinator_info($pickup->flccoordinatorid),
-        ['class' => 'nowrap']
-    );
+    $row[] = local_equipment_get_coordinator_info($pickup->flccoordinatorid);
+
     $row[] = $pickup->partnershipcoordinatorname;
     $row[] = $pickup->partnershipcoordinatorphone;
     $row[] = $actions;

@@ -276,8 +276,8 @@ function local_equipment_get_liaison_info($partnership) {
  * Get the FLC coordinator name, email, and contact phone for a given pickup location and time.
  * Emails and phones will be taken from the user's profile, but admins will have the option to add phone numbers for them if they don't do it themselves.
  *
- * @param stdClass $flccoordinator A database record that contains multiple types of addresses.
- * @return string True if the string exists, false otherwise.
+ * @param int $id The user ID of the FLC coordinator, taken from the Moodle's core user table.
+ * @return string $liasonhtml An HTML string containing the FLC coordinator's name, email, and phone number.
  */
 function local_equipment_get_coordinator_info($id) {
     // $userid = json_decode($flccoordinator->id);
@@ -304,9 +304,15 @@ function local_equipment_get_coordinator_info($id) {
     $userlinks[] = $userlink;
     $liaisoninfo[] = html_writer::tag('strong', $userlink)
         . '<br />' . $user->email . '<br />' . $phone;
+
+    $liasonhtml = html_writer::tag(
+        'div',
+        implode('<br />', $liaisoninfo),
+        ['class' => 'nowrap']
+    );
     // }
 
-    return implode('<br />', $liaisoninfo);
+    return $liasonhtml;
 }
 
 /**
@@ -441,7 +447,7 @@ function local_equipment_format_phone_number($parsedphonenumber) {
  * though the text boxes currently doesn't have labels doing it this way.
  * I'd have to figure that out, and I don't want to....
  *
- * @param moodleform $mform a standard moodle form, probably will be '$this->_form'.
+ * @param MoodleQuickForm $mform a standard moodle form, probably will be '$this->_form'.
  * @param string $groupname the name of the group to add.
  * @param string $label the label for the group.
  */
@@ -470,7 +476,7 @@ function local_equipment_add_address_group($mform, $groupname, $label) {
 /**
  * Add an address block.
  *
- * @param moodleform $mform a standard moodle form, probably will be '$this->_form'.
+ * @param MoodleQuickForm $mform a standard moodle form, probably will be '$this->_form'.
  * @param string $addresstype the type of address block to add: 'mailing', 'physical', 'pickup', or 'billing'.
  * @return object $block a block of elements to be added to the form.
  */
@@ -533,7 +539,7 @@ function local_equipment_add_address_block($mform, $addresstype) {
 /**
  * Add an address block that may have default values populated from the database.
  *
- * @param moodleform $mform a standard moodle form, probably will be '$this->_form'.
+ * @param MoodleQuickForm $mform a standard moodle form, probably will be '$this->_form'.
  * @param string $addresstype the type of address block to add: 'mailing', 'physical', 'pickup', or 'billing'.
  * @param stdClass $data the existing data to populate the form with.
  * @return object $block a block of elements to be added to the form.
@@ -590,4 +596,46 @@ function local_equipment_add_edit_address_block($mform, $addresstype, $data) {
         $mform->addRule('country_' . $addresstype, get_string('required'), 'required', null, 'client');
         $mform->addRule('zipcode_' . $addresstype, get_string('required'), 'required', null, 'client');
     }
+}
+
+/**
+ * Add an address block that may have default values populated from the database.
+ *
+ * @param MoodleQuickForm $mform A standard moodle form, probably will be '$this->_form'.
+ * @param string $addresstype The type of address block to add: 'mailing', 'physical', 'pickup', or 'billing'.
+ * @param string $label The existing data to populate the form with.
+ * @return object $block a block of elements to be added to the form.
+ */
+function create_time_selector($mform, $name, $label) {
+    $hours = array_combine(range(0, 23), range(0, 23));
+    $minutes = array_combine(range(0, 59, 5), range(0, 59, 5)); // 5-minute intervals
+
+
+    $hourelement = $mform->createElement('select', $name . 'hour', get_string('hour'), $hours);
+    $minuteelement = $mform->createElement('select', $name . 'minute', get_string('minute'), $minutes);
+
+
+    $elements = array(
+        $mform->createElement('html', '<div class="form-group row">'),
+        $mform->createElement('html', '<div class="col-md-6">'),
+        $mform->createElement(
+            'static',
+            $name . '_hourlabel',
+            '',
+            html_writer::div(get_string('hour', 'local_equipment'), 'local-equipment-pickups-addpickups-time-selectors')
+        ),
+        $hourelement,
+        $mform->createElement('html', '</div>'),
+        $mform->createElement('html', '<div class="col-md-6">'),
+        $mform->createElement(
+            'static',
+            $name . '_minutelabel',
+            '',
+            html_writer::div(get_string('minute', 'local_equipment'), 'local-equipment-pickups-addpickups-time-selectors')
+        ),
+        $minuteelement,
+        $mform->createElement('html', '</div>'),
+        $mform->createElement('html', '</div>')
+    );
+    return $mform->createElement('group', $name, $label, $elements, ' ', false);
 }

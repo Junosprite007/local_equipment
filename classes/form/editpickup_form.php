@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Edit partnership form.
+ * Edit pickup form.
  *
  * @package     local_equipment
  * @copyright   2024 onward Joshua Kirby <josh@funlearningcompany.com>
@@ -36,10 +36,19 @@ require_once($CFG->dirroot . '/user/lib.php');
  */
 class editpickup_form extends \moodleform {
     public function definition() {
+        global $DB;
         $mform = $this->_form;
         $data = $this->_customdata['data'];
+        echo '<br />';
+        echo '<br />';
+        echo '<br />';
+        echo '<br />';
+        echo '<pre>';
+        var_dump($data);
+        echo '</pre>';
+        // die();
 
-
+        $partnerships = $DB->get_records_menu('local_equipment_partnership', null, 'name ASC', 'id,name');
         $statuses = [
             'pending' => get_string('status_pending', 'local_equipment'),
             'confirmed' => get_string('status_confirmed', 'local_equipment'),
@@ -48,42 +57,50 @@ class editpickup_form extends \moodleform {
         ];
 
 
-
-        var_dump($data);
-        die();
-
-
-        $users = user_get_users_by_id(json_decode($data->liaisonids));
+        // $users = user_get_users_by_id($data->flccoordinatorid);
 
         // Autocomplete users.
-        $users = local_equipment_auto_complete_users();
-        $mastercourses = local_equipment_get_master_courses('ALL_COURSES_CURRENT');
-        $coursesformatted = $mastercourses->courses_formatted;
+        $users = local_equipment_auto_complete_users_single();
+        // $mastercourses = local_equipment_get_master_courses('ALL_COURSES_CURRENT');
+        // $coursesformatted = $mastercourses->courses_formatted;
 
         // Add form elements.
-        $mform->addElement('hidden', 'partnershipid', $data->id);
+
+        $mform->addElement('hidden', 'pickupid', $data->id);
+        $mform->setType('pickupid', PARAM_TEXT);
+
+        $mform->addElement('header', 'pickupheader', get_string('pickup', 'local_equipment'));
+
+        $mform->addElement('date_time_selector', 'pickupstarttime', get_string('pickupstarttime', 'local_equipment'));
+        $mform->setType('pickupstarttime', PARAM_INT);
+        $mform->setDefault('pickupstarttime', $data->pickupstarttime);
+
+        $mform->addElement('date_time_selector', 'pickupendtime', get_string('pickupendtime', 'local_equipment'));
+        $mform->setType('pickupendtime', PARAM_INT);
+        $mform->setDefault('pickupendtime', $data->pickupendtime);
+
+        $mform->addElement('select', 'partnershipid', get_string('partnership', 'local_equipment'), $partnerships);
         $mform->setType('partnershipid', PARAM_INT);
+        $mform->setDefault('partnershipid', $data->partnershipid);
 
-        $mform->addElement('text', 'name', get_string('name', 'local_equipment'));
-        $mform->setType('name', PARAM_TEXT);
-        $mform->setDefault('name', $data->name);
 
-        $mform->addElement('autocomplete', 'liaisons', get_string('selectliaisons', 'local_equipment'), [], $users);
-        $mform->setType('liaisons', PARAM_RAW);
-        $mform->setDefault('liaisons', json_decode($data->liaisonids));
+        $mform->addElement('autocomplete', 'flccoordinatorid', get_string('selectflccoordinator', 'local_equipment'), [], $users);
+        $mform->setType('flccoordinatorid', PARAM_TEXT);
+        $mform->setDefault('flccoordinatorid', $data->flccoordinatorid);
 
-        $mform->addElement('select', 'courses', get_string('selectcourses', 'local_equipment'), $coursesformatted, ['multiple' => 'multiple', 'size' => 10]);
-        $mform->setType('courses', PARAM_RAW);
-        $mform->setDefault('courses', json_decode($data->courseids));
+        $mform->addElement('text', 'partnershipcoordinatorname', get_string('partnershipcoordinatorname', 'local_equipment'));
+        $mform->setType('partnershipcoordinatorname', PARAM_TEXT);
+        $mform->setDefault('partnershipcoordinatorname', $data->partnershipcoordinatorname);
 
-        $mform->addElement('advcheckbox', 'active', get_string('active'));
-        $mform->setType('active', PARAM_BOOL);
-        $mform->setDefault('active', $data->active);
+        $mform->addElement('text', 'partnershipcoordinatorphone', get_string('partnershipcoordinatorphone', 'local_equipment'));
+        $mform->setType('partnershipcoordinatorphone', PARAM_TEXT);
+        $mform->setDefault('partnershipcoordinatorphone', $data->partnershipcoordinatorphone);
 
-        for ($i = 0; $i < count($addresstypes); $i++) {
-            local_equipment_add_edit_address_block($mform, $addresstypes[$i], $data);
-        }
-        $this->add_action_buttons(true);
+        $mform->addElement('select', 'status', get_string('status', 'local_equipment'), $statuses);
+        $mform->setType('status', PARAM_TEXT);
+        $mform->setDefault('status', $data->status);
+
+        $this->add_action_buttons();
     }
 
     public function validation($data, $files) {
