@@ -54,8 +54,7 @@ $columns = [
     'status',
     'partnershipid',
     'flccoordinatorid',
-    'partnershipcoordinatorname',
-    'partnershipcoordinatorphone',
+    'partnershipcoordinatorid',
     'actions',
 ];
 $headers = [
@@ -65,13 +64,11 @@ $headers = [
     'status',
     'partnership',
     'flccoordinator',
-    'partnershipcoordinatorname',
-    'partnershipcoordinatorphone',
+    'partnershipcoordinator',
     'actions',
 ];
 // Columns of the database that should not be sortable.
 $dontsortby = [
-    'partnershipcoordinatorphone',
     'actions',
 ];
 
@@ -113,10 +110,16 @@ $table->column_style(6, 'overflow-x', 'auto');
 $table->setup();
 
 // Construct the SQL query
-$fields = "ep.*, p.name AS partnership, " . $DB->sql_concat('u.firstname', "' '", 'u.lastname') . " AS flccoordinator";
-$from = "{local_equipment_pickup} ep
+$fields =
+    "ep.*,
+    p.name AS partnership,"
+    . $DB->sql_concat('fu.firstname', "' '", 'fu.lastname') . " AS flccoordinator,"
+    . $DB->sql_concat('pu.firstname', "' '", 'pu.lastname') . " AS partnershipcoordinator";
+$from =
+    "{local_equipment_pickup} ep
          LEFT JOIN {local_equipment_partnership} p ON ep.partnershipid = p.id
-         LEFT JOIN {user} u ON ep.flccoordinatorid = u.id";
+         LEFT JOIN {user} fu ON ep.flccoordinatorid = fu.id
+         LEFT JOIN {user} pu ON ep.partnershipcoordinatorid = pu.id";
 
 $where = "";
 $params = [];
@@ -133,7 +136,8 @@ if ($where) {
 // // Replace 'partnership' with 'p.name' in the sort string
 if ($sort) {
     $sort = preg_replace('/\bpartnershipid\b/', 'p.name', $sort);
-    $sort = preg_replace('/\bflccoordinatorid\b/', $DB->sql_concat('u.firstname', "' '", 'u.lastname'), $sort);
+    $sort = preg_replace('/\bflccoordinatorid\b/', $DB->sql_concat('fu.firstname', "' '", 'fu.lastname'), $sort);
+    $sort = preg_replace('/\bpartnershipcoordinatorid\b/', $DB->sql_concat('pu.firstname', "' '", 'pu.lastname'), $sort);
     $sql .= " ORDER BY $sort";
 }
 
@@ -163,9 +167,10 @@ foreach ($pickups as $pickup) {
     $row[] = get_string('status_' . $pickup->status, 'local_equipment');
     $row[] = $partnership ? $partnershipinfo : '';
     $row[] = local_equipment_get_coordinator_info($pickup->flccoordinatorid);
+    $row[] = local_equipment_get_coordinator_info($pickup->partnershipcoordinatorid);
 
-    $row[] = $pickup->partnershipcoordinatorname;
-    $row[] = $pickup->partnershipcoordinatorphone;
+    // $row[] = $pickup->partnershipcoordinatorname;
+    // $row[] = $pickup->partnershipcoordinatorphone;
     $row[] = $actions;
 
     $table->add_data($row);

@@ -69,21 +69,9 @@ class addpickups_form extends \moodleform {
             'pickupdate' => $mform->createElement('date_selector', 'pickupdate', get_string('pickupdate', 'local_equipment')),
             'starttime' => create_time_selector($mform, 'starttime', get_string('starttime', 'local_equipment')),
             'endtime' => create_time_selector($mform, 'endtime', get_string('endtime', 'local_equipment')),
-
-            // 'starttime' => $mform->createElement('group', 'starttime', get_string('starttime', 'local_equipment'), [
-            //     $mform->createElement('label', 'starthour', get_string('hour')),
-            //     $mform->createElement('select', 'starthour', get_string('hour'), $hours),
-            //     $mform->createElement('select', 'startminute', get_string('minute'), $minutes)
-            // ]),
-            // 'endtime' => $mform->createElement('group', 'endtime', get_string('endtime', 'local_equipment'), [
-            //     $mform->createElement('select', 'endhour', get_string('hour'), $hours),
-            //     $mform->createElement('select', 'endminute', get_string('minute'), $minutes)
-            // ]),
-
             'partnershipid' => $mform->createElement('select', 'partnershipid', get_string('partnership', 'local_equipment'), $partnerships),
             'flccoordinatorid' => $mform->createElement('autocomplete', 'flccoordinatorid', get_string('selectflccoordinator', 'local_equipment'), [], $users),
-            'partnershipcoordinatorname' => $mform->createElement('text', 'partnershipcoordinatorname', get_string('partnershipcoordinatorname', 'local_equipment')),
-            'partnershipcoordinatorphone' => $mform->createElement('text', 'partnershipcoordinatorphone', get_string('partnershipcoordinatorphone', 'local_equipment')),
+            'partnershipcoordinatorid' => $mform->createElement('autocomplete', 'partnershipcoordinatorid', get_string('selectpartnershipcoordinator', 'local_equipment'), [], $users),
             'status' => $mform->createElement('select', 'status', get_string('status', 'local_equipment'), $statuses),
             'removepickup' => $mform->createElement(
                 'button',
@@ -102,8 +90,7 @@ class addpickups_form extends \moodleform {
         $repeatoptions['endtime']['type'] = PARAM_INT;
         $repeatoptions['partnershipid']['type'] = PARAM_TEXT;
         $repeatoptions['flccoordinatorid']['type'] = PARAM_TEXT;
-        $repeatoptions['partnershipcoordinatorname']['type'] = PARAM_TEXT;
-        $repeatoptions['partnershipcoordinatorphone']['type'] = PARAM_TEXT;
+        $repeatoptions['partnershipcoordinatorid']['type'] = PARAM_TEXT;
         $repeatoptions['status']['type'] = PARAM_TEXT;
 
         // Set element rules.
@@ -142,7 +129,7 @@ class addpickups_form extends \moodleform {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
-        
+
 
         // for ($i = 0; $i < $data['pickups']; $i++) {
         //     if ($data['pickupendtime'][$i] >= $data['pickupstarttime'][$i]) {

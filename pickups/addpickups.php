@@ -46,25 +46,16 @@ if ($mform->is_cancelled()) {
 } else if ($data = $mform->get_data()) {
     $numberofpickups = $data->pickups;
     $success = true;
-    // echo '<pre>';
-    // var_dump($data);
-    // echo '</pre>';
-    // die();
 
     for ($i = 0; $i < $numberofpickups; $i++) {
         $pickup = new stdClass();
         $pickup->pickupdate = $data->pickupdate[$i];
-
         // Combine hours and minutes into a single timestamp
         $pickup->starttime = $data->pickupdate[$i] + ($data->starttimehour[$i] * 3600) + ($data->starttimeminute[$i] * 60);
         $pickup->endtime = $data->pickupdate[$i] + ($data->endtimehour[$i] * 3600) + ($data->endtimeminute[$i] * 60);
-
-        // $pickup->starttime = $data->starttime[$i];
-        // $pickup->endtime = $data->endtime[$i];
         $pickup->partnershipid = $data->partnershipid[$i];
         $pickup->flccoordinatorid = $data->flccoordinatorid[$i];
-        $pickup->partnershipcoordinatorname = $data->partnershipcoordinatorname[$i];
-        $pickup->partnershipcoordinatorphone = $data->partnershipcoordinatorphone[$i];
+        $pickup->partnershipcoordinatorid = $data->partnershipcoordinatorid[$i];
         $pickup->status = $data->status[$i];
 
         $pickup->id = $DB->insert_record('local_equipment_pickup', $pickup);

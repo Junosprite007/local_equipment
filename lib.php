@@ -276,10 +276,13 @@ function local_equipment_get_liaison_info($partnership) {
  * Get the FLC coordinator name, email, and contact phone for a given pickup location and time.
  * Emails and phones will be taken from the user's profile, but admins will have the option to add phone numbers for them if they don't do it themselves.
  *
- * @param int $id The user ID of the FLC coordinator, taken from the Moodle's core user table.
+ * @param int $id The user ID of the coordinator, taken from the Moodle's core user table. MUST be a valid user ID.
  * @return string $liasonhtml An HTML string containing the FLC coordinator's name, email, and phone number.
  */
 function local_equipment_get_coordinator_info($id) {
+    if (!$id) {
+        return get_string('nocoordinatoradded', 'local_equipment');
+    }
     // $userid = json_decode($flccoordinator->id);
 
     $userlinks = [];

@@ -183,7 +183,40 @@ function xmldb_local_equipment_upgrade($oldversion) {
         }
 
         // Equipment savepoint reached.
-        upgrade_plugin_savepoint(true, 2024071800, 'local', 'equipment');
+        upgrade_plugin_savepoint(true, 2024081401, 'local', 'equipment');
+    }
+
+    // 2024081500
+    if ($oldversion < 2024081500) {
+        // Define field partnershipcoordinatorid to be added to local_equipment_pickup.
+        // The param 'flccoordinatorid' is the field that the new field will be added after in the database.
+        $table = new xmldb_table('local_equipment_pickup');
+        $field = new xmldb_field('partnershipcoordinatorid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'flccoordinatorid');
+
+        // Conditionally launch add_field partnershipcoordinatorid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define foreign key partnershipcoordinatorid to be added to local_equipment_pickup.
+        $key = new xmldb_key('partnershipcoordinatorid', XMLDB_KEY_FOREIGN, ['partnershipcoordinatorid'], 'user', ['id']);
+
+        // Launch add key partnershipcoordinatorid.
+        $dbman->add_key($table, $key);
+
+        // Remove old fields
+        $field = new xmldb_field('partnershipcoordinatorname');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        $field = new xmldb_field('partnershipcoordinatorphone');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        // Local_equipment savepoint reached
+        upgrade_plugin_savepoint(true, 2024081500, 'local', 'equipment');
     }
 
     return true;
