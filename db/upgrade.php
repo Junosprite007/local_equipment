@@ -186,7 +186,8 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024081401, 'local', 'equipment');
     }
 
-    // 2024081500
+    // Thursday, August 15, 2024 upgrade
+    // Replace the partnershipcoordinatorname and partnershipcoordinatorphone fields with a partnershipcoordinatorid field, which is a user.
     if ($oldversion < 2024081500) {
         // Define field partnershipcoordinatorid to be added to local_equipment_pickup.
         // The param 'flccoordinatorid' is the field that the new field will be added after in the database.
@@ -217,6 +218,48 @@ function xmldb_local_equipment_upgrade($oldversion) {
 
         // Local_equipment savepoint reached
         upgrade_plugin_savepoint(true, 2024081500, 'local', 'equipment');
+    }
+
+    // Friday, August 16, 2024 upgrade 'cause I messed up... easy fix, though.
+    // Replace the pickupstarttime and pickupendtime with pickupdate, starttime, and endtime, then add a status field as well.
+    if ($oldversion < 2024081600) {
+        // Add missing fields to local_equipment_pickup table.
+        $table = new xmldb_table('local_equipment_pickup');
+
+        // Add pickupdate field.
+        $field = new xmldb_field('pickupdate', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'partnershipcoordinatorid');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        // Add starttime field.
+        $field = new xmldb_field('starttime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'pickupdate');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        // Add endtime field.
+        $field = new xmldb_field('endtime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'starttime');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        // Add status field.
+        $field = new xmldb_field('status', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'endtime');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Remove old fields
+        $field = new xmldb_field('pickupstarttime');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        $field = new xmldb_field('pickupendtime');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        // Local_equipment savepoint reached
+        upgrade_plugin_savepoint(true, 2024081600, 'local', 'equipment');
     }
 
     return true;
