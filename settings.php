@@ -25,100 +25,121 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-// Let's define some variables for all the name of the part of the admin tree where the setting will be added.
 
-// The Site administration tab that these settings will be seen under.
-// The 'Plugins' tab is actually called 'modules' in the code. Took me forever to figure that out.
-$component = 'local_equipment';
+if ($hassiteconfig) {
 
-// Let's create all the categories and subcategories we will need for the admins to access.
-// Remember, categories and subcategories do not appear until they have a page or link added to them.
+    // Let's define some variables for all the name of the part of the admin tree where the setting will be added.
 
-// Main category must be created first!
-// Create a new category under the Site administration > Plugins tab, which is actually called 'modules' in the codebase. Took me forever to figure that out.
-$ADMIN->add(
-    'modules',
-    new admin_category(
+    // The Site administration tab that these settings will be seen under.
+    // The 'Plugins' tab is actually called 'modules' in the code. Took me forever to figure that out.
+    $component = 'local_equipment';
+
+    // Let's create all the categories and subcategories we will need for the admins to access.
+    // Remember, categories and subcategories do not appear until they have a page or link added to them.
+
+    // Main category must be created first!
+    // Create a new category under the Site administration > Plugins tab, which is actually called 'modules' in the codebase. Took me forever to figure that out.
+    $ADMIN->add(
+        'modules',
+        new admin_category(
+            $component,
+            new lang_string('equipment', 'local_equipment')
+        )
+    );
+
+    // This is just creating a standard settings page for the Equipment plugin.
+    $settings = new admin_settingpage("{$component}_settings", get_string('equipmentsettings', 'local_equipment'));
+
+    // Add Pickups sub-settings
+    $settings->add(new admin_setting_heading(
+        "{$component}/pickupsheading",
+        get_string(
+            'pickupsheading',
+            'local_equipment'
+        ),
+        get_string('pickupsheading_desc', 'local_equipment')
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        "{$component}/endedpickupstoshow",
+        get_string('endedpickupstoshow', 'local_equipment'),
+        get_string('endedpickupstoshow_desc', 'local_equipment'),
+        '7', // Default value
+        PARAM_INT
+    ));
+
+
+    $ADMIN->add($component, $settings);
+
+
+    // Add 'Partnerships' subcategory.
+    $ADMIN->add(
         $component,
-    new lang_string('equipment', 'local_equipment')
-));
+        new admin_category(
+            "{$component}_partnerships_cat",
+            new lang_string('partnerships', 'local_equipment')
+        )
+    );
+    // Add 'Pickups' subcategory.
+    $ADMIN->add(
+        $component,
+        new admin_category(
+            "{$component}_pickups_cat",
+            new lang_string('pickups', 'local_equipment')
+        )
+    );
+    // Add 'Agreements' subcategory.
+    $ADMIN->add(
+        $component,
+        new admin_category(
+                "{$component}_agreements_cat",
+                new lang_string('agreements', 'local_equipment')
+            )
+    );
+    // Add 'Consent form' subcategory.
+    $ADMIN->add(
+        $component,
+        new admin_category(
+            "{$component}_consentform_cat",
+            new lang_string('consentform', 'local_equipment')
+        )
+    );
 
-// This is just creating a standard settings page for the Equipment plugin, which doesn't contain anything yet.
-$ADMIN->add(
-    $component,
-    new admin_settingpage(
-        "{$component}_settings",
-    new lang_string('pluginsettings', 'local_equipment')
-    )
-);
-
-// Add 'Partnerships' subcategory.
-$ADMIN->add(
-    $component,
-    new admin_category(
+    // An external page is a link to a page outside of the Moodle admin settings, i.e. to a file within the custom plugin.
+    // Add the manage partnerships page.
+    $ADMIN->add(
         "{$component}_partnerships_cat",
-        new lang_string('partnerships', 'local_equipment')
-    )
-);
-// Add 'Pickups' subcategory.
-$ADMIN->add(
-    $component,
-    new admin_category(
+        new admin_externalpage(
+            "{$component}_partnerships", // Needs to match the parameter in 'admin_externalpage_setup()' on the partnerships.php page.
+            new lang_string('viewmanagepartnerships', 'local_equipment'),
+            new moodle_url('/local/equipment/partnerships.php'),
+        )
+    );
+    // Add a link to the add partnership page.
+    $ADMIN->add(
+        "{$component}_partnerships_cat",
+        new admin_externalpage(
+            "{$component}_addpartnerships",
+            new lang_string('addpartnerships', 'local_equipment'),
+            new moodle_url('/local/equipment/partnerships/addpartnerships.php')
+        )
+    );
+    // Add the manage pickups page.
+    $ADMIN->add(
         "{$component}_pickups_cat",
-        new lang_string('pickups', 'local_equipment')
-    )
-);
-// Add 'Agreements' subcategory.
-$ADMIN->add(
-    $component,
-    new admin_category(
-        "{$component}_agreements_cat",
-        new lang_string('agreements', 'local_equipment')
-    )
-);
-// Add 'Consent form' subcategory.
-$ADMIN->add(
-    $component,
-    new admin_category(
-        "{$component}_consentform_cat",
-        new lang_string('consentform', 'local_equipment')
-    )
-);
-
-// An external page is a link to a page outside of the Moodle admin settings, i.e. to a file within the custom plugin.
-// Add the manage partnerships page.
-$ADMIN->add(
-    "{$component}_partnerships_cat",
-    new admin_externalpage(
-        "{$component}_partnerships", // Needs to match the parameter in 'admin_externalpage_setup()' on the partnerships.php page.
-        new lang_string('viewmanagepartnerships', 'local_equipment'),
-        new moodle_url('/local/equipment/partnerships.php'),
-    )
-);
-// Add a link to the add partnership page.
-$ADMIN->add(
-    "{$component}_partnerships_cat",
-    new admin_externalpage(
-        "{$component}_addpartnerships",
-        new lang_string('addpartnerships', 'local_equipment'),
-        new moodle_url('/local/equipment/partnerships/addpartnerships.php')
-    )
-);
-// Add the manage pickups page.
-$ADMIN->add(
-    "{$component}_pickups_cat",
-    new admin_externalpage(
-        "{$component}_pickups",
-        new lang_string('viewmanagepickups', 'local_equipment'),
-        new moodle_url('/local/equipment/pickups.php'),
-    )
-);
-// Add a link to the add partnership page.
-$ADMIN->add(
-    "{$component}_pickups_cat",
-    new admin_externalpage(
-        "{$component}_addpickups",
-        new lang_string('addpickups', 'local_equipment'),
-        new moodle_url('/local/equipment/pickups/addpickups.php')
-    )
-);
+        new admin_externalpage(
+            "{$component}_pickups",
+            new lang_string('viewmanagepickups', 'local_equipment'),
+            new moodle_url('/local/equipment/pickups.php'),
+        )
+    );
+    // Add a link to the add partnership page.
+    $ADMIN->add(
+        "{$component}_pickups_cat",
+        new admin_externalpage(
+            "{$component}_addpickups",
+            new lang_string('addpickups', 'local_equipment'),
+            new moodle_url('/local/equipment/pickups/addpickups.php')
+        )
+    );
+}

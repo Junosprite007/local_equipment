@@ -38,7 +38,7 @@ class addpickups_form extends \moodleform {
      * Form definition.
      */
     public function definition() {
-        global $DB, $PAGE;
+        global $DB;
 
         $mform = $this->_form;
         $repeatarray = [];
@@ -66,6 +66,7 @@ class addpickups_form extends \moodleform {
 
         $repeatarray = [
             'pickupheader' => $mform->createElement('header', 'pickupheader', get_string('pickup', 'local_equipment'), ['class' => 'local-equipment-pickups-addpickups-time-selectors']),
+            'delete' => $mform->createElement('html', '<button type="button" class="local-equipment-remove-pickup btn btn-danger"><i class="fa fa-trash"></i></button>'),
             'pickupdate' => $mform->createElement('date_selector', 'pickupdate', get_string('pickupdate', 'local_equipment')),
             'starttime' => create_time_selector($mform, 'starttime', get_string('starttime', 'local_equipment')),
             'endtime' => create_time_selector($mform, 'endtime', get_string('endtime', 'local_equipment')),
@@ -73,12 +74,6 @@ class addpickups_form extends \moodleform {
             'flccoordinatorid' => $mform->createElement('autocomplete', 'flccoordinatorid', get_string('selectflccoordinator', 'local_equipment'), [], $users),
             'partnershipcoordinatorid' => $mform->createElement('autocomplete', 'partnershipcoordinatorid', get_string('selectpartnershipcoordinator', 'local_equipment'), [], $users),
             'status' => $mform->createElement('select', 'status', get_string('status', 'local_equipment'), $statuses),
-            'removepickup' => $mform->createElement(
-                'button',
-                'removepickup',
-                get_string('removepickup', 'local_equipment'),
-                array('class' => 'local-equipment-remove-pickup')
-            )
         ];
 
         // Set header.
@@ -105,10 +100,11 @@ class addpickups_form extends \moodleform {
             $repeatno,
             $repeatoptions,
             'pickups',
-            'addpickup',
+            'add_pickup',
             1,
             get_string('addmorepickups', 'local_equipment'),
-            true
+            false,
+            'delete_pickup'
         );
 
         // $mform->addElement('hidden', 'pickups', $repeatno);

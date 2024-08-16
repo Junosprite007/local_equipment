@@ -26,15 +26,17 @@
 require_once('../../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/local/equipment/classes/form/editpartnership_form.php');
+
 global $DB;
 
 $id = required_param('id', PARAM_INT); // Partnership ID
+require_login();
+
 $context = context_system::instance();
 $url = new moodle_url('/local/equipment/partnerships/editpartnership.php', ['id' => $id]);
 $redirecturl = new moodle_url('/local/equipment/partnerships.php');
 
 // Set up the page.
-require_login();
 $PAGE->set_context($context);
 $PAGE->set_url($url, ['id' => $id]);
 $PAGE->set_title(get_string('editpartnership', 'local_equipment'));

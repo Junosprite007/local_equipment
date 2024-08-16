@@ -16,13 +16,13 @@
 /**
  * JavaScript for deleting partnerships in the add partnerships form.
  *
- * @module      local_equipment/addpartnership_form
+ * @module      local_equipment/addpartnerships_form
  * @copyright   2024 onward Joshua Kirby <josh@funlearningcompany.com>
  * @author      Joshua Kirby - CTO @ Fun Learning Company - funlearningcompany.com
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-M.util.js_pending("local_equipment/addpartnership_form");
+M.util.js_pending("local_equipment/addpartnerships_form");
 
 define(["jquery", "core/log", "core/str"], ($, log, Str) => {
     return {
@@ -130,7 +130,7 @@ define(["jquery", "core/log", "core/str"], ($, log, Str) => {
 
                 updateTrashIcons();
             });
-            M.util.js_complete("local_equipment/addpartnership_form");
+            M.util.js_complete("local_equipment/addpartnerships_form");
         },
     };
 });

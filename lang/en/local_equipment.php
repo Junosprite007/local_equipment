@@ -63,6 +63,7 @@ $string['editpartnership'] = 'Edit partnership';
 $string['editpartnerships'] = 'Edit partnerships';
 $string['endtime'] = 'End time';
 $string['equipment'] = 'Equipment';
+$string['equipmentsettings'] = 'Equipment settings';
 $string['equipment:managepartnerships'] = 'Allows user to manage partnerships';
 $string['equipment:seedetails'] = 'See equipment plugin menus and details';
 $string['equipmentcheckout'] = 'Equipment checkout';
@@ -117,7 +118,6 @@ $string['pickups'] = 'Pickups';
 $string['pickupsadded'] = 'Pickups added successfully';
 $string['pluginadministration'] = 'Equipment checkout administration';
 $string['pluginname'] = 'Equipment';
-$string['pluginsettings'] = 'Plugin settings';
 $string['removepartnership'] = 'Remove partnership';
 $string['returntoaddpartnerships'] = 'addpartnerships';
 $string['roomareainstruction'] = 'Room/area instructions';
@@ -158,6 +158,9 @@ $string['zipcode_pickup'] = 'Zip Code (pickup)';
 
 
 // Pickups pages strings
+$string['endedpickupstoshow'] = 'Ended pickups to show';
+$string['endedpickupstoshow_desc'] = 'The amount of days old that an end time can be for a specific pickup day to be shown in the list of pickups. Examples: "7" means any pickups that ended more than 7 days ago will not be shown in the list of pickups. "0" means pickups disappear as soon as they end. Use "-1" to show all pickups, regardless of end time.';
+
 $string['addpickup'] = 'Add pickup';
 $string['addpickups'] = 'Add pickups';
 $string['addmorepickups'] = 'Add more pickups';
@@ -171,9 +174,11 @@ $string['nocoordinatoradded'] = 'No coordinator added';
 $string['partnershipcoordinator'] = 'Partnership coordinator';
 $string['pickupdeleted'] = 'Pickup deleted';
 $string['pickupendtime'] = 'Pickup end time';
-$string['pickupstarttime'] = 'Pickup start time';
 $string['pickups'] = 'Pickups';
 $string['pickupsadded'] = 'Pickups added';
+$string['pickupsheading'] = 'Pickups settings';
+$string['pickupsheading_desc'] = 'Settings related to equipment pickups.';
+$string['pickupstarttime'] = 'Pickup start time';
 $string['selectflccoordinator'] = 'Select FLC coordinator';
 $string['selectpartnershipcoordinator'] = 'Select partnership coordinator';
 $string['status'] = 'Status';

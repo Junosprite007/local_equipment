@@ -121,8 +121,18 @@ $from =
          LEFT JOIN {user} fu ON ep.flccoordinatorid = fu.id
          LEFT JOIN {user} pu ON ep.partnershipcoordinatorid = pu.id";
 
-$where = "";
+$endedpickupstoshow = get_config('local_equipment', 'endedpickupstoshow');
+if (!isset($endedpickupstoshow)) {
+    $endedpickupstoshow = 7; // Fallback to 7 days if the setting is not found
+}
+
+$pastseconds = time() - ($endedpickupstoshow * 86400); // Convert days to seconds
+$where = '';
 $params = [];
+
+if (!($endedpickupstoshow < 0)) {
+    $where = "endtime >= $pastseconds";
+}
 
 // Get sorting parameters
 $sort = $table->get_sql_sort();

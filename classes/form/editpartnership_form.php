@@ -64,6 +64,7 @@ class editpartnership_form extends \moodleform {
         $mform->addElement('text', 'name', get_string('name', 'local_equipment'));
         $mform->setType('name', PARAM_TEXT);
         $mform->setDefault('name', $data->name);
+        $mform->addRule('name', get_string('required'), 'required', null, 'client');
 
         $mform->addElement('autocomplete', 'liaisons', get_string('selectliaisons', 'local_equipment'), [], $users);
         $mform->setType('liaisons', PARAM_RAW);

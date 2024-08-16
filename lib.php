@@ -607,16 +607,22 @@ function local_equipment_add_edit_address_block($mform, $addresstype, $data) {
  * @param MoodleQuickForm $mform A standard moodle form, probably will be '$this->_form'.
  * @param string $addresstype The type of address block to add: 'mailing', 'physical', 'pickup', or 'billing'.
  * @param string $label The existing data to populate the form with.
+ * @param string $defaultstarttime The existing hours to populate the hour dropdown menu with.
+ * @param string $defaultendtime The existing minutes to populate the minute dropdown menu with.
  * @return object $block a block of elements to be added to the form.
  */
-function create_time_selector($mform, $name, $label) {
+function create_time_selector($mform, $name, $label, $defaulttime = null) {
     $hours = array_combine(range(0, 23), range(0, 23));
     $minutes = array_combine(range(0, 59, 5), range(0, 59, 5)); // 5-minute intervals
 
-
     $hourelement = $mform->createElement('select', $name . 'hour', get_string('hour'), $hours);
     $minuteelement = $mform->createElement('select', $name . 'minute', get_string('minute'), $minutes);
-
+    // Set the default starting hour and minute if it exists.
+    if ($defaulttime) {
+        $mform->setDefault($name . 'hour', date('H', $defaulttime));
+        $mform->setDefault($name . 'minute', date('i', $defaulttime));
+    }
+    // Set the default ending hour and minute if it exists.
 
     $elements = array(
         $mform->createElement('html', '<div class="form-group row">'),

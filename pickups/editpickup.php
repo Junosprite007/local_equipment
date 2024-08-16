@@ -26,16 +26,16 @@
 require_once('../../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/local/equipment/classes/form/editpickup_form.php');
+
 global $DB;
 
 $id = required_param('id', PARAM_INT);
+require_login();
+
 $context = context_system::instance();
 $url = new moodle_url('/local/equipment/pickups/editpickup.php', ['id' => $id]);
 $redirecturl = new moodle_url('/local/equipment/pickups.php');
 
-// admin_externalpage_setup('local_equipment_editpickup');
-
-require_login();
 $PAGE->set_context($context);
 $PAGE->set_url($url);
 $PAGE->set_title(get_string('editpickup', 'local_equipment'));
@@ -52,17 +52,28 @@ $mform = new local_equipment\form\editpickup_form($url, ['id' => $id, 'data' => 
 if ($mform->is_cancelled()) {
     redirect(new moodle_url('/local/equipment/pickups.php'));
 } else if ($data = $mform->get_data()) {
-    $pickup->name = $data->name;
-    $pickup->partnershipid = $data->partnershipid;
+    // $pickup->name = $data->name;
+    // $pickup->partnershipid = $data->partnershipid;
+    // $pickup->pickupdate = $data->pickupdate;
+    // $pickup->dropoffdate = $data->dropoffdate;
+    // $pickup->status = $data->status;
+    // $pickup->timemodified = time();
+
+    // $pickup = new stdClass();
     $pickup->pickupdate = $data->pickupdate;
-    $pickup->dropoffdate = $data->dropoffdate;
+    // Combine hours and minutes into a single timestamp
+    $pickup->starttime = $data->pickupdate + ($data->starttimehour * 3600) + ($data->starttimeminute * 60);
+    $pickup->endtime = $data->pickupdate + ($data->endtimehour * 3600) + ($data->endtimeminute * 60);
+    $pickup->partnershipid = $data->partnershipid;
+    $pickup->flccoordinatorid = $data->flccoordinatorid;
+    $pickup->partnershipcoordinatorid = $data->partnershipcoordinatorid;
     $pickup->status = $data->status;
-    $pickup->timemodified = time();
+
 
     if ($DB->update_record('local_equipment_pickup', $pickup)) {
         redirect(
             new moodle_url('/local/equipment/pickups.php'),
-            get_string('pickupupdated', 'local_equipment'),
+            get_string('pickupdate', 'local_equipment'),
             null,
             \core\output\notification::NOTIFY_SUCCESS
         );

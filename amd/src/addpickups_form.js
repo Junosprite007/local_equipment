@@ -14,75 +14,123 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * JavaScript for managing multiple pickups in the add pickups form.
+ * JavaScript for deleting pickups in the add pickups form.
  *
- * @module      local_equipment/addpickup_form
+ * @module      local_equipment/addpickups_form
  * @copyright   2024 onward Joshua Kirby <josh@funlearningcompany.com>
  * @author      Joshua Kirby - CTO @ Fun Learning Company - funlearningcompany.com
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(["jquery", "core/str"], function ($, Str) {
-    return {
-        init: function () {
-            var module = this;
+M.util.js_pending("local_equipment/addpickups_form");
 
+define(["jquery", "core/log", "core/str"], ($, log, Str) => {
+    return {
+        init: () => {
             $(document).ready(function () {
-                module.updatePickupNumbers();
-                module.updateTrashIcons();
+                const selector = "fieldset[id^='id_pickupheader_']";
+                log.debug("Add Pickup Form JS initialized");
+
+                const updatePickupNumbers = () => {
+                    log.debug("updatePickupNumbers");
+                    $(".local-equipment-pickup-header").each(
+                        (index, element) => {
+                            Str.get_string(
+                                "pickup",
+                                "local_equipment",
+                                index + 1
+                            )
+                                .then((string) => {
+                                    $(element).text(string);
+                                })
+                                .catch((error) => {
+                                    log.error(
+                                        "Error updating pickup header:",
+                                        error
+                                    );
+                                });
+                        }
+                    );
+                };
+
+                const updateHiddenFields = () => {
+                    log.debug("updateHiddenFields");
+                    const pickupsCount = $(selector).length;
+                    log.debug(`Number of fieldsets: ${pickupsCount}`);
+                    $('input[name="pickups"]').val(pickupsCount);
+
+                    // Update the URL if necessary
+                    const url = new URL(window.location.href);
+                    url.searchParams.set("repeatno", pickupsCount);
+                    window.history.replaceState({}, "", url);
+                };
+
+                const renumberFormElements = () => {
+                    log.debug("renumberFormElements");
+                    $(selector).each((index, fieldset) => {
+                        log.debug(`Renumbering fieldset ${index}`);
+                        $(fieldset)
+                            .find("input, select, textarea")
+                            .each((_, element) => {
+                                const name = $(element).attr("name");
+                                if (name) {
+                                    const newName = name.replace(
+                                        /\[\d+\]/,
+                                        `[${index}]`
+                                    );
+                                    $(element).attr("name", newName);
+                                }
+                                const id = $(element).attr("id");
+                                if (id) {
+                                    const newId = id.replace(
+                                        /_\d+_/,
+                                        `_${index}_`
+                                    );
+                                    $(element).attr("id", newId);
+                                }
+                            });
+                    });
+                };
+
+                const updateTrashIcons = () => {
+                    log.debug("updateTrashIcons");
+                    const pickups = $(selector);
+                    log.debug("pickups");
+                    log.debug(pickups);
+                    log.debug('$(".local-equipment-remove-pickup")');
+                    log.debug($(".local-equipment-remove-pickup"));
+                    if (pickups.length > 1) {
+                        log.debug("if");
+                        $(".local-equipment-remove-pickup").show();
+                    } else {
+                        log.debug("else");
+                        $(".local-equipment-remove-pickup").hide();
+                    }
+                };
 
                 $(document).on(
                     "click",
                     ".local-equipment-remove-pickup",
-                    function (e) {
-                        e.preventDefault();
-                        module.removePickup($(this));
+                    function () {
+                        log.debug("Event triggered");
+                        const $fieldset = $(this).closest(selector);
+                        log.debug($fieldset);
+                        const removedfieldset = $fieldset.remove();
+                        log.debug("Fieldset removed");
+                        log.debug(
+                            "Here's what returned from the '$fieldset.remove()' command:"
+                        );
+                        log.debug(removedfieldset);
+                        updatePickupNumbers();
+                        updateHiddenFields();
+                        renumberFormElements();
+                        updateTrashIcons();
                     }
                 );
 
-                $("#id_addpickup").on("click", function () {
-                    setTimeout(function () {
-                        module.updatePickupNumbers();
-                        module.updateTrashIcons();
-                    }, 100);
-                });
+                updateTrashIcons();
             });
-        },
-
-        updatePickupNumbers: function () {
-            $(".local-equipment-pickup-header").each(function (index) {
-                Str.get_string("pickup", "local_equipment", index + 1).then(
-                    function (string) {
-                        $(this).text(string);
-                    }.bind(this)
-                );
-            });
-        },
-
-        updateTrashIcons: function () {
-            var pickups = $('fieldset[id^="id_pickupheader_"]');
-            if (pickups.length > 1) {
-                $(".local-equipment-remove-pickup").show();
-            } else {
-                $(".local-equipment-remove-pickup").hide();
-            }
-        },
-
-        removePickup: function (button) {
-            var pickup = button.closest("fieldset");
-            pickup.remove();
-            this.updatePickupNumbers();
-            this.updateTrashIcons();
-            this.updateHiddenFields();
-        },
-
-        updateHiddenFields: function () {
-            var pickupCount = $('fieldset[id^="id_pickupheader_"]').length;
-            $('input[name="pickups"]').val(pickupCount);
-
-            var url = new URL(window.location.href);
-            url.searchParams.set("repeatno", pickupCount);
-            window.history.replaceState({}, "", url);
+            M.util.js_complete("local_equipment/addpickups_form");
         },
     };
 });

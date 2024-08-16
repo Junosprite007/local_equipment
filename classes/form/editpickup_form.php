@@ -39,14 +39,6 @@ class editpickup_form extends \moodleform {
         global $DB;
         $mform = $this->_form;
         $data = $this->_customdata['data'];
-        echo '<br />';
-        echo '<br />';
-        echo '<br />';
-        echo '<br />';
-        echo '<pre>';
-        var_dump($data);
-        echo '</pre>';
-        // die();
 
         $partnerships = $DB->get_records_menu('local_equipment_partnership', null, 'name ASC', 'id,name');
         $statuses = [
@@ -69,32 +61,36 @@ class editpickup_form extends \moodleform {
         $mform->addElement('hidden', 'pickupid', $data->id);
         $mform->setType('pickupid', PARAM_TEXT);
 
-        $mform->addElement('header', 'pickupheader', get_string('pickup', 'local_equipment'));
+        $mform->addElement('header', 'pickupheader', get_string('pickup', 'local_equipment'), ['class' => 'local-equipment-pickups-addpickups-time-selectors']);
 
-        $mform->addElement('date_time_selector', 'pickupstarttime', get_string('pickupstarttime', 'local_equipment'));
-        $mform->setType('pickupstarttime', PARAM_INT);
-        $mform->setDefault('pickupstarttime', $data->pickupstarttime);
+        $mform->addElement('date_selector', 'pickupdate', get_string('pickupdate', 'local_equipment'));
+        $mform->setType('pickupdate', PARAM_INT);
+        $mform->setDefault('pickupdate', $data->pickupdate);
+        $mform->addRule('pickupdate', get_string('required'), 'required', null, 'client');
 
-        $mform->addElement('date_time_selector', 'pickupendtime', get_string('pickupendtime', 'local_equipment'));
-        $mform->setType('pickupendtime', PARAM_INT);
-        $mform->setDefault('pickupendtime', $data->pickupendtime);
+        $mform->addElement(create_time_selector($mform, 'starttime', get_string('starttime', 'local_equipment'), $data->starttime));
+        $mform->setType('starttime', PARAM_INT);
+        $mform->addRule('starttime', get_string('required'), 'required', null, 'client');
+        // $mform->setDefault('starttime', $data->starttime);
+
+        $mform->addElement(create_time_selector($mform, 'endtime', get_string('endtime', 'local_equipment'), $data->endtime));
+        $mform->setType('endtime', PARAM_INT);
+        $mform->addRule('endtime', get_string('required'), 'required', null, 'client');
+        // $mform->setDefault('endtime', $data->starttime);
 
         $mform->addElement('select', 'partnershipid', get_string('partnership', 'local_equipment'), $partnerships);
         $mform->setType('partnershipid', PARAM_INT);
         $mform->setDefault('partnershipid', $data->partnershipid);
-
+        $mform->addRule('partnershipid', get_string('required'), 'required', null, 'client');
 
         $mform->addElement('autocomplete', 'flccoordinatorid', get_string('selectflccoordinator', 'local_equipment'), [], $users);
         $mform->setType('flccoordinatorid', PARAM_TEXT);
         $mform->setDefault('flccoordinatorid', $data->flccoordinatorid);
+        $mform->addRule('flccoordinatorid', get_string('required'), 'required', null, 'client');
 
-        $mform->addElement('text', 'partnershipcoordinatorname', get_string('partnershipcoordinatorname', 'local_equipment'));
-        $mform->setType('partnershipcoordinatorname', PARAM_TEXT);
-        $mform->setDefault('partnershipcoordinatorname', $data->partnershipcoordinatorname);
-
-        $mform->addElement('text', 'partnershipcoordinatorphone', get_string('partnershipcoordinatorphone', 'local_equipment'));
-        $mform->setType('partnershipcoordinatorphone', PARAM_TEXT);
-        $mform->setDefault('partnershipcoordinatorphone', $data->partnershipcoordinatorphone);
+        $mform->addElement('autocomplete', 'partnershipcoordinatorid', get_string('selectpartnershipcoordinator', 'local_equipment'), [], $users);
+        $mform->setType('partnershipcoordinatorid', PARAM_TEXT);
+        $mform->setDefault('partnershipcoordinatorid', $data->partnershipcoordinatorid);
 
         $mform->addElement('select', 'status', get_string('status', 'local_equipment'), $statuses);
         $mform->setType('status', PARAM_TEXT);
