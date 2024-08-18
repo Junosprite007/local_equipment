@@ -124,7 +124,7 @@ class editagreement_form extends \moodleform {
             $errors['activeendtime'] = get_string('enddateafterstart', 'local_equipment');
         }
         if ($data['activestarttime'] < usergetmidnight(time())) {
-            $errors['activestarttime'] = get_string('starttimecannotbeinthepast', 'local_equipment') . get_string('wheneditinganexistingagreement', 'local_equipment');
+            $errors['activestarttime'] = get_string('startdatecannotbeinthepast', 'local_equipment') . get_string('wheneditinganexistingagreement', 'local_equipment');
         }
 
         return $errors;

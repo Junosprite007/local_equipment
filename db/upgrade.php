@@ -230,11 +230,11 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024081601, 'local', 'equipment');
     }
 
-    if ($oldversion < 2024081701) {
-        $table = new xmldb_table('local_equipment_agreement');
-        $field = new xmldb_field('parentid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
-        $dbman->rename_field($table, $field, 'previousversionid');
-    }
+    // if ($oldversion < 2024081701) {
+    //     $table = new xmldb_table('local_equipment_agreement');
+    //     $field = new xmldb_field('parentid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+    //     $dbman->rename_field($table, $field, 'previousversionid');
+    // }
 
     return true;
 }

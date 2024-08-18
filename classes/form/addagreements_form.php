@@ -74,7 +74,11 @@ class addagreements_form extends \moodleform {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
-
+        $todaymidnight = usergetmidnight(time());
+        // $endofday = usergetmidnight(time()) + 86399;
+        if ($data['activestarttime'] < $todaymidnight) {
+            $errors['activestarttime'] = get_string('startdatecannotbeinthepast', 'local_equipment');
+        }
         if ($data['activestarttime'] >= $data['activeendtime']) {
             $errors['activeendtime'] = get_string('enddateafterstart', 'local_equipment');
         }
