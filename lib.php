@@ -648,3 +648,41 @@ function create_time_selector($mform, $name, $label, $defaulttime = null) {
     );
     return $mform->createElement('group', $name, $label, $elements, ' ', false);
 }
+
+/**
+ * Get the latest version of an agreement.
+ *
+ * @param int $agreementid The ID of the agreement
+ * @return object|false The latest version of the agreement, or false if not found
+ */
+function local_equipment_get_latest_agreement_version($agreementid) {
+    global $DB;
+
+    $sql = "SELECT a.*
+            FROM {local_equipment_agreement} a
+            WHERE a.id = :agreementid OR a.parentid = :parentid
+            ORDER BY a.version DESC
+            LIMIT 1";
+
+    return $DB->get_record_sql($sql, ['agreementid' => $agreementid, 'parentid' => $agreementid]);
+}
+
+/**
+ * Check if a user has signed a specific agreement.
+ *
+ * @param int $agreementid The ID of the agreement
+ * @param int $userid The ID of the user
+ * @return bool True if the user has signed the agreement, false otherwise
+ */
+function local_equipment_user_has_signed_agreement($agreementid, $userid) {
+    global $DB;
+
+    $sql = "SELECT 1
+            FROM {local_equipment_agreementsubmission} s
+            JOIN {local_equipment_agreement} a ON s.agreementid = a.id
+            WHERE (a.id = :agreementid OR a.parentid = :parentid)
+            AND s.userid = :userid
+            AND s.status = 'accepted'";
+
+    return $DB->record_exists_sql($sql, ['agreementid' => $agreementid, 'parentid' => $agreementid, 'userid' => $userid]);
+}

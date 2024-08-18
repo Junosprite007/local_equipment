@@ -133,13 +133,31 @@ if ($hassiteconfig) {
             new moodle_url('/local/equipment/pickups.php'),
         )
     );
-    // Add a link to the add partnership page.
+    // Add a link to the add pickups page.
     $ADMIN->add(
         "{$component}_pickups_cat",
         new admin_externalpage(
             "{$component}_addpickups",
             new lang_string('addpickups', 'local_equipment'),
             new moodle_url('/local/equipment/pickups/addpickups.php')
+        )
+    );
+    // Add the manage agreements page.
+    $ADMIN->add(
+        "{$component}_agreements_cat",
+        new admin_externalpage(
+            "{$component}_agreements",
+            new lang_string('viewmanageagreements', 'local_equipment'),
+            new moodle_url('/local/equipment/agreements.php'),
+        )
+    );
+    // Add a link to the add agreements page.
+    $ADMIN->add(
+        "{$component}_agreements_cat",
+        new admin_externalpage(
+            "{$component}_addagreements",
+            new lang_string('addagreements', 'local_equipment'),
+            new moodle_url('/local/equipment/agreements/addagreements.php')
         )
     );
 }

@@ -185,9 +185,37 @@ $string['status'] = 'Status';
 $string['viewmanagepickups'] = 'View/manage pickups';
 $string['removepickup'] = 'Remove pickup';
 
+// Agreements pages strings
+$string['active'] = 'Active';
+$string['activeendtime'] = 'Active end time';
+$string['activestarttime'] = 'Active start time';
+$string['addagreement'] = 'Add agreement';
+$string['addagreements'] = 'Add agreements';
+$string['agreementadded'] = 'Agreement added successfully';
+$string['agreementcontent'] = 'Agreement content';
+$string['agreementdeleted'] = 'Agreement deleted successfully';
+$string['agreementtitle'] = 'Agreement title';
+$string['agreementtype'] = 'Agreement type';
+$string['agreementtype_informational'] = 'Informational';
+$string['agreementtype_optinout'] = 'Opt-in/Opt-out';
+$string['agreementupdated'] = 'Agreement updated successfully';
+$string['confirmdeletedialog'] = 'Are you sure you want to delete this agreement?';
+$string['content'] = 'Content';
+$string['currentversion'] = 'Current version';
+$string['editagreement'] = 'Edit agreement';
+$string['enddate'] = 'End date';
+$string['enddateafterstart'] = 'End date must be after start date';
+$string['manageagreements'] = 'Manage agreements';
+$string['requireelectronicsignature'] = 'Require electronic signature';
+$string['requiresignature'] = 'Require signature';
+$string['startdate'] = 'Start date';
+$string['title'] = 'Title';
+$string['type'] = 'Type';
+$string['viewmanageagreements'] = 'View/manage agreements';
+$string['version'] = 'Version';
+
 // Time custom format strings
 $string['strftimedate'] = '%B %d, %Y';
-
 $string['strftimedate'] = '%d %B %Y';
 $string['strftimedatemonthabbr'] = '%d %b %Y';
 $string['strftimedatemonthtimeshort'] = '%d %b %Y, %I:%M';

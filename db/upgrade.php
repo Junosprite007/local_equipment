@@ -101,87 +101,6 @@ function xmldb_local_equipment_upgrade($oldversion) {
             $dbman->create_table($table);
         }
 
-        // Define table local_equipment_agreements.
-        $table = new xmldb_table('local_equipment_agreements');
-        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('name', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('text', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
-        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('activestarttime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('activeendtime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('checkboxnames', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
-        $table->add_field('requireelectronicsignature', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, null);
-
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
-
-        if (!$dbman->table_exists($table)) {
-            $dbman->create_table($table);
-        }
-
-        // Define table local_equipment_parent.
-        $table = new xmldb_table('local_equipment_parent');
-        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('studentfullnames', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
-        $table->add_field('streetaddress_mailing', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('city_mailing', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('state_mailing', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('country_mailing', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('zipcode_mailing', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('streetaddress_billing', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('city_billing', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('state_billing', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('country_billing', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('zipcode_billing', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
-
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['userid']);
-
-        if (!$dbman->table_exists($table)) {
-            $dbman->create_table($table);
-        }
-
-        // Define table local_equipment_student.
-        $table = new xmldb_table('local_equipment_student');
-        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('studentid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('parentid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
-        $table->add_key('studentid', XMLDB_KEY_FOREIGN, ['studentid'], 'user', ['id']);
-        $table->add_key('parentid', XMLDB_KEY_FOREIGN, ['parentid'], 'local_equipment_parent', ['userid']);
-
-        if (!$dbman->table_exists($table)) {
-            $dbman->create_table($table);
-        }
-
-        // Define table local_equipment_student_course.
-        $table = new xmldb_table('local_equipment_student_course');
-        $table->add_field('studentid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['studentid', 'courseid']);
-        $table->add_key('studentid', XMLDB_KEY_FOREIGN, ['studentid'], 'local_equipment_student', ['studentid']);
-        $table->add_key('courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
-
-        if (!$dbman->table_exists($table)) {
-            $dbman->create_table($table);
-        }
-
-        // Define table local_equipment_agreementsubmission.
-        $table = new xmldb_table('local_equipment_agreementsubmission');
-        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('agreementid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('submissiondate', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('status', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
-
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
-        $table->add_key('agreementid', XMLDB_KEY_FOREIGN, ['agreementid'], 'local_equipment_agreement', ['id']);
-        $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
-
-        if (!$dbman->table_exists($table)) {
-            $dbman->create_table($table);
-        }
-
         // Equipment savepoint reached.
         upgrade_plugin_savepoint(true, 2024081401, 'local', 'equipment');
     }
@@ -260,6 +179,54 @@ function xmldb_local_equipment_upgrade($oldversion) {
 
         // Local_equipment savepoint reached
         upgrade_plugin_savepoint(true, 2024081600, 'local', 'equipment');
+    }
+
+    // Saturday, August 16, 2024 upgrade to modify the local_equipment_agreement table.
+    if ($oldversion < 2024081601) {
+
+        // Drop old tables because they should not have any data in it yet. No pages even had access to any of them.
+        $oldtable = new xmldb_table('local_equipment_agreements');
+        if ($dbman->table_exists($oldtable)) {
+            $dbman->drop_table($oldtable);
+        }
+        $oldtable = new xmldb_table('local_equipment_agreementsubmission');
+        if ($dbman->table_exists($oldtable)) {
+            $dbman->drop_table($oldtable);
+        }
+        $oldtable = new xmldb_table('local_equipment_parent');
+        if ($dbman->table_exists($oldtable)) {
+            $dbman->drop_table($oldtable);
+        }
+        $oldtable = new xmldb_table('local_equipment_student');
+        if ($dbman->table_exists($oldtable)) {
+            $dbman->drop_table($oldtable);
+        }
+        $oldtable = new xmldb_table('local_equipment_student_course');
+        if ($dbman->table_exists($oldtable)) {
+            $dbman->drop_table($oldtable);
+        }
+
+        // Define table local_equipment_agreement.
+        $table = new xmldb_table('local_equipment_agreement');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('title', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('content', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $table->add_field('agreementtype', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('activestarttime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('activeendtime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('requireelectronicsignature', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('version', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('parentid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_index('parentid', XMLDB_INDEX_NOTUNIQUE, ['parentid']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        upgrade_plugin_savepoint(true, 2024081601, 'local', 'equipment');
     }
 
     return true;
