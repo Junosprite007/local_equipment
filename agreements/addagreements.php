@@ -43,8 +43,14 @@ $mform = new local_equipment\form\addagreements_form();
 if ($mform->is_cancelled()) {
     redirect(new moodle_url('/local/equipment/agreements.php'));
 } else if ($data = $mform->get_data()) {
+    echo '<pre>';
+    var_dump($data);
+    echo '</pre>';
+    die();
+
     $agreement = new stdClass();
     $agreement->title = $data->title;
+    $agreement->contenttext = $data->content['text'];
     $agreement->content = $data->content['text'];
     $agreement->agreementtype = $data->agreementtype;
     $agreement->timecreated = time();

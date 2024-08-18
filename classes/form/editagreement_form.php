@@ -38,29 +38,39 @@ class editagreement_form extends \moodleform {
         $mform = $this->_form;
         $agreement = $this->_customdata['agreement'];
 
+        // echo '<pre>';
+        // var_dump($agreement);
+        // echo '</pre>';
+        // die();
+
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
 
         $mform->addElement('text', 'title', get_string('agreementtitle', 'local_equipment'));
         $mform->setType('title', PARAM_TEXT);
         $mform->addRule('title', null, 'required', null, 'client');
+        // $mform->setDefault('title', $agreement->title);
 
         $mform->addElement('editor', 'content', get_string('agreementcontent', 'local_equipment'));
         $mform->setType('content', PARAM_RAW);
         $mform->addRule('content', null, 'required', null, 'client');
+        // $mform->setDefault('content', ['text' => $agreement->content]);
 
         $types = [
             'informational' => get_string('agreementtype_informational', 'local_equipment'),
             'optinout' => get_string('agreementtype_optinout', 'local_equipment'),
         ];
         $mform->addElement('select', 'agreementtype', get_string('agreementtype', 'local_equipment'), $types);
+        // $mform->setDefault('agreementtype', $agreement->agreementtype);
 
-        $mform->addElement('advcheckbox', 'active', get_string('active', 'local_equipment'));
+        $mform->addElement('advcheckbox', 'requireelectronicsignature', get_string('requireelectronicsignature', 'local_equipment'));
+        // $mform->setDefault('requireelectronicsignature', $agreement->requiresignature);
 
-        $mform->addElement('advcheckbox', 'requiresignature', get_string('requiresignature', 'local_equipment'));
+        $mform->addElement('date_selector', 'activestarttime', get_string('activestarttime', 'local_equipment'));
+        // $mform->setDefault('activestarttime', time());
 
-        $mform->addElement('date_selector', 'startdate', get_string('startdate', 'local_equipment'));
-        $mform->addElement('date_selector', 'enddate', get_string('enddate', 'local_equipment'));
+        $mform->addElement('date_selector', 'activeendtime', get_string('activeendtime', 'local_equipment'));
+        // $mform->setDefault('activeendtime', $agreement->enddate);
 
         $mform->addElement('static', 'currentversion', get_string('currentversion', 'local_equipment'), $agreement->version);
 
@@ -77,8 +87,11 @@ class editagreement_form extends \moodleform {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
-        if ($data['startdate'] >= $data['enddate']) {
-            $errors['enddate'] = get_string('enddateafterstart', 'local_equipment');
+        if ($data['activestarttime'] >= $data['activeendtime']) {
+            $errors['activeendtime'] = get_string('enddateafterstart', 'local_equipment');
+        }
+        if ($data['activestarttime'] < usergetmidnight(time())) {
+            $errors['activestarttime'] = get_string('starttimecannotbeinthepast', 'local_equipment') . get_string('wheneditinganexistingagreement', 'local_equipment');
         }
 
         return $errors;

@@ -210,7 +210,8 @@ function xmldb_local_equipment_upgrade($oldversion) {
         $table = new xmldb_table('local_equipment_agreement');
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('title', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('content', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $table->add_field('contenttext', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $table->add_field('contentformat', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, null);
         $table->add_field('agreementtype', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, null);
         $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('activestarttime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
@@ -227,6 +228,18 @@ function xmldb_local_equipment_upgrade($oldversion) {
         }
 
         upgrade_plugin_savepoint(true, 2024081601, 'local', 'equipment');
+    }
+
+    if ($oldversion < 2024081700) {
+        $table = new xmldb_table('local_equipment_agreement');
+        $oldfield = new xmldb_field('contenttext', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->rename_field($table, $oldfield, 'contenttext');
+        }
+        $field = new xmldb_field('contentformat', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, null, 'contenttext');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
     }
 
     return true;

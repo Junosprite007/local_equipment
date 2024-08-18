@@ -53,9 +53,6 @@ class addagreements_form extends \moodleform {
         $mform->addElement('select', 'agreementtype', get_string('agreementtype', 'local_equipment'), $types);
         $mform->setDefault('agreementtype', 'informational');
 
-        $mform->addElement('advcheckbox', 'active', get_string('active', 'local_equipment'));
-        $mform->setDefault('active', 0);
-
         $mform->addElement('advcheckbox', 'requireelectronicsignature', get_string('requireelectronicsignature', 'local_equipment'));
 
         $mform->addElement('date_selector', 'activestarttime', get_string('activestarttime', 'local_equipment'));

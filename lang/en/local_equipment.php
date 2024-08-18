@@ -209,10 +209,12 @@ $string['manageagreements'] = 'Manage agreements';
 $string['requireelectronicsignature'] = 'Require electronic signature';
 $string['requiresignature'] = 'Require signature';
 $string['startdate'] = 'Start date';
+$string['starttimecannotbeinthepast'] = 'Start time cannot be in the past.';
 $string['title'] = 'Title';
 $string['type'] = 'Type';
 $string['viewmanageagreements'] = 'View/manage agreements';
 $string['version'] = 'Version';
+$string['wheneditinganexistingagreement'] = 'When editing an existing agreement, the start time must be moved to the current day or later.';
 
 // Time custom format strings
 $string['strftimedate'] = '%B %d, %Y';
