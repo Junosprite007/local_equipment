@@ -660,11 +660,11 @@ function local_equipment_get_latest_agreement_version($agreementid) {
 
     $sql = "SELECT a.*
             FROM {local_equipment_agreement} a
-            WHERE a.id = :agreementid OR a.parentid = :parentid
+            WHERE a.id = :agreementid OR a.previousversionid = :previousversionid
             ORDER BY a.version DESC
             LIMIT 1";
 
-    return $DB->get_record_sql($sql, ['agreementid' => $agreementid, 'parentid' => $agreementid]);
+    return $DB->get_record_sql($sql, ['agreementid' => $agreementid, 'previousversionid' => $agreementid]);
 }
 
 /**
@@ -680,9 +680,9 @@ function local_equipment_user_has_signed_agreement($agreementid, $userid) {
     $sql = "SELECT 1
             FROM {local_equipment_agreementsubmission} s
             JOIN {local_equipment_agreement} a ON s.agreementid = a.id
-            WHERE (a.id = :agreementid OR a.parentid = :parentid)
+            WHERE (a.id = :agreementid OR a.previousversionid = :previousversionid)
             AND s.userid = :userid
             AND s.status = 'accepted'";
 
-    return $DB->record_exists_sql($sql, ['agreementid' => $agreementid, 'parentid' => $agreementid, 'userid' => $userid]);
+    return $DB->record_exists_sql($sql, ['agreementid' => $agreementid, 'previousversionid' => $agreementid, 'userid' => $userid]);
 }

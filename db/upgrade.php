@@ -218,10 +218,10 @@ function xmldb_local_equipment_upgrade($oldversion) {
         $table->add_field('activeendtime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('requireelectronicsignature', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, null);
         $table->add_field('version', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '1');
-        $table->add_field('parentid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('previousversionid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
 
         $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
-        $table->add_index('parentid', XMLDB_INDEX_NOTUNIQUE, ['parentid']);
+        $table->add_index('previousversionid', XMLDB_INDEX_NOTUNIQUE, ['previousversionid']);
 
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
@@ -230,16 +230,10 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024081601, 'local', 'equipment');
     }
 
-    if ($oldversion < 2024081700) {
+    if ($oldversion < 2024081701) {
         $table = new xmldb_table('local_equipment_agreement');
-        $oldfield = new xmldb_field('contenttext', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
-        if ($dbman->field_exists($table, $field)) {
-            $dbman->rename_field($table, $oldfield, 'contenttext');
-        }
-        $field = new xmldb_field('contentformat', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, null, 'contenttext');
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
+        $field = new xmldb_field('parentid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $dbman->rename_field($table, $field, 'previousversionid');
     }
 
     return true;

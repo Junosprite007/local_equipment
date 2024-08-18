@@ -35,11 +35,34 @@ class editagreement_form extends \moodleform {
      * Form definition.
      */
     public function definition() {
+        global $PAGE;
+
         $mform = $this->_form;
         $agreement = $this->_customdata['agreement'];
+        // Get the timestamp for the start of today (midnight)
+        $todaymidnight = usergetmidnight(time());
+        $starttimepast = $agreement->activestarttime < $todaymidnight;
+        $updatedactiveendtime = false;
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<pre>';
+        // var_dump($agreement->activestarttime);
+        // var_dump($agreement->activeendtime);
+        // echo '</pre>';
+
+        if ($starttimepast) {
+            $agreement->activestarttime = "$todaymidnight";
+            if ($agreement->activeendtime < $agreement->activestarttime) {
+                $updatedactiveendtime = true;
+                $agreement->activeendtime = $agreement->activestarttime + 31556952;
+            }
+        }
 
         // echo '<pre>';
-        // var_dump($agreement);
+        // var_dump($agreement->activestarttime);
+        // var_dump($agreement->activeendtime);
         // echo '</pre>';
         // die();
 
@@ -67,9 +90,19 @@ class editagreement_form extends \moodleform {
         // $mform->setDefault('requireelectronicsignature', $agreement->requiresignature);
 
         $mform->addElement('date_selector', 'activestarttime', get_string('activestarttime', 'local_equipment'));
+        if ($starttimepast) {
+            $mform->setDefault('activestarttime', $todaymidnight);
+            $notification = \html_writer::div(get_string('startdatewillneedtobeupdated', 'local_equipment'), 'alert alert-warning');
+            $mform->addElement('static', 'updatestarttime', '', $notification);
+        }
         // $mform->setDefault('activestarttime', time());
 
         $mform->addElement('date_selector', 'activeendtime', get_string('activeendtime', 'local_equipment'));
+        if ($updatedactiveendtime) {
+            $mform->setDefault('activeendtime', $todaymidnight);
+            $notification = \html_writer::div(get_string('updateendtime', 'local_equipment'), 'alert alert-warning');
+            $mform->addElement('static', 'activeenddatewillalsoneedtobeupdated', '', $notification);
+        }
         // $mform->setDefault('activeendtime', $agreement->enddate);
 
         $mform->addElement('static', 'currentversion', get_string('currentversion', 'local_equipment'), $agreement->version);

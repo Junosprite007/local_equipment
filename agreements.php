@@ -29,7 +29,6 @@ require_once($CFG->libdir . '/tablelib.php');
 require_once('./lib.php');
 
 admin_externalpage_setup('local_equipment_agreements');
-require_login();
 
 $context = context_system::instance();
 $PAGE->set_context($context);
@@ -78,7 +77,7 @@ $table->setup();
 $sql = "SELECT a.*
         FROM {local_equipment_agreement} a
         LEFT OUTER JOIN {local_equipment_agreement} b
-            ON a.id = b.parentid
+            ON a.id = b.previousversionid
         WHERE b.id IS NULL
         ORDER BY a.title ASC";
 

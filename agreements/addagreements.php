@@ -28,11 +28,10 @@ require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/local/equipment/classes/form/addagreements_form.php');
 
 admin_externalpage_setup('local_equipment_addagreements');
-require_login();
 
 $context = context_system::instance();
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/equipment/agreements/addagreement.php'));
+$PAGE->set_url(new moodle_url('/local/equipment/agreements/addagreements.php'));
 $PAGE->set_title(get_string('addagreement', 'local_equipment'));
 $PAGE->set_heading(get_string('addagreement', 'local_equipment'));
 
@@ -43,15 +42,15 @@ $mform = new local_equipment\form\addagreements_form();
 if ($mform->is_cancelled()) {
     redirect(new moodle_url('/local/equipment/agreements.php'));
 } else if ($data = $mform->get_data()) {
-    echo '<pre>';
-    var_dump($data);
-    echo '</pre>';
-    die();
+    // echo '<pre>';
+    // var_dump($data);
+    // echo '</pre>';
+    // die();
 
     $agreement = new stdClass();
     $agreement->title = $data->title;
     $agreement->contenttext = $data->content['text'];
-    $agreement->content = $data->content['text'];
+    $agreement->contentformat = $data->content['format'];
     $agreement->agreementtype = $data->agreementtype;
     $agreement->timecreated = time();
     $agreement->activestarttime = $data->activestarttime;

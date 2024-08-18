@@ -107,13 +107,15 @@
                 <FIELD NAME="activeendtime" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
                 <FIELD NAME="requireelectronicsignature" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false"/>
                 <FIELD NAME="version" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
-                <FIELD NAME="parentid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+<FIELD NAME="previousversionid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
             </KEYS>
             <INDEXES>
-                <INDEX NAME="parentagreementid" UNIQUE="false" FIELDS="parentagreementid"/>
+<INDEX NAME="previousversionid" UNIQUE="false" FIELDS="previousversionid"/>
+
             </INDEXES>
         </TABLE>
         <!-- parent -->

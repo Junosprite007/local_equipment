@@ -50,24 +50,32 @@ if ($mform->is_cancelled()) {
     // Create a new version of the agreement
     $newagreement = new stdClass();
     $newagreement->title = $data->title;
-    $newagreement->content = $data->content['text'];
+    $newagreement->contenttext = $data->content['text'];
+    $newagreement->contentformat = $data->content['format'];
     $newagreement->agreementtype = $data->agreementtype;
-    $newagreement->timecreated = $data->timecreated;
-    $newagreement->activestarttime = time();
+    $newagreement->timecreated = time();
+    $newagreement->activestarttime = $data->activestarttime;
     $newagreement->activeendtime = $data->activeendtime;
     $newagreement->requireelectronicsignature = $data->requireelectronicsignature;
     $newagreement->version = $agreement->version + 1;
-    $newagreement->parentid = $agreement->id;
+    // Set the parent agreement ID to the previous version of the agreement.
+    $newagreement->previousversionid = $agreement->id;
 
     $DB->insert_record('local_equipment_agreement', $newagreement);
 
     // Deactivate the old version
     // $agreement->active = 0;
-    $agreement->timemodified = time();
+    $agreement->activeendtime = time();
     $DB->update_record('local_equipment_agreement', $agreement);
 
     redirect(new moodle_url('/local/equipment/agreements.php'), get_string('agreementupdated', 'local_equipment'), null, \core\output\notification::NOTIFY_SUCCESS);
 }
+// Load the form with the existing agreement data
+$agreement->content = [
+    'text' => $agreement->contenttext,
+    'format' => $agreement->contentformat
+];
+
 // Load the form with the existing agreement data
 $mform->set_data($agreement);
 
