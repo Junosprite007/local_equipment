@@ -137,7 +137,6 @@ if (!($endedpickupstoshow < 0)) {
 // Get sorting parameters
 $sort = $table->get_sql_sort();
 
-
 // Construct the final SQL query
 $sql = "SELECT $fields FROM $from";
 if ($where) {

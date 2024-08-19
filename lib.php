@@ -686,3 +686,22 @@ function local_equipment_user_has_signed_agreement($agreementid, $userid) {
 
     return $DB->record_exists_sql($sql, ['agreementid' => $agreementid, 'previousversionid' => $agreementid, 'userid' => $userid]);
 }
+
+/**
+ * Check if an agreement is currently active.
+ *
+ * @param object $agreement The agreement object
+ * @return bool True if the agreement is active, false otherwise
+ */
+function local_equipment_agreement_get_status($agreement) {
+    $status = 'unknown';
+    $currenttime = time();
+    if ($currenttime < $agreement->activestarttime) {
+        return 'notstarted';
+    } else if ($currenttime >= $agreement->activestarttime && $currenttime < $agreement->activeendtime) {
+        return 'active';
+    } else if ($currenttime >= $agreement->activeendtime) {
+        return 'ended';
+    }
+    return $status;
+}

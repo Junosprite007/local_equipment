@@ -54,11 +54,20 @@ echo $OUTPUT->single_button($addurl, get_string('addagreement', 'local_equipment
 
 // Set up the table
 $table = new flexible_table('local-equipment-agreements');
-$table->define_columns(['title', 'type', 'active', 'version', 'activestarttime', 'activeendtime', 'actions']);
+$columns = [
+    'title',
+    'agreementtype',
+    'status',
+    'version',
+    'activestarttime',
+    'activeendtime',
+    'actions'
+];
+$table->define_columns($columns);
 $table->define_headers([
     get_string('title', 'local_equipment'),
     get_string('type', 'local_equipment'),
-    get_string('active', 'local_equipment'),
+    get_string('status', 'local_equipment'),
     get_string('version', 'local_equipment'),
     get_string('activestarttime', 'local_equipment'),
     get_string('activeendtime', 'local_equipment'),
@@ -70,47 +79,64 @@ $table->no_sorting('actions');
 $table->collapsible(false);
 $table->initialbars(true);
 $table->set_attribute('id', 'agreements');
-$table->set_attribute('class', 'admintable generaltable');
+$table->set_attribute('class', 'admintable generaltable flctable');
 $table->setup();
 
-// Fetch agreements
-$sql = "SELECT a.*
-        FROM {local_equipment_agreement} a
-        LEFT OUTER JOIN {local_equipment_agreement} b
-            ON a.id = b.previousversionid
-        WHERE b.id IS NULL
-        ORDER BY a.title ASC";
+// Set up the SQL query.
+$currenttime = time();
+$fields = "a.id, a.title, a.agreementtype, a.activestarttime, a.activeendtime, a.version,
+           CASE WHEN a.activestarttime <= :currenttime1 AND a.activeendtime > :currenttime2 THEN 1 ELSE 0 END AS status";
+$from = "{local_equipment_agreement} a";
+$join = "LEFT OUTER JOIN {local_equipment_agreement} b ON a.id = b.previousversionid";
+$where = "b.id IS NULL";
+$params = ['currenttime1' => $currenttime, 'currenttime2' => $currenttime];
 
-$agreements = $DB->get_records_sql($sql);
-// $agreements = $DB->get_records('local_equipment_agreement', null, 'title ASC');
-$active = false;
+$sort = $table->get_sql_sort();
+if ($sort) {
+    $sort = preg_replace(
+        '/\bactive\b/',
+        "CASE WHEN a.activestarttime <= :currenttime3 AND a.activeendtime > :currenttime4 THEN 1 ELSE 0 END",
+        $sort
+    );
+    $params['currenttime3'] = $currenttime;
+    $params['currenttime4'] = $currenttime;
+}
+
+$sql = "SELECT $fields FROM $from $join WHERE $where";
+if ($sort) {
+    $sql .= " ORDER BY $sort";
+}
+
+$agreements = $DB->get_records_sql($sql, $params);
+
+$status = false;
 
 foreach ($agreements as $agreement) {
     $latestagreement = local_equipment_get_latest_agreement_version($agreement->id);
-    if (time() > $agreement->activestarttime || time() < $agreement->activeendtime) {
-        $active = true;
-    }
+    $status = local_equipment_agreement_get_status($agreement);
     $row = [];
     $row[] = $agreement->title;
     $row[] = get_string('agreementtype_' . $agreement->agreementtype, 'local_equipment');
-    $row[] = $active ? get_string('yes') : get_string('no');
+    $row[] = get_string($status, 'local_equipment');
     $row[] = $agreement->version;
-    $row[] = userdate($agreement->activestarttime);
-    $row[] = userdate($agreement->activeendtime);
+    $row[] = userdate($agreement->activestarttime, get_string('strfdaymonthdateyear', 'local_equipment'));
+    $row[] = userdate($agreement->activeendtime, get_string('strfdaymonthdateyear', 'local_equipment'));
 
     $buttons = [];
     $editurl = new moodle_url('/local/equipment/agreements/editagreement.php', ['id' => $agreement->id]);
     $buttons[] = html_writer::link($editurl, $OUTPUT->pix_icon('t/edit', get_string('edit')));
 
-    $deleteurl = new moodle_url($PAGE->url, ['delete' => $agreement->id, 'sesskey' => sesskey()]);
-    $buttons[] = html_writer::link(
-        $deleteurl,
-        $OUTPUT->pix_icon('t/delete', get_string('delete')),
-        ['onclick' => 'return confirm("' . get_string('confirmdeletedialog', 'local_equipment') . '");']
-    );
+    $status = local_equipment_agreement_get_status($agreement);
+    if ($status === 'notstarted') {
+        $deleteurl = new moodle_url($PAGE->url, ['delete' => $agreement->id, 'sesskey' => sesskey()]);
+        $buttons[] = html_writer::link(
+            $deleteurl,
+            $OUTPUT->pix_icon('t/delete', get_string('delete')),
+            ['onclick' => 'return confirm("' . get_string('confirmdeletedialog', 'local_equipment') . '");']
+        );
+    }
 
     $row[] = implode(' ', $buttons);
-
     $table->add_data($row);
 }
 

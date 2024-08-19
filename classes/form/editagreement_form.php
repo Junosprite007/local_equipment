@@ -100,7 +100,7 @@ class editagreement_form extends \moodleform {
         $mform->addElement('date_selector', 'activeendtime', get_string('activeendtime', 'local_equipment'));
         if ($updatedactiveendtime) {
             $mform->setDefault('activeendtime', $todaymidnight);
-            $notification = \html_writer::div(get_string('updateendtime', 'local_equipment'), 'alert alert-warning');
+            $notification = \html_writer::div(get_string('activeenddatewillalsoneedtobeupdated', 'local_equipment'), 'alert alert-warning');
             $mform->addElement('static', 'activeenddatewillalsoneedtobeupdated', '', $notification);
         }
         // $mform->setDefault('activeendtime', $agreement->enddate);

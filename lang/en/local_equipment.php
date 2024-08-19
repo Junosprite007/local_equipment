@@ -186,7 +186,6 @@ $string['viewmanagepickups'] = 'View/manage pickups';
 $string['removepickup'] = 'Remove pickup';
 
 // Agreements pages strings
-$string['active'] = 'Active';
 $string['activeendtime'] = 'Active end time';
 $string['activestarttime'] = 'Active start time';
 $string['addagreement'] = 'Add agreement';
@@ -206,7 +205,9 @@ $string['activeenddatewillalsoneedtobeupdated'] = 'The active end date will also
 $string['editagreement'] = 'Edit agreement';
 $string['enddate'] = 'End date';
 $string['enddateafterstart'] = 'End date must be after start date';
+$string['ended'] = 'Ended';
 $string['manageagreements'] = 'Manage agreements';
+$string['notstarted'] = 'Not started';
 $string['requireelectronicsignature'] = 'Require electronic signature';
 $string['requiresignature'] = 'Require signature';
 $string['startdate'] = 'Start date';
@@ -214,6 +215,7 @@ $string['startdatecannotbeinthepast'] = 'Start date cannot be in the past.';
 $string['startdatewillneedtobeupdated'] = 'The start date will need to be updated to the current date or later because the original start date is now in the past.';
 $string['title'] = 'Title';
 $string['type'] = 'Type';
+$string['unknown'] = 'Unknown';
 $string['viewmanageagreements'] = 'View/manage agreements';
 $string['version'] = 'Version';
 $string['wheneditinganexistingagreement'] = 'When editing an existing agreement, the start time must be moved to the current day or later.';
@@ -221,6 +223,9 @@ $string['wheneditinganexistingagreement'] = 'When editing an existing agreement,
 // Time custom format strings
 $string['strftimedate'] = '%B %d, %Y';
 $string['strftimedate'] = '%d %B %Y';
+$string['strfdaymonthdateyear'] = '%A, %B %d, %Y';
+
+
 $string['strftimedatemonthabbr'] = '%d %b %Y';
 $string['strftimedatemonthtimeshort'] = '%d %b %Y, %I:%M';
 $string['strftimedatefullshort'] = '%d/%m/%y';
