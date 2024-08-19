@@ -30,7 +30,6 @@ require_once('./lib.php');
 
 // Ensure only admins can access this page.
 admin_externalpage_setup('local_equipment_partnerships');
-require_login();
 
 $context = context_system::instance();
 $url = new moodle_url('/local/equipment/partnerships.php');

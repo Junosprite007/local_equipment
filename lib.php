@@ -705,3 +705,143 @@ function local_equipment_agreement_get_status($agreement) {
     }
     return $status;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Virtual course consent (vcc) functions.
+function local_equipment_get_active_partnerships() {
+    global $DB;
+    return $DB->get_records_menu('local_equipment_partnership', ['active' => 1], 'name', 'id, name');
+}
+
+function local_equipment_get_partnership_courses($partnershipid) {
+    global $DB;
+    $partnership = $DB->get_record('local_equipment_partnership', ['id' => $partnershipid]);
+    $courseids = json_decode($partnership->courseids);
+    return $DB->get_records_list('course', 'id', $courseids, '', 'id, fullname');
+}
+
+function local_equipment_get_pickup_times($partnershipid) {
+    global $DB;
+    $pickups = $DB->get_records('local_equipment_pickup', ['partnershipid' => $partnershipid]);
+    $times = [0 => get_string('notimesforme', 'local_equipment')];
+    foreach ($pickups as $pickup) {
+        $times[$pickup->id] = userdate($pickup->starttime, get_string('strftimedatetime', 'langconfig'));
+    }
+    return $times;
+}
+
+function local_equipment_get_active_agreements() {
+    global $DB;
+    $now = time();
+    return $DB->get_records_sql(
+        "SELECT * FROM {local_equipment_agreement}
+         WHERE activestarttime <= :now AND activeendtime > :now
+         ORDER BY version DESC",
+        ['now' => $now]
+    );
+}
+
+function local_equipment_requires_signature($agreements) {
+    foreach ($agreements as $agreement) {
+        if ($agreement->requireelectronicsignature) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function local_equipment_generate_student_email($parentemail, $studentfirstname) {
+    $parts = explode('@', $parentemail);
+    return $parts[0] . '+' . strtolower($studentfirstname) . '@' . $parts[1];
+}
+
+function local_equipment_save_consent_form($data) {
+    global $DB, $USER;
+
+    // Start transaction
+    $transaction = $DB->start_delegated_transaction();
+
+    try {
+        // Insert main consent record
+        $consent = new stdClass();
+        $consent->userid = $USER->id;
+        $consent->partnershipid = $data->partnership;
+        $consent->pickuptime = $data->pickup_time;
+        $consent->pickup_method = $data->pickup_method;
+        $consent->pickup_person = json_encode([
+            'name' => $data->pickup_person_name,
+            'phone' => $data->pickup_person_phone,
+            'details' => $data->pickup_person_details
+        ]);
+        $consent->notes = $data->parent_notes;
+        $consent->timecreated = $consent->timemodified = time();
+
+        $consent->id = $DB->insert_record('local_equipment_consent', $consent);
+
+        // Insert student records
+        foreach ($data->studentrepeats as $student) {
+            $studentrecord = new stdClass();
+            $studentrecord->consentid = $consent->id;
+            $studentrecord->firstname = $student['student_firstname'];
+            $studentrecord->lastname = $student['student_lastname'];
+            $studentrecord->email = $student['student_email'] ?: local_equipment_generate_student_email($USER->email, $student['student_firstname']);
+            $studentrecord->dateofbirth = $student['student_dob'];
+
+            $studentrecord->id = $DB->insert_record('local_equipment_consent_student', $studentrecord);
+
+            // Insert student course records
+            foreach ($student['student_courses'] as $courseid) {
+                $DB->insert_record('local_equipment_consent_student_course', [
+                    'studentid' => $studentrecord->id,
+                    'courseid' => $courseid
+                ]);
+            }
+        }
+
+        // Save agreement responses
+        $agreements = local_equipment_get_active_agreements();
+        foreach ($agreements as $agreement) {
+            if ($agreement->agreementtype == 'optinout') {
+                $DB->insert_record('local_equipment_consent_agreement', [
+                    'consentid' => $consent->id,
+                    'agreementid' => $agreement->id,
+                    'response' => $data->{'agreement_' . $agreement->id . '_option'}
+                ]);
+            }
+        }
+
+        // Commit transaction
+        $transaction->allow_commit();
+
+        return true;
+    } catch (Exception $e) {
+        $transaction->rollback($e);
+        return false;
+    }
+}

@@ -107,20 +107,146 @@
                 <FIELD NAME="activeendtime" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
                 <FIELD NAME="requireelectronicsignature" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false"/>
                 <FIELD NAME="version" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
-<FIELD NAME="previousversionid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
-
+                <FIELD NAME="previousversionid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
             </KEYS>
             <INDEXES>
-<INDEX NAME="previousversionid" UNIQUE="false" FIELDS="previousversionid"/>
-
+                <INDEX NAME="previousversionid" UNIQUE="false" FIELDS="previousversionid"/>
             </INDEXES>
         </TABLE>
-        <!-- parent -->
+        <!-- additional user (parent) information -->
+        <TABLE NAME="local_equipment_user" COMMENT="An extension to Moodle's core 'user' table that hold different information">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the user"/>
+                <FIELD NAME="partnershipid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the selected partnership"/>
+                <FIELD NAME="pickupid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the selected pickup time"/>
+                <FIELD NAME="studentids" TYPE="text" NOTNULL="false"/>
+                <FIELD NAME="vccsubmissionids" TYPE="text" NOTNULL="false"/>
+                <FIELD NAME="phoneverificationids" TYPE="text" NOTNULL="false"/>
+                <!-- mailing address -->
+                <FIELD NAME="streetaddress_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="city_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="state_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="country_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="zipcode_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="instructions_mailing" TYPE="text" NOTNULL="true"/>
+                <!-- billing address -->
+                <FIELD NAME="attention_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="sameasmailing_billing" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="streetaddress_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="city_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="state_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="country_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="zipcode_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Timestamp of when the record was created"/>
+                <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Timestamp of when the record was last modified"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+                <KEY NAME="partnershipid" TYPE="foreign" FIELDS="partnershipid" REFTABLE="local_equipment_partnership" REFFIELDS="id"/>
+                <KEY NAME="pickupid" TYPE="foreign" FIELDS="pickupid" REFTABLE="local_equipment_pickup" REFFIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="userid" UNIQUE="true" FIELDS="userid"/>
+                <INDEX NAME="partnershipid" UNIQUE="false" FIELDS="partnershipid"/>
+                <INDEX NAME="pickupid" UNIQUE="false" FIELDS="pickupid"/>
+            </INDEXES>
+        </TABLE>
+
+        <!-- virtual course consent (vcc) submission (by the parent) -->
+        <TABLE NAME="local_equipment_vccsubmission" COMMENT="Stores virtual course consent (vcc) submissions">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the parent user"/>
+                <FIELD NAME="partnershipid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the selected partnership"/>
+                <FIELD NAME="pickupid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the selected pickup time"/>
+                <FIELD NAME="studentids" TYPE="text" NOTNULL="false"/>
+                <FIELD NAME="agreementids" TYPE="text" NOTNULL="false"/>
+                <FIELD NAME="confirmationid" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="A confirmation id, which should just be a hash of this table's 'id' field. This is intended for easy and secure lookups."/>
+                <FIELD NAME="confirmationexpired" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="ID of the selected pickup time. 0 = no, 1 = yes"/>
+                <FIELD NAME="pickupmethod" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Method of equipment pickup"/>
+                <FIELD NAME="pickuppersonname" TYPE="text" NOTNULL="false" COMMENT="Details of person picking up equipment"/>
+                <FIELD NAME="pickuppersonphone" TYPE="text" NOTNULL="false" COMMENT="Details of person picking up equipment"/>
+                <FIELD NAME="usernotes" TYPE="text" NOTNULL="false" COMMENT="User (probably the parent) notes"/>
+                <FIELD NAME="adminnotes" TYPE="text" NOTNULL="false" COMMENT="Admin notes"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Timestamp of when the record was created"/>
+                <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Timestamp of when the record was last modified"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+                <KEY NAME="partnershipid" TYPE="foreign" FIELDS="partnershipid" REFTABLE="local_equipment_partnership" REFFIELDS="id"/>
+                <KEY NAME="pickupid" TYPE="foreign" FIELDS="pickupid" REFTABLE="local_equipment_pickup" REFFIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="userid" UNIQUE="false" FIELDS="userid"/>
+                <INDEX NAME="partnershipid" UNIQUE="false" FIELDS="partnershipid"/>
+                <INDEX NAME="pickupid" UNIQUE="false" FIELDS="pickupid"/>
+                <INDEX NAME="confirmationid" UNIQUE="true" FIELDS="confirmationid"/>
+                <INDEX NAME="timecreated" UNIQUE="false" FIELDS="timecreated"/>
+            </INDEXES>
+        </TABLE>
+        <!-- Join table for virtual course consent (vcc) submission and agreement -->
+        <TABLE NAME="local_equipment_vccsubmission_agreement" COMMENT="Stores agreements shown in virtual course consent (vcc) submissions">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="vccsubmissionid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the related virtual course consent (vcc) submission"/>
+                <FIELD NAME="agreementid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the agreement shown"/>
+                <FIELD NAME="optinout" TYPE="int" LENGTH="1" NOTNULL="false" COMMENT="Response for opt-in/opt-out agreements. 1 = opt-in, 2 = opt-out, 0 = nothing selected (which shouldn't ever happen)"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="vccsubmissionid" TYPE="foreign" FIELDS="vccsubmissionid" REFTABLE="local_equipment_vccsubmission" REFFIELDS="id"/>
+                <KEY NAME="agreementid" TYPE="foreign" FIELDS="agreementid" REFTABLE="local_equipment_agreement" REFFIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="vccsubmission_agreement" UNIQUE="false" FIELDS="vccsubmissionid, agreementid"/>
+                <INDEX NAME="optinout" UNIQUE="false" FIELDS="optinout"/>
+            </INDEXES>
+        </TABLE>
         <!-- student -->
-        <!-- student course -->
-        <!-- agreement submission -->
+        <TABLE NAME="local_equipment_vccsubmission_student" COMMENT="Stores student information for virtual course consent (vcc)">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Not using this yet, but it will be the ID of the student user"/>
+                <FIELD NAME="vccsubmissionid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the related virtual course consent (vcc) submission that the parent filled out"/>
+                <FIELD NAME="courseids" TYPE="text" NOTNULL="false"/>
+                <FIELD NAME="firstname" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Student's first name"/>
+                <FIELD NAME="lastname" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Student's last name"/>
+                <FIELD NAME="email" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Student's email"/>
+                <FIELD NAME="dateofbirth" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Student's date of birth"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+                <KEY NAME="vccsubmissionid" TYPE="foreign" FIELDS="vccsubmissionid" REFTABLE="local_equipment_vccsubmission" REFFIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="userid" UNIQUE="false" FIELDS="userid"/>
+                <INDEX NAME="vccsubmissionid" UNIQUE="false" FIELDS="vccsubmissionid"/>
+                <INDEX NAME="email" UNIQUE="false" FIELDS="email"/>
+                <INDEX NAME="dateofbirth" UNIQUE="false" FIELDS="dateofbirth"/>
+            </INDEXES>
+        </TABLE>
+        <!-- Join table for virtual course consent (vcc) submission students and their courses -->
+        <TABLE NAME="local_equipment_vccsubmission_student_course" COMMENT="Stores courses for each student">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="studentid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the related student"/>
+                <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the course"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="studentid" TYPE="foreign" FIELDS="studentid" REFTABLE="local_equipment_vccsubmission_student" REFFIELDS="id"/>
+                <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="student_course" UNIQUE="true" FIELDS="studentid, courseid"/>
+            </INDEXES>
+        </TABLE>
     </TABLES>
 </XMLDB>

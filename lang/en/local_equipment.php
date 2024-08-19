@@ -220,6 +220,34 @@ $string['viewmanageagreements'] = 'View/manage agreements';
 $string['version'] = 'Version';
 $string['wheneditinganexistingagreement'] = 'When editing an existing agreement, the start time must be moved to the current day or later.';
 
+// Virtual course consent form strings
+$string['consentformtitle'] = 'Virtual Course Consent Form';
+$string['consentformheading'] = 'Parent Consent for Virtual Courses';
+$string['addstudent'] = 'Add student';
+$string['pickuptime'] = 'Equipment pickup time';
+$string['pickupmethod'] = 'Equipment pickup method';
+$string['pickupself'] = 'I will pick up the equipment';
+$string['pickupother'] = 'Someone else will pick up all equipment on my behalf';
+$string['pickupship'] = 'I\'ll pay FLC to ship equipment to my address';
+$string['pickuppurchased'] = 'I\'ve already purchased all necessary equipment';
+$string['pickuppersonname'] = 'Name of person picking up equipment';
+$string['pickuppersonphone'] = 'Phone number of person picking up equipment';
+$string['pickuppersondetails'] = 'Additional details for pickup';
+$string['parentnotes'] = 'Additional notes';
+$string['optin'] = 'Opt in!';
+$string['optout'] = 'Opt out.';
+$string['electronicsignature'] = 'Electronic signature';
+$string['viewnotes'] = 'View notes';
+$string['addnote'] = 'Add note';
+$string['adminnotes'] = 'Admin notes';
+$string['savenote'] = 'Save note';
+$string['consentformsubmitted'] = 'Consent form submitted successfully';
+$string['manageconsentforms'] = 'Manage consent forms';
+$string['invalidpartnership'] = 'Invalid partnership selected';
+$string['invalidpickuptime'] = 'Invalid pickup time selected';
+$string['signaturemismatch'] = 'Electronic signature does not match parent name';
+$string['studentemailgenerated'] = 'Student email generated automatically';
+
 // Time custom format strings
 $string['strftimedate'] = '%B %d, %Y';
 $string['strftimedate'] = '%d %B %Y';

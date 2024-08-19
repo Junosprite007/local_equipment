@@ -31,8 +31,10 @@ require_once('./lib.php');
 admin_externalpage_setup('local_equipment_agreements');
 
 $context = context_system::instance();
+$url = new moodle_url('/local/equipment/agreements.php');
+
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/equipment/agreements.php'));
+$PAGE->set_url($url);
 $PAGE->set_title(get_string('manageagreements', 'local_equipment'));
 $PAGE->set_heading(get_string('manageagreements', 'local_equipment'));
 
