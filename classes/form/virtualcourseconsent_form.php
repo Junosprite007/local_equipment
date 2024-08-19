@@ -70,7 +70,7 @@ class consent_form extends \moodleform {
         $mform->addElement('repeat', 'studentrepeats', get_string('addstudent', 'local_equipment'), $repeatarray, 3, $repeateloptions, 'add', true);
 
         // Pickup time selection
-        $mform->addElement('select', 'pickup_time', get_string('pickuptime', 'local_equipment'), array());
+        $mform->addElement('select', 'pickuptime', get_string('pickuptime', 'local_equipment'), array());
 
         // Pickup method
         $pickupmethods = array(
@@ -79,15 +79,15 @@ class consent_form extends \moodleform {
             'ship' => get_string('pickupship', 'local_equipment'),
             'purchased' => get_string('pickuppurchased', 'local_equipment')
         );
-        $mform->addElement('select', 'pickup_method', get_string('pickupmethod', 'local_equipment'), $pickupmethods);
+        $mform->addElement('select', 'pickupmethod', get_string('pickupmethod', 'local_equipment'), $pickupmethods);
 
         // Other pickup person details (initially hidden)
-        $mform->addElement('text', 'pickup_person_name', get_string('pickuppersonname', 'local_equipment'));
-        $mform->addElement('text', 'pickup_person_phone', get_string('pickuppersonphone', 'local_equipment'));
-        $mform->addElement('textarea', 'pickup_person_details', get_string('pickuppersondetails', 'local_equipment'));
+        $mform->addElement('text', 'pickuppersonname', get_string('pickuppersonname', 'local_equipment'));
+        $mform->addElement('text', 'pickuppersonphone', get_string('pickuppersonphone', 'local_equipment'));
+        $mform->addElement('textarea', 'pickuppersondetails', get_string('pickuppersondetails', 'local_equipment'));
 
         // Parent notes
-        $mform->addElement('textarea', 'parent_notes', get_string('parentnotes', 'local_equipment'));
+        $mform->addElement('textarea', 'usernotes', get_string('usernotes', 'local_equipment'));
 
         // Agreements
         $agreements = local_equipment_get_active_agreements();

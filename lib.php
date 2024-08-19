@@ -734,11 +734,22 @@ function local_equipment_agreement_get_status($agreement) {
 
 
 // Virtual course consent (vcc) functions.
+/**
+ * Retrieves active partnerships.
+ *
+ * @return array An associative array of active partnerships, with partnership ID as the key and partnership name as the value.
+ */
 function local_equipment_get_active_partnerships() {
     global $DB;
     return $DB->get_records_menu('local_equipment_partnership', ['active' => 1], 'name', 'id, name');
 }
 
+/**
+ * Retrieves partnership courses.
+ *
+ * @param int $partnershipid The ID of the partnership.
+ * @return array An associative array of partnership courses, with course ID as the key and course fullname as the value.
+ */
 function local_equipment_get_partnership_courses($partnershipid) {
     global $DB;
     $partnership = $DB->get_record('local_equipment_partnership', ['id' => $partnershipid]);
@@ -746,6 +757,12 @@ function local_equipment_get_partnership_courses($partnershipid) {
     return $DB->get_records_list('course', 'id', $courseids, '', 'id, fullname');
 }
 
+/**
+ * Retrieves pickup times for a partnership.
+ *
+ * @param int $partnershipid The ID of the partnership.
+ * @return array An associative array of pickup times, with pickup ID as the key and formatted pickup time as the value.
+ */
 function local_equipment_get_pickup_times($partnershipid) {
     global $DB;
     $pickups = $DB->get_records('local_equipment_pickup', ['partnershipid' => $partnershipid]);
@@ -756,6 +773,11 @@ function local_equipment_get_pickup_times($partnershipid) {
     return $times;
 }
 
+/**
+ * Retrieves active agreements.
+ *
+ * @return array An array of active agreements.
+ */
 function local_equipment_get_active_agreements() {
     global $DB;
     $now = time();
@@ -767,6 +789,12 @@ function local_equipment_get_active_agreements() {
     );
 }
 
+/**
+ * Checks if an agreement requires an electronic signature.
+ *
+ * @param array $agreements An array of agreements.
+ * @return bool True if at least one agreement requires an electronic signature, false otherwise.
+ */
 function local_equipment_requires_signature($agreements) {
     foreach ($agreements as $agreement) {
         if ($agreement->requireelectronicsignature) {
@@ -776,12 +804,25 @@ function local_equipment_requires_signature($agreements) {
     return false;
 }
 
+/**
+ * Generates a student email address.
+ *
+ * @param string $parentemail The parent's email address.
+ * @param string $studentfirstname The student's first name.
+ * @return string The generated student email address.
+ */
 function local_equipment_generate_student_email($parentemail, $studentfirstname) {
     $parts = explode('@', $parentemail);
     return $parts[0] . '+' . strtolower($studentfirstname) . '@' . $parts[1];
 }
 
-function local_equipment_save_consent_form($data) {
+/**
+ * Saves a consent form.
+ *
+ * @param object $data The consent form data.
+ * @return bool True if the consent form is successfully saved, false otherwise.
+ */
+function local_equipment_save_vcc_form($data) {
     global $DB, $USER;
 
     // Start transaction
@@ -789,57 +830,102 @@ function local_equipment_save_consent_form($data) {
 
     try {
         // Insert main consent record
-        $consent = new stdClass();
-        $consent->userid = $USER->id;
-        $consent->partnershipid = $data->partnership;
-        $consent->pickuptime = $data->pickup_time;
-        $consent->pickup_method = $data->pickup_method;
-        $consent->pickup_person = json_encode([
-            'name' => $data->pickup_person_name,
-            'phone' => $data->pickup_person_phone,
-            'details' => $data->pickup_person_details
-        ]);
-        $consent->notes = $data->parent_notes;
-        $consent->timecreated = $consent->timemodified = time();
+        $vccsubmission = new stdClass();
+        $vccsubmission->userid = $USER->id;
+        $vccsubmission->partnershipid = $data->partnership;
+        $vccsubmission->pickupid = $data->pickuptime;
+        $vccsubmission->pickupmethod = $data->pickupmethod;
+        $vccsubmission->pickuppersonname = $data->pickuppersonname;
+        $vccsubmission->pickuppersonphone = $data->pickuppersonphone;
+        $vccsubmission->usernotes = $data->usernotes;
+        $vccsubmission->timecreated = $vccsubmission->timemodified = time();
+        $vccsubmission->confirmationid = md5(uniqid(rand(), true)); // Generate a unique confirmation ID
 
-        $consent->id = $DB->insert_record('local_equipment_consent', $consent);
+        $vccsubmission->id = $DB->insert_record('local_equipment_vccsubmission', $vccsubmission);
 
         // Insert student records
+        $studentids = [];
         foreach ($data->studentrepeats as $student) {
             $studentrecord = new stdClass();
-            $studentrecord->consentid = $consent->id;
+            $studentrecord->vccsubmissionid = $vccsubmission->id;
             $studentrecord->firstname = $student['student_firstname'];
             $studentrecord->lastname = $student['student_lastname'];
             $studentrecord->email = $student['student_email'] ?: local_equipment_generate_student_email($USER->email, $student['student_firstname']);
             $studentrecord->dateofbirth = $student['student_dob'];
 
-            $studentrecord->id = $DB->insert_record('local_equipment_consent_student', $studentrecord);
+            $studentrecord->id = $DB->insert_record('local_equipment_vccsubmission_student', $studentrecord);
+            $studentids[] = $studentrecord->id;
 
             // Insert student course records
             foreach ($student['student_courses'] as $courseid) {
-                $DB->insert_record('local_equipment_consent_student_course', [
+                $DB->insert_record('local_equipment_vccsubmission_student_course', [
                     'studentid' => $studentrecord->id,
                     'courseid' => $courseid
                 ]);
             }
         }
 
-        // Save agreement responses
-        $agreements = local_equipment_get_active_agreements();
-        foreach ($agreements as $agreement) {
-            if ($agreement->agreementtype == 'optinout') {
-                $DB->insert_record('local_equipment_consent_agreement', [
-                    'consentid' => $consent->id,
-                    'agreementid' => $agreement->id,
-                    'response' => $data->{'agreement_' . $agreement->id . '_option'}
-                ]);
+        // Update vccsubmission with studentids
+        $DB->set_field('local_equipment_vccsubmission', 'studentids', json_encode($studentids), ['id' => $vccsubmission->id]);
+
+        // Save agreement records
+        $agreementids = [];
+        foreach ($data->agreement_ids as $agreementid) {
+            $agreementrecord = new stdClass();
+            $agreementrecord->vccsubmissionid = $vccsubmission->id;
+            $agreementrecord->agreementid = $agreementid;
+
+            // Check if this agreement has an opt-in/opt-out response
+            $optionfield = 'agreement_' . $agreementid . '_option';
+            if (isset($data->$optionfield)) {
+                $agreementrecord->optinout = ($data->$optionfield === 'optin') ? 1 : 2;
+            } else {
+                $agreementrecord->optinout = 0;
             }
+
+            $DB->insert_record('local_equipment_vccsubmission_agreement', $agreementrecord);
+            $agreementids[] = $agreementid;
         }
+
+        // Update vccsubmission with agreementids
+        $DB->set_field('local_equipment_vccsubmission', 'agreementids', json_encode($agreementids), ['id' => $vccsubmission->id]);
+
+        // Update or insert local_equipment_user record
+        $userrecord = $DB->get_record('local_equipment_user', ['userid' => $USER->id]);
+        if (!$userrecord) {
+            $userrecord = new stdClass();
+            $userrecord->userid = $USER->id;
+        }
+        $userrecord->partnershipid = $data->partnership;
+        $userrecord->pickupid = $data->pickuptime;
+        $userrecord->streetaddress_mailing = $data->street;
+        $userrecord->city_mailing = $data->city;
+        $userrecord->state_mailing = $data->state;
+        $userrecord->country_mailing = $data->country;
+        $userrecord->zipcode_mailing = $data->zipcode;
+        $userrecord->timemodified = time();
+
+        if (isset($userrecord->id)) {
+            $DB->update_record('local_equipment_user', $userrecord);
+        } else {
+            $userrecord->timecreated = time();
+            $userrecord->id = $DB->insert_record('local_equipment_user', $userrecord);
+        }
+
+        // Append new vccsubmission id to user's vccsubmissionids
+        $vccsubmissionids = json_decode($userrecord->vccsubmissionids) ?: [];
+        $vccsubmissionids[] = $vccsubmission->id;
+        $DB->set_field(
+            'local_equipment_user',
+            'vccsubmissionids',
+            json_encode($vccsubmissionids),
+            ['id' => $userrecord->id]
+        );
 
         // Commit transaction
         $transaction->allow_commit();
 
-        return true;
+        return $vccsubmission->id;
     } catch (Exception $e) {
         $transaction->rollback($e);
         return false;

@@ -204,3 +204,13 @@ Implement version control for agreements.
 Create the equipment checkout and return workflow.
 
 Would you like me to elaborate on any specific part of the plugin development, or shall we move on to the next step?
+
+
+
+
+
+
+
+form/consent_form = form/virtualcourseconsent_form
+manage_consents = vccsubmissions
+local/equipment/consent_form.php = local/equipment/virtualcourseconsent/index.php

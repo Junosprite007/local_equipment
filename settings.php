@@ -96,12 +96,12 @@ if ($hassiteconfig) {
                 new lang_string('agreements', 'local_equipment')
             )
     );
-    // Add 'Consent form' subcategory.
+    // Add 'Virtual course consent (vcc) form' subcategory.
     $ADMIN->add(
         $component,
         new admin_category(
-            "{$component}_consentform_cat",
-            new lang_string('consentform', 'local_equipment')
+            "{$component}_vccsubmission_cat",
+            new lang_string('virtualcourseconsent', 'local_equipment')
         )
     );
 
@@ -160,4 +160,21 @@ if ($hassiteconfig) {
             new moodle_url('/local/equipment/agreements/addagreements.php')
         )
     );
+
+    // Add the manage virtual course consent (vcc) form page.
+    $ADMIN->add('local_equipment', new admin_externalpage(
+        'local_equipment_vccsubmissions',
+        new lang_string('managevccsubmissions', 'local_equipment'),
+        new moodle_url('/local/equipment/vccsubmissions.php')
+    ));
+
+    // Virtual course consent (vcc) submissions should not be limited to managers. All users will have access to this page for now.
+    // $ADMIN->add(
+    //     "{$component}_vccsubmission_cat",
+    //     new admin_externalpage(
+    //         "{$component}_vccsubmission",
+    //         new lang_string('viewmanagevccsubmission', 'local_equipment'),
+    //         new moodle_url('/local/equipment/virtualcourseconsent/index.php'),
+    //     )
+    // );
 }

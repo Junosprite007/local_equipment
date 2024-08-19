@@ -78,14 +78,15 @@ $capabilities = [
             'manager' => CAP_ALLOW,
         ],
     ],
-    'local/equipment:manageconsentforms' => [
+    'local/equipment:managevccsubmissions' => [
+        'riskbitmask' => RISK_PERSONAL,
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => [
-            'manager' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
         ],
     ],
-    'local/equipment:consentforms' => [
+    'local/equipment:vccsubmissions' => [
         'riskbitmask' => RISK_CONFIG,
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,

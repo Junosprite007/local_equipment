@@ -14,123 +14,101 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * JavaScript for deleting partnerships in the add partnerships form.
+ * JavaScript for the add partnerships form.
  *
- * @module      local_equipment/addpartnerships_form
- * @copyright   2024 onward Joshua Kirby <josh@funlearningcompany.com>
- * @author      Joshua Kirby - CTO @ Fun Learning Company - funlearningcompany.com
- * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @module     local_equipment/addpartnerships_form
+ * @copyright  2024 Joshua Kirby <josh@funlearningcompany.com>
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-M.util.js_pending("local_equipment/addpartnerships_form");
+import $ from 'jquery';
+import { get_string as getString } from 'core/str';
+import Log from 'core/log';
 
-define(["jquery", "core/log", "core/str"], ($, log, Str) => {
-    return {
-        init: () => {
-            $(document).ready(function () {
-                const selector = "fieldset[id^='id_partnershipheader_']";
-                log.debug("Add Partnership Form JS initialized");
+/**
+ * Initialize the add partnerships form functionality.
+ */
+export const init = () => {
+    Log.debug('Add Partnership Form JS initialized');
+    setupPartnershipsHandling();
+};
 
-                const updatePartnershipNumbers = () => {
-                    log.debug("updatePartnershipNumbers");
-                    $(".local-equipment-partnership-header").each(
-                        (index, element) => {
-                            Str.get_string(
-                                "partnership",
-                                "local_equipment",
-                                index + 1
-                            )
-                                .then((string) => {
-                                    $(element).text(string);
-                                })
-                                .catch((error) => {
-                                    log.error(
-                                        "Error updating partnership header:",
-                                        error
-                                    );
-                                });
-                        }
-                    );
-                };
+/**
+ * Set up partnerships handling.
+ */
+const setupPartnershipsHandling = () => {
+    const selector = "fieldset[id^='id_partnershipheader_']";
 
-                const updateHiddenFields = () => {
-                    log.debug("updateHiddenFields");
-                    const partnershipsCount = $(selector).length;
-                    log.debug(`Number of fieldsets: ${partnershipsCount}`);
-                    $('input[name="partnerships"]').val(partnershipsCount);
+    $(document).on('click', '.local-equipment-remove-partnership', function () {
+        const $fieldset = $(this).closest(selector);
+        $fieldset.remove();
+        updatePartnershipNumbers();
+        updateHiddenFields();
+        renumberFormElements();
+        updateTrashIcons();
+    });
 
-                    // Update the URL if necessary
-                    const url = new URL(window.location.href);
-                    url.searchParams.set("repeatno", partnershipsCount);
-                    window.history.replaceState({}, "", url);
-                };
+    updateTrashIcons();
+};
 
-                const renumberFormElements = () => {
-                    log.debug("renumberFormElements");
-                    $(selector).each((index, fieldset) => {
-                        log.debug(`Renumbering fieldset ${index}`);
-                        $(fieldset)
-                            .find("input, select, textarea")
-                            .each((_, element) => {
-                                const name = $(element).attr("name");
-                                if (name) {
-                                    const newName = name.replace(
-                                        /\[\d+\]/,
-                                        `[${index}]`
-                                    );
-                                    $(element).attr("name", newName);
-                                }
-                                const id = $(element).attr("id");
-                                if (id) {
-                                    const newId = id.replace(
-                                        /_\d+_/,
-                                        `_${index}_`
-                                    );
-                                    $(element).attr("id", newId);
-                                }
-                            });
-                    });
-                };
-
-                const updateTrashIcons = () => {
-                    log.debug("updateTrashIcons");
-                    const partnerships = $(selector);
-                    log.debug("partnerships");
-                    log.debug(partnerships);
-                    log.debug('$(".local-equipment-remove-partnership")');
-                    log.debug($(".local-equipment-remove-partnership"));
-                    if (partnerships.length > 1) {
-                        log.debug("if");
-                        $(".local-equipment-remove-partnership").show();
-                    } else {
-                        log.debug("else");
-                        $(".local-equipment-remove-partnership").hide();
-                    }
-                };
-
-                $(document).on(
-                    "click",
-                    ".local-equipment-remove-partnership",
-                    function () {
-                        log.debug("Event triggered");
-                        const $fieldset = $(this).closest(selector);
-                        log.debug($fieldset);
-                        const removedfieldset = $fieldset.remove();
-                        log.debug("Fieldset removed");
-                        log.debug(
-                            "Here's what returned from the '$fieldset.remove()' command:"
-                        );
-                        log.debug(removedfieldset);
-                        updatePartnershipNumbers();
-                        updateHiddenFields();
-                        renumberFormElements();
-                        updateTrashIcons();
-                    }
-                );
-
-                updateTrashIcons();
+/**
+ * Update partnership numbers.
+ */
+const updatePartnershipNumbers = () => {
+    $('.local-equipment-partnership-header').each((index, element) => {
+        getString('partnership', 'local_equipment', index + 1)
+            .then((string) => {
+                $(element).text(string);
+            })
+            .catch((error) => {
+                Log.error('Error updating partnership header:', error);
             });
-            M.util.js_complete("local_equipment/addpartnerships_form");
-        },
-    };
-});
+    });
+};
+
+/**
+ * Update hidden fields.
+ */
+const updateHiddenFields = () => {
+    const partnershipsCount = $("fieldset[id^='id_partnershipheader_']").length;
+    $('input[name="partnerships"]').val(partnershipsCount);
+
+    // Update the URL if necessary
+    const url = new URL(window.location.href);
+    url.searchParams.set('repeatno', partnershipsCount);
+    window.history.replaceState({}, '', url);
+};
+
+/**
+ * Renumber form elements.
+ */
+const renumberFormElements = () => {
+    $("fieldset[id^='id_partnershipheader_']").each((index, fieldset) => {
+        $(fieldset)
+            .find('input, select, textarea')
+            .each((_, element) => {
+                const name = $(element).attr('name');
+                if (name) {
+                    const newName = name.replace(/\[\d+\]/, `[${index}]`);
+                    $(element).attr('name', newName);
+                }
+                const id = $(element).attr('id');
+                if (id) {
+                    const newId = id.replace(/_\d+_/, `_${index}_`);
+                    $(element).attr('id', newId);
+                }
+            });
+    });
+};
+
+/**
+ * Update trash icons visibility.
+ */
+const updateTrashIcons = () => {
+    const partnerships = $("fieldset[id^='id_partnershipheader_']");
+    if (partnerships.length > 1) {
+        $('.local-equipment-remove-partnership').show();
+    } else {
+        $('.local-equipment-remove-partnership').hide();
+    }
+};
