@@ -79,7 +79,7 @@ class addpartnerships_form extends \moodleform {
                     . $createcourseslink
             );
         } else {
-            $repeatarray['courses'] = $mform->createElement('select', 'courses', get_string('selectcourses', 'local_equipment'), $coursesformatted, ['multiple' => 'multiple', 'size' => 10]);
+            $repeatarray['courses'] = $mform->createElement('select', 'courses', get_string('selectcourses', 'local_equipment'), $coursesformatted, ['multiple' => true, 'size' => 10]);
         }
 
         $repeatarray['active'] = $mform->createElement('advcheckbox', 'active', get_string('active'));

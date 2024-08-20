@@ -24,7 +24,7 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->dirroot . '/local/equipment/classes/form/virtualcourseconsent_form.php');
 
 require_login();
@@ -33,20 +33,40 @@ $PAGE->set_url(new moodle_url('/local/equipment/virtualcourseconsent/index.php')
 $PAGE->set_context(context_system::instance());
 $PAGE->set_title(get_string('consentformtitle', 'local_equipment'));
 $PAGE->set_heading(get_string('consentformheading', 'local_equipment'));
+$PAGE->requires->js_call_amd('local_equipment/vccsubmission_form', 'init');
+$PAGE->requires->js_call_amd('local_equipment/formhandling', 'setupStudentsHandling', ['student', 'header']);
+$PAGE->requires->js_call_amd('local_equipment/partnership_courses', 'init');
+$PAGE->requires->js_call_amd('local_equipment/pickup_times', 'init');
 
-$form = new \local_equipment\form\consent_form();
+$form = new \local_equipment\form\virtualcourseconsent_form();
 
 if ($form->is_cancelled()) {
     redirect(new moodle_url('/'));
 } else if ($data = $form->get_data()) {
+    // echo '<br />';
+    // echo '<br />';
+    // echo '<br />';
+    // echo '<pre>';
+    // var_dump($data);
+    // echo '</pre>';
+    // die();
+
     if (local_equipment_save_vcc_form($data)) {
+        var_dump('if');
         redirect(new moodle_url('/'), get_string('consentformsubmitted', 'local_equipment'), null, \core\output\notification::NOTIFY_SUCCESS);
+
     } else {
+        var_dump('else');
         redirect(new moodle_url('/local/equipment/virtualcourseconsent/index.php'), get_string('consentformsubmissionerror', 'local_equipment'), null, \core\output\notification::NOTIFY_ERROR);
     }
+    redirect(
+        new moodle_url('/'),
+        get_string('consentformsubmitted', 'local_equipment'),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
 }
 
 echo $OUTPUT->header();
 $form->display();
-$PAGE->requires->js_call_amd('local_equipment/virtualcourseconsent/index', 'init');
 echo $OUTPUT->footer();

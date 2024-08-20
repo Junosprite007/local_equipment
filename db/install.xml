@@ -150,11 +150,6 @@
                 <KEY NAME="partnershipid" TYPE="foreign" FIELDS="partnershipid" REFTABLE="local_equipment_partnership" REFFIELDS="id"/>
                 <KEY NAME="pickupid" TYPE="foreign" FIELDS="pickupid" REFTABLE="local_equipment_pickup" REFFIELDS="id"/>
             </KEYS>
-            <INDEXES>
-                <INDEX NAME="userid" UNIQUE="true" FIELDS="userid"/>
-                <INDEX NAME="partnershipid" UNIQUE="false" FIELDS="partnershipid"/>
-                <INDEX NAME="pickupid" UNIQUE="false" FIELDS="pickupid"/>
-            </INDEXES>
         </TABLE>
 
         <!-- virtual course consent (vcc) submission (by the parent) -->
@@ -183,10 +178,7 @@
                 <KEY NAME="pickupid" TYPE="foreign" FIELDS="pickupid" REFTABLE="local_equipment_pickup" REFFIELDS="id"/>
             </KEYS>
             <INDEXES>
-                <INDEX NAME="userid" UNIQUE="false" FIELDS="userid"/>
-                <INDEX NAME="partnershipid" UNIQUE="false" FIELDS="partnershipid"/>
-                <INDEX NAME="pickupid" UNIQUE="false" FIELDS="pickupid"/>
-                <INDEX NAME="confirmationid" UNIQUE="true" FIELDS="confirmationid"/>
+                <INDEX NAME="confirmationid" UNIQUE="false" FIELDS="confirmationid"/>
                 <INDEX NAME="timecreated" UNIQUE="false" FIELDS="timecreated"/>
             </INDEXES>
         </TABLE>
@@ -204,7 +196,6 @@
                 <KEY NAME="agreementid" TYPE="foreign" FIELDS="agreementid" REFTABLE="local_equipment_agreement" REFFIELDS="id"/>
             </KEYS>
             <INDEXES>
-                <INDEX NAME="vccsubmission_agreement" UNIQUE="false" FIELDS="vccsubmissionid, agreementid"/>
                 <INDEX NAME="optinout" UNIQUE="false" FIELDS="optinout"/>
             </INDEXES>
         </TABLE>
@@ -226,8 +217,6 @@
                 <KEY NAME="vccsubmissionid" TYPE="foreign" FIELDS="vccsubmissionid" REFTABLE="local_equipment_vccsubmission" REFFIELDS="id"/>
             </KEYS>
             <INDEXES>
-                <INDEX NAME="userid" UNIQUE="false" FIELDS="userid"/>
-                <INDEX NAME="vccsubmissionid" UNIQUE="false" FIELDS="vccsubmissionid"/>
                 <INDEX NAME="email" UNIQUE="false" FIELDS="email"/>
                 <INDEX NAME="dateofbirth" UNIQUE="false" FIELDS="dateofbirth"/>
             </INDEXES>
@@ -244,9 +233,6 @@
                 <KEY NAME="studentid" TYPE="foreign" FIELDS="studentid" REFTABLE="local_equipment_vccsubmission_student" REFFIELDS="id"/>
                 <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
             </KEYS>
-            <INDEXES>
-                <INDEX NAME="student_course" UNIQUE="true" FIELDS="studentid, courseid"/>
-            </INDEXES>
         </TABLE>
     </TABLES>
 </XMLDB>

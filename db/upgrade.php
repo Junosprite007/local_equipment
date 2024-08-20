@@ -262,10 +262,6 @@ function xmldb_local_equipment_upgrade($oldversion) {
         $table->add_key('partnershipid', XMLDB_KEY_FOREIGN, ['partnershipid'], 'local_equipment_partnership', ['id']);
         $table->add_key('pickupid', XMLDB_KEY_FOREIGN, ['pickupid'], 'local_equipment_pickup', ['id']);
 
-        $table->add_index('userid', XMLDB_INDEX_UNIQUE, ['userid']);
-        $table->add_index('partnershipid', XMLDB_INDEX_NOTUNIQUE, ['partnershipid']);
-        $table->add_index('pickupid', XMLDB_INDEX_NOTUNIQUE, ['pickupid']);
-
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }
@@ -293,9 +289,6 @@ function xmldb_local_equipment_upgrade($oldversion) {
         $table->add_key('partnershipid', XMLDB_KEY_FOREIGN, ['partnershipid'], 'local_equipment_partnership', ['id']);
         $table->add_key('pickupid', XMLDB_KEY_FOREIGN, ['pickupid'], 'local_equipment_pickup', ['id']);
 
-        $table->add_index('userid', XMLDB_INDEX_NOTUNIQUE, ['userid']);
-        $table->add_index('partnershipid', XMLDB_INDEX_NOTUNIQUE, ['partnershipid']);
-        $table->add_index('pickupid', XMLDB_INDEX_NOTUNIQUE, ['pickupid']);
         $table->add_index('confirmationid', XMLDB_INDEX_UNIQUE, ['confirmationid']);
         $table->add_index('timecreated', XMLDB_INDEX_NOTUNIQUE, ['timecreated']);
 
@@ -314,7 +307,6 @@ function xmldb_local_equipment_upgrade($oldversion) {
         $table->add_key('vccsubmissionid', XMLDB_KEY_FOREIGN, ['vccsubmissionid'], 'local_equipment_vccsubmission', ['id']);
         $table->add_key('agreementid', XMLDB_KEY_FOREIGN, ['agreementid'], 'local_equipment_agreement', ['id']);
 
-        $table->add_index('vccsubmission_agreement', XMLDB_INDEX_NOTUNIQUE, ['vccsubmissionid', 'agreementid']);
         $table->add_index('optinout', XMLDB_INDEX_NOTUNIQUE, ['optinout']);
 
         if (!$dbman->table_exists($table)) {
@@ -336,8 +328,6 @@ function xmldb_local_equipment_upgrade($oldversion) {
         $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
         $table->add_key('vccsubmissionid', XMLDB_KEY_FOREIGN, ['vccsubmissionid'], 'local_equipment_vccsubmission', ['id']);
 
-        $table->add_index('userid', XMLDB_INDEX_NOTUNIQUE, ['userid']);
-        $table->add_index('vccsubmissionid', XMLDB_INDEX_NOTUNIQUE, ['vccsubmissionid']);
         $table->add_index('email', XMLDB_INDEX_NOTUNIQUE, ['email']);
         $table->add_index('dateofbirth', XMLDB_INDEX_NOTUNIQUE, ['dateofbirth']);
 
@@ -354,8 +344,6 @@ function xmldb_local_equipment_upgrade($oldversion) {
         $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
         $table->add_key('studentid', XMLDB_KEY_FOREIGN, ['studentid'], 'local_equipment_vccsubmission_student', ['id']);
         $table->add_key('courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
-
-        $table->add_index('student_course', XMLDB_INDEX_UNIQUE, ['studentid', 'courseid']);
 
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);

@@ -70,7 +70,7 @@ class editpartnership_form extends \moodleform {
         $mform->setType('liaisons', PARAM_RAW);
         $mform->setDefault('liaisons', json_decode($data->liaisonids));
 
-        $mform->addElement('select', 'courses', get_string('selectcourses', 'local_equipment'), $coursesformatted, ['multiple' => 'multiple', 'size' => 10]);
+        $mform->addElement('select', 'courses', get_string('selectcourses', 'local_equipment'), $coursesformatted, ['multiple' => true, 'size' => 10]);
         $mform->setType('courses', PARAM_RAW);
         $mform->setDefault('courses', json_decode($data->courseids));
 

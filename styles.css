@@ -17,4 +17,9 @@
   display: block;
 }
 
+#page-local-equipment-virtualcourseconsent-index select.form-control {
+  width: 100%;
+  min-width: 200px;
+}
+
 /*# sourceMappingURL=styles.css.map */

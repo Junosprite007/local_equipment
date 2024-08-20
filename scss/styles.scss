@@ -17,3 +17,8 @@
 .local-equipment-pickups-addpickups-time-selectors {
     display: block;
 }
+
+#page-local-equipment-virtualcourseconsent-index select.form-control {
+    width: 100%;
+    min-width: 200px;
+}

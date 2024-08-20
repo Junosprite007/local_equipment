@@ -322,7 +322,7 @@ function local_equipment_get_coordinator_info($id) {
  * Get all courses from a given category.
  *
  * @param string $categoryname A database record that contains multiple types of addresses.
- * @return stdClass $courses_formatted returns whatever the first category is to match give category name.
+ * @return object $courses_formatted returns whatever the first category is to match give category name.
  */
 function local_equipment_get_master_courses($categoryname = 'ALL_COURSES_CURRENT') {
     global $DB;
@@ -399,7 +399,7 @@ function local_equipment_parse_phone_number($phonenumber, $country = 'US') {
 
     try {
         if (!ctype_digit($parsedphonenumber)) {
-            throw new \Exception(get_string('invalidphonenumberformat', 'local_equipment') . get_string('wecurrentlyonlyacceptusnumbers', 'local_equipment'));
+            throw new \Exception(get_string('invalidphonenumberformat', 'local_equipment') . get_string('wecurrentlyonlyacceptusphonenumbers', 'local_equipment'));
         }
     } catch (\Exception $e) {
         return $e->getMessage();
@@ -414,7 +414,7 @@ function local_equipment_parse_phone_number($phonenumber, $country = 'US') {
                 } else if ((strlen($parsedphonenumber) == 11) && $phonenumber[0] == 1) {
                     $parsedphonenumber = "+" . $parsedphonenumber;
                 } else {
-                    throw new \Exception(new lang_string('invalidphonenumber', 'local_equipment') . new lang_string('wecurrentlyonlyacceptusnumbers', 'local_equipment'));
+                    throw new \Exception(new lang_string('invalidphonenumber', 'local_equipment') . ' ' . new lang_string('wecurrentlyonlyacceptusphonenumbers', 'local_equipment'));
                 }
             } catch (\Exception $e) {
                 return $e->getMessage();
@@ -434,15 +434,60 @@ function local_equipment_parse_phone_number($phonenumber, $country = 'US') {
  */
 function local_equipment_format_phone_number($parsedphonenumber) {
     $formattedphonenumber = preg_replace("/^\+(\d{1})(\d{3})(\d{3})(\d{4})$/", "+$1 ($2) $3-$4", $parsedphonenumber);
+    // try {
+    //     if ($parsedphonenumber == $formattedphonenumber) {
+    //         throw new \Exception(get_string('invalidphonenumberformat', 'local_equipment') . ' ' . get_string('wecurrentlyonlyacceptusphonenumbers', 'local_equipment'));
+    //     }
+    // } catch (\Exception $e) {
+    //     return $e->getMessage();
+    // }
+
+    return $formattedphonenumber;
+}
+
+/**
+ * Validates a mobile phone number to make sure it makes sense.
+ *
+ * @param string $phonenumber The mobile phone number to validate.
+ * @param string $country The country code to use.
+ * @return object $parsedphonedata An object containing the parsed phone number, the country code, whether or not the phone number is valid, and may or may not return errors.
+ */
+function local_equipment_phone_number_is_valid($phonenumber, $country = 'USA') {
+    // Remove commonly used characters from the phone number that are not numbers: ().-+ and the white space char.
+    $parsedphonedata = new stdClass();
+    $parsedphonedata->number = preg_replace("/[\(\)\-\s+\.]/", "", $phonenumber);
+    $parsedphonedata->country = $country;
+    $parsedphonedata->errors = [];
+
     try {
-        if ($parsedphonenumber == $formattedphonenumber) {
-            throw new \Exception(get_string('invalidphonenumberformat', 'local_equipment') . get_string('wecurrentlyonlyacceptusphonenumbers', 'local_equipment'));
+        if (!ctype_digit($parsedphonedata->number)) {
+            $parsedphonedata->errors[] = new moodle_exception(new lang_string('invalidphonenumberformat', 'local_equipment') . new lang_string('wecurrentlyonlyacceptusnumbers', 'local_equipment'));
         }
-    } catch (\Exception $e) {
+    } catch (moodle_exception $e) {
         return $e->getMessage();
     }
 
-    return $formattedphonenumber;
+    switch ($country) {
+        case 'USA':
+            // Check if the number is not empty, if it only contains digits, and if it is a valid 10 or 11 digit United States phone number.
+            try {
+                if ((strlen($parsedphonedata->number) == 10) && $phonenumber[0] != 1) {
+                    $parsedphonedata->number = "+1" . $parsedphonedata->number;
+                } else if ((strlen($parsedphonedata->number) == 11) && $phonenumber[0] == 1) {
+                    $parsedphonedata->number = "+" . $parsedphonedata->number;
+                } else {
+                    $parsedphonedata->errors[] = new moodle_exception(new lang_string('invalidphonenumber', 'local_equipment') . new lang_string('wecurrentlyonlyacceptcertainnumbers', 'local_equipment', $country));
+                }
+            } catch (moodle_exception $e) {
+                return $e->getMessage();
+            }
+            break;
+        default:
+            $parsedphonedata->errors[] = new lang_string('notasupportedcountry', 'local_equipment', $country);
+            return;
+    }
+
+    return $parsedphonedata;
 }
 
 /**
@@ -454,26 +499,175 @@ function local_equipment_format_phone_number($parsedphonenumber) {
  * @param string $groupname the name of the group to add.
  * @param string $label the label for the group.
  */
-function local_equipment_add_address_group($mform, $groupname, $label) {
+function local_equipment_add_address_group($mform, $addresstype, $label) {
+
     $group = [];
+    $types = [];
+    $rules = [];
+    $addressinputs = [
+        'streetaddress',
+        'apartment',
+        'city',
+        'state',
+        'country',
+        'zipcode'
+    ];
 
-    // $mform->addElement('header', $groupname . '_header', $label);
-    $mform->addElement('static', 'streetaddress_label_' . $groupname, get_string('streetaddress_' . $groupname, 'local_equipment'), \html_writer::tag('span', get_string('streetaddress_' . $groupname, 'local_equipment')));
-    $mform->addElement('static', 'city_label_' . $groupname, '', \html_writer::tag('label', get_string('city_' . $groupname, 'local_equipment')));
-    $mform->addElement('static', 'state_label_' . $groupname, '', \html_writer::tag('label', get_string('state_' . $groupname, 'local_equipment')));
-    $mform->addElement('static', 'zipcode_label_' . $groupname, '', \html_writer::tag('label', get_string('zipcode_' . $groupname, 'local_equipment')));
-    $group[] = $mform->createElement('text', 'streetaddress_' . $groupname, get_string('streetaddress_' . $groupname, 'local_equipment'));
-    $group[] = $mform->createElement('text', 'city_' . $groupname, get_string('city_' . $groupname, 'local_equipment'));
-    $group[] = $mform->createElement('text', 'state_' . $groupname, get_string('state_' . $groupname, 'local_equipment'));
-    $group[] = $mform->createElement('text', 'zipcode_' . $groupname, get_string('zipcode_' . $groupname, 'local_equipment'));
+    $formataddressblock = function ($addressinput) use ($mform, $addresstype, &$types, &$rules) {
+        $elementname = "{$addressinput}_{$addresstype}";
+        $types[$elementname] = PARAM_TEXT;
+        if ($addressinput !== 'apartment') {
+            $rules[$elementname] = ['required'];
+        }
+        if ($addressinput !== 'zipcode') {
+            $types[$elementname] = PARAM_INT;
+        }
 
-    $mform->addGroup($group, $groupname . '_group', $label, '<br>', false);
+        if ($addressinput === 'state') {
+            $elementinput = $mform->createElement('select', $elementname, get_string($elementname, 'local_equipment'), local_equipment_get_states());
+        } else if ($addressinput === 'country') {
+            $elementinput = $mform->createElement('select', $elementname, get_string($elementname, 'local_equipment'), local_equipment_get_countries());
+        } else {
+            $elementinput = $mform->createElement('text', $elementname, get_string($elementname, 'local_equipment'));
+        }
+        return [
+            $mform->createElement('html', '<div class="col-md-4">'),
+            $mform->createElement(
+                'static',
+                "{$elementname}_label",
+                '',
+                html_writer::div(get_string($addressinput, 'local_equipment'), 'local-equipment-address-label')
+            ),
+            $elementinput,
+            $mform->createElement('html', '</div>')
+        ];
+    };
 
-    // Set types for elements within the group
-    $mform->setType('streetaddress_' . $groupname, PARAM_TEXT);
-    $mform->setType('city_' . $groupname, PARAM_TEXT);
-    $mform->setType('state_' . $groupname, PARAM_TEXT);
-    $mform->setType('zipcode_' . $groupname, PARAM_TEXT);
+    // $addressinputs = ['streetaddress', 'apartment', 'city', 'state', 'country', 'zipcode'];
+    $addresselements = array_merge(...array_map($formataddressblock, $addressinputs));
+
+    $group = array_merge(
+        [$mform->createElement('html', '<div class="form-group row">')],
+        $addresselements,
+        [$mform->createElement('html', '</div>')]
+    );
+
+    $addressgroup = $mform->createElement('group', $addresstype, $label, $group, ' ', false);
+    return [
+        'element' => $addressgroup,
+        'types' => $types,
+        'rules' => $rules
+    ];
+
+
+    // function format_address_block($addressinput) {
+
+    //     $mform->createElement('html', '<div class="col-md-6">');
+    //     $mform->createElement(
+    //         'static',
+    //         $addressinput . '_' . $addresstype,
+    //         '',
+    //         html_writer::div(get_string('streetaddress', 'local_equipment'), 'local-equipment-pickups-addpickups-time-selectors')
+    //     );
+    //     $mform->createElement('text', $addressinput . '_' . $addresstype, get_string($addressinput . '_' . $addresstype, 'local_equipment'));
+    //     $mform->createElement('html', '</div>');
+    // }
+    // // $starttag = $mform->createElement('html', '<div class="col-md-6">');
+
+    // $elements = [
+    //     $mform->createElement('html', '<div class="form-group row">'),
+    //     format_address_block('streetaddress'),
+    //     format_address_block('apartment'),
+    //     format_address_block('city'),
+    //     format_address_block('state'),
+    //     format_address_block('country'),
+    //     format_address_block('zipcode'),
+
+    //     // $mform->createElement('text', 'streetaddress_' . $addresstype, get_string('streetaddress_' . $addresstype, 'local_equipment')),
+    //     // $mform->createElement('text', 'apartment_' . $addresstype, get_string('apartment_' . $addresstype, 'local_equipment')),
+    //     // $mform->createElement('text', 'city_' . $addresstype, get_string('city_' . $addresstype, 'local_equipment')),
+    //     // $mform->createElement('select', 'state_' . $addresstype, get_string('state_' . $addresstype, 'local_equipment'), local_equipment_get_states()),
+    //     // $mform->createElement('select', 'country_' . $addresstype, get_string('country_' . $addresstype, 'local_equipment'), local_equipment_get_countries()),
+    //     // $mform->createElement('text', 'zipcode_' . $addresstype, get_string('zipcode_' . $addresstype, 'local_equipment')),
+    //     $mform->createElement('html', '</div>'),
+    // ];
+    // $mform->createElement('text', 'streetaddress_' . $addresstype, get_string('streetaddress', 'local_equipment'));
+    // $mform->createElement('text', 'apartment_' . $addresstype, get_string('apartment', 'local_equipment'));
+    // $mform->createElement('text', 'city_' . $addresstype, get_string('city', 'local_equipment'));
+    // $mform->createElement('select', 'state_' . $addresstype, get_string('state', 'local_equipment'), local_equipment_get_states());
+    // $mform->createElement('select', 'country_' . $addresstype, get_string('country', 'local_equipment'), local_equipment_get_countries());
+
+
+
+
+    // $mform->createElement('text', 'zipcode_' . $addresstype, get_string('zipcode', 'local_equipment'));
+    // $mform->setType('streetaddress_' . $addresstype, PARAM_TEXT);
+    // $mform->setType('city_' . $addresstype, PARAM_TEXT);
+    // $mform->setType('state_' . $addresstype, PARAM_TEXT);
+    // $mform->setType('country_' . $addresstype, PARAM_TEXT);
+    // $mform->setType('zipcode_' . $addresstype, PARAM_TEXT);
+
+    // if (false) {
+    //     $mform->setDefault('streetaddress_' . $addresstype, $data->{"streetaddress_$addresstype"});
+    //     $mform->setDefault('city_' . $addresstype, $data->{"city_$addresstype"});
+    //     $mform->setDefault('state_' . $addresstype, $data->{"state_$addresstype"});
+    //     $mform->setDefault('country_' . $addresstype, $data->{"country_$addresstype"});
+    //     $mform->setDefault('zipcode_' . $addresstype, $data->{"zipcode_$addresstype"});
+    // }
+
+    // Set the default starting hour and minute if it exists.
+    // if ($defaulttime) {
+    //     $mform->setDefault($addresstype . 'hour', date('H', $defaulttime));
+    //     $mform->setDefault($addresstype . 'minute', date('i', $defaulttime));
+    // }
+    // Set the default ending hour and minute if it exists.
+
+    // $elements = array(
+    //     $mform->createElement('html', '<div class="form-group row">'),
+    //     $mform->createElement('html', '<div class="col-md-6">'),
+    //     $mform->createElement(
+    //         'static',
+    //         $addresstype . '_hourlabel',
+    //         '',
+    //         html_writer::div(get_string('hour', 'local_equipment'), 'local-equipment-pickups-addpickups-time-selectors')
+    //     ),
+    //     $hourelement,
+    //     $mform->createElement('html', '</div>'),
+    //     $mform->createElement('html', '<div class="col-md-6">'),
+    //     $mform->createElement(
+    //         'static',
+    //         $addresstype . '_minutelabel',
+    //         '',
+    //         html_writer::div(get_string('minute', 'local_equipment'), 'local-equipment-pickups-addpickups-time-selectors')
+    //     ),
+    //     $minuteelement,
+    //     $mform->createElement('html', '</div>'),
+    //     $mform->createElement('html', '</div>')
+    // );
+    // return $mform->createElement('group', $addresstype, $label, $elements, ' ', false);
+
+
+
+
+    // $group = [];
+
+    // // $mform->addElement('header', $groupname . '_header', $label);
+    // $mform->addElement('static', 'streetaddress_label_' . $groupname, get_string('streetaddress_' . $groupname, 'local_equipment'), \html_writer::tag('span', get_string('streetaddress_' . $groupname, 'local_equipment')));
+    // $mform->addElement('static', 'city_label_' . $groupname, '', \html_writer::tag('label', get_string('city_' . $groupname, 'local_equipment')));
+    // $mform->addElement('static', 'state_label_' . $groupname, '', \html_writer::tag('label', get_string('state_' . $groupname, 'local_equipment')));
+    // $mform->addElement('static', 'zipcode_label_' . $groupname, '', \html_writer::tag('label', get_string('zipcode_' . $groupname, 'local_equipment')));
+    // $group[] = $mform->createElement('text', 'streetaddress_' . $groupname, get_string('streetaddress_' . $groupname, 'local_equipment'));
+    // $group[] = $mform->createElement('text', 'city_' . $groupname, get_string('city_' . $groupname, 'local_equipment'));
+    // $group[] = $mform->createElement('text', 'state_' . $groupname, get_string('state_' . $groupname, 'local_equipment'));
+    // $group[] = $mform->createElement('text', 'zipcode_' . $groupname, get_string('zipcode_' . $groupname, 'local_equipment'));
+
+    // $mform->addGroup($group, $groupname . '_group', $label, '<br>', false);
+
+    // // Set types for elements within the group
+    // $mform->setType('streetaddress_' . $groupname, PARAM_TEXT);
+    // $mform->setType('city_' . $groupname, PARAM_TEXT);
+    // $mform->setType('state_' . $groupname, PARAM_TEXT);
+    // $mform->setType('zipcode_' . $groupname, PARAM_TEXT);
 }
 
 /**
@@ -538,6 +732,7 @@ function local_equipment_add_address_block($mform, $addresstype) {
 
     return $block;
 }
+
 
 /**
  * Add an address block that may have default values populated from the database.
@@ -747,6 +942,60 @@ function local_equipment_get_active_partnerships() {
 /**
  * Retrieves partnership courses.
  *
+ * @return array An associative array of partnership courses, with course ID as the key and course fullname as the value.
+ */
+function local_equipment_get_partnerships_with_courses() {
+    global $DB;
+
+    $partnerships = $DB->get_records('local_equipment_partnership', ['active' => 1]);
+    $partnershipdata = array();
+
+    foreach ($partnerships as $partnership) {
+        $courseids = json_decode($partnership->courseids);
+        if (!empty($courseids)) {
+            $courses = $DB->get_records_list('course', 'id', $courseids, '', 'id, fullname');
+            $partnershipdata[$partnership->id] = array_values($courses);
+        }
+    }
+
+    return $partnershipdata;
+}
+
+/**
+ * Retrieves partnership pickuptimes.
+ *
+ * @return array An associative array of partnership courses, with course ID as the key and course fullname as the value.
+ */
+function local_equipment_get_partnerships_with_pickuptimes() {
+    global $DB;
+
+    $partnerships = $DB->get_records('local_equipment_partnership', ['active' => 1]);
+    $pickuptimedata = array();
+
+    foreach ($partnerships as $partnership) {
+        $pickups = $DB->get_records('local_equipment_pickup', ['partnershipid' => $partnership->id], 'pickupdate, starttime');
+        if (!empty($pickups)) {
+            $pickuptimedata[$partnership->id] = array_values(array_filter(array_map(function ($pickup) {
+                // Only include pickup times where starttime and endtime are different
+                if ($pickup->starttime !== $pickup->endtime) {
+                    return [
+                        'id' => $pickup->id,
+                        'datetime' => userdate($pickup->pickupdate, get_string('strftimedate', 'langconfig')) . ' ' .
+                            userdate($pickup->starttime, get_string('strftimetime', 'langconfig')) . ' - ' .
+                            userdate($pickup->endtime, get_string('strftimetime', 'langconfig'))
+                    ];
+                }
+                return null;
+            }, $pickups)));
+        }
+    }
+
+    return $pickuptimedata;
+}
+
+/**
+ * Retrieves partnership courses.
+ *
  * @param int $partnershipid The ID of the partnership.
  * @return array An associative array of partnership courses, with course ID as the key and course fullname as the value.
  */
@@ -783,9 +1032,9 @@ function local_equipment_get_active_agreements() {
     $now = time();
     return $DB->get_records_sql(
         "SELECT * FROM {local_equipment_agreement}
-         WHERE activestarttime <= :now AND activeendtime > :now
+         WHERE activestarttime <= :now1 AND activeendtime > :now2
          ORDER BY version DESC",
-        ['now' => $now]
+        ['now1' => $now, 'now2' => $now]
     );
 }
 

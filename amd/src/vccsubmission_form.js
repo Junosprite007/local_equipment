@@ -25,6 +25,7 @@ import $ from 'jquery';
 import Ajax from 'core/ajax';
 import Notification from 'core/notification';
 import { get_string as getString } from 'core/str';
+import Log from 'core/log';
 
 /**
  * Initialize the manage consents functionality.
@@ -32,6 +33,17 @@ import { get_string as getString } from 'core/str';
 export const init = () => {
     setupViewNotes();
     setupAddNote();
+};
+
+/**
+ * Initialize the form functionality.
+ */
+export const initStudent = () => {
+    Log.debug('Add Student Form JS initialized');
+    makeStudentSectionsCollapsible();
+    handleDeleteStudent();
+    handleAddStudent();
+    updateStudentNumbers();
 };
 
 /**
@@ -89,6 +101,60 @@ const setupAddNote = () => {
                         fail: Notification.exception,
                     },
                 ]);
+            });
+    });
+};
+
+/**
+ * Make student sections collapsible.
+ */
+const makeStudentSectionsCollapsible = () => {
+    $('fieldset[id^="id_studentheader_"]').each((index, element) => {
+        $(element)
+            .addClass('collapsible')
+            .addClass(index === 0 ? 'collapsed' : 'expanded');
+        $(element).on('click', () => {
+            $(element).toggleClass('collapsed expanded');
+        });
+    });
+};
+
+/**
+ * Handle delete student button clicks.
+ */
+const handleDeleteStudent = () => {
+    $(document).on('click', '.local-equipment-remove-student', (e) => {
+        e.preventDefault();
+        const fieldset = $(e.currentTarget).closest(
+            'fieldset[id^="id_studentheader_"]'
+        );
+        fieldset.remove();
+        updateStudentNumbers();
+    });
+};
+
+/**
+ * Handle add student button clicks.
+ */
+const handleAddStudent = () => {
+    $('input[name="add_student"]').on('click', () => {
+        setTimeout(updateStudentNumbers, 100);
+    });
+};
+
+/**
+ * Update student numbers in headers.
+ */
+const updateStudentNumbers = () => {
+    $('fieldset[id^="id_studentheader_"]').each((index, element) => {
+        const legend = $(element).find('legend');
+        getString('student', 'local_equipment', index + 1)
+            .then((str) => {
+                legend.text(str);
+            })
+            .catch((error) => {
+                // eslint-disable-next-line no-console
+                console.error('Error updating student number:', error);
             });
     });
 };
