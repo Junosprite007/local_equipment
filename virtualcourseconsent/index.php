@@ -25,7 +25,7 @@
  */
 
 require_once(__DIR__ . '/../../../config.php');
-require_once($CFG->dirroot . '/local/equipment/classes/form/virtualcourseconsent_form.php');
+require_once($CFG->dirroot . '/local/equipment/classes/form/vccsubmission_form.php');
 
 require_login();
 
@@ -33,12 +33,13 @@ $PAGE->set_url(new moodle_url('/local/equipment/virtualcourseconsent/index.php')
 $PAGE->set_context(context_system::instance());
 $PAGE->set_title(get_string('consentformtitle', 'local_equipment'));
 $PAGE->set_heading(get_string('consentformheading', 'local_equipment'));
-$PAGE->requires->js_call_amd('local_equipment/vccsubmission_form', 'init');
-$PAGE->requires->js_call_amd('local_equipment/formhandling', 'setupStudentsHandling', ['student', 'header']);
-$PAGE->requires->js_call_amd('local_equipment/partnership_courses', 'init');
-$PAGE->requires->js_call_amd('local_equipment/pickup_times', 'init');
+$PAGE->requires->js_call_amd('local_equipment/vccsubmission_addstudents_form', 'init');
+// $PAGE->requires->js_call_amd('local_equipment/vccsubmission_form', 'init');
+// $PAGE->requires->js_call_amd('local_equipment/formhandling', 'setupStudentsHandling', ['student', 'header']);
+// $PAGE->requires->js_call_amd('local_equipment/partnership_courses', 'init');
+// $PAGE->requires->js_call_amd('local_equipment/pickup_times', 'init');
 
-$form = new \local_equipment\form\virtualcourseconsent_form();
+$form = new \local_equipment\form\vccsubmission_form();
 
 if ($form->is_cancelled()) {
     redirect(new moodle_url('/'));

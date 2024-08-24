@@ -504,7 +504,7 @@ function local_equipment_add_address_group($mform, $addresstype, $label) {
     $group = [];
     $types = [];
     $rules = [];
-    $addressinputs = [
+    $addressfields = [
         'streetaddress',
         'apartment',
         'city',
@@ -519,7 +519,7 @@ function local_equipment_add_address_group($mform, $addresstype, $label) {
         if ($addressinput !== 'apartment') {
             $rules[$elementname] = ['required'];
         }
-        if ($addressinput !== 'zipcode') {
+        if ($addressinput === 'zipcode') {
             $types[$elementname] = PARAM_INT;
         }
 
@@ -543,8 +543,8 @@ function local_equipment_add_address_group($mform, $addresstype, $label) {
         ];
     };
 
-    // $addressinputs = ['streetaddress', 'apartment', 'city', 'state', 'country', 'zipcode'];
-    $addresselements = array_merge(...array_map($formataddressblock, $addressinputs));
+    // $addressfields = ['streetaddress', 'apartment', 'city', 'state', 'country', 'zipcode'];
+    $addresselements = array_merge(...array_map($formataddressblock, $addressfields));
 
     $group = array_merge(
         [$mform->createElement('html', '<div class="form-group row">')],
@@ -671,64 +671,145 @@ function local_equipment_add_address_group($mform, $addresstype, $label) {
 }
 
 /**
- * Add an address block.
+ * Conditionally add a div around the block.
  *
  * @param MoodleQuickForm $mform a standard moodle form, probably will be '$this->_form'.
- * @param string $addresstype the type of address block to add: 'mailing', 'physical', 'pickup', or 'billing'.
- * @return object $block a block of elements to be added to the form.
+ * @param string $fieldname the name of the element to add.
+ * @param string $addressinput the type of address block to add: 'mailing', 'physical', 'pickup', or 'billing'.
+ * @param object $element the element to add.
+ * @return object $block a block of elements and their options to be added to the form.
  */
-function local_equipment_add_address_block($mform, $addresstype) {
-    $block = new stdClass();
+function local_equipment_address_group_view($mform, $fieldname, $addressinput, $element) {
+    return [
+        "{$fieldname}_before" => $mform->createElement('html', '<div class="col-md-0">'),
+        // "{$fieldname}_label" => $mform->createElement(
+        //     'static',
+        //     "{$fieldname}_label",
+        //     '',
+        //     html_writer::div(get_string($addressinput, 'local_equipment'), 'local-equipment-address-label')
+        // ),
+        $fieldname => $element,
+        "{$fieldname}_after" => $mform->createElement('html', '</div>')
+    ];
+}
 
+/**
+ * Conditionally add a div around the block.
+ *
+ * @param MoodleQuickForm $mform A standard moodle form, probably will be '$this->_form'.
+ * @param string $addresstype The type of address block to add: 'mailing', 'physical', 'pickup', or 'billing'.
+ * @param string $extrainput An extra input to add to the form (e.g. 'attention', 'name'). If empty, no extra input will be added.
+ * @param bool $showsameasmailing Whether or not to show the 'sameasmailing' checkbox and string.
+ * @param bool $showsameasphysical Whether or not to show the 'sameasphysical' checkbox and string.
+ * @param bool $showapartment Whether or not to show the 'apartment' input.
+ * @param bool $showinstructions Whether or not to show the 'instructions' textarea input.
+ * @param bool $groupview Whether or not to group the address inputs.
+ * @param bool $required Whether or not the address is required.
+ */
+function local_equipment_add_address_block(
+    $mform,
+    $addresstype,
+    $extrainput = '',
+    $showsameasmailing = false,
+    $showsameasphysical = true,
+    $showapartment = false,
+    $showinstructions = false,
+    $groupview = false,
+    $required = false
+) {
+    $block = new stdClass();
     $block->elements = [];
     $block->options = [];
-    $block->elements[$addresstype . 'address'] = $mform->createElement('static', $addresstype . 'address', \html_writer::tag('label', get_string($addresstype . 'address', 'local_equipment'), ['class' => 'form-input-group-labels']));
+    $block->isgrouped = false;
+    $addressfields = [];
 
-    switch ($addresstype) {
-        case 'mailing':
-            $block->elements['attention_' . $addresstype] = $mform->createElement('text', 'attention_' . $addresstype, get_string('attention', 'local_equipment'));
-            $block->options['attention_' . $addresstype]['type'] = PARAM_TEXT;
-            break;
-        case 'pickup':
-            $block->elements['instructions_' . $addresstype] = $mform->createElement('textarea', 'instructions_' . $addresstype, get_string('pickupinstructions', 'local_equipment'));
-            $block->options['instructions_' . $addresstype]['type'] = PARAM_TEXT;
-            break;
-        case 'billing':
-            $block->elements['attention_' . $addresstype] = $mform->createElement('text', 'attention_' . $addresstype, get_string('attention', 'local_equipment'));
-            $block->options['attention_' . $addresstype]['type'] = PARAM_TEXT;
-            break;
-        default:
-            break;
+    // Display address fields in order.
+    $extrainput ? $addressfields[] = $extrainput : null;
+    $addressfields[] = 'streetaddress';
+    $showapartment ? $addressfields[] = 'apartment' : null;
+    $addressfields[] = 'city';
+    $addressfields[] = 'state';
+    $addressfields[] = 'country';
+    $addressfields[] = 'zipcode';
+    // $showinstructions ? $addressfields[] = 'extrainstructions' : null;
+
+    $block->elements["{$addresstype}_address"] = $mform->createElement('static', "{$addresstype}_address", \html_writer::tag('label', get_string("{$addresstype}_address", 'local_equipment'), ['class' => 'form-input-group-labels font-weight-bold']));
+    if ($extrainput !== '') {
+        $fieldname = "{$addresstype}_{$extrainput}";
+        $block->elements[$fieldname] = $mform->createElement('text', $fieldname, get_string($extrainput, 'local_equipment'));
+    }
+    if ($showsameasphysical) {
+        $fieldname = "{$addresstype}_sameasphysical";
+        $showsameasmailing = false;
+        $block->elements[$fieldname] = $mform->createElement('checkbox', $fieldname, get_string('sameasphysical', 'local_equipment'));
+    } else if ($showsameasmailing) {
+        $fieldname = "{$addresstype}_sameasmailing";
+        $block->elements[$fieldname] = $mform->createElement('checkbox', $fieldname, get_string('sameasmailing', 'local_equipment'));
+        $showsameasphysical = false;
     }
 
-    if ($addresstype !== 'physical') {
-        $block->elements['sameasphysical_' . $addresstype] = $mform->createElement('advcheckbox', 'sameasphysical_' . $addresstype, get_string('sameasphysical', 'local_equipment'));
-        $block->options['sameasphysical_' . $addresstype]['type'] = PARAM_BOOL;
+    $groupview ? $block->elements['startgroup'] = $mform->createElement('html', '<div class="form-group row m-1 mb-4">') : null;
+
+    // For each address field, we must set the element name, type, rules, and any attributes.
+    foreach ($addressfields as $field) {
+        // $addresstype = 'mailing', 'physical', 'pickup', or 'billing'.
+        // $field = 'attention' (and others),  'streetaddress', 'apartment', 'city', 'state', 'country', or 'zipcode'.
+        $fieldname = "{$addresstype}_{$field}";
+        ($field !== 'apartment') && $required ? $block->options[$fieldname]['rules']['required'] = ['message' => get_string('required'), 'format' => null] : null;
+        if ($field === 'extrainstructions') {
+            $maxlength = 500;
+        } else if ($field === 'zipcode') {
+            $maxlength = 10;
+        } else {
+            $maxlength = 255;
+        }
+        $block->options[$fieldname]['rules']['maxlength'] = ['message' => get_string('maxlength', 'local_equipment', $maxlength), 'format' => $maxlength];
+
+        // We only have students in the United States for now.
+        $field === 'zipcode' ? $block->options[$fieldname]['rules']['regex'] = ['message' => get_string('mustbezipcodeformat', 'local_equipment'), 'format' => '/^\d{5}(-\d{4})?$/'] : null;
+        $block->options[$fieldname]['type'] = PARAM_TEXT;
+
+        // Set fields.
+        switch ($field) {
+            case 'state':
+                $element = $mform->createElement('select', $fieldname, get_string($field, 'local_equipment'), local_equipment_get_states());
+                break;
+            case 'country':
+                $element = $mform->createElement('select', $fieldname, get_string($field, 'local_equipment'), local_equipment_get_countries());
+                break;
+            default:
+                $element = $mform->createElement('text', $fieldname, get_string($field, 'local_equipment'));
+                break;
+        }
+
+        $required ? $options[$fieldname]['rule'] = 'required' : null;
+        if ($groupview) {
+            if (
+                $field === 'streetaddress' ||
+                $field === 'apartment' ||
+                $field === 'city' ||
+                $field === 'state' ||
+                $field === 'country' ||
+                $field === 'zipcode'
+            ) {
+                $element->updateAttributes(['class' => 'local-equipment-stacked-address-fields']);
+            }
+            $block->isgrouped = true;
+            $addressgroup = local_equipment_address_group_view($mform, $fieldname, $field, $element);
+
+            foreach ($addressgroup as $key => $value) {
+                $block->elements[$key] = $value;
+            }
+        } else {
+            $block->elements[$fieldname] = $element;
+        }
     }
+    $groupview ? $block->elements['endgroup'] = $mform->createElement('html', '</div>') : null;
 
-    $block->elements['streetaddress_' . $addresstype] = $mform->createElement('text', 'streetaddress_' . $addresstype, get_string('streetaddress', 'local_equipment'));
-    $block->elements['city_' . $addresstype] = $mform->createElement('text', 'city_' . $addresstype, get_string('city', 'local_equipment'));
-    $block->elements['state_' . $addresstype] = $mform->createElement('select', 'state_' . $addresstype, get_string('state', 'local_equipment'), local_equipment_get_states());
-    $block->elements['country_' . $addresstype] = $mform->createElement('select', 'country_' . $addresstype, get_string('country', 'local_equipment'), local_equipment_get_countries());
-    $block->elements['zipcode_' . $addresstype] = $mform->createElement('text', 'zipcode_' . $addresstype, get_string('zipcode', 'local_equipment'));
-
-    $block->options['streetaddress_' . $addresstype]['type'] = PARAM_TEXT;
-    $block->options['city_' . $addresstype]['type'] = PARAM_TEXT;
-    $block->options['state_' . $addresstype]['type'] = PARAM_TEXT;
-    $block->options['country_' . $addresstype]['type'] = PARAM_TEXT;
-    $block->options['zipcode_' . $addresstype]['type'] = PARAM_TEXT;
-
-    // The physical address is required, but none of the others are.
-    if ($addresstype === 'physical') {
-        $block->options['streetaddress_' . $addresstype]['rule'] = 'required';
-        $block->options['city_' . $addresstype]['rule'] = 'required';
-        $block->options['state_' . $addresstype]['rule'] = 'required';
-        $block->options['country_' . $addresstype]['rule'] = 'required';
-        $block->options['zipcode_' . $addresstype]['rule'] = 'required';
+    if ($showinstructions) {
+        $fieldname = "{$addresstype}_extrainstructions";
+        $block->elements[$fieldname] = $mform->createElement('textarea', $fieldname, get_string('extrainstructions', 'local_equipment', strtolower(get_string("{$addresstype}_address", 'local_equipment'))));
     }
-
-    $block->options['state_' . $addresstype]['default'] = 'MI';
-    $block->options['country_' . $addresstype]['default'] = 'USA';
 
     return $block;
 }

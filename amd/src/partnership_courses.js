@@ -25,11 +25,16 @@ import Log from 'core/log';
 import { get_string as getString } from 'core/str';
 
 export const init = () => {
+    Log.debug('init function called in partnership_courses.js');
+
     const partnershipSelect = document.getElementById('id_partnership');
 
     if (!partnershipSelect) {
-        Log.error('Partnership select element not found');
+        Log.error('partnershipSelect element not found');
         return;
+    } else {
+        Log.debug("'partnershipSelect' variable: ");
+        Log.debug(partnershipSelect);
     }
 
     let partnershipData;
@@ -37,39 +42,54 @@ export const init = () => {
         partnershipData = JSON.parse(
             partnershipSelect.getAttribute('data-partnerships') || '{}'
         );
+        Log.debug("'partnershipData' variable: ");
+        Log.debug(partnershipData);
     } catch (e) {
-        Log.error('Error parsing partnership data:', e);
+        Log.error('Error parsing partnership data: ', e);
         return;
     }
     // Use async/await for better readability and error handling
     const updateStudentCourses = async (partnershipId) => {
+        Log.debug(
+            'updateStudentCourses function called in partnership_courses.js'
+        );
+        Log.debug('partnershipId argument passed in: ');
+        Log.debug(partnershipId);
+
         const courses = partnershipData[partnershipId] || [];
-        Log.debug('Courses: ');
+        Log.debug("'courses' variable: ");
         Log.debug(courses);
+
         const selects = document.querySelectorAll(
             'select[name^="student_courses["]'
         );
+        Log.debug("'selects' variable: ");
+        Log.debug(selects);
         for (const select of selects) {
             await updateCourseOptions(select, courses);
         }
     };
-    // const updateStudentCourses = async (partnershipId) => {
-    //     const courses = partnershipData[partnershipId] || [];
-    //     Log.debug('Courses:', courses);
-    //     const selects = document.querySelectorAll('select[name^="courses["]');
-    //     for (const select of selects) {
-    //         await updateCourseOptions(select, courses);
-    //     }
-    // };
 
     // Change: Modified to handle previously selected courses
     const updateCourseOptions = async (select, courses) => {
+        Log.debug(
+            'updateCourseOptions function called in partnership_courses.js'
+        );
+        Log.debug("'select' arg passed: ");
+        Log.debug(select);
+        Log.debug("'courses' arg passed: ");
+        Log.debug(courses);
+
         // Retrieve previously selected courses
         const previouslySelected = JSON.parse(
             select.getAttribute('data-selected') || '[]'
         );
+        Log.debug("'previouslySelected' variable: ");
+        Log.debug(previouslySelected);
+
         select.innerHTML = '';
         if (courses.length === 0) {
+            Log.debug('courses length is 0...');
             const noCourseString = await getString(
                 'nocoursesavailable',
                 'local_equipment'
@@ -79,7 +99,13 @@ export const init = () => {
             option.textContent = noCourseString;
             option.disabled = true;
             select.appendChild(option);
+
+            Log.debug("'noCourseString' variable: ");
+            Log.debug(noCourseString);
+            Log.debug("'option' variable: ");
+            Log.debug(option);
         } else {
+            Log.debug('courses length is not 0...');
             courses.forEach((course) => {
                 const option = document.createElement('option');
                 option.value = course.id;
@@ -89,36 +115,20 @@ export const init = () => {
                     course.id.toString()
                 );
                 select.appendChild(option);
+
+                Log.debug("'option' variable: ");
+                Log.debug(option);
             });
         }
         // Call preserveSelectedCourses after updating options
         preserveSelectedCourses();
     };
 
-    // const updateCourseOptions = async (select, courses) => {
-    //     select.innerHTML = '';
-    //     if (courses.length === 0) {
-    //         const noCourseString = await getString(
-    //             'nocoursesavailable',
-    //             'local_equipment'
-    //         );
-    //         const option = document.createElement('option');
-    //         option.value = '';
-    //         option.textContent = noCourseString;
-    //         option.disabled = true;
-    //         select.appendChild(option);
-    //     } else {
-    //         courses.forEach((course) => {
-    //             const option = document.createElement('option');
-    //             option.value = course.id;
-    //             option.textContent = course.fullname;
-    //             select.appendChild(option);
-    //         });
-    //     }
-    // };
-
     // New function: Preserve selected courses
     const preserveSelectedCourses = () => {
+        Log.debug(
+            'preserveSelectedCourses function called in partnership_courses.js'
+        );
         document
             .querySelectorAll('select[name^="student_courses["]')
             .forEach((select) => {
@@ -130,6 +140,8 @@ export const init = () => {
                         'data-selected',
                         JSON.stringify(selectedOptions)
                     );
+                    Log.debug("'option' variable: ");
+                    Log.debug(selectedOptions);
                 });
             });
     };
@@ -143,4 +155,6 @@ export const init = () => {
 
     // Call preserveSelectedCourses initially
     preserveSelectedCourses();
+
+    Log.debug('###### End init function for partnership_courses.js ######');
 };

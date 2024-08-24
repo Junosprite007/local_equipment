@@ -22,4 +22,16 @@
   min-width: 200px;
 }
 
+.local-equipment-stacked-address-fields {
+  display: flex;
+  flex-direction: column;
+  min-width: 300px;
+}
+
+.local-equipment-stacked-address-fields label {
+  order: -1;
+  white-space: nowrap;
+  margin-right: 5px;
+}
+
 /*# sourceMappingURL=styles.css.map */

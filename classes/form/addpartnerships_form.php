@@ -44,6 +44,16 @@ class addpartnerships_form extends \moodleform {
         $repeatoptions = [];
         $address = new stdClass();
 
+        $repeatno = optional_param('repeatno', 1, PARAM_INT);
+        $deletebuttonname = 'delete_partnership';
+        $addfieldsname = 'addpartnership';
+        $deletions = optional_param_array($deletebuttonname, [], PARAM_INT);
+
+        if (!empty($deletions)) {
+            $repeatno = $repeatno - count($deletions);
+            $repeatno = max(1, $repeatno); // Ensure at least one partnership remains
+        }
+
         $users = local_equipment_auto_complete_users();
         $mastercourses = local_equipment_get_master_courses('ALL_COURSES_CURRENT');
         $coursesformatted = $mastercourses->courses_formatted;
@@ -56,10 +66,11 @@ class addpartnerships_form extends \moodleform {
 
         $repeatarray['partnershipheader'] = $mform->createElement('header', 'partnershipheader', get_string('partnership', 'local_equipment'), ['class' => 'local-equipment-partnership-header']);
 
-        $repeatno = optional_param('repeatno', 1, PARAM_INT);
-        $mform->addElement('hidden', 'partnerships', $repeatno);
+        // $repeatno = optional_param('repeatno', 1, PARAM_INT);
+        // $mform->addElement('hidden', 'partnerships', $repeatno);
         // Add a delete button for each repeated element (except the first one).
-        $repeatarray['delete'] = $mform->createElement('html', '<button type="button" class="local-equipment-remove-partnership btn btn-danger"><i class="fa fa-trash"></i></button>');
+        $repeatarray['delete'] = $mform->createElement('html', '<button type="button" class="local-equipment-remove-partnership btn btn-secondary"><i class="fa fa-trash"></i>&nbsp;&nbsp;' . get_string('deletepartnership', 'local_equipment') . '</button>');
+        // $repeatarray['delete'] = $mform->createElement('submit', $deletebuttonname, get_string('delete'), ['class' => 'local-equipment-remove-partnership btn']);
         $repeatarray['partnershipname'] = $mform->createElement('text', 'partnershipname', get_string('partnershipname', 'local_equipment'), ['class' => 'partnership-name-input']);
         $repeatarray['liaisons'] = $mform->createElement('autocomplete', 'liaisons', get_string('selectliaisons', 'local_equipment'), [], $users);
         if ($nomastercategory) {
@@ -84,28 +95,27 @@ class addpartnerships_form extends \moodleform {
 
         $repeatarray['active'] = $mform->createElement('advcheckbox', 'active', get_string('active'));
 
-        // Physical address section
+        // Physical address section.
         $address = local_equipment_add_address_block($mform, 'physical');
         $repeatarray = array_merge($repeatarray, $address->elements);
         $repeatoptions = array_merge($repeatoptions, $address->options);
 
-        // Mailing address section
+        // Mailing address section.
         $address = local_equipment_add_address_block($mform, 'mailing');
         $repeatarray = array_merge($repeatarray, $address->elements);
         $repeatoptions = array_merge($repeatoptions, $address->options);
 
-        // Pickup address section
+        // Pickup address section.
         $address = local_equipment_add_address_block($mform, 'pickup');
         $repeatarray = array_merge($repeatarray, $address->elements);
         $repeatoptions = array_merge($repeatoptions, $address->options);
 
-        // Billing address section
+        // Billing address section.
         $address = local_equipment_add_address_block($mform, 'billing');
         $repeatarray = array_merge($repeatarray, $address->elements);
         $repeatoptions = array_merge($repeatoptions, $address->options);
 
         // Set options.
-        $repeatoptions['partnerships']['type'] = PARAM_INT;
         $repeatoptions['partnershipheader']['header'] = true;
         $repeatoptions['partnershipname']['type'] = PARAM_TEXT;
         $repeatoptions['partnershipname']['rule'] = 'required';
@@ -113,22 +123,35 @@ class addpartnerships_form extends \moodleform {
         $repeatoptions['courses']['type'] = PARAM_TEXT;
         $repeatoptions['active']['type'] = PARAM_BOOL;
         $repeatoptions['active']['default'] = 1;
+
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<pre>';
+        // // var_dump($partnershiprepeats);
+        // var_dump($repeatoptions); // Continue from here.
+        // echo '</pre>';
+        // die();
+
         // Use this later if it helps.
         // $numberofrepeats = $this->repeat_elements(
+
+        // This string gets added to the <div> after the last fieldset element from the repeat_elements function.
+
+
         $this->repeat_elements(
             $repeatarray,
             $repeatno,
             $repeatoptions,
             'partnerships',
-            'add_partnership',
+            $addfieldsname,
             1,
             get_string('addmorepartnerships', 'local_equipment'),
-            false,
-            'delete_partnership'
+            // false,
+            // $deletebuttonname
         );
 
         // $PAGE->requires->js_call_amd('local_equipment/deletepartnership_button', 'init');
-        $this->add_action_buttons();
+        $this->add_action_buttons(true, get_string('submit'));
     }
 
     /**

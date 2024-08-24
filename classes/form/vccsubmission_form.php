@@ -30,7 +30,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/local/equipment/lib.php');
 
-class virtualcourseconsent_form extends \moodleform {
+class vccsubmission_form extends \moodleform {
     public function definition() {
         global $USER, $DB;
         $mform = $this->_form;
@@ -58,22 +58,121 @@ class virtualcourseconsent_form extends \moodleform {
         $mform->setType('phone', PARAM_TEXT);
         $mform->addRule('phone', get_string('required'), 'required', null, 'client');
 
-        // Get address input fields in a 3 column 2 row layout.
-        $addressgroup = local_equipment_add_address_group($mform, 'mailing', get_string('mailingaddress', 'local_equipment'));
-        $mform->addElement($addressgroup['element']);
-        // Set types for each address input, using the types defined in the address group function.
-        foreach ($addressgroup['types'] as $elementname => $type) {
-            $mform->setType($elementname, $type);
+        $regrules = $mform->getRegisteredRules();
+        $att = $mform->getAttributes(true);
+
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<br />';
+
+        // Display all address related fields.
+        // Working with group view right now.
+        $groupview = true;
+        $address = local_equipment_add_address_block($mform, 'mailing', '', false, false, true, false, $groupview, true);
+        foreach ($address->elements as $elementname => $element) {
+            $mform->addElement($element);
+            if ($address->isgrouped) {
+            }
+
+            // if (is_array($element)) {
+            //     // When $groupview = true.
+            //     // $mform->addGroup($element,);
+            // } else {
+            //     // When $groupview = false.
+            // }
         }
+        // Set types for each address input, using the types defined in the address group function.
+
+        foreach ($address->options as $elementname => $options) {
+            $mform->setType($elementname, $options['type']);
+            // echo '<pre>';
+            // var_dump('$elementname: ');
+            // var_dump($elementname);
+            // var_dump('$options: ');
+            // var_dump($options);
+            // var_dump('rules: ');
+            // var_dump(isset($options['rules']));
+            // echo '</pre>';
+            if (isset($options['rules'])) {
+                $rules = $options['rules'];
+                // echo '<pre>';
+                // var_dump('$rule: ');
+                // var_dump(sizeof($rules));
+                // echo '</pre>';
+
+                foreach ($rules as $rule => $value) {
+                    // echo '<pre>';
+                    // var_dump('$rule: ');
+                    // var_dump($rule);
+                    // echo '</pre>';
+                    // die();
+                    $mform->addRule($elementname, $value['message'], $rule, $value['format'], 'client');
+                }
+            }
+
+
+            // echo '<pre>';
+            // var_dump("\$elementname: $elementname");
+            // var_dump('$options: ');
+            // var_dump($options);
+            // echo '</pre>';
+            // $mform->setType($address->elements[$elementname], $options['type']);
+        }
+
+        // $mform->setType('mailing_streetaddress', PARAM_INT);
+
+        // $mform->setType('mailing_streetaddress', PARAM_INT);
+        // echo '<br />';
+        // echo '<br />';
+        // Use the following if you want to see the PARAM_TYPE of the element.
+        // $types = $mform->_types;
+        // echo '<pre>';
+        // var_dump($types['mailing_streetaddress']);
+        // var_dump($mform->getElement('mailing_streetaddress'));
+        // var_dump($mform->getRegisteredTypes());
+        // echo '</pre>';
+        // die();
+
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<pre>';
+        // var_dump($regrules);
+        // var_dump($att);
+        // echo '</pre>';
         // Add rules for each address input, using the rules defined in the address group function.
         $grouprules = [];
-        foreach ($addressgroup['rules'] as $elementname => $rules) {
-            if (!empty($rules)) {
-                $grouprules[$elementname] = array_map(function ($rule) {
-                    return array(get_string($rule), $rule, null, 'client');
-                }, $rules);
+        foreach ($address->options as $elementname => $element) {
+            if (!empty($element['rule'])) {
+                $rules = $element['rule'];
+                foreach ($rules as $rule) {
+                    $mform->addRule($elementname, get_string($rule), $rule, null, 'client');
+                }
             }
         }
+        // Add attributes for each address input, using the attributes defined in the address group function.
+        // foreach ($address->options as $elementname => $element) {
+        //     if (!empty($element['attribute'])) {
+        //         $attributes = $element['attribute'];
+        //         foreach ($attributes as $attribute) {
+        //             $mform->setAttributes($elementname);
+        //         }
+        //     }
+        // }
+        // $addressgroup = local_equipment_add_address_group($mform, 'mailing', get_string('mailingaddress', 'local_equipment'));
+        // $mform->addElement($addressgroup['element']);
+        // // Set types for each address input, using the types defined in the address group function.
+        // foreach ($addressgroup['types'] as $elementname => $type) {
+        //     $mform->setType($elementname, $type);
+        // }
+        // // Add rules for each address input, using the rules defined in the address group function.
+        // $grouprules = [];
+        // foreach ($addressgroup['rules'] as $elementname => $rules) {
+        //     if (!empty($rules)) {
+        //         $grouprules[$elementname] = array_map(function ($rule) {
+        //             return array(get_string($rule), $rule, null, 'client');
+        //         }, $rules);
+        //     }
+        // }
         if (!empty($grouprules)) {
             $mform->addGroupRule('mailing', $grouprules);
         }
@@ -108,21 +207,35 @@ class virtualcourseconsent_form extends \moodleform {
         $mform->addElement('hidden', 'course_attributes', json_encode($courseattributes));
         $mform->setType('course_attributes', PARAM_RAW);
 
-        $repeatarray = [
-            'students' => $mform->createElement('header', 'studentheader', get_string('student', 'local_equipment'), ['class' => 'local-equipment-student-header']),
-            'studentheader' => $mform->createElement('html', '<button type="button" class="local-equipment-remove-student btn btn-danger"><i class="fa fa-trash"></i></button>'),
-            'student_firstname' => $mform->createElement('text', 'student_firstname', get_string('firstname')),
-            'student_lastname' => $mform->createElement('text', 'student_lastname', get_string('lastname')),
-            'student_email' => $mform->createElement('text', 'student_email', get_string('email')),
-            'student_dob' => $mform->createElement('date_selector', 'student_dob', get_string('dateofbirth', 'local_equipment')),
-            'student_courses' => $mform->createElement(
-                'select',
-                'student_courses',
-                get_string('selectcourses', 'local_equipment'),
-                array(),
-                $courseattributes
-            ),
-        ];
+        // $repeatarray = [
+        //     'students' => $mform->createElement('header', 'studentheader', get_string('student', 'local_equipment'), ['class' => 'local-equipment-student-header']),
+        //     'studentheader' => $mform->createElement('html', '<button type="button" class="local-equipment-remove-student btn btn-danger"><i class="fa fa-trash"></i></button>'),
+        //     'student_firstname' => $mform->createElement('text', 'student_firstname', get_string('firstname')),
+        //     'student_lastname' => $mform->createElement('text', 'student_lastname', get_string('lastname')),
+        //     'student_email' => $mform->createElement('text', 'student_email', get_string('email')),
+        //     'student_dob' => $mform->createElement('date_selector', 'student_dob', get_string('dateofbirth', 'local_equipment')),
+        //     'student_courses' => $mform->createElement(
+        //         'select',
+        //         'student_courses',
+        //         get_string('selectcourses', 'local_equipment'),
+        //         array(),
+        //         $courseattributes
+        //     ),
+        // ];
+
+        $repeatarray['studentheader'] = $mform->createElement('header', 'studentheader', get_string('student', 'local_equipment'), ['class' => 'local-equipment-student-header']);
+        $repeatarray['delete'] = $mform->createElement('html', '<button type="button" class="local-equipment-remove-student btn btn-secondary"><i class="fa fa-trash"></i>&nbsp;&nbsp;' . get_string('deletestudent', 'local_equipment') . '</button>');
+        $repeatarray['student_firstname'] = $mform->createElement('text', 'student_firstname', get_string('firstname'));
+        $repeatarray['student_lastname'] = $mform->createElement('text', 'student_lastname', get_string('lastname'));
+        $repeatarray['student_email'] = $mform->createElement('text', 'student_email', get_string('email'));
+        $repeatarray['student_dob'] = $mform->createElement('date_selector', 'student_dob', get_string('dateofbirth', 'local_equipment'));
+        $repeatarray['student_courses'] = $mform->createElement(
+            'select',
+            'student_courses',
+            get_string('selectcourses', 'local_equipment'),
+            array(),
+            $courseattributes
+        );
 
         $repeatoptions = [
             'students' => ['type' => PARAM_INT],
@@ -231,10 +344,10 @@ class virtualcourseconsent_form extends \moodleform {
         // Agreements
         $agreements = local_equipment_get_active_agreements();
         foreach ($agreements as $agreement) {
-            $mform->addElement('static', 'agreement_'.$agreement->id, $agreement->title, format_text($agreement->contenttext, $agreement->contentformat));
+            $mform->addElement('static', 'agreement_' . $agreement->id, $agreement->title, format_text($agreement->contenttext, $agreement->contentformat));
             if ($agreement->agreementtype == 'optinout') {
-                $mform->addElement('radio', 'agreement_'.$agreement->id.'_option', '', get_string('optin', 'local_equipment'), 'optin');
-                $mform->addElement('radio', 'agreement_'.$agreement->id.'_option', '', get_string('optout', 'local_equipment'), 'optout');
+                $mform->addElement('radio', 'agreement_' . $agreement->id . '_option', '', get_string('optin', 'local_equipment'), 'optin');
+                $mform->addElement('radio', 'agreement_' . $agreement->id . '_option', '', get_string('optout', 'local_equipment'), 'optout');
                 $mform->addRule('agreement_' . $agreement->id . '_option', get_string('required'), 'required', null, 'client');
             }
         }

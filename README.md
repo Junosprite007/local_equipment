@@ -214,3 +214,19 @@ Would you like me to elaborate on any specific part of the plugin development, o
 form/consent_form = form/virtualcourseconsent_form
 manage_consents = vccsubmissions
 local/equipment/consent_form.php = local/equipment/virtualcourseconsent/index.php
+
+
+
+id_0
+id_1
+id_2
+id_3
+
+i=0    id_0
+i=1    id_1
+i=2    id_3
+
+i=0    id_0
+i=1    id_1
+i=2    id_2
+

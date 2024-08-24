@@ -29,7 +29,7 @@ import Log from 'core/log';
  * Initialize the add partnerships form functionality.
  */
 export const init = () => {
-    Log.debug('Form handling javascript initialized');
+    Log.debug('init function called in formhandling.js');
 };
 
 /**
