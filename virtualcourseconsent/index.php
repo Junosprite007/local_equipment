@@ -36,28 +36,53 @@ $PAGE->set_heading(get_string('consentformheading', 'local_equipment'));
 $PAGE->requires->js_call_amd('local_equipment/vccsubmission_addstudents_form', 'init');
 // $PAGE->requires->js_call_amd('local_equipment/vccsubmission_form', 'init');
 // $PAGE->requires->js_call_amd('local_equipment/formhandling', 'setupStudentsHandling', ['student', 'header']);
+// // $PAGE->requires->js_call_amd('local_equipment/formhandling', 'collapseNewStudentFieldset');
 // $PAGE->requires->js_call_amd('local_equipment/partnership_courses', 'init');
 // $PAGE->requires->js_call_amd('local_equipment/pickup_times', 'init');
 
-$form = new \local_equipment\form\vccsubmission_form();
 
-if ($form->is_cancelled()) {
+// In the script where you handle the form submission and display
+$selectedcourses = optional_param('selectedcourses', '', PARAM_RAW);
+$customdata = ['selectedcourses' => $selectedcourses];
+echo '<br />';
+echo '<br />';
+echo '<br />';
+// echo '<pre>';
+// var_dump('$selectedcourses: ');
+// var_dump($customdata);
+// die();
+
+// $courses = local_equipment_get_master_courses(); // Function to get available courses.
+// $selectedcourses = get_user_selected_courses($USER->id); // Function to get selected courses for the user.
+// $customdata = [
+//     'courses' => $courses,
+//     'defaultvalues' => [
+//         'selectedcourses' => $selectedcourses,
+//     ],
+// ];
+
+$mform = new \local_equipment\form\vccsubmission_form(null, $customdata);
+// $mform = new \local_equipment\form\vccsubmission_form();
+
+
+
+if ($mform->is_cancelled()) {
     redirect(new moodle_url('/'));
-} else if ($data = $form->get_data()) {
-    // echo '<br />';
-    // echo '<br />';
-    // echo '<br />';
-    // echo '<pre>';
-    // var_dump($data);
-    // echo '</pre>';
-    // die();
+} else if ($data = $mform->get_data()) {
+    echo '<br />';
+    echo '<br />';
+    echo '<br />';
+    echo '<pre>';
+    var_dump($data);
+    echo '</pre>';
+    die();
 
     if (local_equipment_save_vcc_form($data)) {
-        var_dump('if');
+        // var_dump('if');
         redirect(new moodle_url('/'), get_string('consentformsubmitted', 'local_equipment'), null, \core\output\notification::NOTIFY_SUCCESS);
 
     } else {
-        var_dump('else');
+        // var_dump('else');
         redirect(new moodle_url('/local/equipment/virtualcourseconsent/index.php'), get_string('consentformsubmissionerror', 'local_equipment'), null, \core\output\notification::NOTIFY_ERROR);
     }
     redirect(
@@ -66,8 +91,9 @@ if ($form->is_cancelled()) {
         null,
         \core\output\notification::NOTIFY_SUCCESS
     );
+} else {
+    echo $OUTPUT->header();
+    $mform->display();
+    echo $OUTPUT->footer();
 }
 
-echo $OUTPUT->header();
-$form->display();
-echo $OUTPUT->footer();

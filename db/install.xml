@@ -166,6 +166,7 @@
                 <FIELD NAME="pickupmethod" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Method of equipment pickup"/>
                 <FIELD NAME="pickuppersonname" TYPE="text" NOTNULL="false" COMMENT="Details of person picking up equipment"/>
                 <FIELD NAME="pickuppersonphone" TYPE="text" NOTNULL="false" COMMENT="Details of person picking up equipment"/>
+                <!-- <FIELD NAME="pickupnotes" TYPE="text" NOTNULL="false" COMMENT="User (probably the parent) notes"/> -->
                 <FIELD NAME="usernotes" TYPE="text" NOTNULL="false" COMMENT="User (probably the parent) notes"/>
                 <FIELD NAME="adminnotes" TYPE="text" NOTNULL="false" COMMENT="Admin notes"/>
                 <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Timestamp of when the record was created"/>

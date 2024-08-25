@@ -25,6 +25,8 @@
 
 namespace local_equipment\form;
 
+use core_customfield\field;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
@@ -34,9 +36,24 @@ class vccsubmission_form extends \moodleform {
     public function definition() {
         global $USER, $DB;
         $mform = $this->_form;
+        $customdata = $this->_customdata;
+        echo '<br />';
+        echo '<br />';
+        var_dump('$customdata: ');
+        var_dump($customdata);
+        echo '</pre>';
         // Prepare default values for repeated elements
         $defaultvalues = $this->_customdata['defaultvalues'] ?? [];
         $repeatno = empty($defaultvalues) ? 1 : count($defaultvalues);
+
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<pre>';
+        // var_dump($this->_customdata);
+        // echo '</pre>';
+        // die();
+
 
 
         // Parent-specific input fields.
@@ -68,79 +85,28 @@ class vccsubmission_form extends \moodleform {
         // Display all address related fields.
         // Working with group view right now.
         $groupview = true;
-        $address = local_equipment_add_address_block($mform, 'mailing', '', false, false, true, false, $groupview, true);
+        $address = local_equipment_add_address_block($mform, 'mailing', 'attention', false, false, true, true, $groupview, true);
         foreach ($address->elements as $elementname => $element) {
             $mform->addElement($element);
             if ($address->isgrouped) {
             }
-
-            // if (is_array($element)) {
-            //     // When $groupview = true.
-            //     // $mform->addGroup($element,);
-            // } else {
-            //     // When $groupview = false.
-            // }
         }
         // Set types for each address input, using the types defined in the address group function.
 
         foreach ($address->options as $elementname => $options) {
             $mform->setType($elementname, $options['type']);
-            // echo '<pre>';
-            // var_dump('$elementname: ');
-            // var_dump($elementname);
-            // var_dump('$options: ');
-            // var_dump($options);
-            // var_dump('rules: ');
-            // var_dump(isset($options['rules']));
-            // echo '</pre>';
+
             if (isset($options['rules'])) {
                 $rules = $options['rules'];
-                // echo '<pre>';
-                // var_dump('$rule: ');
-                // var_dump(sizeof($rules));
-                // echo '</pre>';
 
                 foreach ($rules as $rule => $value) {
-                    // echo '<pre>';
-                    // var_dump('$rule: ');
-                    // var_dump($rule);
-                    // echo '</pre>';
-                    // die();
                     $mform->addRule($elementname, $value['message'], $rule, $value['format'], 'client');
                 }
             }
-
-
-            // echo '<pre>';
-            // var_dump("\$elementname: $elementname");
-            // var_dump('$options: ');
-            // var_dump($options);
-            // echo '</pre>';
-            // $mform->setType($address->elements[$elementname], $options['type']);
         }
 
-        // $mform->setType('mailing_streetaddress', PARAM_INT);
-
-        // $mform->setType('mailing_streetaddress', PARAM_INT);
-        // echo '<br />';
-        // echo '<br />';
-        // Use the following if you want to see the PARAM_TYPE of the element.
-        // $types = $mform->_types;
-        // echo '<pre>';
-        // var_dump($types['mailing_streetaddress']);
-        // var_dump($mform->getElement('mailing_streetaddress'));
-        // var_dump($mform->getRegisteredTypes());
-        // echo '</pre>';
-        // die();
-
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<pre>';
-        // var_dump($regrules);
-        // var_dump($att);
-        // echo '</pre>';
         // Add rules for each address input, using the rules defined in the address group function.
-        $grouprules = [];
+
         foreach ($address->options as $elementname => $element) {
             if (!empty($element['rule'])) {
                 $rules = $element['rule'];
@@ -148,33 +114,6 @@ class vccsubmission_form extends \moodleform {
                     $mform->addRule($elementname, get_string($rule), $rule, null, 'client');
                 }
             }
-        }
-        // Add attributes for each address input, using the attributes defined in the address group function.
-        // foreach ($address->options as $elementname => $element) {
-        //     if (!empty($element['attribute'])) {
-        //         $attributes = $element['attribute'];
-        //         foreach ($attributes as $attribute) {
-        //             $mform->setAttributes($elementname);
-        //         }
-        //     }
-        // }
-        // $addressgroup = local_equipment_add_address_group($mform, 'mailing', get_string('mailingaddress', 'local_equipment'));
-        // $mform->addElement($addressgroup['element']);
-        // // Set types for each address input, using the types defined in the address group function.
-        // foreach ($addressgroup['types'] as $elementname => $type) {
-        //     $mform->setType($elementname, $type);
-        // }
-        // // Add rules for each address input, using the rules defined in the address group function.
-        // $grouprules = [];
-        // foreach ($addressgroup['rules'] as $elementname => $rules) {
-        //     if (!empty($rules)) {
-        //         $grouprules[$elementname] = array_map(function ($rule) {
-        //             return array(get_string($rule), $rule, null, 'client');
-        //         }, $rules);
-        //     }
-        // }
-        if (!empty($grouprules)) {
-            $mform->addGroupRule('mailing', $grouprules);
         }
 
         // Partnership dropdown menu that auto-populates the courses available using the 'data-partnerships' attribute. in the JavaScript.
@@ -199,13 +138,18 @@ class vccsubmission_form extends \moodleform {
         $courseattributes = [
             'multiple' => true,
             'size' => 10,
-            'class' => 'student-courses'
+            'class' => 'student-courses',
         ];
-        $mform->addElement('hidden', 'students', $repeatno);
+        // $mform->addElement('hidden', 'students', $repeatno);
         // Add this line to pass the attributes to JavaScript.
         // Not sure if the json_encode is necessary.
         $mform->addElement('hidden', 'course_attributes', json_encode($courseattributes));
         $mform->setType('course_attributes', PARAM_RAW);
+
+        // Add a hidden input to store selected courses
+        $mform->addElement('hidden', 'selectedcourses', '', array('id' => 'id_selectedcourses'));
+        $mform->setType('selectedcourses', PARAM_RAW);
+        // $mform->setDefault('selectedcourses', '');
 
         // $repeatarray = [
         //     'students' => $mform->createElement('header', 'studentheader', get_string('student', 'local_equipment'), ['class' => 'local-equipment-student-header']),
@@ -229,23 +173,102 @@ class vccsubmission_form extends \moodleform {
         $repeatarray['student_lastname'] = $mform->createElement('text', 'student_lastname', get_string('lastname'));
         $repeatarray['student_email'] = $mform->createElement('text', 'student_email', get_string('email'));
         $repeatarray['student_dob'] = $mform->createElement('date_selector', 'student_dob', get_string('dateofbirth', 'local_equipment'));
+
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<pre>';
+        // // var_dump($mform->_attributes);
+        // var_dump($mform->getRegisteredTypes());
+        // var_dump($mform->getRegisteredRules());
+        // echo '</pre>';
+
+        // $repeatarray['student_____courses'] = $mform->createElement(
+        //     'select',
+        //     'student_courses',
+        //     get_string('selectcourses', 'local_equipment'),
+        //     array(),
+        //     $courseattributes
+        // );
         $repeatarray['student_courses'] = $mform->createElement(
             'select',
             'student_courses',
             get_string('selectcourses', 'local_equipment'),
             array(),
-            $courseattributes
+            $courseattributes + array('data-student-index' => '') // We'll set this index in JavaScript
         );
 
-        $repeatoptions = [
-            'students' => ['type' => PARAM_INT],
-            'studentheader' => ['header' => true],
-            'student_firstname' => ['type' => PARAM_TEXT, 'rule' => 'required'],
-            'student_lastname' => ['type' => PARAM_TEXT, 'rule' => 'required'],
-            'student_email' => ['type' => PARAM_EMAIL],
-            'student_dob' => ['type' => PARAM_INT, 'rule' => 'required'],
-            'student_courses' => ['type' => PARAM_INT, 'rule' => 'required'] + $courseattributes,
-        ];
+        // Registered rules:
+        // array(14) {
+        //     [0]=>
+        //     string(8) "required"
+        //     [1]=>
+        //     string(9) "maxlength"
+        //     [2]=>
+        //     string(9) "minlength"
+        //     [3]=>
+        //     string(11) "rangelength"
+        //     [4]=>
+        //     string(5) "email"
+        //     [5]=>
+        //     string(5) "regex"
+        //     [6]=>
+        //     string(11) "lettersonly"
+        //     [7]=>
+        //     string(12) "alphanumeric"
+        //     [8]=>
+        //     string(7) "numeric"
+        //     [9]=>
+        //     string(13) "nopunctuation"
+        //     [10]=>
+        //     string(7) "nonzero"
+        //     [11]=>
+        //     string(11) "positiveint"
+        //     [12]=>
+        //     string(8) "callback"
+        //     [13]=>
+        //     string(7) "compare"
+        // }
+
+        // Set types.
+        $repeatoptions['students']['type'] = PARAM_INT;
+        $repeatoptions['student_firstname']['type'] = PARAM_TEXT;
+        $repeatoptions['student_lastname']['type'] = PARAM_TEXT;
+        $repeatoptions['student_email']['type'] = PARAM_EMAIL;
+        $repeatoptions['student_dob']['type'] = PARAM_INT;
+        $repeatoptions['student_courses']['type'] = PARAM_RAW;
+
+        // Set rules.
+        $repeatoptions['student_firstname']['rule'] = 'required';
+        $repeatoptions['student_lastname']['rule'] = 'required';
+        $repeatoptions['student_dob']['rule'] = 'required';
+        $repeatoptions['student_courses']['rule'] = 'required';
+
+        // Set other options.
+        // $repeatoptions['studentheader']['header'] = true;
+        $repeatoptions['studentheader']['expanded'] = false; // This is not working for some reason.
+        $repeatoptions['student_courses'] = array_merge($repeatoptions['student_courses'], $courseattributes);
+        // $repeatoptions['student_courses']['default'] = ['508'];
+        // 'student_firstname[0]' => 'John'
+
+        // $repeatoptions = [
+        //     'students' => ['type' => PARAM_INT],
+        //     'studentheader' => ['header' => true],
+        //     'student_firstname' => ['type' => PARAM_TEXT, 'rule' => 'required'],
+        //     'student_lastname' => ['type' => PARAM_TEXT, 'rule' => 'required'],
+        //     'student_email' => ['type' => PARAM_EMAIL],
+        //     'student_dob' => ['type' => PARAM_INT, 'rule' => 'required'],
+        //     'student_courses' => ['type' => PARAM_INT, 'rule' => 'required'] + $courseattributes,
+        // ];
+
+        // $repeatoptions['student_courses']['type'] = PARAM_INT;
+        // $repeatoptions['student_courses']['rule'] = 'required';
+        // $repeatoptions['student_courses']['rule'] = 'required';
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<pre>';
+        // var_dump($repeatoptions);
+        // echo '</pre>';
 
         $this->repeat_elements(
             $repeatarray,
@@ -259,20 +282,142 @@ class vccsubmission_form extends \moodleform {
             'delete_partnership'
         );
 
+        // $element = $mform->getElement('selectedcourses');
+        // $att = $element->getAttribute('selectedcourses');
+        // $atts = $element->getAttributes('selectedcourses');
+
+        // echo '<pre>';
+        // // var_dump($mform->_attributes);
+        // var_dump($mform->elementExists('student_courses[0]'));
+        // // var_dump($mform->getRegisteredRules());
+        // echo '</pre>';
+
+
+        // $mform->getElement('student_courses[0]')->setSelected(['508']);
+
         // Set default values for repeated elements
-        if (!empty($defaultvalues)) {
-            foreach ($defaultvalues as $index => $values) {
-                foreach ($values as $fieldname => $value) {
-                    $elementname = $fieldname . "[$index]";
-                    $mform->setDefault($elementname, $value);
-                }
-            }
-        }
+        // if (!empty($defaultvalues)) {
+        //     foreach ($defaultvalues as $index => $values) {
+        //         foreach ($values as $fieldname => $value) {
+        //             $elementname = $fieldname . "[$index]";
+        //             if ($fieldname === 'student_courses') {
+        //                 $element = $mform->getElement($elementname);
+        //                 if ($element && method_exists($element, 'setSelected')) {
+        //                     $element->setSelected($value);
+        //                 }
+        //             } else {
+        //                 $mform->setDefault($elementname, $value);
+        //             }
+        //         }
+        //     }
+        // }
+
+        // Read the selectedcourses hidden input and set the default values.
+
+        // if (!empty($customdata['selectedcourses'])) {
+        //     $selectedcourses = json_decode($customdata['selectedcourses']);
+        //     echo '<br />';
+        //     echo '<br />';
+        //     var_dump('$selectedcourses: ');
+        //     echo '<pre>';
+        //     var_dump($selectedcourses);
+        //     echo '</pre>';
+
+        //     $defaultvalues = [
+        //         'student_firstname[0]' => 'John',
+        //         'student_lastname[0]' => 'Doe',
+        //         'student_email[0]' => 'john.doe@example.com',
+        //         'student_courses[0]' => [511],
+        //     ];
+
+        //     $mform->setDefaults($defaultvalues);
+
+            // foreach ($selectedcourses as $index => $values) {
+
+            //     foreach ($values as $key => $value) {
+            //         echo '<br />';
+            //         echo '<br />';
+            //         echo '<pre>';
+            //         var_dump('$key: ');
+            //         var_dump($key);
+            //         var_dump('$value: ');
+            //         var_dump($value);
+            //         echo '</pre>';
+            //         $fieldname = 'student_courses';
+            //         // The extra [] is because this if for a multiple select element.
+            //         $elementname = $fieldname . "[$index]";
+            //         var_dump('$elementname: ', $elementname);
+            //         // die();
+            //         // if ($fieldname === 'student_courses') {
+            //         //     $element = $mform->getElement($elementname);
+            //         //     if ($element && method_exists($element, 'setSelected')) {
+            //         //         $element->setSelected($value);
+            //         //     }
+            //         // } else {
+            //         $mform->setDefaults('student_courses[0]', '511');
+            //         // }
+            //     }
+            // }
+        // }
+        // Set default values for student_courses
+        // if (!empty($customdata['selectedcourses'])) {
+        //     echo '<br />';
+        //     echo '<br />';
+        //     echo '<br />';
+        //     var_dump('$selectedcourses: ');
+        //     echo '<pre>';
+        //     $selectedcourses = json_decode($customdata['selectedcourses']);
+        //     var_dump($selectedcourses);
+        //     // $selectedcourses = json_decode($customdata['selectedcourses'], true);
+        //     foreach ($selectedcourses as $index => $courses) {
+        //         var_dump('$index: ');
+        //         var_dump($index);
+        //         var_dump('$courses: ');
+        //         var_dump($courses);
+        //         // $mform->setDefault("student_courses[$index][]", $courses);
+        //         $mform->setDefault("student_courses[0][]", ['511']);
+        //     }
+        //     echo '</pre>';
+        // }
+        // if (!empty($selectedcourses)) {
+        //     foreach ($selectedcourses as $index => $courses) {
+        //         $elementname = 'student_courses[' . $index . ']';
+        //         $element = $mform->getElement($elementname);
+        //         if ($element && method_exists($element, 'setSelected')) {
+        //             $element->setSelected($courses);
+        //         }
+        //     }
+        // }
+
+        // // Set default values for repeated elements
+        // if (!empty($defaultvalues)) {
+        //     foreach ($defaultvalues as $index => $values) {
+        //         foreach ($values as $fieldname => $value) {
+        //             $elementname = $fieldname . "[$index]";
+        //             if ($fieldname === 'student_courses') {
+        //                 $mform->getElement($elementname)->setSelected($value);
+        //             } else {
+        //                 $mform->setDefault($elementname, $value);
+        //             }
+        //         }
+        //     }
+        // }
+
+        // // Set default values for repeated elements
+        // if (!empty($defaultvalues)) {
+        //     foreach ($defaultvalues as $index => $values) {
+        //         foreach ($values as $fieldname => $value) {
+        //             $elementname = $fieldname . "[$index]";
+        //             $mform->setDefault($elementname, $value);
+        //         }
+        //     }
+        // }
 
 
         // Pickup-specific input fields.
         $pickuplocations = $DB->get_records('local_equipment_partnership', ['active' => 1], '', 'id,name,instructions_pickup,streetaddress_pickup,city_pickup,state_pickup,zipcode_pickup');
         $formattedpickuplocations = ['0' => get_string('selectpickuplocation', 'local_equipment')];
+        $formattedpickuptimes = ['0' => get_string('contactusforpickup', 'local_equipment')];
 
 
         foreach ($pickuplocations as $id => $location) {
@@ -310,9 +455,10 @@ class vccsubmission_form extends \moodleform {
             'select',
             'pickuptime',
             get_string('pickuptime', 'local_equipment'),
-            [0 => get_string('contactusforpickup', 'local_equipment')]
+            $formattedpickuptimes,
+            ['data-pickuptimes' => json_encode($pickuptimedata)]
         );
-        $mform->addRule('pickuptime', get_string('required'), 'required', null, 'client');
+        // $mform->addRule('pickuptime', get_string('required'), 'required', null, 'client');
 
         $pickupmethods = array(
             'self' => get_string('pickupself', 'local_equipment'),
@@ -343,20 +489,38 @@ class vccsubmission_form extends \moodleform {
 
         // Agreements
         $agreements = local_equipment_get_active_agreements();
+        // $agreements = local_equipment_create_agreement_elements($mform, $agreements);
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<pre>';
+        // var_dump('$agreements: ');
+        // var_dump($agreements);
+        // echo '</pre>';
         foreach ($agreements as $agreement) {
             $mform->addElement('static', 'agreement_' . $agreement->id, $agreement->title, format_text($agreement->contenttext, $agreement->contentformat));
             if ($agreement->agreementtype == 'optinout') {
-                $mform->addElement('radio', 'agreement_' . $agreement->id . '_option', '', get_string('optin', 'local_equipment'), 'optin');
-                $mform->addElement('radio', 'agreement_' . $agreement->id . '_option', '', get_string('optout', 'local_equipment'), 'optout');
-                $mform->addRule('agreement_' . $agreement->id . '_option', get_string('required'), 'required', null, 'client');
+                $radioarray = array();
+                $radioarray[] = $mform->createElement('radio', "optionchoice_$agreement->id", '', get_string('optin', 'local_equipment'), 'optin');
+                $radioarray[] = $mform->createElement('radio', "optionchoice_$agreement->id", '', get_string('optout', 'local_equipment'), 'optout');
+                $mform->addGroup($radioarray, "optiongroup_$agreement->id", '', array(' '), false);
+
+                // Make the field required
+                $mform->addRule("optiongroup_$agreement->id", get_string('required'), 'required', null, 'client');
+
+                // Set a default value (optional)
+                // $mform->setDefault('optionchoice', 'optin');
             }
         }
 
+
         // Electronic signature
         if (local_equipment_requires_signature($agreements)) {
+
             $mform->addElement('text', 'signature', get_string('electronicsignature', 'local_equipment'));
             $mform->setType('signature', PARAM_TEXT);
             $mform->addRule('signature', get_string('required'), 'required', null, 'client');
+            // $mform->addRule('signature', get_string('required'), 'regex', '', 'client');
         }
 
         $this->add_action_buttons();
@@ -365,64 +529,18 @@ class vccsubmission_form extends \moodleform {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
-        // // Validate phone number
-        // $phone = local_equipment_parse_phone_number($data['phone']);
-        // $parsed = local_equipment_format_phone_number($phone);
+        // Validate the signature
+        $firstname = $data['firstname'];
+        $lastname = $data['lastname'];
+        $signature = $data['signature'];
+        $sigpattern  = '/^\s*' . preg_quote($firstname, '/') . '\s*.+\s*' . preg_quote($lastname, '/') . '\s*$/i';
+        $sigmatched = preg_match($sigpattern, $signature);
+        if (!$sigmatched) {
+            $errors['signature'] = get_string('signaturemismatch', 'local_equipment');
+        } else {
+            unset($errors['signature']);
+        }
 
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<pre>';
-        // var_dump($phone);
-        // var_dump($parsed);
-        // echo '</pre>';
-        // die();
-        // if (!empty($phone->errors)) {
-        //     $errors['phone'] = implode('<br />', $phone->errors);
-        // }
-
-        // Validate student email addresses
-        // for ($i = 0; $i < $data['students']; $i++) {
-        //     $email = $data['student_email'][$i];
-        //     if (empty($email)) {
-        //         $email = local_equipment_generate_student_email($data['email'], $data['student_firstname'][$i]);
-        //         // You might want to inform the user that an email was auto-generated
-        //     } else if (!validate_email($email)) {
-        //         $errors["student_email[$i]"] = get_string('invalidemail');
-        //     }
-        // }
-
-        // // Validate signature if required
-        // if (!empty($data['signature'])) {
-        //     $fullname = $data['firstname'] . ' ' . $data['lastname'];
-        //     $matchname = $data['signature'];
-        //     $pattern = '/^\s*(\w+)\s+.*\s+(\w+)\s*$/';
-
-        //     if (preg_match($pattern, $fullname, $matches)) {
-        //         $first_name = $matches[1];
-        //         $last_name = $matches[2];
-        //         echo "First name: " . $first_name . "\n";
-        //         echo "Last name: " . $last_name . "\n";
-        //     } else {
-        //         echo "No match found.";
-        //     }
-
-
-
-        //     if (strcasecmp($data['signature'], $fullname) !== 0) {
-        //         $errors['signature'] = get_string('invalidsignature', 'local_equipment');
-        //     }
-        // }
-
-        // if ($data['partnership'] == 0) {
-        //     $errors['partnership'] = get_string('required');
-        // }
-
-        // foreach ($data['students'] as $i => $student) {
-        //     if (empty($student['courses'])) {
-        //         $errors["courses[$i]"] = get_string('required');
-        //     }
-        // }
 
         return $errors;
     }

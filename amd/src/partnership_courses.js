@@ -20,141 +20,130 @@
  * @copyright  2024 Joshua Kirby <josh@funlearningcompany.com>
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-import Log from 'core/log';
 import { get_string as getString } from 'core/str';
 
 export const init = () => {
-    Log.debug('init function called in partnership_courses.js');
-
     const partnershipSelect = document.getElementById('id_partnership');
+    const selectedCoursesInput = document.getElementById('id_selectedcourses');
 
-    if (!partnershipSelect) {
-        Log.error('partnershipSelect element not found');
-        return;
-    } else {
-        Log.debug("'partnershipSelect' variable: ");
-        Log.debug(partnershipSelect);
-    }
-
-    let partnershipData;
-    try {
-        partnershipData = JSON.parse(
-            partnershipSelect.getAttribute('data-partnerships') || '{}'
-        );
-        Log.debug("'partnershipData' variable: ");
-        Log.debug(partnershipData);
-    } catch (e) {
-        Log.error('Error parsing partnership data: ', e);
+    if (!partnershipSelect || !selectedCoursesInput) {
         return;
     }
-    // Use async/await for better readability and error handling
+
+    const partnershipData = JSON.parse(
+        partnershipSelect.getAttribute('data-partnerships') || '{}'
+    );
+
     const updateStudentCourses = async (partnershipId) => {
-        Log.debug(
-            'updateStudentCourses function called in partnership_courses.js'
-        );
-        Log.debug('partnershipId argument passed in: ');
-        Log.debug(partnershipId);
-
         const courses = partnershipData[partnershipId] || [];
-        Log.debug("'courses' variable: ");
-        Log.debug(courses);
-
         const selects = document.querySelectorAll(
             'select[name^="student_courses["]'
         );
-        Log.debug("'selects' variable: ");
-        Log.debug(selects);
         for (const select of selects) {
             await updateCourseOptions(select, courses);
         }
     };
 
-    // Change: Modified to handle previously selected courses
     const updateCourseOptions = async (select, courses) => {
-        Log.debug(
-            'updateCourseOptions function called in partnership_courses.js'
-        );
-        Log.debug("'select' arg passed: ");
-        Log.debug(select);
-        Log.debug("'courses' arg passed: ");
-        Log.debug(courses);
+        const studentIndex = select.name.match(/\[(\d+)\]/)[1];
+        select.setAttribute('data-student-index', studentIndex);
 
-        // Retrieve previously selected courses
         const previouslySelected = JSON.parse(
             select.getAttribute('data-selected') || '[]'
         );
-        Log.debug("'previouslySelected' variable: ");
-        Log.debug(previouslySelected);
-
         select.innerHTML = '';
+
         if (courses.length === 0) {
-            Log.debug('courses length is 0...');
             const noCourseString = await getString(
                 'nocoursesavailable',
                 'local_equipment'
             );
-            const option = document.createElement('option');
-            option.value = '';
-            option.textContent = noCourseString;
-            option.disabled = true;
-            select.appendChild(option);
-
-            Log.debug("'noCourseString' variable: ");
-            Log.debug(noCourseString);
-            Log.debug("'option' variable: ");
-            Log.debug(option);
+            select.innerHTML = `<option value="" disabled>${noCourseString}</option>`;
         } else {
-            Log.debug('courses length is not 0...');
             courses.forEach((course) => {
                 const option = document.createElement('option');
                 option.value = course.id;
                 option.textContent = course.fullname;
-                // Restore previously selected state
                 option.selected = previouslySelected.includes(
                     course.id.toString()
                 );
                 select.appendChild(option);
-
-                Log.debug("'option' variable: ");
-                Log.debug(option);
             });
         }
-        // Call preserveSelectedCourses after updating options
-        preserveSelectedCourses();
+        // validateCourseSelection(select);
     };
 
-    // New function: Preserve selected courses
-    const preserveSelectedCourses = () => {
-        Log.debug(
-            'preserveSelectedCourses function called in partnership_courses.js'
+    const updateSelectedCourses = () => {
+        const allSelects = document.querySelectorAll(
+            'select[name^="student_courses["]'
         );
-        document
-            .querySelectorAll('select[name^="student_courses["]')
-            .forEach((select) => {
-                select.addEventListener('change', () => {
-                    const selectedOptions = Array.from(
-                        select.selectedOptions
-                    ).map((option) => option.value);
-                    select.setAttribute(
-                        'data-selected',
-                        JSON.stringify(selectedOptions)
-                    );
-                    Log.debug("'option' variable: ");
-                    Log.debug(selectedOptions);
-                });
-            });
+        const selectedCourses = {};
+        allSelects.forEach((select) => {
+            const studentIndex = select.getAttribute('data-student-index');
+            selectedCourses[studentIndex] = Array.from(
+                select.selectedOptions
+            ).map((option) => option.value);
+        });
+        selectedCoursesInput.value = JSON.stringify(selectedCourses);
     };
+
+    // const validateCourseSelection = (select) => {
+    //     const selectedCourses = Array.from(select.selectedOptions).map(
+    //         (option) => option.value
+    //     );
+    //     const errorElement =
+    //         select.parentNode.querySelector('.invalid-feedback');
+
+    //     if (selectedCourses.length === 0) {
+    //         select.classList.add('is-invalid');
+    //         if (errorElement) {
+    //             errorElement.textContent = 'Please select at least one course.';
+    //             errorElement.style.display = 'block';
+    //         }
+    //     } else {
+    //         select.classList.remove('is-invalid');
+    //         if (errorElement) {
+    //             errorElement.textContent = '';
+    //             errorElement.style.display = 'none';
+    //         }
+    //     }
+    // };
+
+    document
+        .querySelectorAll('select[name^="student_courses["]')
+        .forEach((select) => {
+            select.addEventListener('change', () => {
+                select.setAttribute(
+                    'data-selected',
+                    JSON.stringify(
+                        Array.from(select.selectedOptions).map(
+                            (option) => option.value
+                        )
+                    )
+                );
+                updateSelectedCourses();
+                // validateCourseSelection(select);
+            });
+        });
+
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', updateSelectedCourses);
+    }
 
     partnershipSelect.addEventListener('change', (event) => {
         updateStudentCourses(event.target.value);
     });
 
-    // Initial update
     updateStudentCourses(partnershipSelect.value);
+    updateSelectedCourses();
 
-    // Call preserveSelectedCourses initially
-    preserveSelectedCourses();
-
-    Log.debug('###### End init function for partnership_courses.js ######');
+    // if (typeof M.form !== 'undefined' && M.form.dependencyManager) {
+    //     M.form.dependencyManager.add_dependency({
+    //         element: document.querySelectorAll(
+    //             'select[name^="student_courses["]'
+    //         ),
+    //         callback: validateCourseSelection,
+    //     });
+    // }
 };

@@ -255,13 +255,15 @@ $string['viewmanageagreements'] = 'View/manage agreements';
 $string['version'] = 'Version';
 $string['wheneditinganexistingagreement'] = 'When editing an existing agreement, the start time must be moved to the current day or later.';
 
-// Virtual course consent form strings
 
+
+// Virtual course consent form strings
 $string['a'] = '{$a}';
 $string['addnote'] = 'Add note';
 $string['addstudent'] = 'Add student';
 $string['addvccsubmission'] = 'Add VCC Submission';
 $string['adminnotes'] = 'Admin notes';
+$string['chooseoption'] = 'Choose an option';
 $string['confirmationid'] = 'Confirmation ID';
 $string['confirmdeletevccsubmission'] = 'Are you sure you want to delete this VCC submission?';
 $string['consentformheading'] = 'Parent Consent for Virtual Courses';
@@ -288,7 +290,7 @@ $string['pickupself'] = 'I will pick up the equipment';
 $string['pickupship'] = 'I\'ll pay FLC to ship equipment to my address';
 $string['pickuptime'] = 'Equipment pickup time';
 $string['savenote'] = 'Save note';
-$string['signaturemismatch'] = 'Electronic signature does not match parent name';
+$string['signaturemismatch'] = 'Electronic signature does not match your full name';
 $string['student'] = 'Student';
 $string['studentemailgenerated'] = 'Student email generated automatically';
 $string['studentheader'] = 'Student: {$a}';

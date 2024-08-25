@@ -131,11 +131,21 @@ function local_equipment_get_countries() {
  * @return array An array of countries.
  */
 function local_equipment_convert_array_values_to_int($ids) {
-    foreach ($ids as $key => $value) {
-        if (is_array($value)) {
-            $ids[$key] = local_equipment_convert_array_values_to_int($value);
-        } else if (is_string($value) && is_numeric($value)) {
-            $ids[$key] = (int)$value;
+    if (is_array($ids)) {
+        foreach ($ids as $key => $value) {
+            if (is_array($value)) {
+                $ids[$key] = local_equipment_convert_array_values_to_int($value);
+            } else if (is_string($value) && is_numeric($value)) {
+                $ids[$key] = (int)$value;
+            }
+        }
+    } else if (is_object($ids)) {
+        foreach ($ids as $key => $value) {
+            if (is_array($value)) {
+                $ids->$key = local_equipment_convert_array_values_to_int($value);
+            } else if (is_string($value) && is_numeric($value)) {
+                $ids->$key = (int)$value;
+            }
         }
     }
 
@@ -724,7 +734,7 @@ function local_equipment_add_address_block(
     $addressfields = [];
 
     // Display address fields in order.
-    $extrainput ? $addressfields[] = $extrainput : null;
+    // $extrainput ? $addressfields[] = 'extrainput' : null;
     $addressfields[] = 'streetaddress';
     $showapartment ? $addressfields[] = 'apartment' : null;
     $addressfields[] = 'city';
@@ -735,17 +745,18 @@ function local_equipment_add_address_block(
 
     $block->elements["{$addresstype}_address"] = $mform->createElement('static', "{$addresstype}_address", \html_writer::tag('label', get_string("{$addresstype}_address", 'local_equipment'), ['class' => 'form-input-group-labels font-weight-bold']));
     if ($extrainput !== '') {
-        $fieldname = "{$addresstype}_{$extrainput}";
+        $fieldname = "{$addresstype}_extrainput";
         $block->elements[$fieldname] = $mform->createElement('text', $fieldname, get_string($extrainput, 'local_equipment'));
+        $block->options[$fieldname]['type'] = PARAM_TEXT;
     }
-    if ($showsameasphysical) {
-        $fieldname = "{$addresstype}_sameasphysical";
-        $showsameasmailing = false;
-        $block->elements[$fieldname] = $mform->createElement('checkbox', $fieldname, get_string('sameasphysical', 'local_equipment'));
-    } else if ($showsameasmailing) {
+    if ($showsameasmailing && $addresstype !== 'mailing') {
         $fieldname = "{$addresstype}_sameasmailing";
         $block->elements[$fieldname] = $mform->createElement('checkbox', $fieldname, get_string('sameasmailing', 'local_equipment'));
         $showsameasphysical = false;
+    } else if ($showsameasphysical && $addresstype !== 'physical') {
+        $fieldname = "{$addresstype}_sameasphysical";
+        $showsameasmailing = false;
+        $block->elements[$fieldname] = $mform->createElement('checkbox', $fieldname, get_string('sameasphysical', 'local_equipment'));
     }
 
     $groupview ? $block->elements['startgroup'] = $mform->createElement('html', '<div class="form-group row m-1 mb-4">') : null;
@@ -1119,6 +1130,34 @@ function local_equipment_get_active_agreements() {
     );
 }
 
+// /**
+//  * Retrieves active agreements.
+//  *
+//  * @param MoodleQuickForm $mform The form object.
+//  * @param array $agreements An array of active agreements (you can use local_equipment_get_active_agreements() function).
+//  *
+//  * @return array An array of agreement elements.
+//  */
+// function local_equipment_create_agreement_elements($mform, $agreements) {
+//     $elements = [];
+//     foreach ($agreements as $agreement) {
+
+//         $elements[] = $mform->createElement('static', 'agreement_' . $agreement->id, $agreement->title, format_text($agreement->contenttext, $agreement->contentformat));
+//         if ($agreement->agreementtype == 'optinout') {
+//             $radioarray = array();
+//             $radioarray[] = $mform->createElement('radio', "optionchoice_$agreement->id", '', get_string('optin', 'local_equipment'), 'optin');
+//             $radioarray[] = $mform->createElement('radio', "optionchoice_$agreement->id", '', get_string('optout', 'local_equipment'), 'optout');
+//             $mform->addGroup($radioarray, "optiongroup_$agreement->id", '', array(' '), false);
+
+//             // Make the field required
+//             $mform->addRule("optiongroup_$agreement->id", get_string('required'), 'required', null, 'client');
+
+//             // Set a default value (optional)
+//             // $mform->setDefault('optionchoice', 'optin');
+//         }
+//     }
+// }
+
 /**
  * Checks if an agreement requires an electronic signature.
  *
@@ -1154,40 +1193,245 @@ function local_equipment_generate_student_email($parentemail, $studentfirstname)
  */
 function local_equipment_save_vcc_form($data) {
     global $DB, $USER;
+    // $DB->set_field()
 
     // Start transaction
     $transaction = $DB->start_delegated_transaction();
 
+    echo '<br />';
+    echo '<br />';
+    echo '<br />';
+    echo '<pre>';
+    var_dump($data);
+    echo '</pre>';
+    die();
+
+    // Here's what the data object looks like:
+    // object(stdClass)#705 (24) {
+    //     ["firstname"]=>
+    //     string(6) "Joshua"
+    //     ["lastname"]=>
+    //     string(5) "Kirby"
+    //     ["phone"]=>
+    //     string(10) "6164465848"
+    //     ["mailing_streetaddress"]=>
+    //     string(14) "126 12th Ave E"
+    //     ["mailing_apartment"]=>
+    //     string(0) ""
+    //     ["mailing_city"]=>
+    //     string(7) "Seattle"
+    //     ["mailing_state"]=>
+    //     string(2) "WA"
+    //     ["mailing_country"]=>
+    //     string(3) "USA"
+    //     ["mailing_zipcode"]=>
+    //     string(10) "98102-5804"
+    //     ["partnership"]=>
+    //     string(2) "62"
+    //     ["course_attributes"]=>
+    //     string(53) "{"multiple":true,"size":10,"class":"student-courses"}"
+    //     ["selectedcourses"]=>
+    //     string(85) "{"0":["526"],"1":["526","529"],"2":["536","540"],"3":["526","529"],"4":["526","529"]}"
+    //     ["students"]=>
+    //     int(5)
+    //     ["student_firstname"]=>
+    //     array(5) {
+    //         [0]=>
+    //         string(6) "Emylye"
+    //         [1]=>
+    //         string(3) "Jim"
+    //         [2]=>
+    //         string(4) "Dawn"
+    //         [3]=>
+    //         string(4) "Adam"
+    //         [4]=>
+    //         string(5) "Molly"
+    //     }
+    //     ["student_lastname"]=>
+    //     array(5) {
+    //         [0]=>
+    //         string(10) "Laperriere"
+    //         [1]=>
+    //         string(5) "Joyce"
+    //         [2]=>
+    //         string(8) "Frasieur"
+    //         [3]=>
+    //         string(10) "Laperriere"
+    //         [4]=>
+    //         string(10) "Laperriere"
+    //     }
+    //     ["student_email"]=>
+    //     array(5) {
+    //         [0]=>
+    //         string(26) "emylyelaparriere@gmail.com"
+    //         [1]=>
+    //         string(25) "papaloveslola@hotmail.com"
+    //         [2]=>
+    //         string(0) ""
+    //         [3]=>
+    //         string(26) "emylyelaparriere@gmail.com"
+    //         [4]=>
+    //         string(26) "emylyelaparriere@gmail.com"
+    //     }
+    //     ["student_dob"]=>
+    //     array(5) {
+    //         [0]=>
+    //         int(1724472000)
+    //         [1]=>
+    //         int(1724472000)
+    //         [2]=>
+    //         int(1724472000)
+    //         [3]=>
+    //         int(1724472000)
+    //         [4]=>
+    //         int(1724472000)
+    //     }
+    //     ["student_courses"]=>
+    //     array(5) {
+    //         [0]=>
+    //         array(0) {
+    //         }
+    //         [1]=>
+    //         array(0) {
+    //         }
+    //         [2]=>
+    //         array(0) {
+    //         }
+    //         [3]=>
+    //         array(0) {
+    //         }
+    //         [4]=>
+    //         array(0) {
+    //         }
+    //     }
+    //     ["pickuplocation"]=>
+    //     string(2) "20"
+    //     ["pickupmethod"]=>
+    //     string(4) "self"
+    //     ["usernotes"]=>
+    //     string(0) ""
+    //     ["agreement_11_option"]=>
+    //     string(5) "optin"
+    //     ["signature"]=>
+    //     string(4) "Josh"
+    //     ["submitbutton"]=>
+    //     string(12) "Save changes"
+    // }
+
+
     try {
-        // Insert main consent record
+        // Decode the selected courses into an stdClass object.
+        $data->selectedcourses = json_decode($data->selectedcourses);
+
         $vccsubmission = new stdClass();
         $vccsubmission->userid = $USER->id;
         $vccsubmission->partnershipid = $data->partnership;
         $vccsubmission->pickupid = $data->pickuptime;
-        $vccsubmission->pickupmethod = $data->pickupmethod;
-        $vccsubmission->pickuppersonname = $data->pickuppersonname;
-        $vccsubmission->pickuppersonphone = $data->pickuppersonphone;
-        $vccsubmission->usernotes = $data->usernotes;
-        $vccsubmission->timecreated = $vccsubmission->timemodified = time();
+        $vccsubmission->studentids = '';
+        $vccsubmission->agreementids = '';
         $vccsubmission->confirmationid = md5(uniqid(rand(), true)); // Generate a unique confirmation ID
+        $vccsubmission->confirmationexpired = 0;
+        $vccsubmission->pickupmethod = $data->pickupmethod;
+        $vccsubmission->pickuppersonname = $data->pickuppersonname ?? '';
+        $vccsubmission->pickuppersonphone = $data->pickuppersonphone ?? '';
+        $vccsubmission->pickuppersondetails = $data->pickuppersondetails ?? '';
+        $vccsubmission->usernotes = $data->usernotes ?? '';
+        $vccsubmission->timecreated = $vccsubmission->timemodified = time();
 
+        // Insert vccsubmission record.
         $vccsubmission->id = $DB->insert_record('local_equipment_vccsubmission', $vccsubmission);
 
+
+        // Make record updates for Moodle Core user.
+        $userrecord = new stdClass();
+        $userrecord->id = $USER->id;
+        $userrecord->firstname = $data->firstname;
+        $userrecord->lastname = $data->lastname;
+        $userrecord->phone2 = $data->phone;
+
+        // Update core user record.
+        $DB->update_record('user', $userrecord);
+
+
+        // Insert extended user (parent) record.
+        $parentrecord = new stdClass();
+        // Foriegn keys first.
+        $parentrecord->userid = $userrecord->id;
+        $parentrecord->partnershipid = $data->partnership;
+        $parentrecord->pickupid = $data->pickuptime;
+        // $parentrecord->studentids = '';
+        // $parentrecord->vccsubmissionids = '';
+        // $parentrecord->phoneverificationids = '';
+
+        // Mailing address-related fields. Must be renamed in the database schema.
+        $parentrecord->mailing_extrainput = $data->mailing_extrainput ?? '';
+        $parentrecord->mailing_streetaddress = $data->mailing_streetaddress;
+        $parentrecord->mailing_apartment = $data->mailing_apartment ?? '';
+        $parentrecord->mailing_city = $data->mailing_city;
+        $parentrecord->mailing_state = $data->mailing_state;
+        $parentrecord->mailing_country = $data->mailing_country;
+        $parentrecord->mailing_zipcode = $data->mailing_zipcode;
+        $parentrecord->mailing_extrainsructions = $data->mailing_extrainsructions ?? '';
+
+        // Billing address-related fields. Must be renamed in the database schema.
+        $parentrecord->billing_extrainput = $data->billing_extrainput ?? '';
+        $parentrecord->billing_sameasmailing = $data->billing_sameasmailing ?? 0;
+        $parentrecord->billing_streetaddress = $data->billing_streetaddress ?? '';
+        $parentrecord->billing_apartment = $data->billing_apartment ?? '';
+        $parentrecord->billing_city = $data->billing_city ?? '';
+        $parentrecord->billing_state = $data->billing_state ?? '';
+        $parentrecord->billing_country = $data->billing_country ?? '';
+        $parentrecord->billing_zipcode = $data->billing_zipcode ?? '';
+        $parentrecord->billing_extrainsructions = $data->billing_extrainsructions ?? '';
+
+        $parentrecord->timecreated = time();
+
+
+
+
+
+
+
         // Insert student records
+
+        echo '<br />';
+        echo '<br />';
+        echo '<br />';
+        echo '<pre>';
+        // var_dump($data->selectedcourses);
+        var_dump($data);
+        // $toints = local_equipment_convert_array_values_to_int($decoded);
+        // var_dump($toints);
+        // var_dump(json_encode($toints));
+        echo '</pre>';
+
+
+        // ["students"] => int(5), represents the number of students.
+        // ["selectedcourses"] => string(85) "{"0":["526"],"1":["526","529"],"2":["536","540"],"3":["526","529"],"4":["526","529"]}"
+    //
+
         $studentids = [];
-        foreach ($data->studentrepeats as $student) {
+        for ($i = 0; $i < $data->students; $i++) {
             $studentrecord = new stdClass();
+            // The string value of $i.
+            $s = strval($i);
+            // The selectedcourses string should have already been decoded above.
+            $selectedcourses = local_equipment_convert_array_values_to_int($data->selectedcourses->$s);
+
+            $studentrecord->userid = $data->student_id[$i] ?? 0;
             $studentrecord->vccsubmissionid = $vccsubmission->id;
-            $studentrecord->firstname = $student['student_firstname'];
-            $studentrecord->lastname = $student['student_lastname'];
-            $studentrecord->email = $student['student_email'] ?: local_equipment_generate_student_email($USER->email, $student['student_firstname']);
-            $studentrecord->dateofbirth = $student['student_dob'];
+            $studentrecord->courseids = json_encode($selectedcourses) ?? '';
+            $studentrecord->firstname = $data->student_firstname[$i];
+            $studentrecord->lastname = $data->student_lastname[$i];
+            $studentrecord->email = $data->student_email[$i] ?? local_equipment_generate_student_email($USER->email, $studentrecord->firstname);
+            $studentrecord->dateofbirth = $data->student_dob[$i];
 
             $studentrecord->id = $DB->insert_record('local_equipment_vccsubmission_student', $studentrecord);
+            // Make an array of student IDs for later use.
             $studentids[] = $studentrecord->id;
 
             // Insert student course records
-            foreach ($student['student_courses'] as $courseid) {
+            foreach ($selectedcourses as $courseid) {
                 $DB->insert_record('local_equipment_vccsubmission_student_course', [
                     'studentid' => $studentrecord->id,
                     'courseid' => $courseid
@@ -1197,6 +1441,10 @@ function local_equipment_save_vcc_form($data) {
 
         // Update vccsubmission with studentids
         $DB->set_field('local_equipment_vccsubmission', 'studentids', json_encode($studentids), ['id' => $vccsubmission->id]);
+        echo '<pre>';
+        var_dump($selectedcourses);
+        echo '</pre>';
+        die();
 
         // Save agreement records
         $agreementids = [];

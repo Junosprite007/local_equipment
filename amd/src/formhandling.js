@@ -214,6 +214,27 @@ export const setupFieldsetNameUpdates = (name, type) => {
     });
 };
 
+
+// /**
+//  * Collapse all student fieldsets.
+//  * @param {boolean} expanded Whether or not the fieldsets should be expanded.
+//  */
+
+// export const collapseNewStudentFieldset = () => {
+//     const fieldsets = document.querySelectorAll('fieldset[id^="id_studentheader_"]');
+//     const lastFieldset = fieldsets[fieldsets.length - 1];
+//     if (lastFieldset) {
+//         const container = lastFieldset.querySelector('.fcontainer');
+//         if (container) {
+//             container.classList.remove('show');
+//         }
+//         const toggleButton = lastFieldset.querySelector('.fheader');
+//         if (toggleButton) {
+//             toggleButton.setAttribute('aria-expanded', 'false');
+//         }
+//     }
+// };
+
 // /**
 //  * Set up real-time header updates for student names.
 //  * @param {string} name The name of the fieldset.
