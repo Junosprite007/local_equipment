@@ -62,30 +62,30 @@ if ($mform->is_cancelled()) {
     $partnership->active = $data->active;
 
     // Mailing address specific fields.
-    if ($partnership->sameasphysical_mailing) {
-        $partnership->streetaddress_mailing = $partnership->streetaddress_physical;
-        $partnership->city_mailing = $partnership->city_physical;
-        $partnership->state_mailing = $partnership->state_physical;
-        $partnership->country_mailing = $partnership->country_physical;
-        $partnership->zipcode_mailing = $partnership->zipcode_physical;
+    if ($partnership->mailing_sameasphysical) {
+        $partnership->mailing_streetaddress = $partnership->physical_streetaddress;
+        $partnership->mailing_city = $partnership->physical_city;
+        $partnership->mailing_state = $partnership->physical_state;
+        $partnership->mailing_country = $partnership->physical_country;
+        $partnership->mailing_zipcode = $partnership->physical_zipcode;
     }
 
     // Pickup address specific fields.
-    if ($partnership->sameasphysical_pickup) {
-        $partnership->streetaddress_pickup = $partnership->streetaddress_physical;
-        $partnership->city_pickup = $partnership->city_physical;
-        $partnership->state_pickup = $partnership->state_physical;
-        $partnership->country_pickup = $partnership->country_physical;
-        $partnership->zipcode_pickup = $partnership->zipcode_physical;
+    if ($partnership->pickup_sameasphysical) {
+        $partnership->pickup_streetaddress = $partnership->physical_streetaddress;
+        $partnership->pickup_city = $partnership->physical_city;
+        $partnership->pickup_state = $partnership->physical_state;
+        $partnership->pickup_country = $partnership->physical_country;
+        $partnership->pickup_zipcode = $partnership->physical_zipcode;
     }
 
     // Billing address specific fields.
-    if ($partnership->sameasphysical_billing) {
-        $partnership->streetaddress_billing = $partnership->streetaddress_physical;
-        $partnership->city_billing = $partnership->city_physical;
-        $partnership->state_billing = $partnership->state_physical;
-        $partnership->country_billing = $partnership->country_physical;
-        $partnership->zipcode_billing = $partnership->zipcode_physical;
+    if ($partnership->billing_sameasphysical) {
+        $partnership->billing_streetaddress = $partnership->physical_streetaddress;
+        $partnership->billing_city = $partnership->physical_city;
+        $partnership->billing_state = $partnership->physical_state;
+        $partnership->billing_country = $partnership->physical_country;
+        $partnership->billing_zipcode = $partnership->physical_zipcode;
     }
 
     $DB->update_record('local_equipment_partnership', $partnership);

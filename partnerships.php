@@ -137,7 +137,7 @@ foreach ($partnerships as $partnership) {
                 $row[] = html_writer::tag(
                     'div',
                     $partnership->pickup_extrainstructions,
-                    ['class' => 'pickup-instructions']
+                    ['class' => 'pickup-extainstructions']
                 );
                 break;
 

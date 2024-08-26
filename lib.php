@@ -618,11 +618,11 @@ function local_equipment_add_address_group($mform, $addresstype, $label) {
     // $mform->setType('zipcode_' . $addresstype, PARAM_TEXT);
 
     // if (false) {
-    //     $mform->setDefault('streetaddress_' . $addresstype, $data->{"streetaddress_$addresstype"});
-    //     $mform->setDefault('city_' . $addresstype, $data->{"city_$addresstype"});
-    //     $mform->setDefault('state_' . $addresstype, $data->{"state_$addresstype"});
-    //     $mform->setDefault('country_' . $addresstype, $data->{"country_$addresstype"});
-    //     $mform->setDefault('zipcode_' . $addresstype, $data->{"zipcode_$addresstype"});
+    //     $mform->setDefault('streetaddress_' . $addresstype, $data->{"{$addresstype}_streetaddress"});
+    //     $mform->setDefault('city_' . $addresstype, $data->{"{$addresstype}_city"});
+    //     $mform->setDefault('state_' . $addresstype, $data->{"{$addresstype}_state"});
+    //     $mform->setDefault('country_' . $addresstype, $data->{"{$addresstype}_country"});
+    //     $mform->setDefault('zipcode_' . $addresstype, $data->{"{$addresstype}_zipcode"});
     // }
 
     // Set the default starting hour and minute if it exists.
@@ -684,20 +684,13 @@ function local_equipment_add_address_group($mform, $addresstype, $label) {
  * Conditionally add a div around the block.
  *
  * @param MoodleQuickForm $mform a standard moodle form, probably will be '$this->_form'.
- * @param string $fieldname the name of the element to add.
- * @param string $addressinput the type of address block to add: 'mailing', 'physical', 'pickup', or 'billing'.
+ * @param string $fieldname the field name of address block to add: 'mailing_city', 'physical_code', etc.
  * @param object $element the element to add.
  * @return object $block a block of elements and their options to be added to the form.
  */
-function local_equipment_address_group_view($mform, $fieldname, $addressinput, $element) {
+function local_equipment_address_group_view($mform, $fieldname, $element) {
     return [
         "{$fieldname}_before" => $mform->createElement('html', '<div class="col-md-0">'),
-        // "{$fieldname}_label" => $mform->createElement(
-        //     'static',
-        //     "{$fieldname}_label",
-        //     '',
-        //     html_writer::div(get_string($addressinput, 'local_equipment'), 'local-equipment-address-label')
-        // ),
         $fieldname => $element,
         "{$fieldname}_after" => $mform->createElement('html', '</div>')
     ];
@@ -806,7 +799,7 @@ function local_equipment_add_address_block(
                 $element->updateAttributes(['class' => 'local-equipment-stacked-address-fields']);
             }
             $block->isgrouped = true;
-            $addressgroup = local_equipment_address_group_view($mform, $fieldname, $field, $element);
+            $addressgroup = local_equipment_address_group_view($mform, $fieldname, $element);
 
             foreach ($addressgroup as $key => $value) {
                 $block->elements[$key] = $value;
@@ -841,21 +834,21 @@ function local_equipment_add_edit_address_block($mform, $addresstype, $data) {
 
     if ($addresstype == 'mailing' || $addresstype == 'billing') {
         // Attention element
-        $mform->addElement('text', "{$addresstype}_attention", get_string('attention', 'local_equipment'));
-        $mform->setType("{$addresstype}_attention", PARAM_TEXT);
-        $mform->setDefault("{$addresstype}_attention", $data->{"attention_$addresstype"});
+        $mform->addElement('text', "{$addresstype}_extrainput", get_string('attention', 'local_equipment'));
+        $mform->setType("{$addresstype}_extrainput", PARAM_TEXT);
+        $mform->setDefault("{$addresstype}_extrainput", $data->{"{$addresstype}_extrainput"});
     } else if ($addresstype == 'pickup') {
         // Instructions element
-        $mform->addElement('textarea', "{$addresstype}_instructions", get_string('pickupinstructions', 'local_equipment'));
-        $mform->setType("{$addresstype}_instructions", PARAM_TEXT);
-        $mform->setDefault("{$addresstype}_instructions", $data->{"instructions_$addresstype"});
+        $mform->addElement('textarea', "{$addresstype}_extrainstructions", get_string('pickupinstructions', 'local_equipment'));
+        $mform->setType("{$addresstype}_extrainstructions", PARAM_TEXT);
+        $mform->setDefault("{$addresstype}_extrainstructions", $data->{"{$addresstype}_extrainstructions"});
     }
 
     if ($addresstype !== 'physical') {
         // Same as physical checkbox
         $mform->addElement('advcheckbox', "{$addresstype}_sameasphysical", get_string('sameasphysical', 'local_equipment'));
         $mform->setType("{$addresstype}_sameasphysical", PARAM_BOOL);
-        $mform->setDefault("{$addresstype}_sameasphysical", $data->{"sameasphysical_$addresstype"});
+        $mform->setDefault("{$addresstype}_sameasphysical", $data->{"{$addresstype}_sameasphysical"});
     }
 
     $mform->addElement(
@@ -864,23 +857,23 @@ function local_equipment_add_edit_address_block($mform, $addresstype, $data) {
         get_string('streetaddress', 'local_equipment')
     );
     $mform->setType("{$addresstype}_streetaddress", PARAM_TEXT);
-    $mform->setDefault("{$addresstype}_streetaddress", $data->{"streetaddress_$addresstype"});
+    $mform->setDefault("{$addresstype}_streetaddress", $data->{"{$addresstype}_streetaddress"});
 
     $mform->addElement('text', "{$addresstype}_city", get_string('city', 'local_equipment'));
     $mform->setType("{$addresstype}_city", PARAM_TEXT);
-    $mform->setDefault("{$addresstype}_city", $data->{"city_$addresstype"});
+    $mform->setDefault("{$addresstype}_city", $data->{"{$addresstype}_city"});
 
     $mform->addElement('select', "{$addresstype}_state", get_string('state', 'local_equipment'), local_equipment_get_states());
     $mform->setType("{$addresstype}_state", PARAM_TEXT);
-    $mform->setDefault("{$addresstype}_state", $data->{"state_$addresstype"});
+    $mform->setDefault("{$addresstype}_state", $data->{"{$addresstype}_state"});
 
     $mform->addElement('select', "{$addresstype}_country", get_string('country', 'local_equipment'), local_equipment_get_countries());
     $mform->setType("{$addresstype}_country", PARAM_TEXT);
-    $mform->setDefault("{$addresstype}_country", $data->{"country_$addresstype"});
+    $mform->setDefault("{$addresstype}_country", $data->{"{$addresstype}_country"});
 
     $mform->addElement('text', "{$addresstype}_zipcode", get_string('zipcode', 'local_equipment'));
     $mform->setType("{$addresstype}_zipcode", PARAM_TEXT);
-    $mform->setDefault("{$addresstype}_zipcode", $data->{"zipcode_$addresstype"});
+    $mform->setDefault("{$addresstype}_zipcode", $data->{"{$addresstype}_zipcode"});
 
     if ($addresstype === 'physical') {
         // Physical address is the only address that's required.

@@ -95,23 +95,24 @@ class addpartnerships_form extends \moodleform {
 
         $repeatarray['active'] = $mform->createElement('advcheckbox', 'active', get_string('active'));
 
+        $groupview = false;
         // Physical address section.
-        $address = local_equipment_add_address_block($mform, 'physical');
+        $address = local_equipment_add_address_block($mform, 'physical', '', false, false, true, false, $groupview, false);
         $repeatarray = array_merge($repeatarray, $address->elements);
         $repeatoptions = array_merge($repeatoptions, $address->options);
 
         // Mailing address section.
-        $address = local_equipment_add_address_block($mform, 'mailing');
+        $address = local_equipment_add_address_block($mform, 'mailing', 'attention', false, true, true, false, $groupview, false);
         $repeatarray = array_merge($repeatarray, $address->elements);
         $repeatoptions = array_merge($repeatoptions, $address->options);
 
         // Pickup address section.
-        $address = local_equipment_add_address_block($mform, 'pickup');
+        $address = local_equipment_add_address_block($mform, 'pickup', '', false, true, true, true, $groupview, false);
         $repeatarray = array_merge($repeatarray, $address->elements);
         $repeatoptions = array_merge($repeatoptions, $address->options);
 
         // Billing address section.
-        $address = local_equipment_add_address_block($mform, 'billing');
+        $address = local_equipment_add_address_block($mform, 'billing', 'attention', false, true, true, false, $groupview, false);
         $repeatarray = array_merge($repeatarray, $address->elements);
         $repeatoptions = array_merge($repeatoptions, $address->options);
 

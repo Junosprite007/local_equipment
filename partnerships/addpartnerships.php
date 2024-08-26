@@ -63,61 +63,61 @@ if ($mform->is_cancelled()) {
         $partnership->active = $data->{'active'}[$i];
 
         // Physical address specific fields.
-        $partnership->streetaddress_physical = $data->streetaddress_physical[$i];
-        $partnership->city_physical = $data->city_physical[$i];
-        $partnership->state_physical = $data->state_physical[$i];
-        $partnership->country_physical = $data->country_physical[$i];
-        $partnership->zipcode_physical = $data->zipcode_physical[$i];
+        $partnership->physical_streetaddress = $data->physical_streetaddress[$i];
+        $partnership->physical_city = $data->physical_city[$i];
+        $partnership->physical_state = $data->physical_state[$i];
+        $partnership->physical_country = $data->physical_country[$i];
+        $partnership->physical_zipcode = $data->physical_zipcode[$i];
 
         // Mailing address specific fields.
-        $partnership->attention_mailing = $data->attention_mailing[$i];
-        $partnership->sameasphysical_mailing = $data->sameasphysical_mailing[$i];
-        if ($partnership->sameasphysical_mailing) {
-            $partnership->streetaddress_mailing = $partnership->streetaddress_physical;
-            $partnership->city_mailing = $partnership->city_physical;
-            $partnership->state_mailing = $partnership->state_physical;
-            $partnership->country_mailing = $partnership->country_physical;
-            $partnership->zipcode_mailing = $partnership->zipcode_physical;
+        $partnership->mailing_extrainput = $data->mailing_extrainput[$i];
+        $partnership->mailing_sameasphysical = $data->mailing_sameasphysical[$i] ?? 0;
+        if ($partnership->mailing_sameasphysical) {
+            $partnership->mailing_streetaddress = $partnership->physical_streetaddress;
+            $partnership->mailing_city = $partnership->physical_city;
+            $partnership->mailing_state = $partnership->physical_state;
+            $partnership->mailing_country = $partnership->physical_country;
+            $partnership->mailing_zipcode = $partnership->physical_zipcode;
         } else {
-            $partnership->streetaddress_mailing = $data->streetaddress_mailing[$i];
-            $partnership->city_mailing = $data->city_mailing[$i];
-            $partnership->state_mailing = $data->state_mailing[$i];
-            $partnership->country_mailing = $data->country_mailing[$i];
-            $partnership->zipcode_mailing = $data->zipcode_mailing[$i];
+            $partnership->mailing_streetaddress = $data->mailing_streetaddress[$i];
+            $partnership->mailing_city = $data->mailing_city[$i];
+            $partnership->mailing_state = $data->mailing_state[$i];
+            $partnership->mailing_country = $data->mailing_country[$i];
+            $partnership->mailing_zipcode = $data->mailing_zipcode[$i];
         }
 
         // Pickup address specific fields.
-        $partnership->instructions_pickup = $data->instructions_pickup[$i];
-        $partnership->sameasphysical_pickup = $data->sameasphysical_pickup[$i];
-        if ($partnership->sameasphysical_pickup) {
-            $partnership->streetaddress_pickup = $partnership->streetaddress_physical;
-            $partnership->city_pickup = $partnership->city_physical;
-            $partnership->state_pickup = $partnership->state_physical;
-            $partnership->country_pickup = $partnership->country_physical;
-            $partnership->zipcode_pickup = $partnership->zipcode_physical;
+        $partnership->pickup_extrainstructions = $data->pickup_extrainstructions[$i];
+        $partnership->pickup_sameasphysical = $data->pickup_sameasphysical[$i] ?? 0;
+        if ($partnership->pickup_sameasphysical) {
+            $partnership->pickup_streetaddress = $partnership->physical_streetaddress;
+            $partnership->pickup_city = $partnership->physical_city;
+            $partnership->pickup_state = $partnership->physical_state;
+            $partnership->pickup_country = $partnership->physical_country;
+            $partnership->pickup_zipcode = $partnership->physical_zipcode;
         } else {
-            $partnership->streetaddress_pickup = $data->streetaddress_pickup[$i];
-            $partnership->city_pickup = $data->city_pickup[$i];
-            $partnership->state_pickup = $data->state_pickup[$i];
-            $partnership->country_pickup = $data->country_pickup[$i];
-            $partnership->zipcode_pickup = $data->zipcode_pickup[$i];
+            $partnership->pickup_streetaddress = $data->pickup_streetaddress[$i];
+            $partnership->pickup_city = $data->pickup_city[$i];
+            $partnership->pickup_state = $data->pickup_state[$i];
+            $partnership->pickup_country = $data->pickup_country[$i];
+            $partnership->pickup_zipcode = $data->pickup_zipcode[$i];
         }
 
         // Billing address specific fields.
-        $partnership->attention_billing = $data->attention_billing[$i];
-        $partnership->sameasphysical_billing = $data->sameasphysical_billing[$i];
-        if ($partnership->sameasphysical_billing) {
-            $partnership->streetaddress_billing = $partnership->streetaddress_physical;
-            $partnership->city_billing = $partnership->city_physical;
-            $partnership->state_billing = $partnership->state_physical;
-            $partnership->country_billing = $partnership->country_physical;
-            $partnership->zipcode_billing = $partnership->zipcode_physical;
+        $partnership->billing_extrainput = $data->billing_extrainput[$i];
+        $partnership->billing_sameasphysical = $data->billing_sameasphysical[$i] ?? 0;
+        if ($partnership->billing_sameasphysical) {
+            $partnership->billing_streetaddress = $partnership->physical_streetaddress;
+            $partnership->billing_city = $partnership->physical_city;
+            $partnership->billing_state = $partnership->physical_state;
+            $partnership->billing_country = $partnership->physical_country;
+            $partnership->billing_zipcode = $partnership->physical_zipcode;
         } else {
-            $partnership->streetaddress_billing = $data->streetaddress_billing[$i];
-            $partnership->city_billing = $data->city_billing[$i];
-            $partnership->state_billing = $data->state_billing[$i];
-            $partnership->country_billing = $data->country_billing[$i];
-            $partnership->zipcode_billing = $data->zipcode_billing[$i];
+            $partnership->billing_streetaddress = $data->billing_streetaddress[$i];
+            $partnership->billing_city = $data->billing_city[$i];
+            $partnership->billing_state = $data->billing_state[$i];
+            $partnership->billing_country = $data->billing_country[$i];
+            $partnership->billing_zipcode = $data->billing_zipcode[$i];
         }
 
         $partnership->timecreated = time();

@@ -49,8 +49,8 @@ if ($delete && confirm_sesskey()) {
 echo $OUTPUT->header();
 
 // Add VCC submission button
-$addurl = new moodle_url('/local/equipment/vccsubmissionform.php');
-echo $OUTPUT->single_button($addurl, get_string('addvccsubmission', 'local_equipment'), 'get');
+// $addurl = new moodle_url('/local/equipment/vccsubmissionform.php');
+// echo $OUTPUT->single_button($addurl, get_string('addvccsubmission', 'local_equipment'), 'get');
 
 // Set up the table
 $table = new flexible_table('local-equipment-vccsubmissions');
@@ -65,6 +65,13 @@ $columns = [
     'timecreated',
     'actions'
 ];
+$columns_nosort = [
+    'id',
+    'user',
+    'partnership',
+    'pickup',
+    'actions'
+];
 
 $headers = array_map(function ($column) {
     return get_string($column, 'local_equipment');
@@ -75,8 +82,11 @@ $table->define_headers($headers);
 
 $table->define_baseurl($PAGE->url);
 $table->sortable(true, 'timecreated', SORT_DESC);
-$table->no_sorting('actions');
-$table->collapsible(false);
+foreach ($columns_nosort as $column) {
+    // $table->column_suppress($column);
+    $table->no_sorting($column);
+}
+$table->collapsible(true);
 $table->initialbars(true);
 $table->set_attribute('id', 'vccsubmissions');
 $table->set_attribute('class', 'admintable generaltable');
@@ -110,13 +120,13 @@ foreach ($submissions as $submission) {
     $editurl = new moodle_url('/local/equipment/vccsubmissionform.php', ['id' => $submission->id]);
     $deleteurl = new moodle_url($PAGE->url, ['delete' => $submission->id, 'sesskey' => sesskey()]);
 
-    $actions .= $OUTPUT->action_icon($viewurl, new pix_icon('i/search', get_string('view')));
-    $actions .= $OUTPUT->action_icon($editurl, new pix_icon('t/edit', get_string('edit')));
-    $actions .= $OUTPUT->action_icon(
-        $deleteurl,
-        new pix_icon('t/delete', get_string('delete')),
-        new confirm_action(get_string('confirmdeletevccsubmission', 'local_equipment'))
-    );
+    // $actions .= $OUTPUT->action_icon($viewurl, new pix_icon('i/search', get_string('view')));
+    // $actions .= $OUTPUT->action_icon($editurl, new pix_icon('t/edit', get_string('edit')));
+    // $actions .= $OUTPUT->action_icon(
+    //     $deleteurl,
+    //     new pix_icon('t/delete', get_string('delete')),
+    //     new confirm_action(get_string('confirmdeletevccsubmission', 'local_equipment'))
+    // );
 
     $row[] = $actions;
 

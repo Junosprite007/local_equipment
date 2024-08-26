@@ -141,8 +141,47 @@ export const setupFieldsetNameUpdates = (name, type) => {
         const firstNameInput = fieldset.querySelector(
             `#id_${name}_firstname_${index}`
         );
+        const headerField = fieldset.querySelector(`#id_${name}name_${index}`);
         const header = fieldset.querySelector('h3');
 
+        if (headerField && header) {
+            const updateHeader = () => {
+                const headerName = headerField.value.trim();
+                if (headerName) {
+                    // Swap the two next lines if you want only the name to show with no description.
+                    // getString('a', 'local_equipment', headerName)
+                    getString(name + type, 'local_equipment', headerName)
+                        .then((str) => {
+                            header.textContent = str;
+                        })
+                        .catch((error) => {
+                            // eslint-disable-next-line no-console
+                            console.error(
+                                'Error updating student header:',
+                                error
+                            );
+                            header.textContent = `Student ${index + 1}`;
+                        });
+                } else {
+                    getString(name, 'local_equipment', index + 1)
+                        .then((str) => {
+                            header.textContent = str;
+                        })
+                        .catch((error) => {
+                            // eslint-disable-next-line no-console
+                            console.error(
+                                'Error updating student header:',
+                                error
+                            );
+                            header.textContent = `Student ${index + 1}`;
+                        });
+                }
+            };
+
+            headerField.addEventListener('input', updateHeader);
+            // Trigger initial update
+            updateHeader();
+        }
         if (firstNameInput && header) {
             const updateHeader = () => {
                 const headerName = firstNameInput.value.trim();
