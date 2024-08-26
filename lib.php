@@ -486,7 +486,7 @@ function local_equipment_phone_number_is_valid($phonenumber, $country = 'USA') {
                 } else if ((strlen($parsedphonedata->number) == 11) && $phonenumber[0] == 1) {
                     $parsedphonedata->number = "+" . $parsedphonedata->number;
                 } else {
-                    $parsedphonedata->errors[] = new moodle_exception(new lang_string('invalidphonenumber', 'local_equipment') . new lang_string('wecurrentlyonlyacceptcertainnumbers', 'local_equipment', $country));
+                    $parsedphonedata->errors[] = new moodle_exception(new lang_string('invalidphonenumber', 'local_equipment') . ' ' . new lang_string('wecurrentlyonlyacceptcertainnumbers', 'local_equipment', $country));
                 }
             } catch (moodle_exception $e) {
                 return $e->getMessage();

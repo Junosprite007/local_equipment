@@ -68,8 +68,12 @@ class vccsubmission_form extends \moodleform {
         $mform->addRule('lastname', get_string('required'), 'required', null, 'client');
 
         $phone = $USER->phone2 ?: $USER->phone1;
-        $phone = local_equipment_parse_phone_number($phone);
-        $phone = local_equipment_format_phone_number($phone);
+        if (empty($phone)) {
+            $phone = '';
+        } else {
+            $phone = local_equipment_parse_phone_number($phone);
+            $phone = local_equipment_format_phone_number($phone);
+        }
 
         // Enter mobile phone.
         $mform->addElement('html', '<div class="alert alert-warning" role="alert">' . get_string('wecurrentlyonlyacceptusphonenumbers', 'local_equipment') . '</div>');
