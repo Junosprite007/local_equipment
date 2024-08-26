@@ -53,17 +53,36 @@ class vccsubmission_form extends \moodleform {
         $mastercourses = local_equipment_get_master_courses('ALL_COURSES_CURRENT');
         $coursesformatted = $mastercourses->courses_formatted;
 
+        $coursesformatted_properlynamed = [];
+
+        foreach ($coursesformatted as $courseid => $coursename) {
+            // Get the current month
+            $currentMonth = date('n'); // 'n' returns the month without leading zeros (1-12)
+
+            // Determine the letter based on the current month
+            if ($currentMonth >= 7 && $currentMonth <= 12) {
+                $letter = 'F';
+            } else {
+                $letter = 'S';
+            }
+
+            $pattern = '/– ' . $letter . '\d{2} \([A-Za-z]\)/';
+            if (preg_match($pattern, $coursename)) {
+                $coursesformatted_properlynamed[$courseid] = $coursename;
+            }
+        }
+
 
         // Parent-specific input fields.
         $mform->addElement('static', 'email', get_string('email'), $USER->email);
 
         // Enter first name.
-        $mform->addElement('text', 'firstname', get_string('firstname'), ['value' => $USER->firstname]);
+        $mform->addElement('text', 'firstname', get_string('firstname'), ['value' => $USER->firstname ?? '']);
         $mform->setType('firstname', PARAM_TEXT);
         $mform->addRule('firstname', get_string('required'), 'required', null, 'client');
 
         // Enter last name.
-        $mform->addElement('text', 'lastname', get_string('lastname'), ['value' => $USER->lastname]);
+        $mform->addElement('text', 'lastname', get_string('lastname'), ['value' => $USER->lastname ?? '']);
         $mform->setType('lastname', PARAM_TEXT);
         $mform->addRule('lastname', get_string('required'), 'required', null, 'client');
 
@@ -174,7 +193,7 @@ class vccsubmission_form extends \moodleform {
         $repeatarray['student_lastname'] = $mform->createElement('text', 'student_lastname', get_string('lastname'));
         $repeatarray['student_email'] = $mform->createElement('text', 'student_email', get_string('email'));
         $repeatarray['student_dob'] = $mform->createElement('date_selector', 'student_dob', get_string('dateofbirth', 'local_equipment'));
-        $repeatarray['student_courses'] = $mform->createElement('select', 'student_courses', get_string('selectcourses', 'local_equipment'), $coursesformatted, ['multiple' => true, 'size' => 10]);
+        $repeatarray['student_courses'] = $mform->createElement('select', 'student_courses', get_string('selectcourses', 'local_equipment'), $coursesformatted_properlynamed, ['multiple' => true, 'size' => 10]);
 
         // Set types.
         $repeatoptions['students']['type'] = PARAM_INT;

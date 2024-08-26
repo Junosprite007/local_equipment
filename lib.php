@@ -366,7 +366,8 @@ function local_equipment_get_master_courses($categoryname = 'ALL_COURSES_CURRENT
         }
 
         foreach ($courses as $course) {
-            $responseobject->courses_formatted[$course->id] = $course->fullname;
+            $responseobject->courses_formatted[$course->id] = $course->shortname;
+            // $responseobject->courses_formatted[$course->id] = $course->fullname;
         }
     } catch (moodle_exception $e) {
         // Handle the exception according to Moodle Coding Standards.
