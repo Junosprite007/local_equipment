@@ -875,14 +875,14 @@ function local_equipment_add_edit_address_block($mform, $addresstype, $data) {
     $mform->setType("{$addresstype}_zipcode", PARAM_TEXT);
     $mform->setDefault("{$addresstype}_zipcode", $data->{"{$addresstype}_zipcode"});
 
-    if ($addresstype === 'physical') {
-        // Physical address is the only address that's required.
-        $mform->addRule("{$addresstype}_streetaddress", get_string('required'), 'required', null, 'client');
-        $mform->addRule("{$addresstype}_city", get_string('required'), 'required', null, 'client');
-        $mform->addRule("{$addresstype}_state", get_string('required'), 'required', null, 'client');
-        $mform->addRule("{$addresstype}_country", get_string('required'), 'required', null, 'client');
-        $mform->addRule("{$addresstype}_zipcode", get_string('required'), 'required', null, 'client');
-    }
+    // if ($addresstype === 'physical') {
+    //     // Physical address is the only address that's required.
+    //     $mform->addRule("{$addresstype}_streetaddress", get_string('required'), 'required', null, 'client');
+    //     $mform->addRule("{$addresstype}_city", get_string('required'), 'required', null, 'client');
+    //     $mform->addRule("{$addresstype}_state", get_string('required'), 'required', null, 'client');
+    //     $mform->addRule("{$addresstype}_country", get_string('required'), 'required', null, 'client');
+    //     $mform->addRule("{$addresstype}_zipcode", get_string('required'), 'required', null, 'client');
+    // }
 }
 
 /**
