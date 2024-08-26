@@ -10,32 +10,49 @@
                 <FIELD NAME="courseids" TYPE="text" NOTNULL="false"/>
                 <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
                 <FIELD NAME="active" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="streetaddress_physical" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="city_physical" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="state_physical" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="country_physical" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="zipcode_physical" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="sameasphysical_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="attention_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="streetaddress_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="city_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="state_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="country_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="zipcode_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="instructions_pickup" TYPE="text" NOTNULL="true"/>
-                <FIELD NAME="sameasphysical_pickup" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="streetaddress_pickup" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="city_pickup" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="state_pickup" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="country_pickup" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="zipcode_pickup" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="attention_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="sameasphysical_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="streetaddress_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="city_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="state_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="country_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="zipcode_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <!-- Physical address -->
+                <FIELD NAME="physical_extrainput" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="physical_sameasmailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="physical_streetaddress" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="physical_apartment" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="physical_city" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="physical_state" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="physical_country" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="physical_zipcode" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="physical_extrainstructions" TYPE="text" NOTNULL="false"/>
+                <!-- Mailing address -->
+                <FIELD NAME="mailing_extrainput" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="mailing_sameasphysical" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="mailing_streetaddress" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="mailing_apartment" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="mailing_city" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="mailing_state" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="mailing_country" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="mailing_zipcode" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="mailing_extrainstructions" TYPE="text" NOTNULL="false"/>
+                <!-- Pickup address -->
+                <FIELD NAME="pickup_extrainput" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickup_sameasmailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickup_sameasphysical" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickup_apartment" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickup_streetaddress" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickup_city" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickup_state" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickup_country" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickup_zipcode" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickup_extrainstructions" TYPE="text" NOTNULL="false"/>
+                <!-- Billing address -->
+                <FIELD NAME="billing_extrainput" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="billing_sameasmailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="billing_sameasphysical" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="billing_streetaddress" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="billing_apartment" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="billing_city" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="billing_state" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="billing_country" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="billing_zipcode" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="billing_extrainstructions" TYPE="text" NOTNULL="false"/>
+
                 <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
             </FIELDS>
             <KEYS>
@@ -86,6 +103,17 @@
                 <FIELD NAME="starttime" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
                 <FIELD NAME="endtime" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
                 <FIELD NAME="status" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <!-- Pickup address infomation -->
+                <FIELD NAME="address_extrainput" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="address_sameasmailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="address_sameasphysical" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="address_apartment" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="address_streetaddress" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="address_city" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="address_state" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="address_country" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="address_zipcode" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="address_extrainstructions" TYPE="text" NOTNULL="false"/>
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -122,25 +150,29 @@
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
                 <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the user"/>
                 <FIELD NAME="partnershipid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the selected partnership"/>
-                <FIELD NAME="pickupid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the selected pickup time"/>
                 <FIELD NAME="studentids" TYPE="text" NOTNULL="false"/>
                 <FIELD NAME="vccsubmissionids" TYPE="text" NOTNULL="false"/>
                 <FIELD NAME="phoneverificationids" TYPE="text" NOTNULL="false"/>
-                <!-- mailing address -->
-                <FIELD NAME="streetaddress_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="city_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="state_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="country_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="zipcode_mailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="instructions_mailing" TYPE="text" NOTNULL="true"/>
-                <!-- billing address -->
-                <FIELD NAME="attention_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="sameasmailing_billing" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="streetaddress_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="city_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="state_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="country_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="zipcode_billing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <!-- Mailing address -->
+                <FIELD NAME="mailing_extrainput" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="mailing_streetaddress" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="mailing_apartment" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="mailing_city" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="mailing_state" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="mailing_country" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="mailing_zipcode" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="mailing_extrainstructions" TYPE="text" NOTNULL="false"/>
+                <!-- Billing address -->
+                <FIELD NAME="billing_extrainput" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="billing_sameasmailing" TYPE="int" LENGTH="1" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="billing_streetaddress" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="billing_apartment" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="billing_city" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="billing_state" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="billing_country" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="billing_zipcode" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="billing_extrainstructions" TYPE="text" NOTNULL="false"/>
+
                 <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Timestamp of when the record was created"/>
                 <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Timestamp of when the record was last modified"/>
             </FIELDS>
@@ -158,15 +190,15 @@
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
                 <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the parent user"/>
                 <FIELD NAME="partnershipid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the selected partnership"/>
-                <FIELD NAME="pickupid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the selected pickup time"/>
+                <FIELD NAME="pickupid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="ID of the selected pickup time"/>
                 <FIELD NAME="studentids" TYPE="text" NOTNULL="false"/>
                 <FIELD NAME="agreementids" TYPE="text" NOTNULL="false"/>
-                <FIELD NAME="confirmationid" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="A confirmation id, which should just be a hash of this table's 'id' field. This is intended for easy and secure lookups."/>
-                <FIELD NAME="confirmationexpired" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="ID of the selected pickup time. 0 = no, 1 = yes"/>
+                <FIELD NAME="confirmationid" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="A confirmation id, which should just be a hash of this table's 'id' field. This is intended for easy and secure lookups."/>
+                <FIELD NAME="confirmationexpired" TYPE="int" LENGTH="1" NOTNULL="false" DEFAULT="0" COMMENT="ID of the selected pickup time. 0 = no, 1 = yes"/>
                 <FIELD NAME="pickupmethod" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Method of equipment pickup"/>
-                <FIELD NAME="pickuppersonname" TYPE="text" NOTNULL="false" COMMENT="Details of person picking up equipment"/>
-                <FIELD NAME="pickuppersonphone" TYPE="text" NOTNULL="false" COMMENT="Details of person picking up equipment"/>
-                <!-- <FIELD NAME="pickupnotes" TYPE="text" NOTNULL="false" COMMENT="User (probably the parent) notes"/> -->
+                <FIELD NAME="pickuppersonname" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Name of the person picking up the equipment (if different from user)"/>
+                <FIELD NAME="pickuppersonphone" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Phone number of the person picking up"/>
+                <FIELD NAME="pickuppersondetails" TYPE="text" NOTNULL="false" COMMENT="Details about the person picking up the students equipment"/>
                 <FIELD NAME="usernotes" TYPE="text" NOTNULL="false" COMMENT="User (probably the parent) notes"/>
                 <FIELD NAME="adminnotes" TYPE="text" NOTNULL="false" COMMENT="Admin notes"/>
                 <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Timestamp of when the record was created"/>
@@ -211,6 +243,7 @@
                 <FIELD NAME="lastname" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Student's last name"/>
                 <FIELD NAME="email" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Student's email"/>
                 <FIELD NAME="dateofbirth" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Student's date of birth"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Timestamp of when the record was created"/>
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -220,6 +253,7 @@
             <INDEXES>
                 <INDEX NAME="email" UNIQUE="false" FIELDS="email"/>
                 <INDEX NAME="dateofbirth" UNIQUE="false" FIELDS="dateofbirth"/>
+                <INDEX NAME="timecreated" UNIQUE="false" FIELDS="timecreated"/>
             </INDEXES>
         </TABLE>
         <!-- Join table for virtual course consent (vcc) submission students and their courses -->

@@ -182,8 +182,8 @@ function local_equipment_get_addresses($dbrecord) {
         'billing',
     ];
     foreach ($addresstypes as $type) {
-        if ("{$dbrecord->{"streetaddress_$type"}}") {
-            $address[] = html_writer::tag('strong', s(get_string($type, 'local_equipment'))) . ": {$dbrecord->{"streetaddress_$type"}}, {$dbrecord->{"city_$type"}}, {$dbrecord->{"state_$type"}} {$dbrecord->{"zipcode_$type"}} {$dbrecord->{"country_$type"}}";
+        if ("{$dbrecord->{"{$type}_streetaddress"}}") {
+            $address[] = html_writer::tag('strong', s(get_string($type, 'local_equipment'))) . ": {$dbrecord->{"{$type}_streetaddress"}}, {$dbrecord->{"{$type}_city"}}, {$dbrecord->{"{$type}_state"}} {$dbrecord->{"{$type}_zipcode"}} {$dbrecord->{"{$type}_country"}}";
         }
     }
 
@@ -524,7 +524,7 @@ function local_equipment_add_address_group($mform, $addresstype, $label) {
     ];
 
     $formataddressblock = function ($addressinput) use ($mform, $addresstype, &$types, &$rules) {
-        $elementname = "{$addressinput}_{$addresstype}";
+        $elementname = "{$addresstype}_{$addressinput}";
         $types[$elementname] = PARAM_TEXT;
         if ($addressinput !== 'apartment') {
             $rules[$elementname] = ['required'];
@@ -575,11 +575,11 @@ function local_equipment_add_address_group($mform, $addresstype, $label) {
     //     $mform->createElement('html', '<div class="col-md-6">');
     //     $mform->createElement(
     //         'static',
-    //         $addressinput . '_' . $addresstype,
+    //         $addresstype . '_' . $addressinput,
     //         '',
     //         html_writer::div(get_string('streetaddress', 'local_equipment'), 'local-equipment-pickups-addpickups-time-selectors')
     //     );
-    //     $mform->createElement('text', $addressinput . '_' . $addresstype, get_string($addressinput . '_' . $addresstype, 'local_equipment'));
+    //     $mform->createElement('text', $addresstype . '_' . $addressinput, get_string($addresstype . '_' . $addressinput, 'local_equipment'));
     //     $mform->createElement('html', '</div>');
     // }
     // // $starttag = $mform->createElement('html', '<div class="col-md-6">');
@@ -841,50 +841,54 @@ function local_equipment_add_edit_address_block($mform, $addresstype, $data) {
 
     if ($addresstype == 'mailing' || $addresstype == 'billing') {
         // Attention element
-        $mform->addElement('text', 'attention_' . $addresstype, get_string('attention', 'local_equipment'));
-        $mform->setType('attention_' . $addresstype, PARAM_TEXT);
-        $mform->setDefault('attention_' . $addresstype, $data->{"attention_$addresstype"});
+        $mform->addElement('text', "{$addresstype}_attention", get_string('attention', 'local_equipment'));
+        $mform->setType("{$addresstype}_attention", PARAM_TEXT);
+        $mform->setDefault("{$addresstype}_attention", $data->{"attention_$addresstype"});
     } else if ($addresstype == 'pickup') {
         // Instructions element
-        $mform->addElement('textarea', 'instructions_' . $addresstype, get_string('pickupinstructions', 'local_equipment'));
-        $mform->setType('instructions_' . $addresstype, PARAM_TEXT);
-        $mform->setDefault('instructions_' . $addresstype, $data->{"instructions_$addresstype"});
+        $mform->addElement('textarea', "{$addresstype}_instructions", get_string('pickupinstructions', 'local_equipment'));
+        $mform->setType("{$addresstype}_instructions", PARAM_TEXT);
+        $mform->setDefault("{$addresstype}_instructions", $data->{"instructions_$addresstype"});
     }
 
     if ($addresstype !== 'physical') {
         // Same as physical checkbox
-        $mform->addElement('advcheckbox', 'sameasphysical_' . $addresstype, get_string('sameasphysical', 'local_equipment'));
-        $mform->setType('sameasphysical_' . $addresstype, PARAM_BOOL);
-        $mform->setDefault('sameasphysical_' . $addresstype, $data->{"sameasphysical_$addresstype"});
+        $mform->addElement('advcheckbox', "{$addresstype}_sameasphysical", get_string('sameasphysical', 'local_equipment'));
+        $mform->setType("{$addresstype}_sameasphysical", PARAM_BOOL);
+        $mform->setDefault("{$addresstype}_sameasphysical", $data->{"sameasphysical_$addresstype"});
     }
 
-    $mform->addElement('text', 'streetaddress_' . $addresstype, get_string('streetaddress', 'local_equipment'));
-    $mform->setType('streetaddress_' . $addresstype, PARAM_TEXT);
-    $mform->setDefault('streetaddress_' . $addresstype, $data->{"streetaddress_$addresstype"});
+    $mform->addElement(
+        'text',
+        "{$addresstype}_streetaddress",
+        get_string('streetaddress', 'local_equipment')
+    );
+    $mform->setType("{$addresstype}_streetaddress", PARAM_TEXT);
+    $mform->setDefault("{$addresstype}_streetaddress", $data->{"streetaddress_$addresstype"});
 
-    $mform->addElement('text', 'city_' . $addresstype, get_string('city', 'local_equipment'));
-    $mform->setType('city_' . $addresstype, PARAM_TEXT);
-    $mform->setDefault('city_' . $addresstype, $data->{"city_$addresstype"});
+    $mform->addElement('text', "{$addresstype}_city", get_string('city', 'local_equipment'));
+    $mform->setType("{$addresstype}_city", PARAM_TEXT);
+    $mform->setDefault("{$addresstype}_city", $data->{"city_$addresstype"});
 
-    $mform->addElement('select', 'state_' . $addresstype, get_string('state', 'local_equipment'), local_equipment_get_states());
-    $mform->setType('state_' . $addresstype, PARAM_TEXT);
-    $mform->setDefault('state_' . $addresstype, $data->{"state_$addresstype"});
+    $mform->addElement('select', "{$addresstype}_state", get_string('state', 'local_equipment'), local_equipment_get_states());
+    $mform->setType("{$addresstype}_state", PARAM_TEXT);
+    $mform->setDefault("{$addresstype}_state", $data->{"state_$addresstype"});
 
-    $mform->addElement('select', 'country_' . $addresstype, get_string('country', 'local_equipment'), local_equipment_get_countries());
-    $mform->setType('country_' . $addresstype, PARAM_TEXT);
-    $mform->setDefault('country_' . $addresstype, $data->{"country_$addresstype"});
+    $mform->addElement('select', "{$addresstype}_country", get_string('country', 'local_equipment'), local_equipment_get_countries());
+    $mform->setType("{$addresstype}_country", PARAM_TEXT);
+    $mform->setDefault("{$addresstype}_country", $data->{"country_$addresstype"});
 
-    $mform->addElement('text', 'zipcode_' . $addresstype, get_string('zipcode', 'local_equipment'));
-    $mform->setType('zipcode_' . $addresstype, PARAM_TEXT);
-    $mform->setDefault('zipcode_' . $addresstype, $data->{"zipcode_$addresstype"});
+    $mform->addElement('text', "{$addresstype}_zipcode", get_string('zipcode', 'local_equipment'));
+    $mform->setType("{$addresstype}_zipcode", PARAM_TEXT);
+    $mform->setDefault("{$addresstype}_zipcode", $data->{"zipcode_$addresstype"});
 
     if ($addresstype === 'physical') {
         // Physical address is the only address that's required.
-        $mform->addRule('streetaddress_' . $addresstype, get_string('required'), 'required', null, 'client');
-        $mform->addRule('city_' . $addresstype, get_string('required'), 'required', null, 'client');
-        $mform->addRule('state_' . $addresstype, get_string('required'), 'required', null, 'client');
-        $mform->addRule('country_' . $addresstype, get_string('required'), 'required', null, 'client');
-        $mform->addRule('zipcode_' . $addresstype, get_string('required'), 'required', null, 'client');
+        $mform->addRule("{$addresstype}_streetaddress", get_string('required'), 'required', null, 'client');
+        $mform->addRule("{$addresstype}_city", get_string('required'), 'required', null, 'client');
+        $mform->addRule("{$addresstype}_state", get_string('required'), 'required', null, 'client');
+        $mform->addRule("{$addresstype}_country", get_string('required'), 'required', null, 'client');
+        $mform->addRule("{$addresstype}_zipcode", get_string('required'), 'required', null, 'client');
     }
 }
 
@@ -1062,6 +1066,38 @@ function local_equipment_get_partnerships_with_pickuptimes() {
     global $DB;
 
     $partnerships = $DB->get_records('local_equipment_partnership', ['active' => 1]);
+    $pickuptimedata = array();
+
+    foreach ($partnerships as $partnership) {
+        $pickups = $DB->get_records('local_equipment_pickup', ['partnershipid' => $partnership->id], 'pickupdate, starttime');
+        if (!empty($pickups)) {
+            $pickuptimedata[$partnership->id] = array_values(array_filter(array_map(function ($pickup) {
+                // Only include pickup times where starttime and endtime are different
+                if ($pickup->starttime !== $pickup->endtime) {
+                    return [
+                        'id' => $pickup->id,
+                        'datetime' => userdate($pickup->pickupdate, get_string('strftimedate', 'langconfig')) . ' ' .
+                            userdate($pickup->starttime, get_string('strftimetime', 'langconfig')) . ' - ' .
+                            userdate($pickup->endtime, get_string('strftimetime', 'langconfig'))
+                    ];
+                }
+                return null;
+            }, $pickups)));
+        }
+    }
+
+    return $pickuptimedata;
+}
+
+/**
+ * Retrieves partnership pickuptimes.
+ *
+ * @return array An associative array of partnership courses, with course ID as the key and course fullname as the value.
+ */
+function local_equipment_get_all_active_pickup_times() {
+    global $DB;
+
+    $partnerships = $DB->get_records('local_equipment_pickup', ['status' => 'confirmed']);
     $pickuptimedata = array();
 
     foreach ($partnerships as $partnership) {
@@ -1408,7 +1444,7 @@ function local_equipment_save_vcc_form($data) {
 
         // ["students"] => int(5), represents the number of students.
         // ["selectedcourses"] => string(85) "{"0":["526"],"1":["526","529"],"2":["536","540"],"3":["526","529"],"4":["526","529"]}"
-    //
+        //
 
         $studentids = [];
         for ($i = 0; $i < $data->students; $i++) {
@@ -1476,11 +1512,11 @@ function local_equipment_save_vcc_form($data) {
         }
         $userrecord->partnershipid = $data->partnership;
         $userrecord->pickupid = $data->pickuptime;
-        $userrecord->streetaddress_mailing = $data->street;
-        $userrecord->city_mailing = $data->city;
-        $userrecord->state_mailing = $data->state;
-        $userrecord->country_mailing = $data->country;
-        $userrecord->zipcode_mailing = $data->zipcode;
+        $userrecord->mailing_streetaddress = $data->street;
+        $userrecord->mailing_city = $data->city;
+        $userrecord->mailing_state = $data->state;
+        $userrecord->mailing_country = $data->country;
+        $userrecord->mailing_zipcode = $data->zipcode;
         $userrecord->timemodified = time();
 
         if (isset($userrecord->id)) {

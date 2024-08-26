@@ -44,7 +44,7 @@ require_capability('local/equipment:managepartnerships', $context);
 $columns = [
     'name',
     'pickups',
-    'instructions_pickup',
+    'pickup_extrainstructions',
     'liaisons',
     'courses',
     'active',
@@ -132,11 +132,11 @@ foreach ($partnerships as $partnership) {
                 $row[] = $partnership->pickupid;
                 break;
 
-            case 'instructions_pickup':
-                // $row[] = $partnership->instructions_pickup;
+            case 'pickup_extrainstructions':
+                // $row[] = $partnership->pickup_extrainstructions;
                 $row[] = html_writer::tag(
                     'div',
-                    $partnership->instructions_pickup,
+                    $partnership->pickup_extrainstructions,
                     ['class' => 'pickup-instructions']
                 );
                 break;

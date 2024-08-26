@@ -145,9 +145,7 @@ class addpartnerships_form extends \moodleform {
             'partnerships',
             $addfieldsname,
             1,
-            get_string('addmorepartnerships', 'local_equipment'),
-            // false,
-            // $deletebuttonname
+            get_string('addmorepartnerships', 'local_equipment')
         );
 
         // $PAGE->requires->js_call_amd('local_equipment/deletepartnership_button', 'init');

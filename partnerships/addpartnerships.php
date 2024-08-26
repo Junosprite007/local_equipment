@@ -37,8 +37,7 @@ $PAGE->set_url(new moodle_url('/local/equipment/partnerships/addpartnerships.php
 $PAGE->set_title(get_string('addpartnerships', 'local_equipment'));
 $PAGE->set_heading(get_string('addpartnerships', 'local_equipment'));
 $PAGE->requires->js_call_amd('local_equipment/addpartnerships_form', 'init', ['partnership']);
-// $PAGE->requires->js_call_amd('local_equipment/addpartnerships_form', 'init', ['partnership', 'header']);
-// $PAGE->requires->js_call_amd('local_equipment/testingjs', 'init');
+$PAGE->requires->js_call_amd('local_equipment/formhandling', 'setupFieldsetNameUpdates', ['partnership', 'header']);
 
 require_capability('local/equipment:managepartnerships', $context);
 
@@ -48,33 +47,7 @@ if ($mform->is_cancelled()) {
     redirect(new moodle_url('/local/equipment/partnerships.php'));
 } else if ($data = $mform->get_data()) {
     $partnershiprepeats = $data->partnerships;
-    // $deletions = optional_param_array('delete_partnership', [], PARAM_INT);
     $success = true;
-
-    // if (!empty($deletions)) {
-    //     $repeatno = $repeatno - count($deletions);
-    //     $repeatno = max(1, $repeatno);
-    // }
-
-
-    // echo '<br />';
-    // echo '<br />';
-    // echo '<pre>';
-    // // var_dump($partnershiprepeats);
-    // var_dump($deletions); // Continue from here.
-    // echo '</pre>';
-    // foreach ($data as $key => $value) {
-    //     echo '<br />';
-    //     echo '<pre>';
-    //     var_dump($key);
-    //     var_dump($value);
-    //     echo '</pre>';
-    //     if (strpos($key, 'delete_element') === 0) {
-    //         // Handle deletion of the corresponding element
-    //     }
-    // }
-
-    // die();
 
     // Inserts each partnership into the database, since you can add multiple partnerships at once.
     for ($i = 0; $i < $partnershiprepeats; $i++) {

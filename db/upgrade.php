@@ -353,5 +353,298 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024081800, 'local', 'equipment');
     }
 
+    if ($oldversion < 2024082502) {
+        // Rename fields in the local_equipment_partnership table.
+        $table = new xmldb_table('local_equipment_partnership');
+
+        // Rename fields in the local_equipment_partnership table.
+        $oldnames = [
+            'streetaddress_physical',
+            'city_physical',
+            'state_physical',
+            'country_physical',
+            'zipcode_physical',
+            'sameasphysical_mailing',
+            'attention_mailing',
+            'streetaddress_mailing',
+            'city_mailing',
+            'state_mailing',
+            'country_mailing',
+            'zipcode_mailing',
+            'instructions_pickup',
+            'sameasphysical_pickup',
+            'streetaddress_pickup',
+            'city_pickup',
+            'state_pickup',
+            'country_pickup',
+            'zipcode_pickup',
+            'attention_billing',
+            'sameasphysical_billing',
+            'streetaddress_billing',
+            'city_billing',
+            'state_billing',
+            'country_billing',
+            'zipcode_billing',
+        ];
+
+        foreach ($oldnames as $oldname) {
+            if ($oldname === 'instructions_pickup') {
+                $newname = preg_replace('/([a-zA-Z0-9]+)_([a-zA-Z0-9]+)/', '$2_extra$1', $oldname);
+                $oldfield = new xmldb_field($oldname, XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+            } else if ($oldname === 'attention_mailing' || $oldname === 'attention_billing') {
+                $newname = preg_replace('/([a-zA-Z0-9]+)_([a-zA-Z0-9]+)/', '$2_extrainput', $oldname);
+                $oldfield = new xmldb_field($oldname, XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+            } else {
+                $newname = preg_replace('/([a-zA-Z0-9]+)_([a-zA-Z0-9]+)/', '$2_$1', $oldname);
+                $oldfield = new xmldb_field($oldname, XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+            }
+            if ($dbman->field_exists($table, $oldfield) && !$dbman->field_exists($table, $newname)) {
+                $dbman->rename_field($table, $oldfield, $newname);
+            }
+        }
+
+        // Add new fields to the local_equipment_partnership table.
+        $newfield = new xmldb_field('physical_extrainput', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'active');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('physical_sameasmailing', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'physical_extrainput');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('physical_apartment', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'physical_streetaddress');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('physical_extrainstructions', XMLDB_TYPE_TEXT, null, null, null, null, null, 'physical_zipcode');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('mailing_apartment', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'mailing_streetaddress');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('mailing_extrainstructions', XMLDB_TYPE_TEXT, null, null, null, null, null, 'mailing_zipcode');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('pickup_extrainput', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'mailing_extrainstructions');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('pickup_sameasmailing', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'pickup_extrainput');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('pickup_apartment', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'pickup_streetaddress');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('billing_sameasmailing', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'billing_extrainput');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('billing_apartment', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'billing_streetaddress');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('billing_extrainstructions', XMLDB_TYPE_TEXT, null, null, null, null, null, 'billing_zipcode');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Add pickup fields to the local_equipment_pickup table.
+        $table = new xmldb_table('local_equipment_pickup');
+
+        $newfield = new xmldb_field('address_extrainput', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'status');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('address_sameasmailing', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'address_extrainput');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('address_sameasphysical', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'address_sameasmailing');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('address_streetaddress', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'address_sameasphysical');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('address_apartment', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'address_streetaddress');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('address_city', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'address_apartment');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('address_state', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'address_city');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('address_country', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'address_state');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('address_zipcode', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'address_country');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+        $newfield = new xmldb_field('address_extrainstructions', XMLDB_TYPE_TEXT, null, null, null, null, null, 'address_zipcode');
+        if (!$dbman->field_exists($table, $newfield)) {
+            $dbman->add_field($table, $newfield);
+        }
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+
+        // Now we can add the new tables:
+        // local_equipment_user,
+        // local_equipment_vccsubmission,
+        // local_equipment_vccsubmission_agreement,
+        // local_equipment_vccsubmission_student,
+        // local_equipment_vccsubmission_student_course
+
+        // Define table local_equipment_user.
+        $table = new xmldb_table('local_equipment_user');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('partnershipid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('studentids', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('vccsubmissionids', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('phoneverificationids', XMLDB_TYPE_TEXT, null, null, null, null, null);
+
+        $table->add_field('mailing_extrainput', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('mailing_streetaddress', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('mailing_apartment', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('mailing_city', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('mailing_state', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('mailing_country', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('mailing_zipcode', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('mailing_extrainstructions', XMLDB_TYPE_TEXT, null, null, null, null, null);
+
+        $table->add_field('billing_extrainput', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('billing_sameasmailing', XMLDB_TYPE_INTEGER, '1', null, null, null, null);
+        $table->add_field('billing_streetaddress', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('billing_apartment', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('billing_city', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('billing_state', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('billing_country', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('billing_zipcode', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('billing_extrainstructions', XMLDB_TYPE_TEXT, null, null, null, null, null);
+
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+        $table->add_key('partnershipid', XMLDB_KEY_FOREIGN, ['partnershipid'], 'local_equipment_partnership', ['id']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Define table local_equipment_vccsubmission.
+        $table = new xmldb_table('local_equipment_vccsubmission');
+
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('partnershipid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('pickupid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('studentids', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('agreementids', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('confirmationid', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('confirmationexpired', XMLDB_TYPE_INTEGER, '1', null, null, null, '0');
+        $table->add_field('pickupmethod', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('pickuppersonname', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('pickuppersonphone', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('pickuppersondetails', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('usernotes', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('adminnotes', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+        $table->add_key('partnershipid', XMLDB_KEY_FOREIGN, ['partnershipid'], 'local_equipment_partnership', ['id']);
+        $table->add_key('pickupid', XMLDB_KEY_FOREIGN, ['pickupid'], 'local_equipment_pickup', ['id']);
+
+        $table->add_index('confirmationid', null, ['confirmationid']);
+        $table->add_index('timecreated', null, ['timecreated']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+
+        // Define table local_equipment_vccsubmission_agreement.
+        $table = new xmldb_table('local_equipment_vccsubmission_agreement');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('vccsubmissionid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('agreementid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('optinout', XMLDB_TYPE_INTEGER, '1', null, null, null, null);
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('vccsubmissionid', XMLDB_KEY_FOREIGN, ['vccsubmissionid'], 'local_equipment_vccsubmission', ['id']);
+        $table->add_key('agreementid', XMLDB_KEY_FOREIGN, ['agreementid'], 'local_equipment_agreement', ['id']);
+
+        $table->add_index('optinout', null, ['optinout']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+
+        // Define table local_equipment_vccsubmission_student.
+        $table = new xmldb_table('local_equipment_vccsubmission_student');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('vccsubmissionid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('courseids', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('firstname', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('lastname', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('email', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('dateofbirth', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+        $table->add_key('vccsubmissionid', XMLDB_KEY_FOREIGN, ['vccsubmissionid'], 'local_equipment_vccsubmission', ['id']);
+
+        $table->add_index('email', null, ['email']);
+        $table->add_index('dateofbirth', null, ['dateofbirth']);
+        $table->add_index('timecreated', null, ['timecreated']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+
+        // Define table local_equipment_vccsubmission_student_course.
+        $table = new xmldb_table('local_equipment_vccsubmission_student_course');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('studentid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('studentid', XMLDB_KEY_FOREIGN, ['studentid'], 'local_equipment_vccsubmission_student', ['id']);
+        $table->add_key('courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Equipment savepoint reached.
+        upgrade_plugin_savepoint(true, 2024082502, 'local', 'equipment');
+    }
+
     return true;
 }
