@@ -353,7 +353,7 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024081800, 'local', 'equipment');
     }
 
-    if ($oldversion < 2024082502) {
+    if ($oldversion < 2024082504) {
         // Rename fields in the local_equipment_partnership table.
         $table = new xmldb_table('local_equipment_partnership');
 
@@ -643,7 +643,7 @@ function xmldb_local_equipment_upgrade($oldversion) {
         }
 
         // Equipment savepoint reached.
-        upgrade_plugin_savepoint(true, 2024082502, 'local', 'equipment');
+        upgrade_plugin_savepoint(true, 2024082504, 'local', 'equipment');
     }
 
     return true;
