@@ -94,6 +94,7 @@ foreach ($columns as $column) {
 
 $table->column_class('timecreated', $nowrap_cell);
 $table->column_class('pickup', $nowrap_cell);
+$table->column_class('students', $nowrap_cell);
 // $table->column_class('pickuppersondetails', $minwidth_cell);
 // $table->column_class('usernotes', $minwidth_cell);
 // $table->column_class('adminnotes', $minwidth_cell);
