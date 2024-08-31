@@ -35,6 +35,14 @@
     margin-right: 5px;
 }
 
-.local-equipment-nowrap-header {
+th.local-equipment-nowrap-header {
     white-space: nowrap;
 }
+
+td.local-equipment-nowrap-cell {
+    white-space: nowrap;
+}
+
+// span.local-equipment-minwidth-cell {
+//    min-width: 500px;
+// }

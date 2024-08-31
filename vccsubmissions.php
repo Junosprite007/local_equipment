@@ -85,11 +85,18 @@ $headers = array_map(function ($column) {
 $table->define_columns($columns);
 $table->define_headers($headers);
 
-$headerclass = 'local-equipment-nowrap-header';
+$nowrap_header = 'local-equipment-nowrap-header';
+$nowrap_cell = 'local-equipment-nowrap-cell';
 
 foreach ($columns as $column) {
-    $table->column_class($column, $headerclass);
+    $table->column_class($column, $nowrap_header);
 }
+
+$table->column_class('timecreated', $nowrap_cell);
+$table->column_class('pickup', $nowrap_cell);
+// $table->column_class('pickuppersondetails', $minwidth_cell);
+// $table->column_class('usernotes', $minwidth_cell);
+// $table->column_class('adminnotes', $minwidth_cell);
 
 $table->define_baseurl($PAGE->url);
 $table->sortable(true, 'timecreated', SORT_DESC);
@@ -186,6 +193,8 @@ foreach ($submissions as $submission) {
     // timecreated
     // actions
 
+    $minwidth_cell = 'local-equipment-minwidth-cell';
+
     $row = [];
     // $row[] = $submission->id;
     $row[] = userdate($submission->timecreated);
@@ -201,6 +210,9 @@ foreach ($submissions as $submission) {
     $row[] = $submission->pickupmethod;
     $row[] = $submission->pickuppersonname;
     $row[] = $submission->pickuppersonphone;
+    // $row[] = html_writer::tag('div', $submission->pickuppersondetails, ['class' => $minwidth_cell]);
+    // $row[] = html_writer::tag('div', $submission->usernotes, ['class' => $minwidth_cell]);
+    // $row[] = html_writer::tag('div', $submission->adminnotes, ['class' => $minwidth_cell]);
     $row[] = $submission->pickuppersondetails;
     $row[] = $submission->usernotes;
     $row[] = $submission->adminnotes;
