@@ -56,22 +56,23 @@ echo $OUTPUT->header();
 $table = new flexible_table('local-equipment-vccsubmissions');
 
 $columns = [
-    // 'id',
+    'timecreated',
     'parent_firstname',
     'parent_lastname',
     'parent_email',
     'parent_phone2',
-    'partnership',
+    'partnership_name',
     'pickup',
     'students',
     'pickupmethod',
-    'timecreated',
+    'pickuppersonname',
+    'pickuppersonphone',
+    'pickuppersondetails',
+    'usernotes',
+    'adminnotes',
     'actions'
 ];
 $columns_nosort = [
-    // 'id',
-    // 'user',
-    'partnership',
     'pickup',
     'students',
     'actions'
@@ -83,6 +84,12 @@ $headers = array_map(function ($column) {
 
 $table->define_columns($columns);
 $table->define_headers($headers);
+
+$headerclass = 'local-equipment-nowrap-header';
+
+foreach ($columns as $column) {
+    $table->column_class($column, $headerclass);
+}
 
 $table->define_baseurl($PAGE->url);
 $table->sortable(true, 'timecreated', SORT_DESC);
@@ -96,22 +103,22 @@ $table->set_attribute('id', 'vccsubmissions');
 $table->set_attribute('class', 'admintable generaltable');
 $table->setup();
 
-$select = "vs.id, vs.userid, vs.partnershipid, vs.studentids, vs.pickupid, vs.pickupmethod, vs.timecreated,
-        u.firstname AS parent_firstname, u.lastname AS parent_lastname, u.email AS parent_email, u.phone2 AS parent_phone2,
-        p.pickup_extrainstructions, p.pickup_apartment, p.pickup_streetaddress, p.pickup_city, p.pickup_state, p.pickup_zipcode,
-        pu.starttime, pu.endtime";
+$select = "vccsubmission.id, vccsubmission.userid, vccsubmission.partnershipid, vccsubmission.studentids, vccsubmission.pickupid, vccsubmission.pickupmethod, vccsubmission.pickuppersonname, vccsubmission.pickuppersonphone, vccsubmission.pickuppersondetails, vccsubmission.usernotes, vccsubmission.adminnotes, vccsubmission.timecreated,
+        user.firstname AS parent_firstname, user.lastname AS parent_lastname, user.email AS parent_email, user.phone2 AS parent_phone2,
+        partnership.name AS partnership_name, partnership.pickup_extrainstructions, partnership.pickup_apartment, partnership.pickup_streetaddress, partnership.pickup_city, partnership.pickup_state, partnership.pickup_zipcode,
+        pickup.starttime, pickup.endtime";
 
-$from = "{local_equipment_vccsubmission} vs
-        LEFT JOIN {user} u ON vs.userid = u.id
-        LEFT JOIN {local_equipment_partnership} p ON vs.partnershipid = p.id
-        LEFT JOIN {local_equipment_pickup} pu ON vs.pickupid = pu.id";
+$from = "{local_equipment_vccsubmission} vccsubmission
+        LEFT JOIN {user} user ON vccsubmission.userid = user.id
+        LEFT JOIN {local_equipment_partnership} partnership ON vccsubmission.partnershipid = partnership.id
+        LEFT JOIN {local_equipment_pickup} pickup ON vccsubmission.pickupid = pickup.id";
 $where = "1=1";
 $params = [];
 
 if ($table->get_sql_sort()) {
     $sort = $table->get_sql_sort();
 } else {
-    $sort = 'vs.timecreated DESC';
+    $sort = 'vccsubmission.timecreated DESC';
 }
 
 $submissions = $DB->get_records_sql("SELECT $select FROM $from WHERE $where ORDER BY $sort", $params);
@@ -125,7 +132,7 @@ $submissions = $DB->get_records_sql("SELECT $select FROM $from WHERE $where ORDE
 foreach ($submissions as $submission) {
 }
 
-$formattedpickuptimes = ['0' => get_string('contactusforpickup', 'local_equipment')];
+$formattedpickuplocation = get_string('contactusforpickup', 'local_equipment');
 
 foreach ($submissions as $submission) {
     $pickup_extrainstructions = $submission->pickup_extrainstructions;
@@ -181,17 +188,22 @@ foreach ($submissions as $submission) {
 
     $row = [];
     // $row[] = $submission->id;
+    $row[] = userdate($submission->timecreated);
     $row[] = $submission->parent_firstname;
     $row[] = $submission->parent_lastname;
     $row[] = $submission->parent_email;
     $row[] = $submission->parent_phone2;
     // $row[] = fullname($DB->get_record('user', ['id' => $submission->userid]));
-    $row[] = $DB->get_field('local_equipment_partnership', 'name', ['id' => $submission->partnershipid]);
+    $row[] = $submission->partnership_name;
     $row[] = $formattedpickuplocation;
     $row[] = local_equipment_get_vcc_students($submission);
     // $row[] = $submission->confirmationid;
     $row[] = $submission->pickupmethod;
-    $row[] = userdate($submission->timecreated);
+    $row[] = $submission->pickuppersonname;
+    $row[] = $submission->pickuppersonphone;
+    $row[] = $submission->pickuppersondetails;
+    $row[] = $submission->usernotes;
+    $row[] = $submission->adminnotes;
 
     $actions = '';
     $viewurl = new moodle_url('/local/equipment/vccsubmissionview.php', ['id' => $submission->id]);

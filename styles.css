@@ -34,4 +34,8 @@
   margin-right: 5px;
 }
 
+.local-equipment-nowrap-header {
+  white-space: nowrap;
+}
+
 /*# sourceMappingURL=styles.css.map */
