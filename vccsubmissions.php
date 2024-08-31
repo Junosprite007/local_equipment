@@ -56,20 +56,24 @@ echo $OUTPUT->header();
 $table = new flexible_table('local-equipment-vccsubmissions');
 
 $columns = [
-    'id',
-    'user',
+    // 'id',
+    'parent_firstname',
+    'parent_lastname',
+    'parent_email',
+    'parent_phone2',
     'partnership',
     'pickup',
-    'confirmationid',
+    'students',
     'pickupmethod',
     'timecreated',
     'actions'
 ];
 $columns_nosort = [
-    'id',
-    'user',
+    // 'id',
+    // 'user',
     'partnership',
     'pickup',
+    'students',
     'actions'
 ];
 
@@ -92,8 +96,15 @@ $table->set_attribute('id', 'vccsubmissions');
 $table->set_attribute('class', 'admintable generaltable');
 $table->setup();
 
-$select = "vs.id, vs.userid, vs.partnershipid, vs.pickupid, vs.confirmationid, vs.pickupmethod, vs.timecreated";
-$from = "{local_equipment_vccsubmission} vs";
+$select = "vs.id, vs.userid, vs.partnershipid, vs.studentids, vs.pickupid, vs.pickupmethod, vs.timecreated,
+        u.firstname AS parent_firstname, u.lastname AS parent_lastname, u.email AS parent_email, u.phone2 AS parent_phone2,
+        p.pickup_extrainstructions, p.pickup_apartment, p.pickup_streetaddress, p.pickup_city, p.pickup_state, p.pickup_zipcode,
+        pu.starttime, pu.endtime";
+
+$from = "{local_equipment_vccsubmission} vs
+        LEFT JOIN {user} u ON vs.userid = u.id
+        LEFT JOIN {local_equipment_partnership} p ON vs.partnershipid = p.id
+        LEFT JOIN {local_equipment_pickup} pu ON vs.pickupid = pu.id";
 $where = "1=1";
 $params = [];
 
@@ -105,13 +116,80 @@ if ($table->get_sql_sort()) {
 
 $submissions = $DB->get_records_sql("SELECT $select FROM $from WHERE $where ORDER BY $sort", $params);
 
+// echo '<pre>';
+// var_dump($submissions);
+// echo '</pre>';
+// die();
+
+// This is the first pass where we merge records of parents who have multiple children and did not put that all on one form.
 foreach ($submissions as $submission) {
+}
+
+$formattedpickuptimes = ['0' => get_string('contactusforpickup', 'local_equipment')];
+
+foreach ($submissions as $submission) {
+    $pickup_extrainstructions = $submission->pickup_extrainstructions;
+
+    $datetime = userdate($submission->starttime, get_string('strftimedate', 'langconfig')) . ' ' .
+        userdate($submission->starttime, get_string('strftimetime', 'langconfig')) . ' - ' .
+        userdate($submission->endtime, get_string('strftimetime', 'langconfig'));
+
+    $pickup_pattern = '/#(.*?)#/';
+    $pickup_name = $submission->pickup_city;
+
+    if (
+        preg_match($pickup_pattern, $submission->pickup_extrainstructions, $matches)
+    ) {
+        $pickup_name = $submission->locationname = $matches[1];
+        $submission->pickup_extrainstructions = trim(preg_replace($pickup_pattern, '', $submission->pickup_extrainstructions, 1));
+    }
+    if ($submission->pickup_streetaddress) {
+        $formattedpickuplocation = "$pickup_name — $datetime — $submission->pickup_streetaddress, $submission->pickup_city, $submission->pickup_state $submission->pickup_zipcode";
+        // if (isset($pickuptimedata[$id])) {
+        //     $formattedpickuptimes[$id] = $pickuptimedata[$id][$i];
+        //     $i++;
+        // }
+    }
+
+    $submission->starttime = $submission->starttime ? userdate($submission->starttime) : get_string('contactusforpickup', 'local_equipment');
+    // $submission->studentids = json_decode($submission->studentids);
+
+    // $submission->pickupid != 0 ? $pickuptime = $DB->get_record('local_equipment_pickup', ['id' => $submission->pickupid]) : $pickuptime = get_string('contactusforpickup', 'local_equipment');
+
+    // $pickuptime = $DB->get_record('local_equipment_pickup', ['id' => $submission->pickupid]) ?? get_string('contactusforpickup', 'local_equipment');
+    // echo '<br />';
+    // echo '<br />';
+    // echo '<br />';
+    // echo '<pre>';
+    // var_dump($submission);
+    // echo '</pre>';
+    // die();
+
+
+
+    // id
+    // parent_name
+    // parent_email
+    // parent_phone
+    // partnership
+    // pickup
+    // students
+    // confirmationid
+    // pickupmethod
+    // timecreated
+    // actions
+
     $row = [];
-    $row[] = $submission->id;
-    $row[] = fullname($DB->get_record('user', ['id' => $submission->userid]));
+    // $row[] = $submission->id;
+    $row[] = $submission->parent_firstname;
+    $row[] = $submission->parent_lastname;
+    $row[] = $submission->parent_email;
+    $row[] = $submission->parent_phone2;
+    // $row[] = fullname($DB->get_record('user', ['id' => $submission->userid]));
     $row[] = $DB->get_field('local_equipment_partnership', 'name', ['id' => $submission->partnershipid]);
-    $row[] = userdate($DB->get_field('local_equipment_pickup', 'pickupdate', ['id' => $submission->pickupid]));
-    $row[] = $submission->confirmationid;
+    $row[] = $formattedpickuplocation;
+    $row[] = local_equipment_get_vcc_students($submission);
+    // $row[] = $submission->confirmationid;
     $row[] = $submission->pickupmethod;
     $row[] = userdate($submission->timecreated);
 

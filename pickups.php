@@ -32,7 +32,6 @@ require_once('./lib.php');
 global $DB;
 // Ensure only admins can access this page.
 admin_externalpage_setup('local_equipment_pickups');
-require_login();
 
 $context = context_system::instance();
 $url = new moodle_url('/local/equipment/pickups.php');

@@ -250,7 +250,7 @@ function local_equipment_user_selector_callback($id) {
  * Emails and phones will be taken from the user's profile, but admins will have the option to add phone numbers for them if they don't do it themselves.
  *
  * @param stdClass $partnership A database record that contains multiple types of addresses.
- * @return string True if the string exists, false otherwise.
+ * @return string Imploded array of all liaisons with there required information.
  */
 function local_equipment_get_liaison_info($partnership) {
     // $liaisons = user_get_users_by_id(json_decode($partnership->liaisonids));
@@ -1538,4 +1538,45 @@ function local_equipment_save_vcc_form($data) {
         $transaction->rollback($e);
         return false;
     }
+}
+
+
+/**
+ * Get all student names, emails, and contact phones for a given Virtual Course Consent submission.
+ *
+ * @param stdClass $submission A database record that contains 1 or more student ids.
+ * Not user ids from core user table, but from local_equipment_vccsubmission_student.
+ * @return string * @return string Imploded array of all liaisons with there required information.
+ */
+function local_equipment_get_vcc_students($submission) {
+    global $DB;
+
+    $studentids = json_decode($submission->studentids);
+    $students = $DB->get_records_list('local_equipment_vccsubmission_student', 'id', $studentids);
+    $studentinfo = [];
+    // echo '<pre>';
+    // var_dump($students);
+    // echo '</pre>';
+    // die();
+
+    foreach ($students as $student) {
+        $courseids = json_decode($student->courseids);
+        $courseinfo = [];
+        foreach ($courseids as $course) {
+            $course = get_course($course);
+
+            // $courseinfo[] = html_writer::tag('span', $course->shortname, ['class' => 'ms-2']);
+            $courseinfo[] = $course->shortname;
+        }
+
+        // $userlinks[] = $userlink;
+        $studentinfo[] = html_writer::tag('strong', $student->firstname . ' ' . $student->lastname);
+        if ($student->email) {
+            $studentinfo[] = html_writer::tag('span', $student->email);
+        }
+
+        $studentinfo[] = html_writer::tag('div', implode('<br />', $courseinfo), ['class' => 'ml-4']);
+    }
+
+    return implode('<br />', $studentinfo);
 }
