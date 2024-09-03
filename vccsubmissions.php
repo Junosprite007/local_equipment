@@ -38,7 +38,7 @@ $PAGE->set_heading(get_string('managevccsubmissions', 'local_equipment'));
 
 require_capability('local/equipment:managevccsubmissions', $context);
 
-// Handle delete action
+// Handle delete action.
 $delete = optional_param('delete', 0, PARAM_INT);
 if ($delete && confirm_sesskey()) {
     $DB->delete_records('local_equipment_vccsubmission', ['id' => $delete]);
@@ -48,11 +48,7 @@ if ($delete && confirm_sesskey()) {
 
 echo $OUTPUT->header();
 
-// Add VCC submission button
-// $addurl = new moodle_url('/local/equipment/vccsubmissionform.php');
-// echo $OUTPUT->single_button($addurl, get_string('addvccsubmission', 'local_equipment'), 'get');
-
-// Set up the table
+// Set up the table.
 $table = new flexible_table('local-equipment-vccsubmissions');
 
 $columns = [
@@ -64,12 +60,6 @@ $columns = [
     'partnership_name',
     'students',
     'parent_mailing_address',
-    // 'parent_mailing_streetaddress',
-    // 'parent_mailing_apartment',
-    // 'parent_mailing_city',
-    // 'parent_mailing_state',
-    // // 'parent_mailing_country',
-    // 'parent_mailing_zipcode',
     'parent_mailing_extrainstructions',
     'pickup',
     'pickupmethod',
@@ -82,12 +72,6 @@ $columns = [
 ];
 $columns_nosort = [
     'parent_mailing_address',
-    // 'parent_mailing_streetaddress',
-    // 'parent_mailing_apartment',
-    // 'parent_mailing_city',
-    // 'parent_mailing_state',
-    // // 'parent_mailing_country',
-    // 'parent_mailing_zipcode',
     'parent_mailing_extrainstructions',
     'pickup',
     'students',
@@ -113,14 +97,10 @@ $table->column_class('partnership_name', $nowrap_cell);
 $table->column_class('parent_mailing_address', $nowrap_cell);
 $table->column_class('students', $nowrap_cell);
 $table->column_class('pickup', $nowrap_cell);
-// $table->column_class('pickuppersondetails', $minwidth_cell);
-// $table->column_class('usernotes', $minwidth_cell);
-// $table->column_class('adminnotes', $minwidth_cell);
 
 $table->define_baseurl($PAGE->url);
 $table->sortable(true, 'timecreated', SORT_DESC);
 foreach ($columns_nosort as $column) {
-    // $table->column_suppress($column);
     $table->no_sorting($column);
 }
 $table->collapsible(true);
@@ -161,43 +141,22 @@ $select = "parent.id, parent.userid, parent.mailing_extrainput AS parent_mailing
 $from = "{local_equipment_user} parent";
 $submissions_parentaddress = $DB->get_records_sql("SELECT $select FROM $from WHERE $where");
 
-// echo '<pre>';
-// var_dump($submissions);
-// echo '</pre>';
-// die();
-
 // This is the first pass where we merge records of parents who have multiple children and did not put that all on one form.
-
-
 $formattedpickuplocation = get_string('contactusforpickup', 'local_equipment');
 
 foreach ($submissions as $submission) {
     $submission->parent_mailing_address = '';
-    // $submission->parent_mailing_streetaddress = '';
-    // $submission->parent_mailing_apartment = '';
-    // $submission->parent_mailing_city = '';
-    // $submission->parent_mailing_state = '';
-    // $submission->parent_mailing_country = '';
-    // $submission->parent_mailing_zipcode = '';
     $submission->parent_mailing_extrainstructions = '';
 
     $break = false;
     foreach ($submissions_parentaddress as $parentuser) {
-        // echo '<pre>';
-        // var_dump($parentuser->parent_mailing_apartment);
-        // echo '</pre>';
         if ($parentuser->userid == $submission->userid) {
             if ($parentuser->parent_mailing_apartment) {
                 $submission->parent_mailing_address = $parentuser->parent_mailing_streetaddress . ', ' . get_string('apt', 'local_equipment') . ' ' . $parentuser->parent_mailing_apartment . ', ' . $parentuser->parent_mailing_city . ', ' . $parentuser->parent_mailing_state . ' ' . $parentuser->parent_mailing_zipcode;
             } else {
                 $submission->parent_mailing_address = "$parentuser->parent_mailing_streetaddress, $parentuser->parent_mailing_city, $parentuser->parent_mailing_state $parentuser->parent_mailing_zipcode";
             }
-            // $submission->parent_mailing_streetaddress = $parentuser->parent_mailing_streetaddress;
-            // $submission->parent_mailing_apartment = $parentuser->parent_mailing_apartment;
-            // $submission->parent_mailing_city = $parentuser->parent_mailing_city;
-            // $submission->parent_mailing_state = $parentuser->parent_mailing_state;
-            // // $submission->parent_mailing_country = $parentuser->parent_mailing_country;
-            // $submission->parent_mailing_zipcode = $parentuser->parent_mailing_zipcode;
+
             $submission->parent_mailing_extrainstructions = $parentuser->parent_mailing_extrainstructions;
             $break = true;
         }
@@ -223,87 +182,32 @@ foreach ($submissions as $submission) {
     }
     if ($submission->pickup_streetaddress) {
         $formattedpickuplocation = "$pickup_name — $datetime — $submission->pickup_streetaddress, $submission->pickup_city, $submission->pickup_state $submission->pickup_zipcode";
-        // if (isset($pickuptimedata[$id])) {
-        //     $formattedpickuptimes[$id] = $pickuptimedata[$id][$i];
-        //     $i++;
-        // }
     }
 
     $submission->starttime = $submission->starttime ? userdate($submission->starttime) : get_string('contactusforpickup', 'local_equipment');
-    // $submission->studentids = json_decode($submission->studentids);
-
-    // $submission->pickupid != 0 ? $pickuptime = $DB->get_record('local_equipment_pickup', ['id' => $submission->pickupid]) : $pickuptime = get_string('contactusforpickup', 'local_equipment');
-
-    // $pickuptime = $DB->get_record('local_equipment_pickup', ['id' => $submission->pickupid]) ?? get_string('contactusforpickup', 'local_equipment');
-    // echo '<br />';
-    // echo '<br />';
-    // echo '<br />';
-    // echo '<pre>';
-    // var_dump($submission);
-    // echo '</pre>';
-    // die();
-
-
-
-    // id
-    // parent_name
-    // parent_email
-    // parent_phone
-    // partnership
-    // pickup
-    // students
-    // confirmationid
-    // pickupmethod
-    // timecreated
-    // actions
-
     $minwidth_cell = 'local-equipment-minwidth-cell';
-
-    $row = [];
-    // $row[] = $submission->id;
-    $row[] = userdate($submission->timecreated, get_string('strftimedatetimeshort', 'langconfig'));
-    $row[] = $submission->parent_firstname;
-    $row[] = $submission->parent_lastname;
-    $row[] = $submission->parent_email;
-    $row[] = $submission->parent_phone2;
-    // $row[] = fullname($DB->get_record('user', ['id' => $submission->userid]));
-    $row[] = $submission->partnership_name;
-    $row[] = local_equipment_get_vcc_students($submission);
-
-    $row[] = $submission->parent_mailing_address;
-    // $row[] = $submission->parent_mailing_streetaddress;
-    // $row[] = $submission->parent_mailing_apartment;
-    // $row[] = $submission->parent_mailing_city;
-    // $row[] = $submission->parent_mailing_state;
-    // // $row[] = $submission->parent_mailing_country;
-    // $row[] = $submission->parent_mailing_zipcode;
-    $row[] = $submission->parent_mailing_extrainstructions;
-
-    $row[] = $formattedpickuplocation;
-    // $row[] = $submission->confirmationid;
-    $row[] = $submission->pickupmethod;
-    $row[] = $submission->pickuppersonname;
-    $row[] = $submission->pickuppersonphone;
-    // $row[] = html_writer::tag('div', $submission->pickuppersondetails, ['class' => $minwidth_cell]);
-    // $row[] = html_writer::tag('div', $submission->usernotes, ['class' => $minwidth_cell]);
-    // $row[] = html_writer::tag('div', $submission->adminnotes, ['class' => $minwidth_cell]);
-    $row[] = $submission->pickuppersondetails;
-    $row[] = $submission->usernotes;
-    $row[] = $submission->adminnotes;
-
     $actions = '';
     $viewurl = new moodle_url('/local/equipment/vccsubmissionview.php', ['id' => $submission->id]);
     $editurl = new moodle_url('/local/equipment/vccsubmissionform.php', ['id' => $submission->id]);
     $deleteurl = new moodle_url($PAGE->url, ['delete' => $submission->id, 'sesskey' => sesskey()]);
 
-    // $actions .= $OUTPUT->action_icon($viewurl, new pix_icon('i/search', get_string('view')));
-    // $actions .= $OUTPUT->action_icon($editurl, new pix_icon('t/edit', get_string('edit')));
-    // $actions .= $OUTPUT->action_icon(
-    //     $deleteurl,
-    //     new pix_icon('t/delete', get_string('delete')),
-    //     new confirm_action(get_string('confirmdeletevccsubmission', 'local_equipment'))
-    // );
-
+    $row = [];
+    $row[] = userdate($submission->timecreated, get_string('strftimedatetimeshort', 'langconfig'));
+    $row[] = $submission->parent_firstname;
+    $row[] = $submission->parent_lastname;
+    $row[] = $submission->parent_email;
+    $row[] = $submission->parent_phone2;
+    $row[] = $submission->partnership_name;
+    $row[] = local_equipment_get_vcc_students($submission);
+    $row[] = $submission->parent_mailing_address;
+    $row[] = $submission->parent_mailing_extrainstructions;
+    $row[] = $formattedpickuplocation;
+    $row[] = $submission->pickupmethod;
+    $row[] = $submission->pickuppersonname;
+    $row[] = $submission->pickuppersonphone;
+    $row[] = $submission->pickuppersondetails;
+    $row[] = $submission->usernotes;
+    $row[] = $submission->adminnotes;
     $row[] = $actions;
 
     $table->add_data($row);

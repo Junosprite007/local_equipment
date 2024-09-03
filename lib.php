@@ -1216,138 +1216,16 @@ function local_equipment_generate_student_email($parentemail, $studentfirstname)
 }
 
 /**
- * Saves a consent form.
+ * Saves a consent form. This fuction is not currently used.
  *
  * @param object $data The consent form data.
  * @return bool True if the consent form is successfully saved, false otherwise.
  */
 function local_equipment_save_vcc_form($data) {
     global $DB, $USER;
-    // $DB->set_field()
 
-    // Start transaction
+    // Start transaction.
     $transaction = $DB->start_delegated_transaction();
-
-    echo '<br />';
-    echo '<br />';
-    echo '<br />';
-    echo '<pre>';
-    var_dump($data);
-    echo '</pre>';
-    die();
-
-    // Here's what the data object looks like:
-    // object(stdClass)#705 (24) {
-    //     ["firstname"]=>
-    //     string(6) "Joshua"
-    //     ["lastname"]=>
-    //     string(5) "Kirby"
-    //     ["phone"]=>
-    //     string(10) "6164465848"
-    //     ["mailing_streetaddress"]=>
-    //     string(14) "126 12th Ave E"
-    //     ["mailing_apartment"]=>
-    //     string(0) ""
-    //     ["mailing_city"]=>
-    //     string(7) "Seattle"
-    //     ["mailing_state"]=>
-    //     string(2) "WA"
-    //     ["mailing_country"]=>
-    //     string(3) "USA"
-    //     ["mailing_zipcode"]=>
-    //     string(10) "98102-5804"
-    //     ["partnership"]=>
-    //     string(2) "62"
-    //     ["course_attributes"]=>
-    //     string(53) "{"multiple":true,"size":10,"class":"student-courses"}"
-    //     ["selectedcourses"]=>
-    //     string(85) "{"0":["526"],"1":["526","529"],"2":["536","540"],"3":["526","529"],"4":["526","529"]}"
-    //     ["students"]=>
-    //     int(5)
-    //     ["student_firstname"]=>
-    //     array(5) {
-    //         [0]=>
-    //         string(6) "Emylye"
-    //         [1]=>
-    //         string(3) "Jim"
-    //         [2]=>
-    //         string(4) "Dawn"
-    //         [3]=>
-    //         string(4) "Adam"
-    //         [4]=>
-    //         string(5) "Molly"
-    //     }
-    //     ["student_lastname"]=>
-    //     array(5) {
-    //         [0]=>
-    //         string(10) "Laperriere"
-    //         [1]=>
-    //         string(5) "Joyce"
-    //         [2]=>
-    //         string(8) "Frasieur"
-    //         [3]=>
-    //         string(10) "Laperriere"
-    //         [4]=>
-    //         string(10) "Laperriere"
-    //     }
-    //     ["student_email"]=>
-    //     array(5) {
-    //         [0]=>
-    //         string(26) "emylyelaparriere@gmail.com"
-    //         [1]=>
-    //         string(25) "papaloveslola@hotmail.com"
-    //         [2]=>
-    //         string(0) ""
-    //         [3]=>
-    //         string(26) "emylyelaparriere@gmail.com"
-    //         [4]=>
-    //         string(26) "emylyelaparriere@gmail.com"
-    //     }
-    //     ["student_dob"]=>
-    //     array(5) {
-    //         [0]=>
-    //         int(1724472000)
-    //         [1]=>
-    //         int(1724472000)
-    //         [2]=>
-    //         int(1724472000)
-    //         [3]=>
-    //         int(1724472000)
-    //         [4]=>
-    //         int(1724472000)
-    //     }
-    //     ["student_courses"]=>
-    //     array(5) {
-    //         [0]=>
-    //         array(0) {
-    //         }
-    //         [1]=>
-    //         array(0) {
-    //         }
-    //         [2]=>
-    //         array(0) {
-    //         }
-    //         [3]=>
-    //         array(0) {
-    //         }
-    //         [4]=>
-    //         array(0) {
-    //         }
-    //     }
-    //     ["pickuplocation"]=>
-    //     string(2) "20"
-    //     ["pickupmethod"]=>
-    //     string(4) "self"
-    //     ["usernotes"]=>
-    //     string(0) ""
-    //     ["agreement_11_option"]=>
-    //     string(5) "optin"
-    //     ["signature"]=>
-    //     string(4) "Josh"
-    //     ["submitbutton"]=>
-    //     string(12) "Save changes"
-    // }
-
 
     try {
         // Decode the selected courses into an stdClass object.
@@ -1416,29 +1294,7 @@ function local_equipment_save_vcc_form($data) {
 
         $parentrecord->timecreated = time();
 
-
-
-
-
-
-
-        // Insert student records
-
-        echo '<br />';
-        echo '<br />';
-        echo '<br />';
-        echo '<pre>';
-        // var_dump($data->selectedcourses);
-        var_dump($data);
-        // $toints = local_equipment_convert_array_values_to_int($decoded);
-        // var_dump($toints);
-        // var_dump(json_encode($toints));
-        echo '</pre>';
-
-
-        // ["students"] => int(5), represents the number of students.
-        // ["selectedcourses"] => string(85) "{"0":["526"],"1":["526","529"],"2":["536","540"],"3":["526","529"],"4":["526","529"]}"
-        //
+        // Insert student records.
 
         $studentids = [];
         for ($i = 0; $i < $data->students; $i++) {
@@ -1460,7 +1316,7 @@ function local_equipment_save_vcc_form($data) {
             // Make an array of student IDs for later use.
             $studentids[] = $studentrecord->id;
 
-            // Insert student course records
+            // Insert student course records.
             foreach ($selectedcourses as $courseid) {
                 $DB->insert_record('local_equipment_vccsubmission_student_course', [
                     'studentid' => $studentrecord->id,
@@ -1469,21 +1325,21 @@ function local_equipment_save_vcc_form($data) {
             }
         }
 
-        // Update vccsubmission with studentids
+        // Update vccsubmission with studentids.
         $DB->set_field('local_equipment_vccsubmission', 'studentids', json_encode($studentids), ['id' => $vccsubmission->id]);
         echo '<pre>';
         var_dump($selectedcourses);
         echo '</pre>';
         die();
 
-        // Save agreement records
+        // Save agreement records.
         $agreementids = [];
         foreach ($data->agreement_ids as $agreementid) {
             $agreementrecord = new stdClass();
             $agreementrecord->vccsubmissionid = $vccsubmission->id;
             $agreementrecord->agreementid = $agreementid;
 
-            // Check if this agreement has an opt-in/opt-out response
+            // Check if this agreement has an opt-in/opt-out response.
             $optionfield = 'agreement_' . $agreementid . '_option';
             if (isset($data->$optionfield)) {
                 $agreementrecord->optinout = ($data->$optionfield === 'optin') ? 1 : 2;
@@ -1495,10 +1351,10 @@ function local_equipment_save_vcc_form($data) {
             $agreementids[] = $agreementid;
         }
 
-        // Update vccsubmission with agreementids
+        // Update vccsubmission with agreementids.
         $DB->set_field('local_equipment_vccsubmission', 'agreementids', json_encode($agreementids), ['id' => $vccsubmission->id]);
 
-        // Update or insert local_equipment_user record
+        // Update or insert local_equipment_user record.
         $userrecord = $DB->get_record('local_equipment_user', ['userid' => $USER->id]);
         if (!$userrecord) {
             $userrecord = new stdClass();
@@ -1520,7 +1376,7 @@ function local_equipment_save_vcc_form($data) {
             $userrecord->id = $DB->insert_record('local_equipment_user', $userrecord);
         }
 
-        // Append new vccsubmission id to user's vccsubmissionids
+        // Append new vccsubmission id to user's vccsubmissionids.
         $vccsubmissionids = json_decode($userrecord->vccsubmissionids) ?: [];
         $vccsubmissionids[] = $vccsubmission->id;
         $DB->set_field(
@@ -1530,7 +1386,7 @@ function local_equipment_save_vcc_form($data) {
             ['id' => $userrecord->id]
         );
 
-        // Commit transaction
+        // Commit transaction.
         $transaction->allow_commit();
 
         return $vccsubmission->id;
@@ -1554,22 +1410,15 @@ function local_equipment_get_vcc_students($submission) {
     $studentids = json_decode($submission->studentids);
     $students = $DB->get_records_list('local_equipment_vccsubmission_student', 'id', $studentids);
     $studentinfo = [];
-    // echo '<pre>';
-    // var_dump($students);
-    // echo '</pre>';
-    // die();
 
     foreach ($students as $student) {
         $courseids = json_decode($student->courseids);
         $courseinfo = [];
         foreach ($courseids as $course) {
             $course = get_course($course);
-
-            // $courseinfo[] = html_writer::tag('span', $course->shortname, ['class' => 'ms-2']);
             $courseinfo[] = $course->shortname;
         }
 
-        // $userlinks[] = $userlink;
         $studentinfo[] = html_writer::tag('strong', $student->firstname . ' ' . $student->lastname);
         if ($student->email) {
             $studentinfo[] = html_writer::tag('span', $student->email);
