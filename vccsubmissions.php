@@ -62,8 +62,16 @@ $columns = [
     'parent_email',
     'parent_phone2',
     'partnership_name',
-    'pickup',
     'students',
+    'parent_mailing_address',
+    // 'parent_mailing_streetaddress',
+    // 'parent_mailing_apartment',
+    // 'parent_mailing_city',
+    // 'parent_mailing_state',
+    // // 'parent_mailing_country',
+    // 'parent_mailing_zipcode',
+    'parent_mailing_extrainstructions',
+    'pickup',
     'pickupmethod',
     'pickuppersonname',
     'pickuppersonphone',
@@ -73,6 +81,14 @@ $columns = [
     'actions'
 ];
 $columns_nosort = [
+    'parent_mailing_address',
+    // 'parent_mailing_streetaddress',
+    // 'parent_mailing_apartment',
+    // 'parent_mailing_city',
+    // 'parent_mailing_state',
+    // // 'parent_mailing_country',
+    // 'parent_mailing_zipcode',
+    'parent_mailing_extrainstructions',
     'pickup',
     'students',
     'actions'
@@ -93,8 +109,10 @@ foreach ($columns as $column) {
 }
 
 $table->column_class('timecreated', $nowrap_cell);
-$table->column_class('pickup', $nowrap_cell);
+$table->column_class('partnership_name', $nowrap_cell);
+$table->column_class('parent_mailing_address', $nowrap_cell);
 $table->column_class('students', $nowrap_cell);
+$table->column_class('pickup', $nowrap_cell);
 // $table->column_class('pickuppersondetails', $minwidth_cell);
 // $table->column_class('usernotes', $minwidth_cell);
 // $table->column_class('adminnotes', $minwidth_cell);
@@ -116,7 +134,8 @@ $select = "vccsubmission.id, vccsubmission.userid, vccsubmission.partnershipid, 
         partnership.name AS partnership_name, partnership.pickup_extrainstructions, partnership.pickup_apartment, partnership.pickup_streetaddress, partnership.pickup_city, partnership.pickup_state, partnership.pickup_zipcode,
         pickup.starttime, pickup.endtime";
 
-$from = "{local_equipment_vccsubmission} vccsubmission
+$from =
+    "{local_equipment_vccsubmission} vccsubmission
         LEFT JOIN {user} user ON vccsubmission.userid = user.id
         LEFT JOIN {local_equipment_partnership} partnership ON vccsubmission.partnershipid = partnership.id
         LEFT JOIN {local_equipment_pickup} pickup ON vccsubmission.pickupid = pickup.id";
@@ -128,8 +147,19 @@ if ($table->get_sql_sort()) {
 } else {
     $sort = 'vccsubmission.timecreated DESC';
 }
-
 $submissions = $DB->get_records_sql("SELECT $select FROM $from WHERE $where ORDER BY $sort", $params);
+
+$select = "parent.id, parent.userid, parent.mailing_extrainput AS parent_mailing_extrainput,
+        parent.mailing_streetaddress AS parent_mailing_streetaddress,
+        parent.mailing_apartment AS parent_mailing_apartment,
+        parent.mailing_city AS parent_mailing_city,
+        parent.mailing_state AS parent_mailing_state,
+        parent.mailing_country AS parent_mailing_country,
+        parent.mailing_zipcode AS parent_mailing_zipcode,
+        parent.mailing_extrainstructions AS parent_mailing_extrainstructions";
+
+$from = "{local_equipment_user} parent";
+$submissions_parentaddress = $DB->get_records_sql("SELECT $select FROM $from WHERE $where");
 
 // echo '<pre>';
 // var_dump($submissions);
@@ -137,12 +167,45 @@ $submissions = $DB->get_records_sql("SELECT $select FROM $from WHERE $where ORDE
 // die();
 
 // This is the first pass where we merge records of parents who have multiple children and did not put that all on one form.
-foreach ($submissions as $submission) {
-}
+
 
 $formattedpickuplocation = get_string('contactusforpickup', 'local_equipment');
 
 foreach ($submissions as $submission) {
+    $submission->parent_mailing_address = '';
+    // $submission->parent_mailing_streetaddress = '';
+    // $submission->parent_mailing_apartment = '';
+    // $submission->parent_mailing_city = '';
+    // $submission->parent_mailing_state = '';
+    // $submission->parent_mailing_country = '';
+    // $submission->parent_mailing_zipcode = '';
+    $submission->parent_mailing_extrainstructions = '';
+
+    $break = false;
+    foreach ($submissions_parentaddress as $parentuser) {
+        // echo '<pre>';
+        // var_dump($parentuser->parent_mailing_apartment);
+        // echo '</pre>';
+        if ($parentuser->userid == $submission->userid) {
+            if ($parentuser->parent_mailing_apartment) {
+                $submission->parent_mailing_address = $parentuser->parent_mailing_streetaddress . ', ' . get_string('apt', 'local_equipment') . ' ' . $parentuser->parent_mailing_apartment . ', ' . $parentuser->parent_mailing_city . ', ' . $parentuser->parent_mailing_state . ' ' . $parentuser->parent_mailing_zipcode;
+            } else {
+                $submission->parent_mailing_address = "$parentuser->parent_mailing_streetaddress, $parentuser->parent_mailing_city, $parentuser->parent_mailing_state $parentuser->parent_mailing_zipcode";
+            }
+            // $submission->parent_mailing_streetaddress = $parentuser->parent_mailing_streetaddress;
+            // $submission->parent_mailing_apartment = $parentuser->parent_mailing_apartment;
+            // $submission->parent_mailing_city = $parentuser->parent_mailing_city;
+            // $submission->parent_mailing_state = $parentuser->parent_mailing_state;
+            // // $submission->parent_mailing_country = $parentuser->parent_mailing_country;
+            // $submission->parent_mailing_zipcode = $parentuser->parent_mailing_zipcode;
+            $submission->parent_mailing_extrainstructions = $parentuser->parent_mailing_extrainstructions;
+            $break = true;
+        }
+        if ($break) {
+            break;
+        }
+    }
+
     $pickup_extrainstructions = $submission->pickup_extrainstructions;
 
     $datetime = userdate($submission->starttime, get_string('strftimedate', 'langconfig')) . ' ' .
@@ -198,15 +261,25 @@ foreach ($submissions as $submission) {
 
     $row = [];
     // $row[] = $submission->id;
-    $row[] = userdate($submission->timecreated);
+    $row[] = userdate($submission->timecreated, get_string('strftimedatetimeshort', 'langconfig'));
     $row[] = $submission->parent_firstname;
     $row[] = $submission->parent_lastname;
     $row[] = $submission->parent_email;
     $row[] = $submission->parent_phone2;
     // $row[] = fullname($DB->get_record('user', ['id' => $submission->userid]));
     $row[] = $submission->partnership_name;
-    $row[] = $formattedpickuplocation;
     $row[] = local_equipment_get_vcc_students($submission);
+
+    $row[] = $submission->parent_mailing_address;
+    // $row[] = $submission->parent_mailing_streetaddress;
+    // $row[] = $submission->parent_mailing_apartment;
+    // $row[] = $submission->parent_mailing_city;
+    // $row[] = $submission->parent_mailing_state;
+    // // $row[] = $submission->parent_mailing_country;
+    // $row[] = $submission->parent_mailing_zipcode;
+    $row[] = $submission->parent_mailing_extrainstructions;
+
+    $row[] = $formattedpickuplocation;
     // $row[] = $submission->confirmationid;
     $row[] = $submission->pickupmethod;
     $row[] = $submission->pickuppersonname;
