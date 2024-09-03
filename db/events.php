@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other meta-data are defined here.
+ * The log in observer for the Equipment plugin.
  *
  * @package     local_equipment
  * @copyright   2024 onward Joshua Kirby <josh@funlearningcompany.com>
@@ -25,8 +25,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_equipment';
-$plugin->release = '0.1.0';
-$plugin->version = 2024090304;
-$plugin->requires = 2024042201;
-$plugin->maturity = MATURITY_STABLE;
+$observers = [
+    [
+        'eventname' => '\core\event\user_loggedin',
+        'callback' => 'local_equipment_user_verify_phone_number',
+        'includefile' => '/local/equipment/lib.php',
+        'internal' => false,
+    ],
+];

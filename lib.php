@@ -1429,3 +1429,22 @@ function local_equipment_get_vcc_students($submission) {
 
     return implode('<br />', $studentinfo);
 }
+
+
+/**
+ * Observer function for the user_loggedin event.
+ *
+ * @param \core\event\user_loggedin $event The event.
+ */
+function local_equipment_user_verify_phone_number(\core\event\user_loggedin $event) {
+    global $USER, $SESSION;
+
+    // Check if the notification has already been shown in this session
+    if (empty($SESSION->local_equipment_shown)) {
+        $message = get_string('welcomemessage', 'local_equipment', $USER->firstname);
+        \core\notification::add($message, \core\output\notification::NOTIFY_INFO);
+
+        // Set a flag to avoid showing the message multiple times in the same session
+        $SESSION->local_equipment_shown = true;
+    }
+}
