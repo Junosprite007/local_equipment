@@ -352,17 +352,17 @@ $string['wecurrentlyonlyacceptcertainnumbers'] = 'We currently only accept {$a} 
 $string['strftimedate'] = '%B %d, %Y';
 $string['strftimedate'] = '%d %B %Y';
 $string['strfdaymonthdateyear'] = '%A, %B %d, %Y';
-
+$string['strftime24date_mdy'] = '%H:%M, %b %d %Y';
 
 $string['strftimedatemonthabbr'] = '%d %b %Y';
 $string['strftimedatemonthtimeshort'] = '%d %b %Y, %I:%M';
-$string['strftimedatefullshort'] = '%d/%m/%y';
+$string['strftimedatefullshort'] = '%m/%d/%y';
 $string['strftimedateshort'] = '%d %B';
 $string['strftimedateshortmonthabbr'] = '%d %b';
 $string['strftimedatetime'] = '%d %B %Y, %I:%M %p';
 $string['strftimedatetimeaccurate'] = '%d %B %Y, %I:%M:%S %p';
-$string['strftimedatetimeshort'] = '%d/%m/%y, %H:%M';
-$string['strftimedatetimeshortaccurate'] = '%d/%m/%y, %H:%M:%S';
+$string['strftimedatetimeshort'] = '%m/%d/%y, %H:%M';
+$string['strftimedatetimeshortaccurate'] = '%m/%d/%y, %H:%M:%S';
 $string['strftimedaydate'] = '%A, %d %B %Y';
 $string['strftimedaydatetime'] = '%A, %d %B %Y, %I:%M %p';
 $string['strftimedayshort'] = '%A, %d %B';

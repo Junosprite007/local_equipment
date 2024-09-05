@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 $observers = [
     [
         'eventname' => '\core\event\user_loggedin',
-        'callback' => 'local_equipment_user_verify_phone_number',
+        'callback' => 'local_equipment_vcc_phone_verified',
         'includefile' => '/local/equipment/lib.php',
         'internal' => false,
     ],

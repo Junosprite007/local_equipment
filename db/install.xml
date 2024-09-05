@@ -195,6 +195,34 @@
                 <FIELD NAME="agreementids" TYPE="text" NOTNULL="false"/>
                 <FIELD NAME="confirmationid" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="A confirmation id, which should just be a hash of this table's 'id' field. This is intended for easy and secure lookups."/>
                 <FIELD NAME="confirmationexpired" TYPE="int" LENGTH="1" NOTNULL="false" DEFAULT="0" COMMENT="ID of the selected pickup time. 0 = no, 1 = yes"/>
+                <FIELD NAME="email" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="0" COMMENT="The email that the user entered when filling out the form."/>
+                <FIELD NAME="email_confirmed" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Whether or not email is confirmed. 1 = Confirmed; 0 = Not confirmed"/>
+                <FIELD NAME="firstname" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="0" COMMENT="The first name that the user entered when filling out this form."/>
+                <FIELD NAME="lastname" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="0" COMMENT="The last name that the user entered when filling out this form."/>
+                <FIELD NAME="phone" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="0" COMMENT="The mobile phone that the user entered when filling out this form."/>
+                <FIELD NAME="phone_confirmed" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Whether or not phone is confirmed. 1 = Confirmed; 0 = Not confirmed"/>
+                <FIELD NAME="partnership_name" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="0" COMMENT="The partnership the user selected when filling out this form."/>
+                <!-- Mailing address -->
+                <FIELD NAME="mailing_extrainput" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="mailing_streetaddress" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+                <FIELD NAME="mailing_apartment" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="mailing_city" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+                <FIELD NAME="mailing_state" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+                <FIELD NAME="mailing_country" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+                <FIELD NAME="mailing_zipcode" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+                <FIELD NAME="mailing_extrainstructions" TYPE="text" NOTNULL="false"/>
+                <!-- Billing address -->
+                <FIELD NAME="billing_extrainput" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="billing_sameasmailing" TYPE="int" LENGTH="1" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="billing_streetaddress" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="billing_apartment" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="billing_city" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="billing_state" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="billing_country" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="billing_zipcode" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="billing_extrainstructions" TYPE="text" NOTNULL="false"/>
+                <FIELD NAME="pickup_locationtime" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="The partnership's pickup location and time that the user selected when filling out this form."/>
+                <FIELD NAME="electronicsignature" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="The full name that the user typed when filling out this form. First and last name should match the 'firstname' and 'lastname' field entries in the same row, if everything went correctly."/>
                 <FIELD NAME="pickupmethod" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Method of equipment pickup"/>
                 <FIELD NAME="pickuppersonname" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Name of the person picking up the equipment (if different from user)"/>
                 <FIELD NAME="pickuppersonphone" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Phone number of the person picking up"/>

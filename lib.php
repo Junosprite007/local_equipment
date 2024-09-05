@@ -1436,8 +1436,25 @@ function local_equipment_get_vcc_students($submission) {
  *
  * @param \core\event\user_loggedin $event The event.
  */
-function local_equipment_user_verify_phone_number(\core\event\user_loggedin $event) {
+function local_equipment_vcc_phone_verified(\core\event\user_loggedin $event) {
     global $USER, $SESSION;
+
+    $sixmonthsago = time() - (YEARSECS / 2);
+    // $uservcc = $DB->get_record('local_equipment_user', ['userid' => $USER->id, 'timecreated' =>]);
+
+    $phone1 = $USER->phone1;
+    $phone2 = $USER->phone2;
+    $vccphone = '';
+
+    if (!$phone1 && !$phone2) {
+        // User has no phone numbers on their profile.
+        $message = get_string('musthaveaphoneonrecord', 'local_equipment');
+    }
+
+    // if ()
+
+    // var_dump($phone1, $phone2);
+    // die();
 
     // Check if the notification has already been shown in this session
     if (empty($SESSION->local_equipment_shown)) {

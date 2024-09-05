@@ -612,5 +612,46 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024082505, 'local', 'equipment');
     }
 
+    if ($oldversion < 2024090500) {
+        $table = new xmldb_table('local_equipment_vccsubmission');
+        $fields = [];
+
+        $fields[] = new xmldb_field('email', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, '0', 'confirmationexpired');
+        $fields[] = new xmldb_field('email_confirmed', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'email');
+        $fields[] = new xmldb_field('firstname', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, '0', 'email_confirmed');
+        $fields[] = new xmldb_field('lastname', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, '0', 'firstname');
+        $fields[] = new xmldb_field('phone', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, '0', 'lastname');
+        $fields[] = new xmldb_field('phone_confirmed', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'phone');
+        $fields[] = new xmldb_field('partnership_name', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, '0', 'phone_confirmed');
+        $fields[] = new xmldb_field('mailing_extrainput', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'partnership_name');
+        $fields[] = new xmldb_field('mailing_streetaddress', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, '0', 'mailing_extrainput');
+        $fields[] = new xmldb_field('mailing_apartment', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, '0', 'mailing_streetaddress');
+        $fields[] = new xmldb_field('mailing_city', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, '0', 'mailing_apartment');
+        $fields[] = new xmldb_field('mailing_state', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, '0', 'mailing_city');
+        $fields[] = new xmldb_field('mailing_country', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, '0', 'mailing_state');
+        $fields[] = new xmldb_field('mailing_zipcode', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, '0', 'mailing_country');
+        $fields[] = new xmldb_field('mailing_extrainstructions', XMLDB_TYPE_TEXT, null, null, null, null, null, 'mailing_zipcode');
+        $fields[] = new xmldb_field('billing_extrainput', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'mailing_extrainstructions');
+        $fields[] = new xmldb_field('billing_sameasmailing', XMLDB_TYPE_INTEGER, '1', null, null, null, null, 'billing_extrainput');
+        $fields[] = new xmldb_field('billing_streetaddress', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'billing_sameasmailing');
+        $fields[] = new xmldb_field('billing_apartment', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'billing_streetaddress');
+        $fields[] = new xmldb_field('billing_city', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'billing_apartment');
+        $fields[] = new xmldb_field('billing_state', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'billing_city');
+        $fields[] = new xmldb_field('billing_country', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'billing_state');
+        $fields[] = new xmldb_field('billing_zipcode', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'billing_country');
+        $fields[] = new xmldb_field('billing_extrainstructions', XMLDB_TYPE_TEXT, null, null, null, null, null, 'billing_zipcode');
+        $fields[] = new xmldb_field('pickup_locationtime', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, '0', 'billing_extrainstructions');
+        $fields[] = new xmldb_field('electronicsignature', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, '0', 'pickup_locationtime');
+
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+
+        // Equipment savepoint reached.
+        upgrade_plugin_savepoint(true, 2024090500, 'local', 'equipment');
+    }
+
     return true;
 }

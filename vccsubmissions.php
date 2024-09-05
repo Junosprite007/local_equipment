@@ -165,21 +165,26 @@ foreach ($submissions as $submission) {
         }
     }
 
-    $pickup_extrainstructions = $submission->pickup_extrainstructions;
+    // $pickup_extrainstructions = $submission->pickup_extrainstructions ?? '';
 
     $datetime = userdate($submission->starttime, get_string('strftimedate', 'langconfig')) . ' ' .
         userdate($submission->starttime, get_string('strftimetime', 'langconfig')) . ' - ' .
         userdate($submission->endtime, get_string('strftimetime', 'langconfig'));
 
-    $pickup_pattern = '/#(.*?)#/';
+    $pickup_pattern = '/#(.*?)#/' ?? '';
     $pickup_name = $submission->pickup_city;
 
-    if (
-        preg_match($pickup_pattern, $submission->pickup_extrainstructions, $matches)
-    ) {
+    if (!empty($submission->pickup_extrainstructions) && preg_match($pickup_pattern, $submission->pickup_extrainstructions, $matches)) {
         $pickup_name = $submission->locationname = $matches[1];
         $submission->pickup_extrainstructions = trim(preg_replace($pickup_pattern, '', $submission->pickup_extrainstructions, 1));
     }
+
+    // if (
+    //     preg_match($pickup_pattern, $submission->pickup_extrainstructions, $matches)
+    // ) {
+    //     $pickup_name = $submission->locationname = $matches[1];
+    //     $submission->pickup_extrainstructions = trim(preg_replace($pickup_pattern, '', $submission->pickup_extrainstructions, 1));
+    // }
     if ($submission->pickup_streetaddress) {
         $formattedpickuplocation = "$pickup_name — $datetime — $submission->pickup_streetaddress, $submission->pickup_city, $submission->pickup_state $submission->pickup_zipcode";
     }
@@ -192,7 +197,7 @@ foreach ($submissions as $submission) {
     $deleteurl = new moodle_url($PAGE->url, ['delete' => $submission->id, 'sesskey' => sesskey()]);
 
     $row = [];
-    $row[] = userdate($submission->timecreated, get_string('strftimedatetimeshort', 'langconfig'));
+    $row[] = userdate($submission->timecreated, get_string('strftime24date_mdy', 'local_equipment'));
     $row[] = $submission->parent_firstname;
     $row[] = $submission->parent_lastname;
     $row[] = $submission->parent_email;

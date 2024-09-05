@@ -230,3 +230,50 @@ i=0    id_0
 i=1    id_1
 i=2    id_2
 
+
+
+## New fields to add to the local_equipment_vccsubmission table.
+
+### User personal info
+email
+email_confirmed (not gonna use this for now)
+firstname
+lastname
+phone
+phone_confirmed
+partnership_name
+
+
+### Mailing address
+mailing_extrainput
+mailing_streetaddress
+mailing_apartment
+mailing_city
+mailing_state
+mailing_country
+mailing_zipcode
+mailing_extrainstructions
+
+
+### Billing
+billing_extrainput
+billing_sameasmailing
+billing_streetaddress
+billing_apartment
+billing_city
+billing_state
+billing_country
+billing_zipcode
+billing_extrainstructions
+
+
+### Pickup info
+pickup_locationtime
+
+### Agreement info
+electronicsignature
+
+/Volumes/Extreme_SSD/Fun_Learning_Company/website/Development/site_backups/flip.funlearningco.com/2024-09-05-10h52m56s
+2024-09-05-10h52m56s
+docker exec -it flip_db /bin/bash
+mysqldump -u flipuser -pXrLAve7NgaSNnapv9gKHSLeZ3pke4w8UNAb6MWkep3CE8LaDaruU6g989HF9ZL4X flip_prod_db mdl_local_equipment_vccsubmission > /opt/backups/flip_db/2024-09-05-10h52m56s/local_equipment_vccsubmission.sql
