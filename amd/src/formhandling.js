@@ -130,6 +130,29 @@ const updateTrashIcons = (name, type) => {
     }
 };
 
+
+/**
+ * Enhance multi-select fields to allow selection without CTRL key.
+ */
+const enhanceMultiSelects = () => {
+    Log.debug('Enhancing multi-select fields');
+    $('select[multiple]').each((index, element) => {
+        $(element)
+            .on('mousedown', (e) => {
+                e.preventDefault();
+
+                const option = $(e.target).closest('option');
+                if (option.length) {
+                    option.prop('selected', !option.prop('selected'));
+                    $(element).trigger('change');
+                }
+            })
+            .on('mousemove', (e) => {
+                e.preventDefault();
+            });
+    });
+};
+
 /**
  * Set up real-time header updates for student names.
  * @param {string} name The name of the fieldset.
@@ -226,6 +249,7 @@ export const setupFieldsetNameUpdates = (name, type) => {
         updateFieldsetHeader(fieldset);
     };
 
+
     // Initial setup for existing student fields
     document
         .querySelectorAll(`fieldset[id^="id_${name}${type}_"]`)
@@ -251,6 +275,10 @@ export const setupFieldsetNameUpdates = (name, type) => {
         childList: true,
         subtree: true,
     });
+};
+
+export const setupMultiSelects = () => {
+    enhanceMultiSelects();
 };
 
 

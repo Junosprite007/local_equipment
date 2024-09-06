@@ -35,6 +35,7 @@ $PAGE->set_title(get_string('consentformtitle', 'local_equipment'));
 $PAGE->set_heading(get_string('consentformheading', 'local_equipment'));
 $PAGE->requires->js_call_amd('local_equipment/vccsubmission_addstudents_form', 'init');
 $PAGE->requires->js_call_amd('local_equipment/formhandling', 'setupFieldsetNameUpdates', ['student', 'header']);
+$PAGE->requires->js_call_amd('local_equipment/formhandling', 'setupMultiSelects');
 
 // In the script where you handle the form submission and display
 $mform = new \local_equipment\form\vccsubmission_form();
@@ -73,20 +74,53 @@ if ($mform->is_cancelled()) {
 
         // Insert the consent form submission into the database.
 
+        // Fetch the partnership name
+        $pickupmethod = '';
+        $partnership = $DB->get_record('local_equipment_partnership', ['id' => $data->partnership], 'name');
+        $pickupmethods = local_equipment_get_pickup_methods();
+
+        switch ($data->pickupmethod) {
+            case 'self':
+                $pickupmethod = $pickupmethods['self'];
+                break;
+            case 'other':
+                $pickupmethod = $pickupmethods['other'];
+                break;
+            case 'ship':
+                $pickupmethod = $pickupmethods['ship'];
+                break;
+            case 'purchased':
+                $pickupmethod = $pickupmethods['purchased'];
+                break;
+            default:
+                $pickupmethod = '';
+                break;
+        }
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<pre>';
+        // var_dump($partnership);
+        // echo '</pre>';
+        // // die();
+
         // Make record updates for Moodle Core user.
-        $userrecord = new stdClass();
-        $userrecord->id = $USER->id;
-        $userrecord->firstname = $data->firstname;
-        $userrecord->lastname = $data->lastname;
-        $userrecord->phone2 = $data->phone;
+        // $userrecord = new stdClass();
+        // $userrecord->id = $USER->id;
+        // $userrecord->firstname = $data->firstname;
+        // $userrecord->lastname = $data->lastname;
+        // $userrecord->phone2 = $data->phone;
+
+        // Actually don't.
+
 
         // Update core user record.
-        $DB->update_record('user', $userrecord);
+        // $DB->update_record('user', $userrecord);
 
         // Insert extended user (parent) record.
         $parentrecord = new stdClass();
         // Foriegn keys first.
-        $parentrecord->userid = $userrecord->id;
+        $parentrecord->userid = $USER->id;
         $parentrecord->partnershipid = $data->partnership;
         $parentrecord->pickupid = $data->pickup;
         $parentrecord->studentids = '[]';
@@ -127,7 +161,35 @@ if ($mform->is_cancelled()) {
         $vccsubmission->agreementids = '[]';
         $vccsubmission->confirmationid = md5(uniqid(rand(), true)); // Generate a unique confirmation ID
         $vccsubmission->confirmationexpired = 0;
-        $vccsubmission->pickupmethod = $data->pickupmethod;
+
+        $vccsubmission->email = $data->email;
+        $vccsubmission->firstname = $data->firstname;
+        $vccsubmission->lastname = $data->lastname;
+        $phoneobj = local_equipment_parse_phone_number($data->phone);
+        $vccsubmission->phone = $phoneobj->phone;
+        $vccsubmission->partnership_name = $partnership->name;
+
+        // Mailing address-related fields. Must be renamed in the database schema.
+        $vccsubmission->mailing_extrainput = $data->mailing_extrainput ?? '';
+        $vccsubmission->mailing_streetaddress = $data->mailing_streetaddress;
+        $vccsubmission->mailing_apartment = $data->mailing_apartment ?? '';
+        $vccsubmission->mailing_city = $data->mailing_city;
+        $vccsubmission->mailing_state = $data->mailing_state;
+        $vccsubmission->mailing_country = $data->mailing_country;
+        $vccsubmission->mailing_zipcode = $data->mailing_zipcode;
+        $vccsubmission->mailing_extrainsructions = $data->mailing_extrainsructions ?? '';
+        // Billing address-related fields. Must be renamed in the database schema.
+        $vccsubmission->billing_extrainput = $data->billing_extrainput ?? '';
+        $vccsubmission->billing_sameasmailing = $data->billing_sameasmailing ?? 0;
+        $vccsubmission->billing_streetaddress = $data->billing_streetaddress ?? '';
+        $vccsubmission->billing_apartment = $data->billing_apartment ?? '';
+        $vccsubmission->billing_city = $data->billing_city ?? '';
+        $vccsubmission->billing_state = $data->billing_state ?? '';
+        $vccsubmission->billing_country = $data->billing_country ?? '';
+        $vccsubmission->billing_zipcode = $data->billing_zipcode ?? '';
+        $vccsubmission->billing_extrainsructions = $data->billing_extrainsructions ?? '';
+        $vccsubmission->electronicsignature = $data->signature;
+        $vccsubmission->pickupmethod = $pickupmethod;
         $vccsubmission->pickuppersonname = $data->pickuppersonname ?? '';
         $vccsubmission->pickuppersonphone = $data->pickuppersonphone ?? '';
         $vccsubmission->pickuppersondetails = $data->pickuppersondetails ?? '';
@@ -227,12 +289,17 @@ if ($mform->is_cancelled()) {
         // Only get this submission's agreementids.
         $vccsubmission->agreementids = json_encode($agreementids);
 
+        $DB->update_record('local_equipment_vccsubmission', $vccsubmission);
 
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<br />';
         // echo '<pre>';
-        // echo '$parentrecord->vccsubmissionids: ';
-        // var_dump($parentrecord->vccsubmissionids);
+        // echo '$vccsubmission: ';
+        // var_dump($vccsubmission);
         // // var_dump($vccsubmissionids_string);
         // echo '</pre>';
+        // die();
         // echo '<pre>';
         // echo '$parentrecord->studentids: ';
         // var_dump($parentrecord->studentids);
@@ -251,8 +318,7 @@ if ($mform->is_cancelled()) {
 
 
         // update all the records.
-        $DB->update_record('local_equipment_user', $parentrecord);
-        $DB->update_record('local_equipment_vccsubmission', $vccsubmission);
+        // $DB->update_record('local_equipment_user', $parentrecord);
 
 
         // Commit transaction

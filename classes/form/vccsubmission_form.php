@@ -74,7 +74,9 @@ class vccsubmission_form extends \moodleform {
 
 
         // Parent-specific input fields.
-        $mform->addElement('static', 'email', get_string('email'), $USER->email);
+        $mform->addElement('static', 'email_display', get_string('email'), $USER->email);
+        $mform->addElement('hidden', 'email', $USER->email);
+        $mform->setType('email', PARAM_EMAIL);
 
         // Enter first name.
         $mform->addElement('text', 'firstname', get_string('firstname'), ['value' => $USER->firstname ?? '']);
@@ -90,7 +92,8 @@ class vccsubmission_form extends \moodleform {
         if (empty($phone)) {
             $phone = '';
         } else {
-            $phone = local_equipment_parse_phone_number($phone);
+            $phoneobj = local_equipment_parse_phone_number($phone);
+            $phone = $phoneobj->phone;
             $phone = local_equipment_format_phone_number($phone);
         }
 
@@ -121,6 +124,11 @@ class vccsubmission_form extends \moodleform {
             ['data-partnerships' => json_encode($partnershipdata)]
         );
         $mform->addRule('partnership', get_string('required'), 'required', null, 'client');
+
+        // // We'll need to access the partnership name in the submission form.
+        // // We want to save all the information as the parent saw it when submitting the form.
+        // $mform->addElement('hidden', 'partnership_name', '');
+        // $mform->setType('partnership_name', PARAM_TEXT);
 
 
         // Mailing address-related fields.
@@ -207,7 +215,7 @@ class vccsubmission_form extends \moodleform {
         $repeatoptions['student_firstname']['rule'] = 'required';
         $repeatoptions['student_lastname']['rule'] = 'required';
         $repeatoptions['student_dob']['rule'] = 'required';
-        $repeatoptions['student_courses']['rule'] = 'required';
+        // $repeatoptions['student_courses']['rule'] = 'required';
 
         // Set other options.
         $repeatoptions['studentheader']['expanded'] = false; // This is not working for some reason.
@@ -269,12 +277,7 @@ class vccsubmission_form extends \moodleform {
         $mform->addRule('pickup', get_string('required'), 'required', null, 'client');
         $mform->setDefault('pickup', '-1');
 
-        $pickupmethods = array(
-            'self' => get_string('pickupself', 'local_equipment'),
-            'other' => get_string('pickupother', 'local_equipment'),
-            'ship' => get_string('pickupship', 'local_equipment'),
-            'purchased' => get_string('pickuppurchased', 'local_equipment')
-        );
+        $pickupmethods = local_equipment_get_pickup_methods();
         $mform->addElement('select', 'pickupmethod', get_string('pickupmethod', 'local_equipment'), $pickupmethods);
         $mform->setType('pickupmethod', PARAM_TEXT);
         $mform->addRule('pickupmethod', get_string('required'), 'required', null, 'client');
@@ -352,6 +355,28 @@ class vccsubmission_form extends \moodleform {
         // Validate the signature
         $firstname = $data['firstname'];
         $lastname = $data['lastname'];
+        $phone = $data['phone'];
+        $phoneobj = local_equipment_parse_phone_number($phone);
+        // echo '<pre>';
+        // var_dump($phoneobj);
+        // echo '</pre>';
+        if (!empty($phoneobj->errors)) {
+            $errors['phoneobj'] = get_string('invalidphonenumber', 'local_equipment');
+            foreach ($phoneobj->errors as $error) {
+                \core\notification::error($error);
+            }
+        } else {
+            unset($errors['phoneobj']);
+        }
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<br />';
+        // // var_dump('$phone as it was entered: ' . $phone);
+        // // var_dump('$phone after parsing: ');
+
+        // die();
+
+
         $signature = $data['signature'];
         $sigpattern  = '/^\s*' . preg_quote($firstname, '/') . '\s*.+\s*' . preg_quote($lastname, '/') . '\s*$/i';
         $sigmatched = preg_match($sigpattern, $signature);
@@ -403,9 +428,7 @@ class vccsubmission_form extends \moodleform {
         }
 
         if (!empty($customerrors)) {
-            echo '<br />';
-            echo '<br />';
-            echo '<br />';
+            echo '<br /><br /><br />';
             array_unshift($customerrors, new notification(get_string('formdidnotsubmit', 'local_equipment'), notification::NOTIFY_ERROR));
             foreach ($customerrors as $error) {
                 echo $OUTPUT->render($error);

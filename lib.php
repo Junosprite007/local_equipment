@@ -266,11 +266,13 @@ function local_equipment_get_liaison_info($partnership) {
         $phone = '';
         // These if/elseif statements seem inefficient, but I wanted to add a <br /> tag only if a phone number exists, so if you can find a better way, feel free.
         if ($user->phone1) {
-            $phone = local_equipment_parse_phone_number($user->phone1);
+            $phoneobj = local_equipment_parse_phone_number($user->phone1);
+            $phone = $phoneobj->phone;
             $phone = local_equipment_format_phone_number($phone);
             $phone .= ' <br />';
         } else if ($user->phone2) {
-            $phone = local_equipment_parse_phone_number($user->phone2);
+            $phoneobj = local_equipment_parse_phone_number($user->phone2);
+            $phone = $phoneobj->phone;
             $phone = local_equipment_format_phone_number($phone);
             $phone .= ' <br />';
         }
@@ -306,11 +308,13 @@ function local_equipment_get_coordinator_info($id) {
     $phone = '';
     // These if/elseif statements seem inefficient, but I wanted to add a <br /> tag only if a phone number exists, so if you can find a better way, feel free.
     if ($user->phone1) {
-        $phone = local_equipment_parse_phone_number($user->phone1);
+        $phoneobj = local_equipment_parse_phone_number($user->phone1);
+        $phone = $phoneobj->phone;
         $phone = local_equipment_format_phone_number($phone);
         $phone .= ' <br />';
     } else if ($user->phone2) {
-        $phone = local_equipment_parse_phone_number($user->phone2);
+        $phoneobj = local_equipment_parse_phone_number($user->phone2);
+        $phone = $phoneobj->phone;
         $phone = local_equipment_format_phone_number($phone);
         $phone .= ' <br />';
     }
@@ -402,39 +406,50 @@ function local_equipment_get_courses($partnership) {
  *
  * @param string $phonenumber The mobile phone number to validate.
  * @param string $country The country code to use.
- * @return string
+ * @return object $parsedphonedata An object containing the parsed phone number, may or may not return errors.
  */
 function local_equipment_parse_phone_number($phonenumber, $country = 'US') {
+    $parsedphoneobj = new stdClass();
+    $parsedphoneobj->errors = [];
+
     // Remove commonly used characters from the phone number that are not numbers: ().-+ and the white space char.
-    $parsedphonenumber = preg_replace("/[\(\)\-\s+\.]/", "", $phonenumber);
+    $parsedphoneobj->phone = preg_replace("/[\(\)\-\s+\.]/", "", $phonenumber);
 
     try {
-        if (!ctype_digit($parsedphonenumber)) {
+        if (!ctype_digit($parsedphoneobj->phone)) {
             throw new \Exception(get_string('invalidphonenumberformat', 'local_equipment') . get_string('wecurrentlyonlyacceptusphonenumbers', 'local_equipment'));
         }
     } catch (\Exception $e) {
-        return $e->getMessage();
+        $parsedphoneobj->errors[] = $e->getMessage();
     }
 
     switch ($country) {
         case 'US':
             // Check if the number is not empty, if it only contains digits, and if it is a valid 10 or 11 digit United States phone number.
             try {
-                if ((strlen($parsedphonenumber) == 10) && $phonenumber[0] != 1) {
-                    $parsedphonenumber = "+1" . $parsedphonenumber;
-                } else if ((strlen($parsedphonenumber) == 11) && $phonenumber[0] == 1) {
-                    $parsedphonenumber = "+" . $parsedphonenumber;
+                if ((strlen($parsedphoneobj->phone) == 10) && $parsedphoneobj->phone[0] != 1) {
+                    $parsedphoneobj->phone = "+1" . $parsedphoneobj->phone;
+                } else if ((strlen($parsedphoneobj->phone) == 11) && $parsedphoneobj->phone[0] == 1) {
+                    $parsedphoneobj->phone = "+" . $parsedphoneobj->phone;
                 } else {
                     throw new \Exception(new lang_string('invalidphonenumber', 'local_equipment') . ' ' . new lang_string('wecurrentlyonlyacceptusphonenumbers', 'local_equipment'));
                 }
             } catch (\Exception $e) {
-                return $e->getMessage();
+                $parsedphoneobj->errors[] = $e->getMessage();
             }
             break;
         default:
-            return new lang_string('notasupportedcountry', 'local_equipment', $country);
+            $parsedphoneobj->errors[] = new lang_string('notasupportedcountry', 'local_equipment', $country);
     }
-    return $parsedphonenumber;
+
+    // if (empty($parsedphoneobj->errors)) {
+    // } else {
+    //     foreach ($parsedphoneobj->errors as $error) {
+    //         \core\notification::add($error, \core\output\notification::NOTIFY_ERROR);
+    //     }
+    // }
+    return $parsedphoneobj;
+
 }
 
 /**
@@ -1464,4 +1479,17 @@ function local_equipment_vcc_phone_verified(\core\event\user_loggedin $event) {
         // Set a flag to avoid showing the message multiple times in the same session
         $SESSION->local_equipment_shown = true;
     }
+}
+
+/**
+ * Get all current equipment pickup methods for parents to select.
+ * @return array An associative array of pickup methods.
+ */
+function local_equipment_get_pickup_methods() {
+    return [
+        'self' => get_string('pickupself', 'local_equipment'),
+        'other' => get_string('pickupother', 'local_equipment'),
+        'ship' => get_string('pickupship', 'local_equipment'),
+        'purchased' => get_string('pickuppurchased', 'local_equipment')
+    ];
 }
