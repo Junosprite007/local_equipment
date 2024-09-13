@@ -290,6 +290,7 @@ $string['needsatleastonecourseselected'] = '{$a} needs at least one course selec
 $string['needstobeatleastsixmonthsold'] = '{$a} needs to be at least 6 months old.';
 $string['manageconsentforms'] = 'Manage consent forms';
 $string['managevccsubmissions'] = 'Manage VCC Submissions';
+$string['musthaveaphoneonrecord'] = 'Must have a phone number on record.';
 $string['optin'] = 'Opt in!';
 $string['optout'] = 'Opt out.';
 $string['usernotes'] = 'Additional notes';
