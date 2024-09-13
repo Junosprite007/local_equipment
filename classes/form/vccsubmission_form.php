@@ -74,26 +74,15 @@ class vccsubmission_form extends \moodleform {
 
         $mform->addElement('html', '<div class="alert alert-warning" role="alert">' . get_string('attnparents_useyouraccount', 'local_equipment') . '</div>');
 
-        // $mform->addElement('html', '</div>');
-
-        // $mform->addElement('html', '<div class="text-dark pt-4">');
-        // Parent-specific input fields.
-        // $mform->addElement('static', 'email_display', get_string('email'), $USER->email);
+        // Profile email.
         $mform->addElement('text', 'email', get_string('email'), ['value' => $USER->email, 'disabled' => 'disabled']);
-        // $mform->addElement('hidden', 'email', $USER->email);
         $mform->setType('email', PARAM_EMAIL);
-        // $mform->disabledIf('email', '');
 
-        // Enter first name.
-        // $mform->addElement('static', 'firstname_display', get_string('firstname'), $USER->firstname ?? '');
-        // $mform->addElement('hidden', 'firstname', $USER->firstname);
+        // Profile first name.
         $mform->addElement('text', 'firstname', get_string('firstname'), ['value' => $USER->firstname, 'disabled' => 'disabled']);
         $mform->setType('firstname', PARAM_TEXT);
-        // $mform->disabledIf('firstname', 'email', 'eq', $USER->email);
 
-        // Enter last name.
-        // $mform->addElement('static', 'lastname_display', get_string('lastname'), $USER->lastname ?? '', ['class' => 'bg-light']);
-        // $mform->addElement('hidden', 'lastname', $USER->lastname);
+        // Profile last name.
         $mform->addElement('text', 'lastname', get_string('lastname'), ['value' => $USER->lastname, 'disabled' => 'disabled']);
         $mform->setType('lastname', PARAM_TEXT);
 
@@ -103,7 +92,6 @@ class vccsubmission_form extends \moodleform {
         $editprofilelink = \html_writer::link($editprofileurl, get_string('editmyprofile'));
 
         $mform->addElement('html', '<div class="mb-4 ml-4">' . new \lang_string('toeditprofile', 'local_equipment', $editprofilelink) . '</div>');
-        // $mform->addElement('html', '</div>');
 
         $phone = $USER->phone2 ?: $USER->phone1;
         if (empty($phone)) {
@@ -118,15 +106,7 @@ class vccsubmission_form extends \moodleform {
         $mform->addElement('text', 'phone', get_string('phone'), ['value' => $phone]);
         $mform->setType('phone', PARAM_TEXT);
         $mform->addRule('phone', get_string('required'), 'required', null, 'client');
-        // $mform->addRule('phone', get_string('invalidphonenumber', 'local_equipment'), 'regex', "/^(?:\+1\s?)?(\(?\d{3}\)?[\s.-]?)?\d{3}[\s.-]?\d{4}$/", 'client');
         $mform->addRule('phone', get_string('invalidusphonenumber', 'local_equipment'), 'regex', "/^\s*(1\d{10}|(?:\+1\s?)?(?:\(?\d{3}\)?[\s.-]?)?\d{3}[\s.-]?\d{4})\s*$/", 'client');
-
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<pre>';
-        // var_dump($mform->getRegisteredRules());
-        // echo '</pre>';
 
         // Select partnership.
         $partnershipdata = local_equipment_get_partnerships_with_courses();
@@ -395,9 +375,7 @@ class vccsubmission_form extends \moodleform {
 
         $phone = $data['phone'];
         $phoneobj = local_equipment_parse_phone_number($phone);
-        // echo '<pre>';
-        // var_dump($phoneobj);
-        // echo '</pre>';
+
         if (!empty($phoneobj->errors)) {
             $errors['phoneobj'] = get_string('invalidphonenumber', 'local_equipment');
             foreach ($phoneobj->errors as $error) {
@@ -406,14 +384,6 @@ class vccsubmission_form extends \moodleform {
         } else {
             unset($errors['phoneobj']);
         }
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<br />';
-        // // var_dump('$phone as it was entered: ' . $phone);
-        // // var_dump('$phone after parsing: ');
-
-        // die();
-
 
         $signature = $data['signature'];
         $sigpattern  = '/^\s*' . preg_quote($firstname, '/') . '\s*.+\s*' . preg_quote($lastname, '/') . '\s*$/i';
