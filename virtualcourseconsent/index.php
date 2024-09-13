@@ -37,6 +37,11 @@ $PAGE->requires->js_call_amd('local_equipment/vccsubmission_addstudents_form', '
 $PAGE->requires->js_call_amd('local_equipment/formhandling', 'setupFieldsetNameUpdates', ['student', 'header']);
 $PAGE->requires->js_call_amd('local_equipment/formhandling', 'setupMultiSelects');
 
+// Import the Select2 library for selecting multiple courses on mobile devices.
+$PAGE->requires->css(new moodle_url('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css'));
+// $PAGE->requires->js(new moodle_url('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js'));
+
+
 // In the script where you handle the form submission and display
 $mform = new \local_equipment\form\vccsubmission_form();
 

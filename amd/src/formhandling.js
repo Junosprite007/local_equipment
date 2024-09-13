@@ -24,7 +24,7 @@
 import $ from 'jquery';
 import { get_string as getString } from 'core/str';
 import Log from 'core/log';
-
+import { init as mobileCourseSelect } from './mobile_course_select';
 /**
  * Initialize the add partnerships form functionality.
  */
@@ -130,7 +130,6 @@ const updateTrashIcons = (name, type) => {
     }
 };
 
-
 /**
  * Enhance multi-select fields to allow selection without CTRL key.
  */
@@ -140,7 +139,6 @@ const enhanceMultiSelects = () => {
         $(element)
             .on('mousedown', (e) => {
                 e.preventDefault();
-
                 const option = $(e.target).closest('option');
                 if (option.length) {
                     option.prop('selected', !option.prop('selected'));
@@ -249,7 +247,6 @@ export const setupFieldsetNameUpdates = (name, type) => {
         updateFieldsetHeader(fieldset);
     };
 
-
     // Initial setup for existing student fields
     document
         .querySelectorAll(`fieldset[id^="id_${name}${type}_"]`)
@@ -278,88 +275,14 @@ export const setupFieldsetNameUpdates = (name, type) => {
 };
 
 export const setupMultiSelects = () => {
-    enhanceMultiSelects();
+    const isMobile = () => {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent
+        );
+    };
+    if (isMobile()) {
+        mobileCourseSelect();
+    } else {
+        enhanceMultiSelects();
+    }
 };
-
-
-// /**
-//  * Collapse all student fieldsets.
-//  * @param {boolean} expanded Whether or not the fieldsets should be expanded.
-//  */
-
-// export const collapseNewStudentFieldset = () => {
-//     const fieldsets = document.querySelectorAll('fieldset[id^="id_studentheader_"]');
-//     const lastFieldset = fieldsets[fieldsets.length - 1];
-//     if (lastFieldset) {
-//         const container = lastFieldset.querySelector('.fcontainer');
-//         if (container) {
-//             container.classList.remove('show');
-//         }
-//         const toggleButton = lastFieldset.querySelector('.fheader');
-//         if (toggleButton) {
-//             toggleButton.setAttribute('aria-expanded', 'false');
-//         }
-//     }
-// };
-
-// /**
-//  * Set up real-time header updates for student names.
-//  * @param {string} name The name of the fieldset.
-//  * @param {string} type The type of element.
-//  */
-// export const setupFieldsetNameUpdates = (name, type) => {
-//     const updateHeader = (index) => {
-//         const firstNameInput = document.querySelector(
-//             `#id_${name}_firstname_${index}`
-//         );
-//         const header = document.querySelector(`#id_${name}${type}_${index} h3`);
-
-//         if (firstNameInput && header) {
-//             firstNameInput.addEventListener('input', (event) => {
-//                 const headerName = event.target.value.trim();
-//                 getString(
-//                     name + type,
-//                     'local_equipment',
-//                     headerName || index + 1
-//                 )
-//                     .then((str) => {
-//                         header.textContent = str;
-//                     })
-//                     .catch((error) => {
-//                         // eslint-disable-next-line no-console
-//                         console.error(`Error updating ${name} ${type}:`, error);
-//                         header.textContent = `Student ${index + 1}`;
-//                     });
-//             });
-//         }
-//     };
-
-//     // Initial setup for existing student fields
-//     document
-//         .querySelectorAll(`fieldset[id^="id_${name}${type}_"]`)
-//         .forEach((fieldset, index) => {
-//             updateHeader(index);
-//         });
-
-//     // Setup for dynamically added student fields
-//     const observer = new MutationObserver((mutations) => {
-//         mutations.forEach((mutation) => {
-//             if (mutation.type === 'childList') {
-//                 mutation.addedNodes.forEach((node) => {
-//                     if (
-//                         node.nodeType === Node.ELEMENT_NODE &&
-//                         node.matches(`fieldset[id^="id_${name}${type}_"]`)
-//                     ) {
-//                         const index = parseInt(node.id.split('_').pop(), 10);
-//                         updateHeader(index);
-//                     }
-//                 });
-//             }
-//         });
-//     });
-
-//     observer.observe(document.querySelector('form'), {
-//         childList: true,
-//         subtree: true,
-//     });
-// };

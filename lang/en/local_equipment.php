@@ -262,8 +262,6 @@ $string['viewmanageagreements'] = 'View/manage agreements';
 $string['version'] = 'Version';
 $string['wheneditinganexistingagreement'] = 'When editing an existing agreement, the start time must be moved to the current day or later.';
 
-
-
 // Virtual course consent form strings
 $string['a'] = '{$a}';
 $string['addnote'] = 'Add note';
@@ -272,6 +270,7 @@ $string['addvccsubmission'] = 'Add VCC Submission';
 $string['admin_notes'] = 'Admin notes';
 $string['adminnotes'] = 'Admin notes';
 $string['apt'] = 'Apt.';
+$string['attnparents_useyouraccount'] = 'ATTENTION, PARENTS! You must be logged into your own personal FLIP account to fill out this form.';
 $string['chooseoption'] = 'Choose an option';
 $string['confirmationid'] = 'Confirmation ID';
 $string['confirmdeletevccsubmission'] = 'Are you sure you want to delete this VCC submission?';
@@ -284,6 +283,7 @@ $string['electronicsignature'] = 'Electronic signature';
 $string['formdidnotsubmit'] = 'Form was not submitted! Please make sure you have filled out all required fields, then try submitting again.';
 $string['formsubmitted'] = 'Your {$a} form has been submitted successfully!';
 $string['id'] = 'ID';
+$string['inputmismatch'] = 'Input mismatch for {$a}. Make sure you\'re logged into the correct account or contact a system administrator for further assistance.';
 $string['invalidpartnership'] = 'Invalid partnership selected';
 $string['invalidpickuptime'] = 'Invalid pickup time selected';
 $string['needsatleastonecourseselected'] = '{$a} needs at least one course selected.';
@@ -337,6 +337,7 @@ $string['studentemailgenerated'] = 'Student email generated automatically';
 $string['studentheader'] = 'Student: {$a}';
 $string['students'] = 'Students';
 $string['timecreated'] = 'Time created';
+$string['toeditprofile'] = 'To edit your email or name, go to {$a}.';
 $string['user'] = 'User';
 $string['vccsubmissiondeleted'] = 'VCC submission deleted successfully';
 $string['viewnotes'] = 'View notes';

@@ -72,21 +72,38 @@ class vccsubmission_form extends \moodleform {
             }
         }
 
+        $mform->addElement('html', '<div class="alert alert-warning" role="alert">' . get_string('attnparents_useyouraccount', 'local_equipment') . '</div>');
 
+        // $mform->addElement('html', '</div>');
+
+        // $mform->addElement('html', '<div class="text-dark pt-4">');
         // Parent-specific input fields.
-        $mform->addElement('static', 'email_display', get_string('email'), $USER->email);
-        $mform->addElement('hidden', 'email', $USER->email);
+        // $mform->addElement('static', 'email_display', get_string('email'), $USER->email);
+        $mform->addElement('text', 'email', get_string('email'), ['value' => $USER->email, 'disabled' => 'disabled']);
+        // $mform->addElement('hidden', 'email', $USER->email);
         $mform->setType('email', PARAM_EMAIL);
+        // $mform->disabledIf('email', '');
 
         // Enter first name.
-        $mform->addElement('text', 'firstname', get_string('firstname'), ['value' => $USER->firstname ?? '']);
+        // $mform->addElement('static', 'firstname_display', get_string('firstname'), $USER->firstname ?? '');
+        // $mform->addElement('hidden', 'firstname', $USER->firstname);
+        $mform->addElement('text', 'firstname', get_string('firstname'), ['value' => $USER->firstname, 'disabled' => 'disabled']);
         $mform->setType('firstname', PARAM_TEXT);
-        $mform->addRule('firstname', get_string('required'), 'required', null, 'client');
+        // $mform->disabledIf('firstname', 'email', 'eq', $USER->email);
 
         // Enter last name.
-        $mform->addElement('text', 'lastname', get_string('lastname'), ['value' => $USER->lastname ?? '']);
+        // $mform->addElement('static', 'lastname_display', get_string('lastname'), $USER->lastname ?? '', ['class' => 'bg-light']);
+        // $mform->addElement('hidden', 'lastname', $USER->lastname);
+        $mform->addElement('text', 'lastname', get_string('lastname'), ['value' => $USER->lastname, 'disabled' => 'disabled']);
         $mform->setType('lastname', PARAM_TEXT);
-        $mform->addRule('lastname', get_string('required'), 'required', null, 'client');
+
+
+        $userid = $USER->id;
+        $editprofileurl = new \moodle_url('/user/edit.php', array('id' => $userid));
+        $editprofilelink = \html_writer::link($editprofileurl, get_string('editmyprofile'));
+
+        $mform->addElement('html', '<div class="mb-4 ml-4">' . new \lang_string('toeditprofile', 'local_equipment', $editprofilelink) . '</div>');
+        // $mform->addElement('html', '</div>');
 
         $phone = $USER->phone2 ?: $USER->phone1;
         if (empty($phone)) {
@@ -98,7 +115,6 @@ class vccsubmission_form extends \moodleform {
         }
 
         // Enter mobile phone.
-        $mform->addElement('html', '<div class="alert alert-warning" role="alert">' . get_string('wecurrentlyonlyacceptusphonenumbers', 'local_equipment') . '</div>');
         $mform->addElement('text', 'phone', get_string('phone'), ['value' => $phone]);
         $mform->setType('phone', PARAM_TEXT);
         $mform->addRule('phone', get_string('required'), 'required', null, 'client');
@@ -201,7 +217,7 @@ class vccsubmission_form extends \moodleform {
         $repeatarray['student_lastname'] = $mform->createElement('text', 'student_lastname', get_string('lastname'));
         $repeatarray['student_email'] = $mform->createElement('text', 'student_email', get_string('email'));
         $repeatarray['student_dob'] = $mform->createElement('date_selector', 'student_dob', get_string('dateofbirth', 'local_equipment'));
-        $repeatarray['student_courses'] = $mform->createElement('select', 'student_courses', get_string('selectcourses', 'local_equipment'), $coursesformatted_properlynamed, ['multiple' => true, 'size' => 10]);
+        $repeatarray['student_courses'] = $mform->createElement('select', 'student_courses', get_string('selectcourses', 'local_equipment'), $coursesformatted_properlynamed, ['multiple' => true, 'size' => 10, 'class' => 'custom-multiselect']);
 
         // Set types.
         $repeatoptions['students']['type'] = PARAM_INT;
@@ -348,13 +364,35 @@ class vccsubmission_form extends \moodleform {
     }
 
     public function validation($data, $files) {
-        global $OUTPUT;
+        global $OUTPUT, $USER;
         $errors = parent::validation($data, $files);
         $customerrors = [];
 
         // Validate the signature
+        $email = $data['email'];
         $firstname = $data['firstname'];
         $lastname = $data['lastname'];
+
+        // Email and first/last name validation only happens to prevent savvy people from submitting the form with another email or name.
+        if ($email != $USER->email) {
+            $errors['email_mismatch'] = get_string('inputmismatch', 'local_equipment', "'" . strtolower(get_string('email') . "'"));
+            $customerrors[] = new notification($errors['email_mismatch'], notification::NOTIFY_ERROR);
+        } else {
+            unset($errors['email_mismatch']);
+        }
+        if ($firstname != $USER->firstname) {
+            $errors['firstname_mismatch'] = get_string('inputmismatch', 'local_equipment', "'" . strtolower(get_string('firstname') . "'"));
+            $customerrors[] = new notification($errors['firstname_mismatch'], notification::NOTIFY_ERROR);
+        } else {
+            unset($errors['firstname_mismatch']);
+        }
+        if ($lastname != $USER->lastname) {
+            $errors['lastname_mismatch'] = get_string('inputmismatch', 'local_equipment', "'" . strtolower(get_string('lastname') . "'"));
+            $customerrors[] = new notification($errors['lastname_mismatch'], notification::NOTIFY_ERROR);
+        } else {
+            unset($errors['lastname_mismatch']);
+        }
+
         $phone = $data['phone'];
         $phoneobj = local_equipment_parse_phone_number($phone);
         // echo '<pre>';
