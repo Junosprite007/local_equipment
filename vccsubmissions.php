@@ -53,12 +53,12 @@ $table = new flexible_table('local-equipment-vccsubmissions');
 
 $columns = [
     'timecreated',
-    'parent_firstname',
-    'parent_lastname',
-    'parent_email',
-    'parent_phone2',
+    'u_firstname',
+    'u_lastname',
+    'u_email',
+    'u_phone2',
     'partnership_name',
-    'students',
+    'sub_students',
     'parent_mailing_address',
     'parent_mailing_extrainstructions',
     'pickup',
@@ -70,6 +70,31 @@ $columns = [
     'adminnotes',
     'actions'
 ];
+
+// $headers = array_map(function ($column) {
+//     return get_string($column, 'local_equipment');
+// }, $columns);
+
+$headers = [
+    get_string('timecreated'),
+    get_string('firstname'),
+    get_string('lastname'),
+    get_string('email'),
+    get_string('phone', 'local_equipment'),
+    get_string('partnership', 'local_equipment'),
+    get_string('students', 'local_equipment'),
+    get_string('mailingaddress', 'local_equipment'),
+    get_string('mailing_extrainstructions', 'local_equipment'),
+    get_string('pickup', 'local_equipment'),
+    get_string('pickupmethod', 'local_equipment'),
+    get_string('pickuppersonname', 'local_equipment'),
+    get_string('pickuppersonphone', 'local_equipment'),
+    get_string('pickuppersondetails', 'local_equipment'),
+    get_string('usernotes', 'local_equipment'),
+    get_string('adminnotes', 'local_equipment'),
+    get_string('actions', 'local_equipment')
+];
+
 $columns_nosort = [
     'parent_mailing_address',
     'parent_mailing_extrainstructions',
@@ -77,10 +102,6 @@ $columns_nosort = [
     'students',
     'actions'
 ];
-
-$headers = array_map(function ($column) {
-    return get_string($column, 'local_equipment');
-}, $columns);
 
 $table->define_columns($columns);
 $table->define_headers($headers);
@@ -109,55 +130,189 @@ $table->set_attribute('id', 'vccsubmissions');
 $table->set_attribute('class', 'admintable generaltable');
 $table->setup();
 
-$select = "vccsubmission.id, vccsubmission.userid, vccsubmission.partnershipid, vccsubmission.studentids, vccsubmission.pickupid, vccsubmission.pickupmethod, vccsubmission.pickuppersonname, vccsubmission.pickuppersonphone, vccsubmission.pickuppersondetails, vccsubmission.usernotes, vccsubmission.adminnotes, vccsubmission.timecreated,
-        user.firstname AS parent_firstname, user.lastname AS parent_lastname, user.email AS parent_email, user.phone2 AS parent_phone2,
-        partnership.name AS partnership_name, partnership.pickup_extrainstructions, partnership.pickup_apartment, partnership.pickup_streetaddress, partnership.pickup_city, partnership.pickup_state, partnership.pickup_zipcode,
-        pickup.starttime, pickup.endtime";
+$select =
+"
+        vccsubmission.id,
+        vccsubmission.userid,
+        vccsubmission.partnershipid,
+        vccsubmission.pickupid,
+        vccsubmission.studentids,
+        vccsubmission.agreementids,
+        vccsubmission.confirmationid,
+        vccsubmission.confirmationexpired,
+        vccsubmission.email,
+        vccsubmission.email_confirmed,
+        vccsubmission.firstname,
+        vccsubmission.lastname,
+        vccsubmission.phone,
+        vccsubmission.phone_confirmed,
+        vccsubmission.partnership_name,
+        vccsubmission.mailing_extrainput,
+        vccsubmission.mailing_streetaddress,
+        vccsubmission.mailing_apartment,
+        vccsubmission.mailing_city,
+        vccsubmission.mailing_state,
+        vccsubmission.mailing_country,
+        vccsubmission.mailing_zipcode,
+        vccsubmission.mailing_extrainstructions,
+        vccsubmission.billing_extrainput,
+        vccsubmission.billing_sameasmailing,
+        vccsubmission.billing_streetaddress,
+        vccsubmission.billing_apartment,
+        vccsubmission.billing_city,
+        vccsubmission.billing_state,
+        vccsubmission.billing_country,
+        vccsubmission.billing_zipcode,
+        vccsubmission.billing_extrainstructions,
+        vccsubmission.pickup_locationtime,
+        vccsubmission.electronicsignature,
+        vccsubmission.pickupmethod,
+        vccsubmission.pickuppersonname,
+        vccsubmission.pickuppersonphone,
+        vccsubmission.pickuppersondetails,
+        vccsubmission.usernotes,
+        vccsubmission.adminnotes,
+        vccsubmission.timecreated,
+        vccsubmission.timemodified,
+
+        u.id AS u_id,
+        u.firstname AS u_firstname,
+        u.lastname AS u_lastname,
+        u.email AS u_email,
+        u.phone1 AS u_phone1,
+        u.phone2 AS u_phone2,
+
+        partnership.name AS p_name,
+        partnership.pickup_extrainstructions,
+        partnership.pickup_apartment,
+        partnership.pickup_streetaddress,
+        partnership.pickup_city,
+        partnership.pickup_state,
+        partnership.pickup_zipcode,
+
+        pickup.starttime AS pickup_starttime,
+        pickup.endtime AS pickup_endtime
+";
 
 $from =
-    "{local_equipment_vccsubmission} vccsubmission
-        LEFT JOIN {user} user ON vccsubmission.userid = user.id
+"
+        {local_equipment_vccsubmission} vccsubmission
+        LEFT JOIN {user} u ON vccsubmission.userid = u.id
         LEFT JOIN {local_equipment_partnership} partnership ON vccsubmission.partnershipid = partnership.id
-        LEFT JOIN {local_equipment_pickup} pickup ON vccsubmission.pickupid = pickup.id";
+        LEFT JOIN {local_equipment_pickup} pickup ON vccsubmission.pickupid = pickup.id
+";
 $where = "1=1";
 $params = [];
 
 if ($table->get_sql_sort()) {
     $sort = $table->get_sql_sort();
 } else {
-    $sort = 'vccsubmission.timecreated DESC';
+    $sort = 'sub_timecreated DESC';
 }
 $submissions = $DB->get_records_sql("SELECT $select FROM $from WHERE $where ORDER BY $sort", $params);
 
-$select = "parent.id, parent.userid, parent.mailing_extrainput AS parent_mailing_extrainput,
-        parent.mailing_streetaddress AS parent_mailing_streetaddress,
-        parent.mailing_apartment AS parent_mailing_apartment,
-        parent.mailing_city AS parent_mailing_city,
-        parent.mailing_state AS parent_mailing_state,
-        parent.mailing_country AS parent_mailing_country,
-        parent.mailing_zipcode AS parent_mailing_zipcode,
-        parent.mailing_extrainstructions AS parent_mailing_extrainstructions";
+$select =
+"
+        user.id,
+        user.userid,
+        user.partnershipid,
+        user.studentids,
+        user.vccsubmissionids,
+        user.phoneverificationids,
+        user.mailing_extrainput,
+        user.mailing_streetaddress,
+        user.mailing_apartment,
+        user.mailing_city,
+        user.mailing_state,
+        user.mailing_country,
+        user.mailing_zipcode,
+        user.mailing_extrainstructions,
+        user.billing_extrainput,
+        user.billing_sameasmailing,
+        user.billing_streetaddress,
+        user.billing_apartment,
+        user.billing_city,
+        user.billing_state,
+        user.billing_country,
+        user.billing_zipcode,
+        user.billing_extrainstructions,
+        user.timecreated,
+        user.timemodified
+";
 
-$from = "{local_equipment_user} parent";
-$submissions_parentaddress = $DB->get_records_sql("SELECT $select FROM $from WHERE $where");
-
+$from = "{local_equipment_user} user";
+$local_equipment_user = $DB->get_records_sql("SELECT $select FROM $from WHERE $where");
 // This is the first pass where we merge records of parents who have multiple children and did not put that all on one form.
 $formattedpickuplocation = get_string('contactusforpickup', 'local_equipment');
 
 foreach ($submissions as $submission) {
+
     $submission->parent_mailing_address = '';
     $submission->parent_mailing_extrainstructions = '';
 
     $break = false;
-    foreach ($submissions_parentaddress as $parentuser) {
+    foreach ($local_equipment_user as $parentuser) {
+
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<pre>';
+        // var_dump($submission);
+        // echo '</pre>';
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<pre>';
+        // var_dump($parentuser);
+        // echo '</pre>';
+        // die();
         if ($parentuser->userid == $submission->userid) {
-            if ($parentuser->parent_mailing_apartment) {
-                $submission->parent_mailing_address = $parentuser->parent_mailing_streetaddress . ', ' . get_string('apt', 'local_equipment') . ' ' . $parentuser->parent_mailing_apartment . ', ' . $parentuser->parent_mailing_city . ', ' . $parentuser->parent_mailing_state . ' ' . $parentuser->parent_mailing_zipcode;
+            if ($parentuser->mailing_apartment) {
+                $submission->parent_mailing_address = $parentuser->mailing_streetaddress . ', ' . get_string('apt', 'local_equipment') . ' ' . $parentuser->mailing_apartment . ', ' . $parentuser->mailing_city . ', ' . $parentuser->mailing_state . ' ' . $parentuser->mailing_zipcode;
             } else {
-                $submission->parent_mailing_address = "$parentuser->parent_mailing_streetaddress, $parentuser->parent_mailing_city, $parentuser->parent_mailing_state $parentuser->parent_mailing_zipcode";
+                $submission->parent_mailing_address = "$parentuser->mailing_streetaddress, $parentuser->mailing_city, $parentuser->mailing_state $parentuser->mailing_zipcode";
             }
 
-            $submission->parent_mailing_extrainstructions = $parentuser->parent_mailing_extrainstructions;
+
+
+            // userdate($submission->timecreated, get_string('strftime24date_mdy', 'local_equipment'));
+            // $submission->firstname ?? $submission->u_firstname;
+            // $submission->lastname ?? $submission->u_lastname;
+            // $submission->email ?? $submission->u_email;
+            // $submission->phone ?? $submission->u_phone2 ?? $submission->u_phone1;
+            // $submission->partnership_name ?? $submission->p_name;
+            // local_equipment_get_vcc_students($submission);
+            // $submission->parent_mailing_address;
+            // $submission->parent_mailing_extrainstructions;
+            // $formattedpickuplocation;
+            // $submission->pickupmethod;
+            // $submission->pickuppersonname;
+            // $submission->pickuppersonphone;
+            // $submission->pickuppersondetails;
+            // $submission->usernotes;
+            // $submission->adminnotes;
+
+            // if ($submission->firstname == 0) {
+            //     $submission->firstname = $submission->u_firstname;
+            // }
+            // if ($submission->lastname == 0) {
+            //     $submission->lastname = $submission->u_lastname;
+            // }
+            // if ($submission->email == 0) {
+            //     $submission->email = $submission->u_email;
+            // }
+            // if ($submission->phone == 0) {
+            //     if ($submission->u_phone2) {
+            //         $submission->phone = $submission->u_phone2;
+            //     } else {
+            //         $submission->phone = $submission->u_phone1;
+            //     }
+            // }
+            // if ($submission->partnership_name == 0) {
+            //     $submission->partnership_name = $submission->p_name;
+            // }
+
+
+            $submission->parent_mailing_extrainstructions = $parentuser->mailing_extrainstructions;
             $break = true;
         }
         if ($break) {
@@ -167,9 +322,9 @@ foreach ($submissions as $submission) {
 
     // $pickup_extrainstructions = $submission->pickup_extrainstructions ?? '';
 
-    $datetime = userdate($submission->starttime, get_string('strftimedate', 'langconfig')) . ' ' .
-        userdate($submission->starttime, get_string('strftimetime', 'langconfig')) . ' - ' .
-        userdate($submission->endtime, get_string('strftimetime', 'langconfig'));
+    $datetime = userdate($submission->pickup_starttime, get_string('strftimedate', 'langconfig')) . ' ' .
+        userdate($submission->pickup_starttime, get_string('strftimetime', 'langconfig')) . ' - ' .
+        userdate($submission->pickup_endtime, get_string('strftimetime', 'langconfig'));
 
     $pickup_pattern = '/#(.*?)#/' ?? '';
     $pickup_name = $submission->pickup_city;
@@ -189,20 +344,22 @@ foreach ($submissions as $submission) {
         $formattedpickuplocation = "$pickup_name — $datetime — $submission->pickup_streetaddress, $submission->pickup_city, $submission->pickup_state $submission->pickup_zipcode";
     }
 
-    $submission->starttime = $submission->starttime ? userdate($submission->starttime) : get_string('contactusforpickup', 'local_equipment');
+
+    $submission->pickup_starttime = $submission->pickup_starttime ? userdate($submission->pickup_starttime) : get_string('contactusforpickup', 'local_equipment');
     $minwidth_cell = 'local-equipment-minwidth-cell';
     $actions = '';
     $viewurl = new moodle_url('/local/equipment/vccsubmissionview.php', ['id' => $submission->id]);
     $editurl = new moodle_url('/local/equipment/vccsubmissionform.php', ['id' => $submission->id]);
     $deleteurl = new moodle_url($PAGE->url, ['delete' => $submission->id, 'sesskey' => sesskey()]);
 
+    $submission->firstname = null;
     $row = [];
     $row[] = userdate($submission->timecreated, get_string('strftime24date_mdy', 'local_equipment'));
-    $row[] = $submission->parent_firstname;
-    $row[] = $submission->parent_lastname;
-    $row[] = $submission->parent_email;
-    $row[] = $submission->parent_phone2;
-    $row[] = $submission->partnership_name;
+    $row[] = $submission->firstname != 0 ? $submission->firstname : $submission->u_firstname;
+    $row[] = $submission->lastname != 0 ? $submission->lastname : $submission->u_lastname;
+    $row[] = $submission->email != 0 ? $submission->email : $submission->u_email;
+    $row[] = $submission->phone != 0 ? $submission->phone : ($submission->u_phone2 != '' ? $submission->u_phone2 : $submission->u_phone1);
+    $row[] = $submission->partnership_name != 0 ? $submission->partnership_name : $submission->p_name;
     $row[] = local_equipment_get_vcc_students($submission);
     $row[] = $submission->parent_mailing_address;
     $row[] = $submission->parent_mailing_extrainstructions;
