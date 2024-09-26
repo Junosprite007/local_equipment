@@ -131,7 +131,7 @@ $table->set_attribute('class', 'admintable generaltable');
 $table->setup();
 
 $select =
-"
+    "
         vccsubmission.id,
         vccsubmission.userid,
         vccsubmission.partnershipid,
@@ -195,7 +195,7 @@ $select =
 ";
 
 $from =
-"
+    "
         {local_equipment_vccsubmission} vccsubmission
         LEFT JOIN {user} u ON vccsubmission.userid = u.id
         LEFT JOIN {local_equipment_partnership} partnership ON vccsubmission.partnershipid = partnership.id
@@ -212,7 +212,7 @@ if ($table->get_sql_sort()) {
 $submissions = $DB->get_records_sql("SELECT $select FROM $from WHERE $where ORDER BY $sort", $params);
 
 $select =
-"
+    "
         user.id,
         user.userid,
         user.partnershipid,
@@ -243,7 +243,7 @@ $select =
 $from = "{local_equipment_user} user";
 $local_equipment_user = $DB->get_records_sql("SELECT $select FROM $from WHERE $where");
 // This is the first pass where we merge records of parents who have multiple children and did not put that all on one form.
-$formattedpickuplocation = get_string('contactusforpickup', 'local_equipment');
+$formattedpickuplocation = "";
 
 foreach ($submissions as $submission) {
 
@@ -325,6 +325,7 @@ foreach ($submissions as $submission) {
     $datetime = userdate($submission->pickup_starttime, get_string('strftimedate', 'langconfig')) . ' ' .
         userdate($submission->pickup_starttime, get_string('strftimetime', 'langconfig')) . ' - ' .
         userdate($submission->pickup_endtime, get_string('strftimetime', 'langconfig'));
+    $samestartend = $submission->pickup_starttime === $submission->pickup_endtime;
 
     $pickup_pattern = '/#(.*?)#/' ?? '';
     $pickup_name = $submission->pickup_city;
@@ -340,8 +341,10 @@ foreach ($submissions as $submission) {
     //     $pickup_name = $submission->locationname = $matches[1];
     //     $submission->pickup_extrainstructions = trim(preg_replace($pickup_pattern, '', $submission->pickup_extrainstructions, 1));
     // }
-    if ($submission->pickup_streetaddress) {
+    if ($submission->pickup_streetaddress && !$samestartend) {
         $formattedpickuplocation = "$pickup_name — $datetime — $submission->pickup_streetaddress, $submission->pickup_city, $submission->pickup_state $submission->pickup_zipcode";
+    } else {
+        $formattedpickuplocation = get_string('contactusforpickup', 'local_equipment');
     }
 
 

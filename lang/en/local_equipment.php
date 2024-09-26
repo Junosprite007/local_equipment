@@ -61,6 +61,7 @@ $string['billing_country'] = 'Country (billing)';
 $string['billingaddress'] = 'Billing address';
 $string['mailing_country'] = 'Country';
 $string['mailingaddress'] = 'Mailing address';
+$string['phonedoesnotexist'] = 'Phone number does not exist.';
 $string['physical_country'] = 'Country (physical)';
 $string['physicaladdress'] = 'Physical address';
 $string['pickup_country'] = 'Country (pickup)';
@@ -271,7 +272,7 @@ $string['addvccsubmission'] = 'Add VCC Submission';
 $string['admin_notes'] = 'Admin notes';
 $string['adminnotes'] = 'Admin notes';
 $string['apt'] = 'Apt.';
-$string['attnparents_useyouraccount'] = 'ATTENTION, PARENTS! You must be logged into your own personal FLIP account to fill out this form.';
+$string['attnparents_useyouraccount'] = 'ATTENTION, PARENTS! You must be logged into your own, personal FLIP account to fill out this form.';
 $string['chooseoption'] = 'Choose an option';
 $string['confirmationid'] = 'Confirmation ID';
 $string['confirmdeletevccsubmission'] = 'Are you sure you want to delete this VCC submission?';
@@ -292,6 +293,7 @@ $string['needstobeatleastsixmonthsold'] = '{$a} needs to be at least 6 months ol
 $string['manageconsentforms'] = 'Manage consent forms';
 $string['managevccsubmissions'] = 'Manage VCC Submissions';
 $string['musthaveaphoneonrecord'] = 'Must have a phone number on record.';
+$string['mustlogintoyourownaccount'] = 'You cannot fill out the {$a} form unless you are logged into your own, personal FLIP account.';
 $string['optin'] = 'Opt in!';
 $string['optout'] = 'Opt out.';
 $string['usernotes'] = 'Additional notes';
@@ -349,8 +351,112 @@ $string['virtualcourseconsentsubmission'] = 'Virtual course consent submission';
 $string['virtualcourseconsentsubmissions'] = 'Virtual course consent submissions';
 $string['youmustselectapartnership'] = 'You must select a partnership';
 $string['youmustselectatleastonecourse'] = 'You must select at least one course';
-
 $string['wecurrentlyonlyacceptcertainnumbers'] = 'We currently only accept {$a} phone numbers. You can use most standard ways of typing a phone number like 2345678910 or +1 (234) 567-8910.';
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Phone communication
+$string['allphonesalreadyverified'] = 'All of your phone numbers have already been verified!';
+$string['awssns'] = 'AWS SNS';
+$string['awssns_desc'] = 'Enter AWS SNS configuration here. An account for AWS SNS can be created {$a}.';
+$string['awssnsaccesskey'] = 'AWS SNS Access Key';
+$string['awssnsaccesskey_desc'] = 'Enter your AWS SNS Access Key here.';
+$string['awssnsregion'] = 'AWS SNS Region';
+$string['awssnsregion_desc'] = 'Enter your AWS SNS Region here.';
+$string['awssnssecretkey'] = 'AWS SNS Secret Key';
+$string['awssnssecretkey_desc'] = 'Enter your AWS SNS Secret Key here.';
+$string['caughtexception'] = 'Caught exception: {$a}';
+$string['codeconfirmed'] = 'Code confirmed! Your phone number {$a->tophonenumber} is now verified.';
+$string['dbrecordidnotset'] = 'The database record ID was not set properly.';
+$string['enterexactly6digits'] = '- Must be exactly 6 digits.';
+$string['enternumbersonly'] = '- Enter numbers only.';
+$string['errorcommunications'] = 'Your site couldn\'t communicate with your mail server. Please check your outgoing mail configuration.';
+$string['fromtext'] = 'From username or email address';
+$string['fromtext_help'] = 'This field emulates sending the message from that user, but the From header used in the real email sent will depend on other settings such as allowedemaildomains';
+$string['fromtext_invalid'] = 'Invalid From username or email. Must be a valid email format or an existing username in Moodle.';
+$string['here'] = 'here';
+$string['httprequestfailed'] = 'HTTP request failed.';
+$string['httprequestfailedwithcode'] = 'HTTP request failed with code {$a->httpcode}<br />cURL code: {$a->curlcode}';
+$string['infobip'] = 'Infobip';
+$string['infobip_desc'] = 'Enter Infobip configuration here. An account for Infobip can be accessed/created {$a}.';
+$string['infobipapibaseurl'] = 'Infobip API base URL';
+$string['infobipapibaseurl_desc'] = 'Enter the API base URL for Infobip.';
+$string['infobipapikey'] = 'Infobip API key';
+$string['infobipapikey_desc'] = 'Enter the API key for Infobip.';
+$string['invalidphonenumberformat'] = 'Invalid phone number format.';
+$string['message'] = 'This is a test message to confirm that you have successfully configured your site\'s outgoing mail.  Sent: {$a}';
+$string['nophonefound'] = 'No phone found! Go to {$a} > Optional to add your phone number.';
+$string['nophonestoverify'] = 'It looks like you don\'t have any phones that need verification.';
+$string['noproviderfound'] = 'Provider not configured! Configure a provider here: {$a}';
+$string['notasupportedcountry'] = '{$a} is not a supported country.';
+$string['novalidotpsfound'] = 'No valid OTPs found for you. You\'ll need to send a verification code first. You can do that here: {$a}';
+$string['otp'] = 'OTP';
+$string['otpdoesnotmatch'] = 'The code you entered does not match the one we sent you. Please try again.';
+$string['otperror'] = 'OTP error:<br /><br />{$a}';
+$string['otphasexpired'] = 'It looks like this code has expired. You can request another one here: {$a}';
+$string['otpsdonotmatch'] = 'The code you entered does not match any of the verification codes we have for you. Please try again.';
+$string['otpforthisnumberalreadyexists'] = 'A code for this number already exists. Please check your text messages. It may take a few minutes to receive the code.';
+$string['phone'] = 'Phone';
+$string['phonealreadyverified'] = 'It looks like this phone number has already been verified.';
+$string['phonefieldsdonotexist'] = 'Phone fields "phone1" or "phone2" do not exist.';
+$string['phoneproviderconfiguration'] = 'Phone provider configuration';
+$string['phonesettings'] = 'Phone settings';
+$string['phoneverificationcodeforflip'] = '{$a} is your phone verification code for FLIP.';
+$string['profilesettings'] = 'profile settings';
+$string['provider'] = 'Provider';
+$string['provider_desc'] = 'Select the provider to use for sending SMS messages.';
+$string['recipientphone_invalid'] = 'Invalid recipient phone number. Must be a valid phone number.';
+$string['showinnavigation'] = 'Show in navigation';
+$string['showinnavigation_desc'] = 'This setting determines whether the phone verification plugin will be shown in the navigation.';
+$string['selectphonetoverify'] = 'Select a phone number to verify';
+$string['selectprovider'] = 'Select provider to use';
+$string['sendtest'] = 'Send a test message';
+$string['senttextsuccess'] = 'Text message for verification was successfully sent to {$a->tonumber}<br />Now use the code to verify your phone number here: {$a->link}.';
+$string['senttextfailure'] = 'Message did not send:<br /><br />{$a}';
+$string['somethingwentwrong'] = 'Something went wrong... This probably needs to be looked at by a programmer.';
+$string['subject'] = '{$a->site}: test message. {$a->additional} Sent: {$a->time}';
+$string['subjectadditional'] = 'Additional subject';
+$string['testoutgoingtextconf'] = 'Test outgoing text configuration';
+$string['testoutgoingtextdetail'] = 'Note: Before testing, please save your configuration.<br />{$a}';
+$string['testoutgoingtextconf_message'] = 'Here\'s your text from {$a->shortname} via {$a->provider}!';
+$string['twilio'] = 'Twilio';
+$string['twilio_desc'] = 'Enter Twilio configuration here. An account for Twilio can be accessed/created {$a}.';
+$string['twilioaccountsid'] = 'Twilio account SID';
+$string['twilioaccountsid_desc'] = 'Enter the account SID for Twilio.';
+$string['twilioauthtoken'] = 'Twilio auth token';
+$string['twilioauthtoken_desc'] = 'Enter the auth token for Twilio.';
+$string['twilionumber'] = 'Twilio number';
+$string['twilionumber_desc'] = 'Enter the Twilio number to send messages from.';
+$string['verificationcode'] = 'Verification code';
+$string['verificationstatus'] = 'Verification status';
+$string['verifyotp'] = 'Verify OTP';
+$string['verifyotpdetail'] = 'Verify your phone number with an existing code.<br />{$a}';
+$string['wait10minutes'] = 'You\'ll have to wait 10 minutes before you can request another code.';
+$string['wecurrentlyonlyacceptusphonenumbers'] = 'We currently only accept U.S. phone numbers. You can use most standard ways of typing a phone number like 2345678910 or +1 (234) 567-8910.';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Time custom format strings
 $string['strftimedate'] = '%B %d, %Y';

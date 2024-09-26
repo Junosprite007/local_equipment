@@ -28,6 +28,10 @@ require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->dirroot . '/local/equipment/classes/form/vccsubmission_form.php');
 
 require_login();
+// Check if the user is a guest and redirect or display an error message
+if (isguestuser()) {
+    redirect(new moodle_url('/login/index.php'), get_string('mustlogintoyourownaccount', 'local_equipment', get_string('virtualcourseconsent', 'local_equipment')), null, \core\output\notification::NOTIFY_ERROR);
+}
 
 $PAGE->set_url(new moodle_url('/local/equipment/virtualcourseconsent/index.php'));
 $PAGE->set_context(context_system::instance());
@@ -121,6 +125,9 @@ if ($mform->is_cancelled()) {
 
         // Update core user record.
         // $DB->update_record('user', $userrecord);
+        // echo '<pre>';
+        // var_dump($parentrecord);
+        // echo '</pre>';
 
         // Insert extended user (parent) record.
         $parentrecord = new stdClass();
@@ -155,7 +162,40 @@ if ($mform->is_cancelled()) {
 
         $parentrecord->timecreated = $parentrecord->timemodified = time();
         // Insert parent user record.
-        $parentrecord->id = $DB->insert_record('local_equipment_user', $parentrecord);
+        $recordscount = $DB->count_records('local_equipment_user', ['userid' => $USER->id]);
+        // echo '<pre>';
+        // var_dump($recordscount);
+        // echo '</pre>';
+
+        if ($recordscount) {
+            var_dump('$recordscount > 0');
+            $combinedrecords = local_equipment_combine_user_records_by_userid($USER->id);
+
+            echo '<pre>';
+            var_dump($combinedrecords->studentids);
+            echo '</pre>';
+
+            $parentrecord->id = $combinedrecords->id;
+            $parentrecord->studentids = $combinedrecords->studentids;
+            $parentrecord->vccsubmissionids = $combinedrecords->vccsubmissionids;
+            // echo '<pre>';
+            // var_dump($parentrecord);
+            // echo '</pre>';
+            $DB->update_record('local_equipment_user', $parentrecord);
+            // echo '<pre>';
+            // var_dump($parentrecord);
+            // echo '</pre>';
+
+            // echo '<pre>';
+            // var_dump($combinedrecords);
+            // echo '</pre>';
+            die();
+        } else {
+            var_dump('$recordscount == 0');
+            $parentrecord->id = $DB->insert_record('local_equipment_user', $parentrecord);
+        }
+
+
 
         // Insert the virtual course consent (vcc) submission.
         $vccsubmission = new stdClass();
@@ -202,8 +242,8 @@ if ($mform->is_cancelled()) {
         $vccsubmission->timecreated = $vccsubmission->timemodified = time();
         // Insert vccsubmission record.
         $vccsubmission->id = $DB->insert_record('local_equipment_vccsubmission', $vccsubmission);
-
         $vccsubmissionids = [$vccsubmission->id];
+
         $previous_record = $DB->get_record('local_equipment_user', ['id' => $parentrecord->id], 'vccsubmissionids');
         $previous_vccsubmissionids = json_decode($previous_record->vccsubmissionids);
         $vccsubmissionids = array_merge($previous_vccsubmissionids, $vccsubmissionids);
@@ -253,6 +293,7 @@ if ($mform->is_cancelled()) {
         $previous_studentids = json_decode($previous_record->studentids);
         $studentids = array_merge($previous_studentids, $studentids);
         $parentrecord->studentids = json_encode($studentids);
+        $DB->update_record('local_equipment_user', $parentrecord);
 
 
         // Get the number of agreements
@@ -342,12 +383,28 @@ if ($mform->is_cancelled()) {
     }
 
     if ($success) {
-        redirect(
-            new moodle_url('/'),
-            get_string('formsubmitted', 'local_equipment',  get_string('virtualcourseconsent', 'local_equipment')),
-            null,
-            \core\output\notification::NOTIFY_SUCCESS
-        );
+
+        // if ($recordscount > 0) {
+        //     $DB->delete_records('local_equipment_user', ['userid' => $userid]);
+        // }
+
+        // Send a text message to the parent with the OTP.
+        if (true) {
+            echo '<pre>';
+            var_dump($vccsubmission);
+            echo '</pre>';
+            die();
+        } else {
+            // Phone already verified.
+            redirect(
+                new moodle_url('/'),
+                get_string('formsubmitted', 'local_equipment',  get_string('virtualcourseconsent', 'local_equipment')),
+                null,
+                \core\output\notification::NOTIFY_SUCCESS
+            );
+        }
+
+
     } else {
         redirect(
             new moodle_url('/local/equipment/partnerships/addpartnerships.php'),

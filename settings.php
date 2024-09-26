@@ -177,4 +177,131 @@ if ($hassiteconfig) {
     //         new moodle_url('/local/equipment/virtualcourseconsent/index.php'),
     //     )
     // );
+
+    $ADMIN->add('server', new admin_externalpage(
+        'local_equipment_testoutgoingtextconf',
+        new lang_string('testoutgoingtextconf', 'local_equipment'),
+        new moodle_url('/local/equipment/phonecommunication/testoutgoingtextconf.php'),
+        'moodle/site:config',
+        true
+    ));
+    $ADMIN->add('server', new admin_externalpage(
+        'local_equipment_verifyotp',
+        new lang_string('verifyotp', 'local_equipment'),
+        new moodle_url('/local/equipment/phonecommunication/verifyotp.php'),
+        'moodle/site:config',
+        true
+    ));
+
+    $ADMIN->add('server', new admin_category('local_equipment_phone', new lang_string('phone', 'local_equipment')));
+    $settingspage = new admin_settingpage('local_equipment_managetoolphoneverification', new lang_string('phoneproviderconfiguration', 'local_equipment'));
+
+    if ($ADMIN->fulltree) {
+
+        // Infobip
+        $link = html_writer::link('https://portal.infobip.com/', get_string('here', 'local_equipment'));
+        $settingspage->add(new admin_setting_heading(
+            'local_equipment_infobip',
+            new lang_string('infobip', 'local_equipment'),
+            new lang_string('infobip_desc', 'local_equipment', $link)
+        ));
+        $settingspage->add(new admin_setting_configtext(
+            'local_equipment/infobipapikey',
+            new lang_string('infobipapikey', 'local_equipment'),
+            new lang_string('infobipapikey_desc', 'local_equipment'),
+            '',
+            PARAM_TEXT,
+            69
+        ));
+        $settingspage->add(new admin_setting_configtext(
+            'local_equipment/infobipapibaseurl',
+            new lang_string('infobipapibaseurl', 'local_equipment'),
+            new lang_string('infobipapibaseurl_desc', 'local_equipment'),
+            '',
+            PARAM_URL
+        ));
+
+        // // Twilio
+        // $link = html_writer::link('https://www.twilio.com/', get_string('here', 'local_equipment'));
+        // $settingspage->add(new admin_setting_heading(
+        //     'local_equipment_twilio',
+        //     new lang_string('twilio', 'local_equipment'),
+        //     new lang_string('twilio_desc', 'local_equipment', $link)
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/twilioaccountsid',
+        //     new lang_string('twilioaccountsid', 'local_equipment'),
+        //     new lang_string('twilioaccountsid_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_TEXT
+        //     // '/^[a-f0-9]{32}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/',
+        //     // 69
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/twilioauthtoken',
+        //     new lang_string('twilioauthtoken', 'local_equipment'),
+        //     new lang_string('twilioauthtoken_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_URL
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/twilionumber',
+        //     new lang_string('twilionumber', 'local_equipment'),
+        //     new lang_string('twilionumber_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_TEXT
+        // ));
+
+        // // AWS SNS
+        // $link = html_writer::link('https://aws.amazon.com/sns/', get_string('here', 'local_equipment'));
+        // $settingspage->add(new admin_setting_heading(
+        //     'local_equipment_awssns',
+        //     new lang_string('awssns', 'local_equipment'),
+        //     new lang_string('awssns_desc', 'local_equipment', $link)
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/awssnsaccesskey',
+        //     new lang_string('awssnsaccesskey', 'local_equipment'),
+        //     new lang_string('awssnsaccesskey_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_TEXT,
+        //     69
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/awssnssecretkey',
+        //     new lang_string('awssnssecretkey', 'local_equipment'),
+        //     new lang_string('awssnssecretkey_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_TEXT,
+        //     69
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/awssnsregion',
+        //     new lang_string('awssnsregion', 'local_equipment'),
+        //     new lang_string('awssnsregion_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_TEXT,
+        //     69
+        // ));
+
+        // Test outgoing text configuration.
+        $url = new moodle_url('/local/equipment/phonecommunication/testoutgoingtextconf.php');
+        $link = html_writer::link($url, get_string('testoutgoingtextconf', 'local_equipment'));
+        $settingspage->add(new admin_setting_heading(
+            'local_equipment_testoutgoingtextconf',
+            new lang_string('testoutgoingtextconf', 'local_equipment'),
+            new lang_string('testoutgoingtextdetail', 'local_equipment', $link)
+        ));
+
+        // Verify OTP.
+        $url = new moodle_url('/local/equipment/phonecommunication/verifyotp.php');
+        $link = html_writer::link($url, get_string('verifyotp', 'local_equipment'));
+        $settingspage->add(new admin_setting_heading(
+            'local_equipment_verifyotp',
+            new lang_string('verifyotp', 'local_equipment'),
+            new lang_string('verifyotpdetail', 'local_equipment', $link)
+        ));
+    }
+
+    $ADMIN->add('local_equipment_phone', $settingspage);
 }
