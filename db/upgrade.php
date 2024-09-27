@@ -653,5 +653,22 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024090500, 'local', 'equipment');
     }
 
+    if ($oldversion < 2024092601) {
+        $table = new xmldb_table('local_equipment_user');
+        $fields = [];
+
+        $fields[] = new xmldb_field('phone', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'phoneverificationids');
+        $fields[] = new xmldb_field('phone_confirmed', XMLDB_TYPE_INTEGER, '1', null, null, null, null, 'phone');
+
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+
+        // Equipment savepoint reached.
+        upgrade_plugin_savepoint(true, 2024092601, 'local', 'equipment');
+    }
+
     return true;
 }

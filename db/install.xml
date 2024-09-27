@@ -152,7 +152,10 @@
                 <FIELD NAME="partnershipid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the selected partnership"/>
                 <FIELD NAME="studentids" TYPE="text" NOTNULL="false"/>
                 <FIELD NAME="vccsubmissionids" TYPE="text" NOTNULL="false"/>
+                <!-- Phone verification -->
                 <FIELD NAME="phoneverificationids" TYPE="text" NOTNULL="false"/>
+                <FIELD NAME="phone" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="The mobile phone that the user entered when filling out this form."/>
+                <FIELD NAME="phone_confirmed" TYPE="int" LENGTH="1" NOTNULL="false" COMMENT="Whether or not phone is confirmed. 1 = Confirmed; 0 = Not confirmed"/>
                 <!-- Mailing address -->
                 <FIELD NAME="mailing_extrainput" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
                 <FIELD NAME="mailing_streetaddress" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>

@@ -1456,17 +1456,30 @@ function local_equipment_get_vcc_students($submission) {
  * @param \core\event\user_loggedin $event The event.
  */
 function local_equipment_vcc_phone_verified(\core\event\user_loggedin $event) {
-    global $USER, $SESSION;
+    global $DB, $USER, $SESSION;
 
     $sixmonthsago = time() - (YEARSECS / 2);
     // $uservcc = $DB->get_record('local_equipment_user', ['userid' => $USER->id, 'timecreated' =>]);
+
+    $records = $DB->get_records('local_equipment_vccsubmission', ['userid' => $USER->id], 'timecreated DESC', 'id, phone');
+    foreach($records as $record) {
+        
+        $phone = $record->phone;
+        if ($phone) {
+            $SESSION->local_equipment_phone = $phone;
+            break;
+        }
+    }
 
     $phone1 = $USER->phone1;
     $phone2 = $USER->phone2;
     $vccphone = '';
 
+    $message = "Here's phone: $phone, phone1: $phone1, phone2: $phone2 ";
+
     if (!$phone1 && !$phone2) {
         // User has no phone numbers on their profile.
+        \core\notification::add($message, \core\output\notification::NOTIFY_INFO);
         $message = get_string('musthaveaphoneonrecord', 'local_equipment');
     }
 
@@ -1476,13 +1489,12 @@ function local_equipment_vcc_phone_verified(\core\event\user_loggedin $event) {
     // die();
 
     // Check if the notification has already been shown in this session
-    if (empty($SESSION->local_equipment_shown)) {
-        $message = get_string('welcomemessage', 'local_equipment', $USER->firstname);
-        \core\notification::add($message, \core\output\notification::NOTIFY_INFO);
+    // if (empty($SESSION->local_equipment_shown)) {
+    //     // $message = get_string('welcomemessage', 'local_equipment', $USER->firstname);
 
-        // Set a flag to avoid showing the message multiple times in the same session
-        $SESSION->local_equipment_shown = true;
-    }
+    //     // Set a flag to avoid showing the message multiple times in the same session
+    //     $SESSION->local_equipment_shown = true;
+    // }
 }
 
 /**
