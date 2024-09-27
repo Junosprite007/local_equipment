@@ -29,10 +29,10 @@ require_once($CFG->libdir . '/adminlib.php');
 global $SITE, $USER;
 
 // This is an admin page.
-admin_externalpage_setup('testoutgoingtextconf');
+admin_externalpage_setup('local_equipment_testoutgoingtextconf');
 
 $headingtitle = get_string('testoutgoingtextconf', 'local_equipment');
-$homeurl = new moodle_url('/admin/category.php', array('category' => 'phone'));
+$homeurl = new moodle_url('/admin/category.php', array('category' => 'local_equipment_phone'));
 $returnurl = new moodle_url('/admin/testoutgoingtextconf.php');
 $redirecturl = new moodle_url('/admin/tool/phoneverification/verifytestotp.php');
 $link = html_writer::link($redirecturl, get_string('verifyotp', 'local_equipment'));

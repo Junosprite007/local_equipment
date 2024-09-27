@@ -29,7 +29,7 @@ require_once($CFG->libdir . '/adminlib.php');
 global $SITE, $USER;
 
 // This is an admin page.
-admin_externalpage_setup('verifytestotp');
+admin_externalpage_setup('local_equipment_verifytestotp');
 
 $headingtitle = get_string('verifyotp', 'local_equipment');
 $homeurl = new moodle_url('/admin/category.php', array('category' => 'phone'));

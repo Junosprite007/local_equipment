@@ -1562,7 +1562,7 @@ function local_equipment_providers_to_show($allphoneconfigs) {
     $providers = [];
 
     if ($allphoneconfigs->infobipapikey && $allphoneconfigs->infobipapibaseurl) {
-        $providers['infobip'] = get_string('infobip', 'tool_phoneverification');
+        $providers['infobip'] = get_string('infobip', 'local_equipment');
     }
 
     return $providers;
@@ -1587,8 +1587,8 @@ function local_equipment_send_sms($provider, $tonumber, $message) {
                 // $responseobject->success = true;
                 // break;
 
-                $infobipapikey = get_config('tool_phoneverification', 'infobipapikey');
-                $infobipapibaseurl = get_config('tool_phoneverification', 'infobipapibaseurl');
+                $infobipapikey = get_config('local_equipment', 'infobipapikey');
+                $infobipapibaseurl = get_config('local_equipment', 'infobipapibaseurl');
                 $curl = new curl();
 
                 // Set headers
@@ -1616,21 +1616,21 @@ function local_equipment_send_sms($provider, $tonumber, $message) {
                     // The request failed
                     $responseobject->errorobject->httpcode = $info['http_code'];
                     $responseobject->errorobject->curlcode = $curl->get_errno();
-                    $responseobject->errormessage = get_string('httprequestfailedwithcode', 'tool_phoneverification', $responseobject->errorobject);
+                    $responseobject->errormessage = get_string('httprequestfailedwithcode', 'local_equipment', $responseobject->errorobject);
                     $responseobject->success = false;
-                    throw new moodle_exception('httprequestfailed', 'tool_phoneverification', '', null, $responseobject->errormessage);
+                    throw new moodle_exception('httprequestfailed', 'local_equipment', '', null, $responseobject->errormessage);
                 }
                 break;
             case 'twilio':
-                // $twilioaccountsid = get_config('tool_phoneverification', 'twilioaccountsid');
-                // $twilioauthtoken = get_config('tool_phoneverification', 'twilioauthtoken');
-                // $twilionumber = get_config('tool_phoneverification', 'twilionumber');
+                // $twilioaccountsid = get_config('local_equipment', 'twilioaccountsid');
+                // $twilioauthtoken = get_config('local_equipment', 'twilioauthtoken');
+                // $twilionumber = get_config('local_equipment', 'twilionumber');
 
                 break;
             case 'awssns':
-                // $awssnsaccesskey = get_config('tool_phoneverification', 'awssnsaccesskey');
-                // $awssnssecretkey = get_config('tool_phoneverification', 'awssnssecretkey');
-                // $awssnsregion = get_config('tool_phoneverification', 'awssnsregion');
+                // $awssnsaccesskey = get_config('local_equipment', 'awssnsaccesskey');
+                // $awssnssecretkey = get_config('local_equipment', 'awssnssecretkey');
+                // $awssnsregion = get_config('local_equipment', 'awssnsregion');
 
                 break;
             default:
@@ -1669,7 +1669,7 @@ function local_equipment_send_secure_otp($provider, $tophonenumber, $ttl = 600) 
 
         // Test OTP
         $testotp = 345844;
-        $message = get_string('phoneverificationcodefor', 'tool_phoneverification', $otp, $SITE->shortname);
+        $message = get_string('phoneverificationcodefor', 'local_equipment', $otp, $SITE->shortname);
         $phone1 = local_equipment_parse_phone_number($USER->phone1);
         $phone2 = local_equipment_parse_phone_number($USER->phone2);
         if ($tophonenumber == $phone1) {
@@ -1677,7 +1677,7 @@ function local_equipment_send_secure_otp($provider, $tophonenumber, $ttl = 600) 
         } elseif ($tophonenumber == $phone2) {
             $record->tophonename = 'phone2';
         } else {
-            throw new moodle_exception('phonefieldsdonotexist', 'tool_phoneverification');
+            throw new moodle_exception('phonefieldsdonotexist', 'local_equipment');
         }
 
         $sessionotpcount = 0;
@@ -1737,15 +1737,15 @@ function local_equipment_send_secure_otp($provider, $tophonenumber, $ttl = 600) 
 
             $SESSION->otps->{$record->tophonename} = $record;
             $SESSION->otps->{$record->tophonename}->id = $DB->insert_record('local_equipment_phonecommunication_otp', $record);
-            $message = get_string('phoneverificationcodefor', 'tool_phoneverification', $otp, $SITE->shortname);
+            $message = get_string('phoneverificationcodefor', 'local_equipment', $otp, $SITE->shortname);
             $responseobject = local_equipment_send_sms($provider, $tophonenumber, $message);
         } elseif ($recordexists && $isverified) {
-            throw new moodle_exception('phonealreadyverified', 'tool_phoneverification');
+            throw new moodle_exception('phonealreadyverified', 'local_equipment');
         } elseif ($recordexists && !$isverified) {
-            throw new moodle_exception('otpforthisnumberalreadyexists', 'tool_phoneverification');
-            throw new moodle_exception('wait10minutes', 'tool_phoneverification');
+            throw new moodle_exception('otpforthisnumberalreadyexists', 'local_equipment');
+            throw new moodle_exception('wait10minutes', 'local_equipment');
         } else {
-            throw new moodle_exception('somethingwentwrong', 'tool_phoneverification');
+            throw new moodle_exception('somethingwentwrong', 'local_equipment');
         }
     } catch (moodle_exception $e) {
         // Catch the exception and add it to the array
@@ -1812,9 +1812,9 @@ function local_equipment_verify_otp($otp) {
                 $responseobject->tophonenumber = $record->tophonenumber;
                 if ($verified && $matches) {
                     $url = new moodle_url('/admin/tool/phoneverification/testoutgoingtextconf.php');
-                    $link = html_writer::link($url, get_string('testoutgoingtextconf', 'tool_phoneverification'));
+                    $link = html_writer::link($url, get_string('testoutgoingtextconf', 'local_equipment'));
                     $responseobject->success = true;
-                    $responseobject->successmessage = get_string('phonealreadyverified', 'tool_phoneverification');
+                    $responseobject->successmessage = get_string('phonealreadyverified', 'local_equipment');
                     return $responseobject;
                     return $responseobject;
                 }
@@ -1828,15 +1828,15 @@ function local_equipment_verify_otp($otp) {
             }
         }
         if (($sessioncount == 1 || $dbcount == 1) && $verified == 1) {
-            throw new moodle_exception('nophonestoverify', 'tool_phoneverification');
+            throw new moodle_exception('nophonestoverify', 'local_equipment');
         } elseif ($sessioncount == 1 || $dbcount == 1) {
-            throw new moodle_exception('otpdoesnotmatch', 'tool_phoneverification');
+            throw new moodle_exception('otpdoesnotmatch', 'local_equipment');
         } elseif ($sessioncount > 0 && $dbcount > 0) {
-            throw new moodle_exception('otpsdonotmatch', 'tool_phoneverification');
+            throw new moodle_exception('otpsdonotmatch', 'local_equipment');
         } else {
             $url = new moodle_url('/admin/tool/phoneverification/testoutgoingtextconf.php');
-            $link = html_writer::link($url, get_string('testoutgoingtextconf', 'tool_phoneverification'));
-            throw new moodle_exception('novalidotpsfound', 'tool_phoneverification', '', $link);
+            $link = html_writer::link($url, get_string('testoutgoingtextconf', 'local_equipment'));
+            throw new moodle_exception('novalidotpsfound', 'local_equipment', '', $link);
         }
     } catch (moodle_exception $e) {
         // Step 2: Catch the exception and add it to the array
