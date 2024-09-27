@@ -186,9 +186,9 @@ if ($hassiteconfig) {
         true
     ));
     $ADMIN->add('server', new admin_externalpage(
-        'local_equipment_verifyotp',
-        new lang_string('verifyotp', 'local_equipment'),
-        new moodle_url('/local/equipment/phonecommunication/verifyotp.php'),
+        'local_equipment_verifytestotp',
+        new lang_string('verifytestotp', 'local_equipment'),
+        new moodle_url('/local/equipment/phonecommunication/verifytestotp.php'),
         'moodle/site:config',
         true
     ));
@@ -294,12 +294,12 @@ if ($hassiteconfig) {
         ));
 
         // Verify OTP.
-        $url = new moodle_url('/local/equipment/phonecommunication/verifyotp.php');
-        $link = html_writer::link($url, get_string('verifyotp', 'local_equipment'));
+        $url = new moodle_url('/local/equipment/phonecommunication/verifytestotp.php');
+        $link = html_writer::link($url, get_string('verifytestotp', 'local_equipment'));
         $settingspage->add(new admin_setting_heading(
-            'local_equipment_verifyotp',
-            new lang_string('verifyotp', 'local_equipment'),
-            new lang_string('verifyotpdetail', 'local_equipment', $link)
+            'local_equipment_verifytestotp',
+            new lang_string('verifytestotp', 'local_equipment'),
+            new lang_string('verifytestotpdetail', 'local_equipment', $link)
         ));
     }
 

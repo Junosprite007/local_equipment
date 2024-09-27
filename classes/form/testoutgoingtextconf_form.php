@@ -45,11 +45,14 @@ class testoutgoingtextconf_form extends \moodleform {
         $phone1 = local_equipment_parse_phone_number($USER->phone1);
         $phone2 = local_equipment_parse_phone_number($USER->phone2);
 
-        echo '<pre>';
-        var_dump($phone1);
-        var_dump($phone2);
-        echo '</pre>';
-        die();
+        $phone1formatted = '';
+        $phone2formatted = '';
+
+        // echo '<pre>';
+        // var_dump($phone1);
+        // var_dump($phone2);
+        // echo '</pre>';
+        // die();
 
         $phone1 = $phone1->phone;
         $phone2 = $phone2->phone;

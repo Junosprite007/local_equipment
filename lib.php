@@ -1449,39 +1449,54 @@ function local_equipment_get_vcc_students($submission) {
     return implode('<br />', $studentinfo);
 }
 
-
 /**
- * Observer function for the user_loggedin event.
+ * Checks to see if phone is verified on login.
  *
  * @param \core\event\user_loggedin $event The event.
+ * @return bool True if the user's phone number has been verified; false otherwise.
  */
 function local_equipment_vcc_phone_verified(\core\event\user_loggedin $event) {
     global $DB, $USER, $SESSION;
+    $phone_verified = $DB->get_field('local_equipment_user', 'phone_verified', ['userid' => $USER->id], IGNORE_MULTIPLE);
+    $redirecturl = new moodle_url('/local/equipment/phonecommunication/verifyphone.php');
+    $msg = get_string('mustverifyphone', 'local_equipment');
 
-    $sixmonthsago = time() - (YEARSECS / 2);
-    // $uservcc = $DB->get_record('local_equipment_user', ['userid' => $USER->id, 'timecreated' =>]);
-
-    $records = $DB->get_records('local_equipment_vccsubmission', ['userid' => $USER->id], 'timecreated DESC', 'id, phone');
-    foreach($records as $record) {
-        
-        $phone = $record->phone;
-        if ($phone) {
-            $SESSION->local_equipment_phone = $phone;
-            break;
+    // We must use a strict type here since $phone_verified can be NULL as well as false.
+    // NULL will go to the 'if' part of the statement.
+    if ($phone_verified !== false) {
+        if ($phone_verified === 1) {
+            $SESSION->local_equipment_phone_verified = true;
+        } else {
+            redirect($redirecturl);
+            $SESSION->local_equipment_phone_verified = false;
         }
     }
 
-    $phone1 = $USER->phone1;
-    $phone2 = $USER->phone2;
-    $vccphone = '';
 
-    $message = "Here's phone: $phone, phone1: $phone1, phone2: $phone2 ";
+    // $sixmonthsago = time() - (YEARSECS / 2);
+    // $uservcc = $DB->get_record('local_equipment_user', ['userid' => $USER->id, 'timecreated' =>]);
 
-    if (!$phone1 && !$phone2) {
-        // User has no phone numbers on their profile.
-        \core\notification::add($message, \core\output\notification::NOTIFY_INFO);
-        $message = get_string('musthaveaphoneonrecord', 'local_equipment');
-    }
+    // $records = $DB->get_records('local_equipment_vccsubmission', ['userid' => $USER->id], 'timecreated DESC', 'id, phone');
+    // foreach($records as $record) {
+
+    //     $phone = $record->phone;
+    //     if ($phone) {
+    //         $SESSION->local_equipment_phone = $phone;
+    //         break;
+    //     }
+    // }
+
+    // $phone1 = $USER->phone1;
+    // $phone2 = $USER->phone2;
+    // $vccphone = '';
+
+    // $message = "Here's phone: $phone, phone1: $phone1, phone2: $phone2 ";
+
+    // if (!$phone1 && !$phone2) {
+    //     // User has no phone numbers on their profile.
+    //     \core\notification::add($message, \core\output\notification::NOTIFY_INFO);
+    //     $message = get_string('musthaveaphoneonrecord', 'local_equipment');
+    // }
 
     // if ()
 
@@ -1496,6 +1511,32 @@ function local_equipment_vcc_phone_verified(\core\event\user_loggedin $event) {
     //     $SESSION->local_equipment_shown = true;
     // }
 }
+
+function local_equipment_user_phone_exists($userid) {
+    global $DB;
+
+    $phone = $DB->get_field('local_equipment_user', 'phone', ['userid' => $userid]);
+    return $phone;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Get all current equipment pickup methods for parents to select.
@@ -1611,7 +1652,7 @@ function local_equipment_send_sms($provider, $tonumber, $message) {
  * @return object
  */
 function local_equipment_send_secure_otp($provider, $tophonenumber, $ttl = 600) {
-    global $USER, $DB, $SESSION;
+    global $USER, $DB, $SESSION, $SITE;
 
     $responseobject = new stdClass();
     $verifyurl = new moodle_url('/admin/tool/phoneverification/verifyotp.php');
@@ -1628,7 +1669,7 @@ function local_equipment_send_secure_otp($provider, $tophonenumber, $ttl = 600) 
 
         // Test OTP
         $testotp = 345844;
-        $message = get_string('phoneverificationcodeforflip', 'tool_phoneverification', $otp);
+        $message = get_string('phoneverificationcodefor', 'tool_phoneverification', $otp, $SITE->shortname);
         $phone1 = local_equipment_parse_phone_number($USER->phone1);
         $phone2 = local_equipment_parse_phone_number($USER->phone2);
         if ($tophonenumber == $phone1) {
@@ -1696,7 +1737,7 @@ function local_equipment_send_secure_otp($provider, $tophonenumber, $ttl = 600) 
 
             $SESSION->otps->{$record->tophonename} = $record;
             $SESSION->otps->{$record->tophonename}->id = $DB->insert_record('local_equipment_phonecommunication_otp', $record);
-            $message = get_string('phoneverificationcodeforflip', 'tool_phoneverification', $otp);
+            $message = get_string('phoneverificationcodefor', 'tool_phoneverification', $otp, $SITE->shortname);
             $responseobject = local_equipment_send_sms($provider, $tophonenumber, $message);
         } elseif ($recordexists && $isverified) {
             throw new moodle_exception('phonealreadyverified', 'tool_phoneverification');

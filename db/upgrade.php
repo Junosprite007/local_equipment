@@ -658,7 +658,7 @@ function xmldb_local_equipment_upgrade($oldversion) {
         $fields = [];
 
         $fields[] = new xmldb_field('phone', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'phoneverificationids');
-        $fields[] = new xmldb_field('phone_confirmed', XMLDB_TYPE_INTEGER, '1', null, null, null, null, 'phone');
+        $fields[] = new xmldb_field('phone_verified', XMLDB_TYPE_INTEGER, '1', null, null, null, null, 'phone');
 
         foreach ($fields as $field) {
             if (!$dbman->field_exists($table, $field)) {

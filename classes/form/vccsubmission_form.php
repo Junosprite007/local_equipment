@@ -34,7 +34,7 @@ require_once($CFG->dirroot . '/local/equipment/lib.php');
 
 class vccsubmission_form extends \moodleform {
     public function definition() {
-        global $USER, $DB;
+        global $USER, $DB, $SITE;
         $mform = $this->_form;
         $customdata = $this->_customdata;
 
@@ -72,7 +72,7 @@ class vccsubmission_form extends \moodleform {
             }
         }
 
-        $mform->addElement('html', '<div class="alert alert-warning" role="alert">' . get_string('attnparents_useyouraccount', 'local_equipment') . '</div>');
+        $mform->addElement('html', '<div class="alert alert-warning" role="alert">' . get_string('attnparents_useyouraccount', 'local_equipment', $SITE->shortname) . '</div>');
 
         // Profile email.
         $mform->addElement('text', 'email', get_string('email'), ['value' => $USER->email, 'disabled' => 'disabled']);
