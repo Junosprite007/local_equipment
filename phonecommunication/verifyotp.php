@@ -35,7 +35,7 @@ $headingtitle = get_string('verifyotp', 'local_equipment');
 $homeurl = new moodle_url('/admin/category.php', array('category' => 'phone'));
 $returnurl = new moodle_url('/admin/verifyotp.php');
 
-// This form is located at admin/tool/phoneverification/classes/form/verifyotp_form.php.
+// This form is located at local/equipment/classes/form/verifyotp_form.php.
 $form = new local_equipment\form\verifyotp_form(null, ['returnurl' => $returnurl]);
 if ($form->is_cancelled()) {
     redirect($homeurl);

@@ -29,7 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/../../lib.php');
 
-class testoutgoingtextconf_form extends \moodleform {
+class verifyphone_form extends \moodleform {
     public function definition() {
         $mform = $this->_form;
 
@@ -39,6 +39,8 @@ class testoutgoingtextconf_form extends \moodleform {
         $userid = $USER->id;
         $editprofileurl = new \moodle_url('/user/edit.php', array('id' => $userid));
         $editprofilelink = \html_writer::link($editprofileurl, get_string('editmyprofile'));
+        $vccformurl = new \moodle_url('/local/equipment/virtualcourseconsent/index.php');
+        $vccformlink = \html_writer::link($vccformurl, get_string('fillouttheform', 'local_equipment', get_string('virtualcourseconsent', 'local_equipment')));
         $providerconfigurl = new \moodle_url('/admin/settings.php?section=managetoolphoneverification');
         $providerconfiglink = \html_writer::link($providerconfigurl, get_string('phoneproviderconfiguration', 'local_equipment'));
 
@@ -60,6 +62,16 @@ class testoutgoingtextconf_form extends \moodleform {
         }
 
         $phoneoptions = [];
+        $phone_user = local_equipment_user_phone_exists($USER->id);
+        $phone_vcc = local_equipment_vccsubmission_phone_exists($USER->id);
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<br />';
+        // var_dump($phone_user);
+        // var_dump($phone_vcc);
+        // $phone = false;
+
+        // Could be a phone number, could be NULL, or could be false.
 
         if (empty($phone2obj->errors) && empty($phone1obj->errors)) {
             $phoneoptions = [$phone1 => $phone1formatted, $phone2 => $phone2formatted];
@@ -71,84 +83,46 @@ class testoutgoingtextconf_form extends \moodleform {
             $phoneoptions = [];
         }
 
-        $phoneselected = '';
+        $phonedefault = '';
 
         // Set the selected phone number for setDefault later.
         if ((isset($phoneoptions[$phone1]) && isset($phoneoptions[$phone2])) || isset($phoneoptions[$phone2])) {
-            $phoneselected = $phone2;
+            $phonedefault = $phoneoptions[$phone2];
         } elseif (isset($phoneoptions[$phone1])) {
-            $phoneselected = $phone1;
+            $phonedefault = $phoneoptions[$phone1];
+        } else if ($phone_user) {
+            $phonedefault = $phone_user;
+        } else if ($phone_vcc) {
+            $phonedefault = $phone_vcc;
         }
 
-        // Provider dropdown.
-        $providerstoshow = local_equipment_get_phone_providers();
-
-
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<pre>';
-        // var_dump($providerstoshow);
-        // echo '</pre>';
-        // die();
-
-        if (!$providerstoshow) {
-            // No providers configured.
-            $mform->addElement(
-                'static',
-                'noproviderfound',
-                get_string('selectphonetoverify', 'local_equipment'),
-                new \lang_string('noproviderfound', 'local_equipment', $providerconfiglink)
-            );
-            $mform->addRule('noproviderfound', get_string('required'), 'required');
-        } else {
-            $mform->addElement('select', 'provider', get_string('selectprovider', 'local_equipment'), $providerstoshow);
-            $mform->setType('provider', PARAM_TEXT);
-            $mform->addRule('provider', get_string('required'), 'required');
-        }
-
-        if (!$phoneselected) {
-            // No phone numbers available.
-            if ($phone2obj->phone === '' && $phone1obj->phone === '') {
-                $text = new \lang_string('nophonefound', 'local_equipment', $editprofilelink);
-            } else if (!empty($phone2obj->errors) || !empty($phone1obj->errors)) {
-                $text = new \lang_string('novalidphonefound', 'local_equipment', $editprofilelink);
-            } else {
-                $text = new \lang_string('somethingwrong_phone', 'local_equipment', $editprofilelink);
-            }
-
-            $mform->addElement(
-                'static',
-                'nophonefound',
-                get_string('selectphonetoverify', 'local_equipment'),
-                $text
-            );
-            $mform->addRule('nophonefound', get_string('required'), 'required');
-
-            if (!empty($phone2obj->errors)) {
-                $msg = get_string('somethingwrong_phone2', 'local_equipment') . ' ' . get_string('seeerrorsbelow', 'local_equipment');
-                $notification = \html_writer::div(join("<br>", $phone2obj->errors), 'alert alert-warning');
-                $mform->addElement('static', 'activeenddatewillalsoneedtobeupdated', '', $notification);
-            } else if (!empty($phone1obj->errors)) {
-                $msg = get_string('somethingwrong_phone1', 'local_equipment') . ' ' . get_string('seeerrorsbelow', 'local_equipment');
-                echo $OUTPUT->notification($msg, \core\output\notification::NOTIFY_ERROR);
-                foreach ($phone1obj->errors as $error) {
-                    echo $OUTPUT->notification($error, \core\output\notification::NOTIFY_ERROR);
-                }
-            }
-        } else {
-            $mform->addElement('select', 'tonumber', get_string('selectphonetoverify', 'local_equipment'), $phoneoptions);
+        if ($phonedefault) {
+            $mform->addElement('text', 'tonumber', get_string('entermobilephone', 'local_equipment'), $phoneoptions);
             $mform->setType('tonumber', PARAM_TEXT);
-            $mform->setDefault('tonumber', $phoneselected);
+            $mform->setDefault('tonumber', $phonedefault);
             $mform->addRule('tonumber', get_string('required'), 'required');
+        } else {
+            $mform->addElement(
+                'html',
+                '<div class="alert alert-warning">'
+                    . get_string('haventfilledoutform', 'local_equipment', $vccformlink)
+                    . '</div>'
+            );
+            // $mform->addRule('nophonefound', get_string('required'), 'required');
         }
+        // if (!empty($phone2obj->errors)) {
+        //     $msg = get_string('somethingwrong_phone2', 'local_equipment') . ' ' . get_string('seeerrorsbelow', 'local_equipment');
+        //     $notification = \html_writer::div(join("<br>", $phone2obj->errors), 'alert alert-warning');
+        //     $mform->addElement('static', 'activeenddatewillalsoneedtobeupdated', '', $notification);
+        // }
+        if ($phonedefault) {
+            $buttonarray = array();
+            $buttonarray[] = $mform->createElement('submit', 'send', get_string('sendtest', 'local_equipment'));
+            $buttonarray[] = $mform->createElement('cancel');
 
-        $buttonarray = array();
-        $buttonarray[] = $mform->createElement('submit', 'send', get_string('sendtest', 'local_equipment'));
-        $buttonarray[] = $mform->createElement('cancel');
-
-        $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
-        $mform->closeHeaderBefore('buttonar');
+            $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
+            $mform->closeHeaderBefore('buttonar');
+        }
     }
 
     /**

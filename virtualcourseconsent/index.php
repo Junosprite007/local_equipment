@@ -30,7 +30,8 @@ require_once($CFG->dirroot . '/local/equipment/classes/form/vccsubmission_form.p
 require_login();
 // Check if the user is a guest and redirect or display an error message
 if (isguestuser()) {
-    redirect(new moodle_url('/login/index.php'), get_string('mustlogintoyourownaccount', 'local_equipment', get_string('virtualcourseconsent', 'local_equipment')), null, \core\output\notification::NOTIFY_ERROR);
+    $msgparams = ['form' => get_string('virtualcourseconsent', 'local_equipment'), 'site' => $SITE->shortname];
+    redirect(new moodle_url('/login/index.php'), get_string('mustlogintoyourownaccount', 'local_equipment', $msgparams), null, \core\output\notification::NOTIFY_ERROR);
 }
 
 $PAGE->set_url(new moodle_url('/local/equipment/virtualcourseconsent/index.php'));

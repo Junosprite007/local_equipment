@@ -24,22 +24,36 @@
  */
 
 require_once(__DIR__ . '/../../../config.php');
-require_once($CFG->libdir . '/adminlib.php');
+require_once($CFG->libdir . '/formslib.php');
 
 global $SITE, $USER;
 
 // This is an admin page.
-// admin_externalpage_setup('testoutgoingtextconf');
+// admin_externalpage_setup('local_equipment_testoutgoingtextconf');
 
-$headingtitle = get_string('verifyphonenumber', 'local_equipment');
+require_login();
+// Check if the user is a guest and redirect or display an error message
+if (isguestuser()) {
+    $msgparams = ['form' => get_string('phoneverification', 'local_equipment'), 'site' => $SITE->shortname];
+    redirect(new moodle_url('/login/index.php'), get_string('mustlogintoyourownaccount', 'local_equipment', $msgparams), null, \core\output\notification::NOTIFY_ERROR);
+}
+
+$context = context_system::instance();
+$url = new moodle_url('/local/equipment/agreements.php');
+
+$PAGE->set_context($context);
+$PAGE->set_url($url);
+$PAGE->set_title(get_string('phoneverification', 'local_equipment'));
+$PAGE->set_heading(get_string('phoneverification', 'local_equipment'));
+
 $homeurl = new moodle_url('/');
-$returnurl = new moodle_url('/local/equipment/phonecommunication/verifyphone.php');
-$redirecturl = new moodle_url('/local/equipment/phonecommunication/verifyotp.php');
+$returnurl = new moodle_url('/admin/testoutgoingtextconf.php');
+$redirecturl = new moodle_url('/local/equipment/phonecommunication/verifytestotp.php');
 $link = html_writer::link($redirecturl, get_string('verifyotp', 'local_equipment'));
 $msg = '';
 
-// This form is located at admin/tool/phoneverification/classes/form/testoutgoingtextconf_form.php.
-$form = new local_equipment\form\testoutgoingtextconf_form(null, ['returnurl' => $returnurl]);
+// This form is located at local/equipment/classes/form/verifyphone_form.php.
+$form = new local_equipment\form\verifyphone_form(null, ['returnurl' => $returnurl]);
 if ($form->is_cancelled()) {
     redirect($homeurl);
 }
@@ -72,7 +86,6 @@ if ($data) {
 
 // Display the page.
 echo $OUTPUT->header();
-echo $OUTPUT->heading($headingtitle);
 
 if ($msg) {
     // // Show result.

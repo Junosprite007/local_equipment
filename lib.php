@@ -436,7 +436,7 @@ function local_equipment_parse_phone_number($phonenumber, $country = 'US') {
                     } else if ((strlen($parsedphoneobj->phone) == 11) && $parsedphoneobj->phone[0] == 1) {
                         $parsedphoneobj->phone = "+" . $parsedphoneobj->phone;
                     } else {
-                        throw new \Exception(new lang_string('invalidphonenumber', 'local_equipment') . ' ' . new lang_string('wecurrentlyonlyacceptusphonenumbers', 'local_equipment'));
+                        throw new \Exception(new lang_string('invalidphonenumber', 'local_equipment', $parsedphoneobj->phone) . ' ' . new lang_string('wecurrentlyonlyacceptusphonenumbers', 'local_equipment'));
                     }
                 } catch (\Exception $e) {
                     $parsedphoneobj->errors[] = $e->getMessage();
@@ -728,6 +728,8 @@ function local_equipment_address_group_view($mform, $fieldname, $element) {
  * @param bool $showinstructions Whether or not to show the 'instructions' textarea input.
  * @param bool $groupview Whether or not to group the address inputs.
  * @param bool $required Whether or not the address is required.
+ * @param object $customdata The custom default data to add to the form.
+ * @return object $block A block of elements and their options to be added to the form.
  */
 function local_equipment_add_address_block(
     $mform,
@@ -738,7 +740,8 @@ function local_equipment_add_address_block(
     $showapartment = false,
     $showinstructions = false,
     $groupview = false,
-    $required = false
+    $required = false,
+    $customdata = null
 ) {
     $block = new stdClass();
     $block->elements = [];
@@ -834,9 +837,14 @@ function local_equipment_add_address_block(
         $fieldname = "{$addresstype}_extrainstructions";
         $block->elements[$fieldname] = $mform->createElement('textarea', $fieldname, get_string('extrainstructions', 'local_equipment', strtolower(get_string("{$addresstype}_address", 'local_equipment'))));
     }
-
+    foreach ($block->elements as $fieldname => $element) {
+        if (isset($customdata->$fieldname)) {
+            $mform->setDefault($fieldname, $customdata->$fieldname);
+        }
+    }
     return $block;
 }
+
 
 
 /**
@@ -1512,10 +1520,34 @@ function local_equipment_vcc_phone_verified(\core\event\user_loggedin $event) {
     // }
 }
 
+function local_equipment_vccsubmission_phone_exists($userid) {
+    global $DB;
+
+    // Construct the SQL WHERE clause
+    $where = 'userid = :userid AND phone != 0';
+    $params = ['userid' => $userid];
+
+    // Get the records
+    $records = $DB->get_records_select('local_equipment_vccsubmission', $where, $params, '', 'id,phone');
+
+    // Extract the phone value if a record is found
+    $phone = !empty($records) ? reset($records)->phone : false;
+
+    return $phone;
+}
 function local_equipment_user_phone_exists($userid) {
     global $DB;
 
-    $phone = $DB->get_field('local_equipment_user', 'phone', ['userid' => $userid]);
+    // Construct the SQL WHERE clause
+    $where = 'userid = :userid AND phone != NULL';
+    $params = ['userid' => $userid];
+
+    // Get the records
+    $records = $DB->get_records_select('local_equipment_user', $where, $params, '', 'id,phone');
+
+    // Extract the phone value if a record is found
+    $phone = !empty($records) ? reset($records)->phone : false;
+
     return $phone;
 }
 
@@ -1563,6 +1595,34 @@ function local_equipment_providers_to_show($allphoneconfigs) {
 
     if ($allphoneconfigs->infobipapikey && $allphoneconfigs->infobipapibaseurl) {
         $providers['infobip'] = get_string('infobip', 'local_equipment');
+    }
+
+    return $providers;
+}
+
+
+/**
+ * Gets all the phone providers that are available based on whether or not the API setting exist.
+ *
+ * @return array Array of phone providers.
+ */
+function local_equipment_get_phone_providers() {
+    $providers = [];
+
+    $provider = get_config('local_equipment');
+
+    if (($provider->infobipapikey) && $provider->infobipapibaseurl) {
+        $providers['infobip'] = get_string('infobip', 'local_equipment');
+    }
+
+    $provider = get_config('factor_sms');
+
+    if (
+        $provider->api_key &&
+        $provider->api_region &&
+        $provider->api_secret
+    ) {
+        $providers['aws'] = get_string('aws', 'local_equipment');
     }
 
     return $providers;
@@ -1649,13 +1709,19 @@ function local_equipment_send_sms($provider, $tonumber, $message) {
  * @param string $provider The provider to use for sending the SMS message.
  * @param string $tophonenumber The phone number to send the SMS message to.
  * @param int $ttl Time to live (TTL) in seconds until the OTP expires.
+ * @param bool $isatest Whether or not this is a test OTP or a real one.
  * @return object
  */
-function local_equipment_send_secure_otp($provider, $tophonenumber, $ttl = 600) {
+function local_equipment_send_secure_otp($provider, $tophonenumber, $ttl = 600, $isatest = false) {
     global $USER, $DB, $SESSION, $SITE;
 
     $responseobject = new stdClass();
-    $verifyurl = new moodle_url('/admin/tool/phoneverification/verifyotp.php');
+
+    if ($isatest) {
+        $verifyurl = new moodle_url('/local/equipment/phonecommunication/verifytestotp.php');
+    } else {
+        $verifyurl = new moodle_url('/local/equipment/phonecommunication/verifyotp.php');
+    }
 
     try {
 
@@ -1669,9 +1735,14 @@ function local_equipment_send_secure_otp($provider, $tophonenumber, $ttl = 600) 
 
         // Test OTP
         $testotp = 345844;
-        $message = get_string('phoneverificationcodefor', 'local_equipment', $otp, $SITE->shortname);
-        $phone1 = local_equipment_parse_phone_number($USER->phone1);
-        $phone2 = local_equipment_parse_phone_number($USER->phone2);
+        $msgparams = ['otp' => $otp, 'site' => $SITE->shortname];
+        $message = get_string('phoneverificationcodefor', 'local_equipment', $msgparams);
+        $phone1obj = local_equipment_parse_phone_number($USER->phone1);
+        $phone2obj = local_equipment_parse_phone_number($USER->phone2);
+
+        $phone1 = $phone1obj->phone;
+        $phone2 = $phone2obj->phone;
+
         if ($tophonenumber == $phone1) {
             $record->tophonename = 'phone1';
         } elseif ($tophonenumber == $phone2) {
@@ -1737,7 +1808,9 @@ function local_equipment_send_secure_otp($provider, $tophonenumber, $ttl = 600) 
 
             $SESSION->otps->{$record->tophonename} = $record;
             $SESSION->otps->{$record->tophonename}->id = $DB->insert_record('local_equipment_phonecommunication_otp', $record);
-            $message = get_string('phoneverificationcodefor', 'local_equipment', $otp, $SITE->shortname);
+
+            $msgparams = ['otp' => $otp, 'site' => $SITE->shortname];
+            $message = get_string('phoneverificationcodefor', 'local_equipment', $msgparams);
             $responseobject = local_equipment_send_sms($provider, $tophonenumber, $message);
         } elseif ($recordexists && $isverified) {
             throw new moodle_exception('phonealreadyverified', 'local_equipment');
@@ -1811,7 +1884,7 @@ function local_equipment_verify_otp($otp) {
                 $matches = password_verify($otp, $record->otp);
                 $responseobject->tophonenumber = $record->tophonenumber;
                 if ($verified && $matches) {
-                    $url = new moodle_url('/admin/tool/phoneverification/testoutgoingtextconf.php');
+                    $url = new moodle_url('/local/equipment/phonecommunication/testoutgoingtextconf.php');
                     $link = html_writer::link($url, get_string('testoutgoingtextconf', 'local_equipment'));
                     $responseobject->success = true;
                     $responseobject->successmessage = get_string('phonealreadyverified', 'local_equipment');
@@ -1834,7 +1907,7 @@ function local_equipment_verify_otp($otp) {
         } elseif ($sessioncount > 0 && $dbcount > 0) {
             throw new moodle_exception('otpsdonotmatch', 'local_equipment');
         } else {
-            $url = new moodle_url('/admin/tool/phoneverification/testoutgoingtextconf.php');
+            $url = new moodle_url('/local/equipment/phonecommunication/testoutgoingtextconf.php');
             $link = html_writer::link($url, get_string('testoutgoingtextconf', 'local_equipment'));
             throw new moodle_exception('novalidotpsfound', 'local_equipment', '', $link);
         }

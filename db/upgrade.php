@@ -670,7 +670,7 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024092601, 'local', 'equipment');
     }
 
-    if ($oldversion < 2024092605) {
+    if ($oldversion < 2024092606) {
         // Define table local_equipment_vccsubmission_student.
         $table = new xmldb_table('local_equipment_phonecommunication_otp');
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
@@ -680,7 +680,7 @@ function xmldb_local_equipment_upgrade($oldversion) {
         $table->add_field('tophonename', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL);
         $table->add_field('phoneisverified', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
         $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
-        $table->add_field('timeverified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timeverified', XMLDB_TYPE_INTEGER, '10');
         $table->add_field('expires', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL);
 
         $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
@@ -691,7 +691,7 @@ function xmldb_local_equipment_upgrade($oldversion) {
         }
 
         // Equipment savepoint reached.
-        upgrade_plugin_savepoint(true, 2024092605, 'local', 'equipment');
+        upgrade_plugin_savepoint(true, 2024092606, 'local', 'equipment');
     }
 
     return true;

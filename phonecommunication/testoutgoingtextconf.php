@@ -34,11 +34,11 @@ admin_externalpage_setup('local_equipment_testoutgoingtextconf');
 $headingtitle = get_string('testoutgoingtextconf', 'local_equipment');
 $homeurl = new moodle_url('/admin/category.php', array('category' => 'local_equipment_phone'));
 $returnurl = new moodle_url('/admin/testoutgoingtextconf.php');
-$redirecturl = new moodle_url('/admin/tool/phoneverification/verifytestotp.php');
+$redirecturl = new moodle_url('/local/equipment/phonecommunication/verifytestotp.php');
 $link = html_writer::link($redirecturl, get_string('verifyotp', 'local_equipment'));
 $msg = '';
 
-// This form is located at admin/tool/phoneverification/classes/form/testoutgoingtextconf_form.php.
+// This form is located at local/equipment/classes/form/testoutgoingtextconf_form.php.
 $form = new local_equipment\form\testoutgoingtextconf_form(null, ['returnurl' => $returnurl]);
 if ($form->is_cancelled()) {
     redirect($homeurl);

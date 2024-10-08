@@ -246,7 +246,6 @@ $local_equipment_user = $DB->get_records_sql("SELECT $select FROM $from WHERE $w
 $formattedpickuplocation = "";
 
 foreach ($submissions as $submission) {
-
     $submission->parent_mailing_address = '';
     $submission->parent_mailing_extrainstructions = '';
 
@@ -351,9 +350,11 @@ foreach ($submissions as $submission) {
     $submission->pickup_starttime = $submission->pickup_starttime ? userdate($submission->pickup_starttime) : get_string('contactusforpickup', 'local_equipment');
     $minwidth_cell = 'local-equipment-minwidth-cell';
     $actions = '';
-    $viewurl = new moodle_url('/local/equipment/vccsubmissionview.php', ['id' => $submission->id]);
-    $editurl = new moodle_url('/local/equipment/vccsubmissionform.php', ['id' => $submission->id]);
+    $viewurl = new moodle_url('/local/equipment/vccsubmissions/viewvccsubmission.php', ['id' => $submission->id]);
+    $editurl = new moodle_url('/local/equipment/vccsubmissions/editvccsubmission.php', ['id' => $submission->id]);
     $deleteurl = new moodle_url($PAGE->url, ['delete' => $submission->id, 'sesskey' => sesskey()]);
+
+    $actions = $OUTPUT->action_icon($editurl, new pix_icon('t/edit', get_string('edit')));
 
     $submission->firstname = null;
     $row = [];

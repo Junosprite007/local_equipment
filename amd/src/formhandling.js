@@ -286,3 +286,25 @@ export const setupMultiSelects = () => {
         enhanceMultiSelects();
     }
 };
+
+export const updateURLId = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const idParam = urlParams.get('id');
+    const id = $('input[name="id"]').val();
+
+    Log.debug(`urlParams: ${urlParams}`);
+    Log.debug(`id: ${id}`);
+    Log.debug(`window.location.href: ${window.location.href}`);
+    Log.debug(
+        `window.location.href.includes('id='): ${window.location.href.includes(
+            'id='
+        )}`
+    );
+
+    if (idParam === null) {
+        const { href } = window.location;
+        const separator = href.includes('?') ? '&' : '?';
+        const newUrl = `${href}${separator}id=${id}`;
+        history.pushState({}, '', newUrl);
+    }
+};
