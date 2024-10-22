@@ -32,7 +32,7 @@ global $DB;
 $id = required_param('id', PARAM_INT); // VCC submission ID
 require_login();
 
-$context = context_system::instance();
+$context = \core\context\system::instance();
 $url = new moodle_url('/local/equipment/vccsubmissions/editvccsubmission.php', ['id' => $id]);
 $redirecturl = new moodle_url('/local/equipment/vccsubmissions.php');
 

@@ -26,6 +26,7 @@
 
 require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->dirroot . '/local/equipment/classes/form/vccsubmission_form.php');
+require_once($CFG->dirroot . '/lib/accesslib.php');
 
 require_login();
 // Check if the user is a guest and redirect or display an error message
@@ -34,8 +35,10 @@ if (isguestuser()) {
     redirect(new moodle_url('/login/index.php'), get_string('mustlogintoyourownaccount', 'local_equipment', $msgparams), null, \core\output\notification::NOTIFY_ERROR);
 }
 
+$context = \core\context\system::instance();
+
 $PAGE->set_url(new moodle_url('/local/equipment/virtualcourseconsent/index.php'));
-$PAGE->set_context(context_system::instance());
+$PAGE->set_context($context);
 $PAGE->set_title(get_string('consentformtitle', 'local_equipment'));
 $PAGE->set_heading(get_string('consentformheading', 'local_equipment'));
 $PAGE->requires->js_call_amd('local_equipment/vccsubmission_addstudents_form', 'init');
@@ -190,12 +193,12 @@ if ($mform->is_cancelled()) {
             // echo '<pre>';
             // var_dump($combinedrecords);
             // echo '</pre>';
-            die();
         } else {
             var_dump('$recordscount == 0');
             $parentrecord->id = $DB->insert_record('local_equipment_user', $parentrecord);
         }
 
+        die();
 
 
         // Insert the virtual course consent (vcc) submission.
@@ -408,8 +411,8 @@ if ($mform->is_cancelled()) {
 
     } else {
         redirect(
-            new moodle_url('/local/equipment/partnerships/addpartnerships.php'),
-            get_string('erroraddingpartnerships', 'local_equipment'),
+            new moodle_url('/local/equipment/virtualcourseconsent/index.php'),
+            get_string('errorsubmittingform', 'local_equipment'),
             null,
             \core\output\notification::NOTIFY_ERROR
         );

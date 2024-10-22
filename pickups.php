@@ -33,7 +33,7 @@ global $DB;
 // Ensure only admins can access this page.
 admin_externalpage_setup('local_equipment_pickups');
 
-$context = context_system::instance();
+$context = \core\context\system::instance();
 $url = new moodle_url('/local/equipment/pickups.php');
 
 $PAGE->set_context($context);

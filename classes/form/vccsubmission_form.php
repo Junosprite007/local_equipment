@@ -38,6 +38,22 @@ class vccsubmission_form extends \moodleform {
         $mform = $this->_form;
         $customdata = $this->_customdata;
 
+        $students = local_equipment_get_my_students('parent');
+
+        // Use the following when you're ready to prevent non-parents from accessing the form.
+        if ($students === false) {
+            // If you have no students, there's no reason to fill out this form, since if you're old enough to sign your own form,
+            // We'll have a different form for you to fill out.
+
+            // Redirect with an error message for the user who's trying to fill out the form from a non-parent account.
+            // redirect(new \moodle_url('/'));
+        }
+
+
+
+
+
+
         $repeatno = optional_param('repeatno', 1, PARAM_INT);
         $deletebuttonname = 'delete_student';
         $addfieldsname = 'addstudent';
@@ -74,24 +90,34 @@ class vccsubmission_form extends \moodleform {
 
         $mform->addElement('html', '<div class="alert alert-warning" role="alert">' . get_string('attnparents_useyouraccount', 'local_equipment', $SITE->shortname) . '</div>');
 
+
+        // Users would fill out this form while logged into one of their students accounts, so the email, first name,
+        // and last name fields ended up being filled out with the student's information, since this form changes core user fields.
+        // The parents would then fill out the electronic signature field with the student's name instead of their own.
+
+        // This was obviously a big oversight, so I had removed this "convenience" of default values so that parents would be more
+        // likely to just fill out their own information, but I put it back 'cause I'm taking a different approach now. I'm going
+        // to force users to be logged in to their own personal account by validating that the logged in user has the 'Parent' role
+        // assigned to their account.
+
         // Profile email.
-        $mform->addElement('text', 'email', get_string('email'), ['value' => $USER->email, 'disabled' => 'disabled']);
+        $mform->addElement('text', 'email', get_string('email'), ['value' => $USER->email]);
         $mform->setType('email', PARAM_EMAIL);
 
         // Profile first name.
-        $mform->addElement('text', 'firstname', get_string('firstname'), ['value' => $USER->firstname, 'disabled' => 'disabled']);
+        $mform->addElement('text', 'firstname', get_string('firstname'), ['value' => $USER->firstname]);
         $mform->setType('firstname', PARAM_TEXT);
 
         // Profile last name.
-        $mform->addElement('text', 'lastname', get_string('lastname'), ['value' => $USER->lastname, 'disabled' => 'disabled']);
+        $mform->addElement('text', 'lastname', get_string('lastname'), ['value' => $USER->lastname]);
         $mform->setType('lastname', PARAM_TEXT);
 
 
-        $userid = $USER->id;
-        $editprofileurl = new \moodle_url('/user/edit.php', array('id' => $userid));
-        $editprofilelink = \html_writer::link($editprofileurl, get_string('editmyprofile'));
-
-        $mform->addElement('html', '<div class="mb-4 ml-4">' . new \lang_string('toeditprofile', 'local_equipment', $editprofilelink) . '</div>');
+        // This is a convenience for users, but we're not using it right now.
+        // $userid = $USER->id;
+        // $editprofileurl = new \moodle_url('/user/edit.php', array('id' => $userid));
+        // $editprofilelink = \html_writer::link($editprofileurl, get_string('editmyprofile'));
+        // $mform->addElement('html', '<div class="mb-4 ml-4">' . new \lang_string('toeditprofile', 'local_equipment', $editprofilelink) . '</div>');
 
         $phone = $USER->phone2 ?: $USER->phone1;
         if (empty($phone)) {
@@ -232,11 +258,22 @@ class vccsubmission_form extends \moodleform {
         $pickuptimedata = local_equipment_get_partnerships_with_pickuptimes();
         $pickuptimes = $DB->get_records('local_equipment_pickup', ['status' => 'confirmed']);
 
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<pre>';
+        // var_dump($pickuptimedata);
+        // echo '</pre>';
+        // echo '<br />';
+        // echo '<pre>';
+        // var_dump($pickuptimes);
+        // echo '</pre>';
 
         $i = 0;
+        // Creates the list of formatted pickup locations and times for the user to select from.
         foreach ($pickuptimes as $id => $pickup) {
-            $partnership = $DB->get_record('local_equipment_partnership', ['id' => $pickup->partnershipid]);
 
+            $partnership = $DB->get_record('local_equipment_partnership', ['id' => $pickup->partnershipid]);
             $datetime = userdate($pickup->pickupdate, get_string('strftimedate', 'langconfig')) . ' ' .
             userdate($pickup->starttime, get_string('strftimetime', 'langconfig')) . ' - ' .
             userdate($pickup->endtime, get_string('strftimetime', 'langconfig'));
@@ -254,11 +291,26 @@ class vccsubmission_form extends \moodleform {
                 $name = $partnership->locationname = $matches[1];
                 $partnership->pickup_extrainstructions = trim(preg_replace($pattern, '', $partnership->pickup_extrainstructions, 1));
             }
+
+            // If the partnership has a pickup address, add it to the list of formatted pickup locations.
             if ($partnership->pickup_streetaddress) {
                 $formattedpickuplocations[$id] = "$name — $datetime — $partnership->pickup_streetaddress, $partnership->pickup_city, $partnership->pickup_state $partnership->pickup_zipcode";
-                if (isset($pickuptimedata[$id])) {
+                if (isset($pickuptimedata[$id]) && isset($pickuptimedata[$id][$i])) {
+                    // echo '<br />';
+                    // echo '<br />';
+                    // echo '<br />';
+                    // echo '<pre>';
+                    // var_dump($i);
+                    // var_dump($id);
+                    // var_dump($pickuptimedata);
+                    // echo '</pre>';
+
+                    // if ($i === 1) {
+                    //     die();
+                    // }
                     $formattedpickuptimes[$id] = $pickuptimedata[$id][$i];
                     $i++;
+
                 }
             }
         }

@@ -283,6 +283,7 @@ $string['consentformtitle'] = 'Virtual Course Consent Form';
 $string['dateofbirth'] = 'Date of birth';
 $string['deletestudent'] = 'Delete student';
 $string['editvccsubmission'] = 'Edit VCC submission';
+$string['errorsubmittingform'] = 'Error submitting the Virtual Course Consent form';
 $string['electronicsignature'] = 'Electronic signature';
 $string['formdidnotsubmit'] = 'Form was not submitted! Please make sure you have filled out all required fields, then try submitting again.';
 $string['formsubmitted'] = 'Your {$a} form has been submitted successfully!';
@@ -357,17 +358,6 @@ $string['virtualcourseconsentsubmissions'] = 'Virtual course consent submissions
 $string['youmustselectapartnership'] = 'You must select a partnership';
 $string['youmustselectatleastonecourse'] = 'You must select at least one course';
 $string['wecurrentlyonlyacceptcertainnumbers'] = 'We currently only accept {$a} phone numbers. You can use most standard ways of typing a phone number like 2345678910 or +1 (234) 567-8910.';
-
-
-
-
-
-
-
-
-
-
-
 
 
 // Phone communication
@@ -465,19 +455,6 @@ $string['wait10minutes'] = 'You\'ll have to wait 10 minutes before you can reque
 $string['wecurrentlyonlyacceptusphonenumbers'] = 'We currently only accept U.S. phone numbers. You can use most standard ways of typing a phone number like 2345678910 or +1 (234) 567-8910.';
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Time custom format strings
 $string['strftimedate'] = '%B %d, %Y';
 $string['strftimedate'] = '%d %B %Y';
@@ -504,5 +481,64 @@ $string['strftimerecentfull'] = '%a, %d %b %Y, %I:%M %p';
 $string['strftimetime'] = '%I:%M %p';
 $string['strftimetime12'] = '%I:%M %p';
 $string['strftimetime24'] = '%H:%M';
+
+
+
+// Bulk family upload and enroll strings
+
+$string['bulkfamilyupload'] = 'Bulk family upload and enroll';
+$string['familiesinputdata'] = 'Families data';
+$string['familiesinputdata_help'] = 'Enter family data in the following format:
+Parent Name
+parent@email.com
+Phone Number (optional)
+Partnership ID
+* Student Name
+student@email.com (optional)
+Phone Number (optional)
+** courseid1, courseid2, courseid3, etc.
+* Next Student Name (if applicable)
+...
+
+Use a blank line to separate families.';
+$string['uploadresults'] = 'Upload Results';
+$string['newparentcreated'] = 'Created new parent: {$a}';
+$string['connotaddmorethanonepartnership'] = '{$a}: cannot add more than one partnership per family. Please remove the extra partnership ID.';
+$string['existingparentfound'] = 'Found existing parent: {$a}';
+$string['newstudentcreated'] = 'Created new student: {$a}';
+$string['existingstudentfound'] = 'Found existing student: {$a}';
+$string['expectedanonemptystring'] = 'Expected a non-empty string';
+$string['parentroleassigned'] = 'Assigned parent role to: {$a}';
+$string['studentroleassigned'] = 'Assigned student role to: {$a}';
+$string['userenrolled'] = 'Enrolled user {$a->user} in course {$a->course}';
+$string['invalidformat'] = 'Invalid data format on line {$a}';
+$string['invalidinput'] = 'Invalid input: {$a}';
+$string['processingcompleted'] = 'Processing completed. {$a->created} users created, {$a->updated} users updated.';
+$string['emailexists'] = 'Email already exists: {$a}';
+$string['invalidcourseid'] = 'Invalid course ID: {$a}';
+$string['invalidpartnershipid'] = 'Invalid partnership ID: {$a}';
+$string['nopermission'] = 'You do not have permission to perform this action.';
+$string['errorvalidatingfamilydata'] = 'Error validating family data:';
+$string['newfamily'] = 'Line {$a}: New family';
+$string['parentname'] = 'p_name: {$a}';
+$string['parentemail'] = 'p_email: {$a}';
+$string['parentphone'] = 'p_phone: {$a}';
+$string['studentname'] = 's_name: {$a}';
+$string['studentemail'] = 's_email: {$a}';
+$string['studentphone'] = 'p_phone: {$a}';
+$string['studentcourses'] = 's_courses: {$a}';
+// $string['familypartnershipid'] = 'fp_id: {$a}';
+$string['partnershipid'] = 'Partnership ID';
+$string['preprocess'] = 'Pre-process';
+$string['uploadandenroll'] = 'Upload & enroll';
+$string['unrecognizedformat'] = '{$a}: Unrecognized format';
+$string['nocoursesfoundforthispartnership'] = 'No courses found for this partnership';
+$string['partnershipnumbernotfound'] = 'Partnership ID #{$a} not found';
+$string['courseidnotfound'] = 'Course ID #{$a} not found';
+$string['preprocessing_success'] = 'Preprocessing successful';
+$string['preprocessing_failure'] = 'Preprocessing failed';
+
+
+
 
 $string['welcomemessage'] = 'Hey there, {$a}!';

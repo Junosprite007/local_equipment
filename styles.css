@@ -88,4 +88,21 @@ td.local-equipment-nowrap-cell {
   padding-left: 30px;
 }
 
+.local-equipment-bulkfamilyupload-container {
+  display: flex;
+  gap: 20px;
+}
+
+.local-equipment-bulkfamilyupload-textarea {
+  flex: 1;
+  resize: vertical;
+}
+
+.local-equipment-bulkfamilyupload-preprocess-output {
+  flex: 1;
+  border: 1px solid #ccc;
+  padding: 10px;
+  overflow-y: auto;
+}
+
 /*# sourceMappingURL=styles.css.map */

@@ -30,7 +30,7 @@ require_once('./lib.php');
 
 admin_externalpage_setup('local_equipment_vccsubmissions');
 
-$context = context_system::instance();
+$context = \core\context\system::instance();
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/equipment/vccsubmissions.php'));
 $PAGE->set_title(get_string('managevccsubmissions', 'local_equipment'));
@@ -359,7 +359,7 @@ foreach ($submissions as $submission) {
     $submission->firstname = null;
     $row = [];
     $row[] = userdate($submission->timecreated, get_string('strftime24date_mdy', 'local_equipment'));
-    $row[] = $submission->firstname != 0 ? $submission->firstname : $submission->u_firstname;
+    $row[] = $submission->firstname != 0 ? $submission->firstname : '[empty]';
     $row[] = $submission->lastname != 0 ? $submission->lastname : $submission->u_lastname;
     $row[] = $submission->email != 0 ? $submission->email : $submission->u_email;
     $row[] = $submission->phone != 0 ? $submission->phone : ($submission->u_phone2 != '' ? $submission->u_phone2 : $submission->u_phone1);

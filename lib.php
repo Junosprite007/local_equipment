@@ -1087,7 +1087,7 @@ function local_equipment_get_partnerships_with_pickuptimes() {
     global $DB;
 
     $partnerships = $DB->get_records('local_equipment_partnership', ['active' => 1]);
-    $pickuptimedata = array();
+    $pickuptimedata = [];
 
     foreach ($partnerships as $partnership) {
         $pickups = $DB->get_records('local_equipment_pickup', ['partnershipid' => $partnership->id], 'pickupdate, starttime');
@@ -1980,4 +1980,135 @@ function local_equipment_combine_user_records_by_userid($userid) {
     $userrecord->studentids = json_encode(array_unique($studentids));
     $userrecord->vccsubmissionids = json_encode(array_unique($vccsubmissionids));
     return $userrecord;
+}
+
+
+/**
+ * Get all users who have a specific role assigned to them.
+ * @param string $role The 'shortname' of the role to search for.
+ * @return array An array of non-duplicate userids that have the specified role assigned to them.
+ */
+
+function local_equipment_get_users_by_role($role) {
+    global $DB;
+    // $context = context_system::instance();
+
+    $roleid = $DB->get_field('role', 'id', ['shortname' => $role]);
+    $userids = $DB->get_fieldset_select('role_assignments', 'userid', 'roleid = ?', [$roleid]);
+
+    // Get the same list without duplicates.
+    $users = $DB->get_records_list('user', 'id', $userids, '', 'id');
+    return $users;
+}
+
+/**
+ * Users who want to get a list of all their children, mentees, etc. should use this function.
+ *
+ * Get all the students, and their corresponding roles, of the currently logged user, such as this user's children or mentees, who
+ * have the logged in user assigned to them through the 'Assign roles relative to this user' setting in Preferences.
+ *
+ * I.e. if a student has a role assigned to them, such as 'Mentor', with the current user listed on that assigned role, that student
+ * of yours—your mentee in this case—will appear in this list along with all user info and the role that connects you to them.
+ *
+ * @param string $asrole The 'shortname' of the role for which you need to get students. E.g. 'parent', 'mentor'.
+ * @return object An object containing two arrays of equal length, each with a key: roles[] and users[].
+ * roles[] contains one matching role for each student of this user, but the role itself is actually the relative role the current
+ * user has been assigned to by their students, such as a 'Parent' or 'Mentor' role id, as well as the context in which it's
+ * assigned, and other relavent IDs.
+ * users[] contains one entry for each student student of the current user, filled with all student info from the core mdl_user
+ * table
+ *
+ * Returns false if no students are found.
+ */
+
+function local_equipment_get_my_students($asrole) {
+    // Get my students as a 'parent'; get them as a 'mentor'; etc.
+    global $DB, $USER;
+    $users = [];
+    $usersinfo = new stdClass();
+    $usersinfo->roles = [];
+    $usersinfo->users = [];
+    // This is the query to get the all the students/mentees of the currently logged in user.
+    $sql = "SELECT role_assignments.id,roleid,userid,instanceid,contextid
+        FROM {role_assignments} role_assignments
+        JOIN {role} role ON role_assignments.roleid = role.id
+        JOIN {context} context ON role_assignments.contextid = context.id
+        WHERE role_assignments.userid = :userid
+        AND role.shortname = :shortname;";
+    $params = ['userid' => $USER->id, 'shortname' => $asrole];
+
+    $rolesassignments = $DB->get_records_sql($sql, $params);
+
+    // Now we can iterate through the role assignments to get the records of this user's students/mentees.
+    $i = 0;
+    foreach ($rolesassignments as $role) {
+        $users[$role->instanceid] = $DB->get_record('user', ['id' => $role->instanceid]);
+        $usersinfo->roles[$role->instanceid] = array_values($rolesassignments)[$i];
+        $i++;
+    }
+
+    $usersinfo->users = $users;
+
+    if (empty($usersinfo->users) || empty($usersinfo->roles)) {
+        return false;
+    }
+
+    return $usersinfo;
+}
+
+/**
+ * Users who want to get a list of all their parents, mentors, etc. should use this function.
+ *
+ * Get all the users—such as the students or mentees—who have the logged in user assigned to them through the 'Assign roles relative
+ * to this user' setting in Preferences.
+ *
+ * @param string $role The 'shortname' of the role for which the logged in user needs to get their relative role assignments. If the
+ * currently logged in user is a student who wants to see their parents or mentors, use 'parent' or 'mentor'.
+ * @return object An object containing two arrays of equal length, each with a key: roles[] and users[].
+ * roles[] contains one matching role for each student of this user, but the role itself is actually the relative role the current
+ * user has been assigned to by their students, such as a 'Parent' or 'Mentor' role id, as well as the context in which it's
+ * assigned, and other relavent IDs.
+ * users[] contains one entry for each student student of the current user, filled with all student info from the core mdl_user
+ * table
+ *
+ * Returns false if no one is assigned to this user via specified role.
+ */
+
+function local_equipment_get_users_assigned_to_me($role) {
+    // i.e get my parents; get my mentors; etc.
+    global $DB, $USER;
+    $users = [];
+    $roles = [];
+    $usersinfo = new stdClass();
+    // Get all the users of the specified role, regardless of the currently logged in user.
+    $allusersofthisrole = local_equipment_get_users_by_role($role);
+
+    $sql = "SELECT role_assignments.id,roleid,userid,instanceid,contextid
+        FROM {role_assignments} role_assignments
+        JOIN {role} role ON role_assignments.roleid = role.id
+        JOIN {context} context ON role_assignments.contextid = context.id
+        WHERE role_assignments.userid = :userid
+        AND role.shortname = :shortname
+        AND instanceid = :instanceid;";
+
+    // This is how you get the all assigned users of the currently logged in user.
+    foreach ($allusersofthisrole as $userrole) {
+        $params = ['userid' => $userrole->id, 'shortname' => $role, 'instanceid' => $USER->id];
+        $records = $DB->get_records_sql($sql, $params);
+        if (!empty($records)) {
+            $roles[$userrole->id] = array_values($records)[0];
+        }
+    }
+
+    foreach ($roles as $r) {
+        $users[$r->userid] = $DB->get_record('user', ['id' => $r->userid]);
+    }
+    $usersinfo->roles = $roles;
+    $usersinfo->users = $users;
+
+    if (empty($usersinfo->users) || empty($usersinfo->roles)) {
+        return false;
+    }
+
+    return $usersinfo;
 }

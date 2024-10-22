@@ -277,3 +277,120 @@ electronicsignature
 2024-09-05-10h52m56s
 docker exec -it flip_db /bin/bash
 mysqldump -u flipuser -pXrLAve7NgaSNnapv9gKHSLeZ3pke4w8UNAb6MWkep3CE8LaDaruU6g989HF9ZL4X flip_prod_db mdl_local_equipment_vccsubmission > /opt/backups/flip_db/2024-09-05-10h52m56s/local_equipment_vccsubmission.sql
+
+
+# Data structures
+
+## Add bulk families.php
+### local/equipment/addbulkfamilies.php
+
+The 'Add bulk families' sub-features generates an array of objects (families) from the #id_familydata text input box. Each family is an object, and the array contains all families. Here's the data structure layout:
+
+[
+    // Family 1
+    {
+        parents:
+            [
+                {
+                    email: 'parent1email@domain.com',
+                    name: 'Parent Name',
+                    phone: '+12345678910',
+                },
+                {
+                    email: 'parent2email@domain.com',
+                    name: 'Parent Name',
+                },
+            ],
+        students:
+            [
+                {
+                    email: 'student1email@domain.com',
+                    name: 'Student Name',
+                    phone: '+12345678910',
+                    courses: ['1','23','456'],
+                },
+                {
+                    email: 'student2email@domain.com',
+                    name: 'Student Name',
+                    courses: ['1','23','456'],
+                },
+                {
+                    email: 'student3+parent1email@domain.com',
+                    name: 'Student Name',
+                    courses: ['1','23','456'],
+                },
+            ],
+        partnership: '4',
+    },
+    
+    // Family 2
+    {
+        parents:
+            [
+                {
+                    email: 'parent3email@domain.com',
+                    name: 'Parent Name',
+                    phone: '+12345678910',
+                },
+            ],
+        students:
+            [
+                {
+                    email: 'student4email@domain.com',
+                    name: 'Student Name',
+                    courses: ['1','23','456'],
+                },
+
+            ],
+        partnership: '2',
+    },
+
+    // Family 3, only 1 student and no parents.
+    {
+        students:
+            [
+                {
+                    email: 'student5email@domain.com',
+                    name: 'Student Name',
+                    courses: ['23'],
+                },
+
+            ],
+    },
+
+    // Family 4, only 1 parent and no students.
+    {
+        parents:
+            [
+                {
+                    email: 'parent4email@domain.com',
+                    name: 'Parent Name',
+                },
+
+            ],
+    }
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
