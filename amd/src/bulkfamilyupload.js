@@ -30,7 +30,7 @@ import Log from 'core/log';
  * Initialize the module.
  */
 export const init = () => {
-    const $textarea = $('#id_familydata');
+    const $textarea = $('#id_familiesinputdata');
     const $preprocessDiv = $('#family-preprocess-display');
     const $preprocessButton = $('.preprocessbutton');
     const $submitButton = $('#id_submitbutton');
@@ -49,8 +49,13 @@ export const init = () => {
         $submitButton.prop('disabled', true);
     });
 
-    // Function to clean up input text
+    // Function to clean up input text with error handling
     const cleanInputText = (text) => {
+        Log.debug('text: ');
+        Log.debug(text);
+        if (!text || typeof text !== 'string') {
+            return '';
+        }
         // Trim newlines and whitespace from the start and end of the entire input
         return text.replace(/^\s+|\s+$/g, '');
     };
@@ -114,8 +119,8 @@ export const init = () => {
  * @return {Promise<string>} The HTML feedback string.
  */
 export const validateFamilyData = async ({ input, partnerships, courses }) => {
-    let familiesData = [];
-    let familiesHTML = [];
+    // let familiesData = [];
+    // let familiesHTML = [];
     Log.debug('input: ');
     Log.debug(input);
     // Log.debug(partnerships);
@@ -304,8 +309,16 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
             case 'student': {
                 // This refers to the student's name, which is the only line that is preceded by a single asterisk (*).
                 const name = line.replace('*', '').trim();
-                student[textType].data = name;
-                student[textType].html = name;
+
+                student = {
+                    ...student,
+                    [textType]: {
+                        data: name,
+                        html: name,
+                    },
+                };
+                // student[textType].data = name;
+                // student[textType].html = name;
 
                 // return { ...student, name, line: name };
                 break;
@@ -348,7 +361,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                     coursesData.map(async (id) => {
                         let courseName = '';
                         if (courses[id]) {
-                            const enDash = '–'; // EN DASH character
+                            const enDash = '–'; // EN DASH character: '–' or \u2013
                             const regex = new RegExp(`${id} ${enDash} `, 'g');
                             courseName = courses[id].replace(regex, '');
                         } else {
@@ -397,7 +410,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
         if (partnerships[id]) {
             partnership = {
                 data: id,
-                html: partnerships[id],
+                html: partnerships[id].name,
             };
         } else {
             partnership = {
@@ -419,6 +432,78 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
         };
     };
 
+    // We can use this for mapping below, instead of the for loop.
+    // Grab each family chunk and split each line into its own element within the 'lines' array.
+    // const promiseResults = await Promise.all(
+    //     family.split('\n').map(async (line) => {
+    //         Log.debug('Processing family... mapping...');
+    //         line.trim();
+    //         const textType = determineTextType(line);
+
+    //         if (textType === 'student') {
+    //             inStudentSection = true;
+    //         }
+
+    //         // Determine whether we're in the student section, parent section, or an unknown section.
+    //         if (textType === 'unknown') {
+    //             const errorString = await getString(
+    //                 'unrecognizedformat',
+    //                 'local_equipment',
+    //                 line
+    //             );
+    //             familyHTML.push(
+    //                 `<span class="pl-2 alert-danger">${errorString}</span>`
+    //             );
+    //             // The 'familyData' object won't need anything added, 'cause we're checking for errors using 'alert-danger'.
+    //         } else if (partnershipAdded && textType === 'partnership') {
+    //             const errorString = await getString(
+    //                 'connotaddmorethanonepartnership',
+    //                 'local_equipment',
+    //                 line
+    //             );
+    //             familyHTML.push(
+    //                 `<span class="pl-2 alert-danger">${errorString}</span>`
+    //             );
+    //         } else if (textType === 'partnership') {
+    //             ({ partnership, inStudentSection } =
+    //                 await processPartnershipInfo(line));
+    //             familyHTML.push(partnership.html);
+    //             // There can only be one partnership
+    //             familyData.partnership = partnership.data;
+    //             partnershipAdded = true;
+    //         } else if (!inStudentSection) {
+    //             // We haven't entered the student section yet.
+    //             ({ parent } = await processParentInfo(
+    //                 line,
+    //                 textType,
+    //                 parent
+    //             ));
+
+    //             // The 'email' line marks the end of a given parent, so we push the parent object to the 'parents' array.
+    //             if (textType === 'email') {
+    //                 parents.push(parent);
+    //                 parent = {};
+    //             }
+    //             familyHTML.push(parent[textType].html);
+    //         } else {
+    //             // Now we are in the student section.
+    //             ({ student } = await processStudentInfo(
+    //                 line,
+    //                 textType,
+    //                 student
+    //             ));
+    //             // line = student[textType].html;
+    //             if (textType === 'courses') {
+    //                 students.push(student);
+    //                 student = {};
+    //             }
+    //             familyHTML.push(student[textType].html);
+    //         }
+
+    //         // We're using this map function to change and update the variables above, so we don't need to return anything.
+    //     })
+    // );
+
     /**
      * Process a single family's data, a.k.a. a family chunk.
      * This const will be used as input for the map() function below.
@@ -427,173 +512,165 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
      * @return {string} HTML feedback for the family.
      */
     const processFamily = async (family) => {
-        Log.debug('Processing family...');
+        try {
+            let parents = [];
+            let students = [];
+            let parent = {};
+            let student = {};
+            let partnership = {};
+            let inStudentSection = false;
+            let familyHTML = [];
+            let partnershipAdded = false;
 
-        let parents = [];
-        let students = [];
-        let parent = {};
-        let student = {};
-        let partnership = {};
-        let inStudentSection = false;
-        let familyData = {};
-        let familyHTML = []; // The will be joined into a single string at the end.
+            const lines = family
+                .split('\n')
+                .map((line) => line.trim())
+                .filter((line) => line); // Remove empty lines
 
-        let partnershipAdded = false;
+            for (const line of lines) {
+                try {
+                    const textType = determineTextType(line);
+                    Log.debug(`Processing line: ${line} of type: ${textType}`);
 
-        // Grab each family chunk and split each line into its own element within the 'lines' array.
-        const promiseResults = await Promise.all(
-            family.split('\n').map(async (line) => {
-                Log.debug('Processing family... mapping...');
-                line.trim();
-                const textType = determineTextType(line);
+                    if (textType === 'student') {
+                        inStudentSection = true;
+                    }
 
-                if (textType === 'student') {
-                    inStudentSection = true;
-                }
+                    if (textType === 'unknown') {
+                        const errorString = await getString(
+                            'unrecognizedformat',
+                            'local_equipment',
+                            line
+                        );
+                        familyHTML.push(
+                            `<span class="pl-2 alert-danger">${errorString}</span>`
+                        );
+                        continue;
+                    }
 
-                // Determine whether we're in the student section, parent section, or an unknown section.
-                if (textType === 'unknown') {
+                    if (partnershipAdded && textType === 'partnership') {
+                        const errorString = await getString(
+                            'connotaddmorethanonepartnership',
+                            'local_equipment',
+                            line
+                        );
+                        familyHTML.push(
+                            `<span class="pl-2 alert-danger">${errorString}</span>`
+                        );
+                        continue;
+                    }
+
+                    switch (true) {
+                        case textType === 'partnership': {
+                            const result = await processPartnershipInfo(line);
+                            partnership = result.partnership;
+                            inStudentSection = result.inStudentSection;
+                            familyHTML.push(partnership.html);
+                            partnershipAdded = true;
+                            break;
+                        }
+                        case !inStudentSection: {
+                            parent = await processParentInfo(
+                                line,
+                                textType,
+                                parent
+                            );
+                            if (parent[textType]) {
+                                familyHTML.push(parent[textType].html);
+                            }
+                            if (textType === 'email') {
+                                parents.push({ ...parent }); // Create a deep copy
+                                parent = {};
+                            }
+                            break;
+                        }
+                        case inStudentSection: {
+                            const result = await processStudentInfo(
+                                line,
+                                textType,
+                                student
+                            );
+                            student = result;
+                            if (student[textType]) {
+                                familyHTML.push(student[textType].html);
+                            }
+                            if (textType === 'courses') {
+                                students.push({ ...student }); // Create a deep copy
+                                student = {};
+                            }
+                            break;
+                        }
+                    }
+                } catch (lineError) {
+                    Log.error('Error processing line:', line, lineError);
                     const errorString = await getString(
-                        'unrecognizedformat',
+                        'errorprocessingline',
                         'local_equipment',
                         line
                     );
                     familyHTML.push(
                         `<span class="pl-2 alert-danger">${errorString}</span>`
                     );
-                    // The 'familyData' object won't need anything added, 'cause we're checking for errors using 'alert-danger'.
-                } else if (partnershipAdded && textType === 'partnership') {
-                    const errorString = await getString(
-                        'connotaddmorethanonepartnership',
-                        'local_equipment',
-                        line
-                    );
-                    familyHTML.push(
-                        `<span class="pl-2 alert-danger">${errorString}</span>`
-                    );
-                } else if (textType === 'partnership') {
-                    ({ partnership, inStudentSection } =
-                        await processPartnershipInfo(line));
-                    familyHTML.push(partnership.html);
-                    // There can only be one partnership
-                    familyData.partnership = partnership.data;
-                    partnershipAdded = true;
-                } else if (!inStudentSection) {
-                    // We haven't entered the student section yet.
-                    ({ parent } = await processParentInfo(
-                        line,
-                        textType,
-                        parent
-                    ));
-
-                    // The 'email' line marks the end of a given parent, so we push the parent object to the 'parents' array.
-                    if (textType === 'email') {
-                        parents.push(parent);
-                        parent = {};
-                    }
-                    familyHTML.push(parent[textType].html);
-                } else {
-                    // Now we are in the student section.
-                    ({ student } = await processStudentInfo(
-                        line,
-                        textType,
-                        student
-                    ));
-                    // line = student[textType].html;
-                    if (textType === 'courses') {
-                        students.push(student);
-                        student = {};
-                    }
-                    familyHTML.push(student[textType].html);
                 }
+            }
 
-                // We're using this map function to change and update the variables above, so we don't need to return anything.
-            })
+            // Handle any remaining student data
+            if (Object.keys(student).length > 0) {
+                students.push({ ...student });
+            }
+
+            const familyData = { parents, students, partnership };
+            const htmlOutput = `<div class="bg-light border p-3">${familyHTML.join(
+                '<br />'
+            )}</div>`;
+
+            return {
+                data: familyData,
+                html: htmlOutput,
+            };
+        } catch (error) {
+            Log.error('Error processing family:', error);
+            const errorString = await getString(
+                'errorprocessingfamily',
+                'local_equipment'
+            );
+            return {
+                data: {},
+                html: `<div class="bg-light border p-3"><span class="pl-2 alert-danger">${errorString}</span></div>`,
+            };
+        }
+    };
+
+    try {
+        const familiesInput = input
+            .split('\n\n')
+            .filter((family) => family.trim());
+        const results = await Promise.all(familiesInput.map(processFamily));
+
+        const familiesData = results
+            .map((result) => result.data)
+            .filter(Boolean);
+        const familiesHTML = results.map((result) => result.html);
+
+        Log.debug('Processing complete:', {
+            familiesCount: familiesData.length,
+            dataStructure: familiesData,
+            htmlContent: familiesHTML,
+        });
+
+        return {
+            data: familiesData,
+            html: familiesHTML.join('<br>'),
+        };
+    } catch (error) {
+        Log.error('Error in validateFamilyData:', error);
+        const errorMessage = await getString(
+            'errorvalidatingfamilydata',
+            'local_equipment'
         );
-
-        // for (let line of lines) {
-        //     const textType = determineTextType(line);
-
-        //     // Log.debug('line ' + line + ' is of type ' + textType);
-        //     // Log.debug(partnership);
-
-        //     if (textType === 'student') {
-        //         inStudentSection = true;
-        //     }
-
-        //     // Determine whether we're in the student section, parent section, or an unknown section.
-        //     if (textType === 'unknown') {
-        //         const errorString = await getString(
-        //             'unrecognizedformat',
-        //             'local_equipment',
-        //             line
-        //         );
-        //         familyHTML.push(
-        //             `<span class="pl-2 alert-danger">${errorString}</span>`
-        //         );
-        //     } else if (textType === 'partnership') {
-        //         ({ partnership, inStudentSection } =
-        //             await processPartnershipInfo(line));
-        //         familyHTML.push(partnership.html);
-        //         familyData.partnership = partnership.data;
-        //     } else if (!inStudentSection) {
-        //         // We haven't entered the student section yet.
-        //         ({ parent } = await processParentInfo(line, textType, parent));
-
-        //         // The 'email' line marks the end of a given parent, so we push the parent object to the 'parents' array.
-        //         if (textType === 'email') {
-        //             parents.push(parent);
-        //             parent = {};
-        //         }
-        //         familyHTML.push(parent[textType].html);
-        //     } else {
-        //         // Now we are in the student section.
-        //         ({ student } = await processStudentInfo(
-        //             line,
-        //             textType,
-        //             student
-        //         ));
-        //         // line = student[textType].html;
-        //         if (textType === 'courses') {
-        //             students.push(student);
-        //             student = {};
-        //         }
-        //         familyHTML.push(student[textType].html);
-        //     }
-
-        //     // if (textType !== 'unknown') {
-        //     //     familyHTML.push(line);
-        //     // }
-        // }
-
-        Log.debug('promiseResults: ');
-        Log.debug(promiseResults);
-
-        familyData = { parents, students, partnership };
-        familiesData.push(familyData);
-        familyHTML = `<div class="bg-light border p-3">${familyHTML.join(
-            '<br />'
-        )}</div>`;
-        familiesHTML.push(familyHTML);
-
-        return familyHTML;
-    };
-
-    // Separate the families into individual family chunks and trim.
-    const familiesInput = input.split('\n\n').filter((family) => family.trim());
-
-    familiesHTML = await Promise.all(familiesInput.map(processFamily));
-
-    Log.debug('family stuff: ');
-    Log.debug(familiesData);
-    Log.debug(familiesHTML);
-    Log.debug(familiesInput);
-    // Log.debug(preprocessPromises);
-    // Log.debug(preprocessResults);
-    Log.debug(familiesHTML);
-
-    return {
-        data: familiesData,
-        html: familiesHTML.join('<br>'),
-    };
+        return {
+            data: [],
+            html: `<div class="alert alert-danger">${errorMessage}</div>`,
+        };
+    }
 };
