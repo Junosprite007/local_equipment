@@ -170,11 +170,12 @@ class addbulkfamilies_form extends moodleform {
         $mform->addElement($preprocess_button);
 
         // Add action buttons, but don't use add_action_buttons()
-        $buttonarray = array();
-        $buttonarray[] = &$mform->createElement('submit', 'submitbutton', get_string('uploadandenroll', 'local_equipment'), ['id' => 'id_submitbutton', 'disabled' => 'disabled']);
-        $buttonarray[] = &$mform->createElement('cancel');
-        $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
-        $mform->closeHeaderBefore('buttonar');
+        $mform->addElement('submit', 'submitbutton', get_string('uploadandenroll', 'local_equipment'), ['id' => 'id_submitbutton', 'disabled' => 'disabled']);
+        // $buttonarray = array();
+        // $buttonarray[] = &$mform->createElement('submit', 'submitbutton', get_string('uploadandenroll', 'local_equipment'), ['id' => 'id_submitbutton', 'disabled' => 'disabled']);
+        // $buttonarray[] = &$mform->createElement('cancel');
+        // $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
+        // $mform->closeHeaderBefore('buttonar');
 
 
 

@@ -51,8 +51,6 @@ export const init = () => {
 
     // Function to clean up input text with error handling
     const cleanInputText = (text) => {
-        Log.debug('text: ');
-        Log.debug(text);
         if (!text || typeof text !== 'string') {
             return '';
         }
@@ -79,6 +77,8 @@ export const init = () => {
             Log.debug(families);
             $preprocessDiv.html(families.html);
 
+
+
             // Adjust height of preprocess div to match textarea
             $preprocessDiv.css('height', $textarea.outerHeight() + 'px');
 
@@ -86,11 +86,11 @@ export const init = () => {
             const hasErrors = families.html.includes('alert-danger');
             $submitButton.prop('disabled', hasErrors);
 
-            const messageKey = hasErrors
-                ? 'preprocessing_failure'
-                : 'preprocessing_success';
-            const message = await getString(messageKey, 'local_equipment');
-            Log.debug(message);
+            // const messageKey = hasErrors
+            //     ? 'preprocessing_failure'
+            //     : 'preprocessing_success';
+            // const message = await getString(messageKey, 'local_equipment');
+            // Log.debug(message);
         } catch (error) {
             Log.error('Error in preprocessing: ');
             Log.error(error);
@@ -121,8 +121,8 @@ export const init = () => {
 export const validateFamilyData = async ({ input, partnerships, courses }) => {
     // let familiesData = [];
     // let familiesHTML = [];
-    Log.debug('input: ');
-    Log.debug(input);
+    // Log.debug('input: ');
+    // Log.debug(input);
     // Log.debug(partnerships);
     // Log.debug(courses);
     if (!input || typeof input !== 'string') {
@@ -357,28 +357,41 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                 // });
                 // let coursesHTML = '';
 
+                const processedCourses = [];
+
                 const coursesHTML = await Promise.all(
                     coursesData.map(async (id) => {
+                        const courseAlreadyProcessed =
+                            processedCourses.includes(id);
                         let courseName = '';
-                        if (courses[id]) {
+                        if (courses[id] && !courseAlreadyProcessed) {
+                            processedCourses.push(id);
                             const enDash = '–'; // EN DASH character: '–' or \u2013
                             const regex = new RegExp(`${id} ${enDash} `, 'g');
                             courseName = courses[id].replace(regex, '');
+                        } else if (courses[id] && courseAlreadyProcessed) {
+                            processedCourses.push(id);
+                            const errorMessage = await getString(
+                                'coursealreadyadded',
+                                'local_equipment',
+                                id
+                            );
+                            courseName = `<span class="pl-2 pr-2 alert-danger">${errorMessage}</span>`;
                         } else {
                             const errorMessage = await getString(
-                                'idnotfound',
+                                'courseidnotfound',
                                 'local_equipment',
                                 id
                             );
                             courseName = `<span class="pl-2 pr-2 alert-danger">${errorMessage}</span>`;
                         }
 
-                        Log.debug('courseName: ', courseName);
-                        Log.debug('id: ', id);
+                        // Log.debug('courseName: ', courseName);
+                        // Log.debug('id: ', id);
 
                         return courseName;
                     })
-                ).join(', ');
+                );
 
                 // Log.debug('studentCourses: ', studentCourses);
 
@@ -388,8 +401,13 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                 //         ', '
                 //     )}</span>`,
                 // };
+                // Log.debug('coursesData: ');
+                // Log.debug(coursesData);
                 student[textType].data = coursesData;
-                student[textType].html = coursesHTML;
+                student[textType].html =
+                    '<span class="pl-4 pr-4">' +
+                    coursesHTML.join(', ') +
+                    '</span>';
                 break;
             }
             default:
@@ -530,7 +548,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
             for (const line of lines) {
                 try {
                     const textType = determineTextType(line);
-                    Log.debug(`Processing line: ${line} of type: ${textType}`);
+                    // Log.debug(`Processing line: ${line} of type: ${textType}`);
 
                     if (textType === 'student') {
                         inStudentSection = true;
