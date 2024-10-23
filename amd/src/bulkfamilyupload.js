@@ -30,80 +30,258 @@ import Log from 'core/log';
  * Initialize the module.
  */
 export const init = () => {
+    // Core form elements
     const $textarea = $('#id_familiesinputdata');
-    const $preprocessDiv = $('#family-preprocess-display');
+    const $preprocessDiv = $('#id_familypreprocessdisplay');
     const $preprocessButton = $('.preprocessbutton');
+    const $shownexterrorContainer = $('.shownexterror-container');
+    const $noerrorsfoundContainer = $('.noerrorsfound-container');
+    const $shownexterrorButton = $shownexterrorContainer.find('button');
+    const $noerrorsfoundButton = $noerrorsfoundContainer.find('button');
     const $submitButton = $('#id_submitbutton');
     const $partnershipData = $('#id_partnershipdata');
+    const $courseData = $('#id_coursedata');
+
+    // Parse initial data
     const partnershipDataValue = JSON.parse(
         $partnershipData.attr('data-partnerships')
     );
-    const $courseData = $('#id_coursedata');
     const courseDataValue = JSON.parse($courseData.attr('data-courses'));
 
-    // Set initial height of preprocess div to match textarea
-    $preprocessDiv.css('height', $textarea.outerHeight() + 'px');
+    // Error navigation state
+    let currentErrorIndex = -1;
 
-    // Disable submit button when textarea content changes
-    $textarea.on('input', () => {
-        $submitButton.prop('disabled', true);
-    });
-
-    // Function to clean up input text with error handling
-    const cleanInputText = (text) => {
-        if (!text || typeof text !== 'string') {
-            return '';
-        }
-        // Trim newlines and whitespace from the start and end of the entire input
-        return text.replace(/^\s+|\s+$/g, '');
-    };
-
-    $preprocessButton.on('click', async (e) => {
-        e.preventDefault(); // Prevent form submission
-
-        // Clean up input text
-
+    /**
+     * Process the current data and update UI
+     */
+    const processCurrentData = async () => {
         try {
-            $textarea.val(cleanInputText($textarea.val()));
             const data = {
-                input: $textarea.val(),
+                input: cleanInputText($textarea.val()),
                 partnerships: partnershipDataValue,
                 courses: courseDataValue,
             };
 
             const families = await validateFamilyData(data);
+            Log.debug('families:', families);
 
-            Log.debug('families: ');
-            Log.debug(families);
             $preprocessDiv.html(families.html);
-
-
-
-            // Adjust height of preprocess div to match textarea
             $preprocessDiv.css('height', $textarea.outerHeight() + 'px');
 
-            // Enable the submit button if there are no error messages
             const hasErrors = families.html.includes('alert-danger');
-            $submitButton.prop('disabled', hasErrors);
 
-            // const messageKey = hasErrors
-            //     ? 'preprocessing_failure'
-            //     : 'preprocessing_success';
-            // const message = await getString(messageKey, 'local_equipment');
-            // Log.debug(message);
+            // Update form controls based on error state
+            $shownexterrorButton.prop('hidden', !hasErrors);
+            $shownexterrorButton.prop('disabled', !hasErrors);
+            $noerrorsfoundButton.prop('hidden', hasErrors);
+            $submitButton.prop('disabled', hasErrors);
+            $shownexterrorButton.prop({
+                disabled: !hasErrors,
+                hidden: !hasErrors,
+            });
+
+            // Automatically scroll to first error
+            if (hasErrors && currentErrorIndex === -1) {
+                currentErrorIndex = 0;
+                scrollToError(currentErrorIndex);
+            }
         } catch (error) {
-            Log.error('Error in preprocessing: ');
-            Log.error(error);
+            Log.error('Error in preprocessing:', error);
             $submitButton.prop('disabled', true);
+
             const errorMessage = await getString(
                 'errorvalidatingfamilydata',
                 'local_equipment'
             );
-            Log.debug(errorMessage);
+
+            $preprocessDiv.html(
+                `<div class="alert alert-danger">${errorMessage}</div>`
+            );
+        }
+    };
+
+    // Set initial height and handlers
+    $preprocessDiv.css('height', $textarea.outerHeight() + 'px');
+
+    $textarea.on('input', () => {
+        $submitButton.prop('disabled', true);
+    });
+
+    // Function to clean up input text
+    const cleanInputText = (text) => {
+        if (!text || typeof text !== 'string') {
+            return '';
+        }
+        return text.replace(/^\s+|\s+$/g, '');
+    };
+
+    /**
+     * Get the corresponding line in textarea for an error
+     * @param {jQuery} $error The error element from preprocess div
+     * @returns {Object} Line information including line number and specific error positions
+     */
+    const getErrorLineInTextarea = ($error) => {
+        const errorText = $error.text().trim();
+        const lines = $textarea.val().split('\n');
+        Log.debug('errorText: ');
+        Log.debug(errorText);
+
+        Log.debug('lines: ');
+        Log.debug(lines);
+
+        // Handle course ID errors
+        if (errorText.includes('Course ID')) {
+            // const string = async () =>
+            //     await getString('courseidnotfound', 'local_equipment', '(.+)');
+            // const regex = string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            // Log.debug('regex: ');
+            // Log.debug(regex);
+            const courseIdMatch = errorText.match(/Course ID #(.+) not found/);
+            Log.debug('courseIdMatch: ');
+            Log.debug(courseIdMatch);
+
+            if (courseIdMatch) {
+                const courseId = courseIdMatch[1];
+                const lineIndex = lines.findIndex((line) => {
+                    return line.startsWith('**') && line.includes(courseId);
+                });
+
+                if (lineIndex !== -1) {
+                    const line = lines[lineIndex];
+                    const start = line.indexOf(courseId);
+                    return {
+                        lineNumber: lineIndex,
+                        errorStart: start,
+                        errorEnd: start + courseId.length,
+                    };
+                }
+            }
+        }
+
+        // General error line matching
+        const cleanErrorText = errorText
+            .replace(/^(Error:|Invalid:|Not found:|Course ID)\s*/i, '')
+            .trim();
+
+        const lineIndex = lines.findIndex((line) => {
+            const cleanLine = line.trim();
+            return (
+                cleanLine &&
+                (cleanErrorText.includes(cleanLine) ||
+                    cleanLine.includes(cleanErrorText))
+            );
+        });
+
+        return {
+            lineNumber: lineIndex,
+            errorStart: -1,
+            errorEnd: -1,
+        };
+    };
+
+    /**
+     * Scroll element into view
+     * @param {Element} element The element to scroll into view
+     */
+    const smoothScrollIntoView = (element) => {
+        const $container = $('#id_familypreprocessdisplay');
+        const containerTop = $container.offset().top;
+        const elementTop = $(element).offset().top;
+        const scroll =
+            elementTop -
+            containerTop -
+            $container.height() / 2 +
+            $(element).height();
+
+        $container.scrollTop($container.scrollTop() + scroll);
+    };
+
+    /**
+     * Highlight specific text in textarea
+     * @param {Object} errorInfo A.I generated doc: Line information including line number and specific error positions.
+     */
+    const highlightTextareaError = (errorInfo) => {
+        if (errorInfo.lineNumber === -1) {
+            return;
+        }
+
+        const lines = $textarea.val().split('\n');
+        let position = lines
+            .slice(0, errorInfo.lineNumber)
+            .reduce((pos, line) => pos + line.length + 1, 0);
+
+        const textareaElement = $textarea.get(0);
+        textareaElement.focus();
+
+        if (errorInfo.errorStart >= 0 && errorInfo.errorEnd >= 0) {
+            textareaElement.setSelectionRange(
+                position + errorInfo.errorStart,
+                position + errorInfo.errorEnd
+            );
+        } else {
+            textareaElement.setSelectionRange(
+                position,
+                position + lines[errorInfo.lineNumber].length
+            );
+        }
+
+        // Scroll textarea to show highlighted text
+        const lineHeight = parseInt($textarea.css('line-height'));
+        const scrollPosition = errorInfo.lineNumber * lineHeight;
+        $textarea.scrollTop(scrollPosition - $textarea.height() / 2);
+    };
+
+    /**
+     * Scroll to and highlight specific error
+     * @param {number} index The index of the error to scroll to.
+     */
+    const scrollToError = (index) => {
+        const $errors = $preprocessDiv.find('.alert-danger');
+        if (index >= 0 && index < $errors.length) {
+            $('.error-highlight').removeClass('error-highlight');
+            const $currentError = $errors.eq(index);
+            $currentError.addClass('error-highlight');
+
+            smoothScrollIntoView($currentError.get(0));
+            highlightTextareaError(getErrorLineInTextarea($currentError));
+        }
+    };
+
+    // Add error highlight styling
+    $('<style>')
+        .text(
+            `
+            .error-highlight {
+                animation: highlight-pulse 1s;
+                box-shadow: 0 0 8px rgba(220, 53, 69, 0.5);
+            }
+            @keyframes highlight-pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.02); }
+                100% { transform: scale(1); }
+            }
+        `
+        )
+        .appendTo('head');
+
+    // Event Handlers
+    $preprocessButton.on('click', async (e) => {
+        e.preventDefault();
+        $textarea.val(cleanInputText($textarea.val()));
+        currentErrorIndex = -1;
+        await processCurrentData();
+    });
+
+    $shownexterrorButton.on('click', async (e) => {
+        e.preventDefault();
+        await processCurrentData();
+        const $errors = $preprocessDiv.find('.alert-danger');
+        if ($errors.length > 0) {
+            currentErrorIndex = (currentErrorIndex + 1) % $errors.length;
+            scrollToError(currentErrorIndex);
         }
     });
 
-    // Adjust preprocess div height on window resize
     $(window).on('resize', () => {
         $preprocessDiv.css('height', $textarea.outerHeight() + 'px');
     });

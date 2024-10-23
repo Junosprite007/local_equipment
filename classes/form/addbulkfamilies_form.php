@@ -136,16 +136,25 @@ class addbulkfamilies_form extends moodleform {
         }
 
 
+        $buttonarray = array();
+        $buttonarray[] = &$mform->createElement('button', 'preprocess', get_string('preprocess', 'local_equipment'), ['class' => 'preprocessbutton']);
+        $buttonarray[] = &$mform->createElement('button', 'shownexterror', get_string('shownexterror', 'local_equipment'), ['disabled' => true, 'class' => 'shownexterror-container']);
+        $buttonarray[] = &$mform->createElement('button', 'noerrorsfound', get_string('noerrorsfound', 'local_equipment'), ['disabled' => true, 'class' => 'noerrorsfound-container alert-success', 'hidden' => true]);
+
+
+        $mform->addElement('html', '<div class="local-equipment-errornavigation-container">');
+        $mform->addGroup($buttonarray, 'preprocessanderrors_before', '', [' '], false);
+        $mform->addElement('html', '</div>');
         // Create the Pre-process button
-        $preprocess_button = $mform->createElement(
-            'button',
-            'preprocess',
-            get_string('preprocess', 'local_equipment'),
-            array('class' => 'preprocessbutton')
-        );
+        // $preprocess_button = $mform->createElement(
+        //     'button',
+        //     'preprocess',
+        //     get_string('preprocess', 'local_equipment'),
+        //     array('class' => 'preprocessbutton')
+        // );
 
         // Add the button to the top of the form.
-        $mform->addElement($preprocess_button);
+        // $mform->addElement($preprocess_button);
 
         // Add a container div for flex layout.
         $mform->addElement('html', '<div class="local-equipment-bulkfamilyupload-container">');
@@ -155,19 +164,23 @@ class addbulkfamilies_form extends moodleform {
             'textarea',
             'familiesinputdata',
             get_string('familiesinputdata', 'local_equipment'),
-            array('rows' => 20, 'cols' => 50, 'class' => 'local-equipment-bulkfamilyupload-textarea')
+            array('rows' => 10, 'cols' => 50, 'class' => 'local-equipment-bulkfamilyupload-textarea')
         );
         $mform->setType('familiesinputdata', PARAM_RAW);
         $mform->addRule('familiesinputdata', null, 'required', null, 'client');
 
         // Add the feedback div.
-        $mform->addElement('html', '<div id="family-preprocess-display" class="local-equipment-bulkfamilyupload-preprocess-output"></div>');
+        $mform->addElement('html', '<div id="id_familypreprocessdisplay" class="local-equipment-bulkfamilyupload-preprocess-output"></div>');
 
         // Close the container div.
         $mform->addElement('html', '</div>');
 
+        $mform->addElement('html', '<div class="local-equipment-errornavigation-container">');
+        $mform->addGroup($buttonarray, 'preprocessanderrors_after', '', [' '], false);
+        $mform->addElement('html', '</div>');
+
         // Add the Pre-process button to the bottom of the form as well.
-        $mform->addElement($preprocess_button);
+        // $mform->addElement($preprocess_button);
 
         // Add action buttons, but don't use add_action_buttons()
         $mform->addElement('submit', 'submitbutton', get_string('uploadandenroll', 'local_equipment'), ['id' => 'id_submitbutton', 'disabled' => 'disabled']);
@@ -176,6 +189,7 @@ class addbulkfamilies_form extends moodleform {
         // $buttonarray[] = &$mform->createElement('cancel');
         // $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
         // $mform->closeHeaderBefore('buttonar');
+        $mform->closeHeaderBefore('buttonar');
 
 
 
