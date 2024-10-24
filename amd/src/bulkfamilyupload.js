@@ -24,13 +24,12 @@
 import $ from 'jquery';
 import { get_string as getString } from 'core/str';
 import Log from 'core/log';
-// import { get } from 'grunt';
 
 /**
  * Initialize the module.
  */
 export const init = () => {
-    // Core form elements
+    // Core form elements.
     const $textarea = $('#id_familiesinputdata');
     const $preprocessDiv = $('#id_familypreprocessdisplay');
     const $preprocessButton = $('.preprocessbutton');
@@ -42,17 +41,17 @@ export const init = () => {
     const $partnershipData = $('#id_partnershipdata');
     const $courseData = $('#id_coursedata');
 
-    // Parse initial data
+    // Parse initial data.
     const partnershipDataValue = JSON.parse(
         $partnershipData.attr('data-partnerships')
     );
     const courseDataValue = JSON.parse($courseData.attr('data-courses'));
 
-    // Error navigation state
+    // Error navigation state.
     let currentErrorIndex = -1;
 
     /**
-     * Process the current data and update UI
+     * Process the current data and update UI.
      */
     const processCurrentData = async () => {
         try {
@@ -124,22 +123,9 @@ export const init = () => {
     const getErrorLineInTextarea = ($error) => {
         const errorText = $error.text().trim();
         const lines = $textarea.val().split('\n');
-        // Log.debug('errorText: ');
-        // Log.debug(errorText);
 
-        // Log.debug('lines: ');
-        // Log.debug(lines);
-
-        // Handle course ID errors
         if (errorText.includes('Course ID')) {
-            // const string = async () =>
-            //     await getString('courseidnotfound', 'local_equipment', '(.+)');
-            // const regex = string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            // Log.debug('regex: ');
-            // Log.debug(regex);
             const courseIdMatch = errorText.match(/Course ID #(.+) not found/);
-            // Log.debug('courseIdMatch: ');
-            // Log.debug(courseIdMatch);
 
             if (courseIdMatch) {
                 const courseId = courseIdMatch[1];
@@ -226,14 +212,14 @@ export const init = () => {
             );
         }
 
-        // Scroll textarea to show highlighted text
+        // Scroll textarea to show highlighted text.
         const lineHeight = parseInt($textarea.css('line-height'));
         const scrollPosition = errorInfo.lineNumber * lineHeight;
         $textarea.scrollTop(scrollPosition - $textarea.height() / 2);
     };
 
     /**
-     * Scroll to and highlight specific error
+     * Scroll to and highlight specific error.
      * @param {number} index The index of the error to scroll to.
      */
     const scrollToError = (index) => {
@@ -298,12 +284,6 @@ export const init = () => {
  * @return {Promise<string>} The HTML feedback string.
  */
 export const validateFamilyData = async ({ input, partnerships, courses }) => {
-    // let familiesData = [];
-    // let familiesHTML = [];
-    // Log.debug('input: ');
-    // Log.debug(input);
-    // Log.debug(partnerships);
-    // Log.debug(courses);
     if (!input || typeof input !== 'string') {
         throw new Error(
             getString(
@@ -407,20 +387,6 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
      * @return {Object} Updated parent object.
      */
     const processParentInfo = async (line, textType, parent) => {
-        // let parentObj = {
-        //     name: {
-        //         html: '',
-        //         data: '',
-        //     },
-        //     phone: {
-        //         html: '',
-        //         data: '',
-        //     },
-        //     email: {
-        //         html: '',
-        //         data: '',
-        //     },
-        // };
         parent = {
             ...parent,
             [textType]: {
@@ -428,24 +394,12 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                 data: line,
             },
         };
-        // parentObj[textType] = {
-        //     html: line,
-        //     data: line,
-        // };
-        // Log.debug('parent stuff: ');
-        // Log.debug(textType);
-        // Log.debug(line);
         switch (textType) {
-            // case 'name':
-            //     break;
+            // We'll separate full names into first, last, and middle (if it exists) in PHP during form submission.
             case 'email':
                 parent[textType].html =
                     '<span class="pl-4 pr-4">' + line + '</span>';
-                // parentObj = {
-                //     line: '<span class="pl-4 pr-4">' + line + '</span>',
-                //     parent: { ...parent, [textType]: line },
-                //     partnership,
-                // };
+
                 break;
             case 'phone': {
                 let formattedPhone = await parsePhoneNumber(line);
@@ -453,15 +407,8 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                 parent[textType].html =
                     '<span class="pl-4 pr-4">' + formattedPhone + '</span>';
                 break;
-
-                // return {
-                //     line: '<span class="pl-4 pr-4">' + line + '</span>',
-                //     parent: { ...parent, [textType]: line },
-                //     partnership,
-                // };
             }
             default:
-                // return { parent, partnership };
                 break;
         }
         return parent;
@@ -521,6 +468,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
 
         switch (textType) {
             case 'student': {
+                // We'll separate full names into first, last, and middle (if it exists) in PHP during form submission.
                 // This refers to the student's name, which is the only line that is preceded by a single asterisk (*).
                 const name = line.replace('*', '').trim();
 
@@ -531,20 +479,12 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                         html: name,
                     },
                 };
-                // student[textType].data = name;
-                // student[textType].html = name;
-
-                // return { ...student, name, line: name };
                 break;
             }
             case 'email':
                 student[textType].data = line;
                 student[textType].html =
                     '<span class="pl-4 pr-4">' + line + '</span>';
-                // return {
-                //     line: '<span class="pl-4 pr-4">' + line + '</span>',
-                //     student: { ...student, [textType]: line },
-                // };
                 break;
             case 'phone': {
                 let formattedPhone = await parsePhoneNumber(line);
@@ -554,22 +494,11 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                 break;
             }
             case 'courses': {
-                // student[textType].data =
-
                 const coursesData = line
                     .replace('**', '')
                     .trim()
                     .split(',')
                     .map((course) => course.trim());
-
-                // courseIds.map(async (id) => {
-                //     student[textType] = {
-                //         ...student[textType],
-                //             html: line,
-                //             data: line,
-                //     };
-                // });
-                // let coursesHTML = '';
 
                 const processedCourses = [];
 
@@ -583,7 +512,6 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             partnerships[partnership?.data].coursedata[id] !==
                             undefined;
                         Log.debug(courseExistsInPartnership);
-                        // Log.debug(partnerships[partnershipId].includes(id));
                         const courseAlreadyProcessed =
                             processedCourses.includes(id);
                         let courseName = '';
@@ -593,7 +521,8 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             courseExistsInPartnership
                         ) {
                             processedCourses.push(id);
-                            const enDash = '–'; // EN DASH character: '–' or \u2013
+                            // EN DASH character: '–' or \u2013
+                            const enDash = '–';
                             const regex = new RegExp(`${id} ${enDash} `, 'g');
                             courseName = courses[id].replace(regex, '');
                         } else if (
@@ -624,23 +553,10 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             courseName = `<span class="pl-2 pr-2 alert-danger">${errorMessage}</span>`;
                         }
 
-                        // Log.debug('courseName: ', courseName);
-                        // Log.debug('id: ', id);
-
                         return courseName;
                     })
                 );
 
-                // Log.debug('studentCourses: ', studentCourses);
-
-                // return {
-                //     student: { ...student, courses: studentCourses },
-                //     line: `<span class="pl-4 pr-4">${studentCourses.join(
-                //         ', '
-                //     )}</span>`,
-                // };
-                // Log.debug('coursesData: ');
-                // Log.debug(coursesData);
                 student[textType].data = coursesData;
                 student[textType].html =
                     '<span class="pl-4 pr-4">' +
@@ -653,78 +569,6 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
         }
         return student;
     };
-
-    // We can use this for mapping below, instead of the for loop.
-    // Grab each family chunk and split each line into its own element within the 'lines' array.
-    // const promiseResults = await Promise.all(
-    //     family.split('\n').map(async (line) => {
-    //         Log.debug('Processing family... mapping...');
-    //         line.trim();
-    //         const textType = determineTextType(line);
-
-    //         if (textType === 'student') {
-    //             inStudentSection = true;
-    //         }
-
-    //         // Determine whether we're in the student section, parent section, or an unknown section.
-    //         if (textType === 'unknown') {
-    //             const errorString = await getString(
-    //                 'unrecognizedformat',
-    //                 'local_equipment',
-    //                 line
-    //             );
-    //             familyHTML.push(
-    //                 `<span class="pl-2 alert-danger">${errorString}</span>`
-    //             );
-    //             // The 'familyData' object won't need anything added, 'cause we're checking for errors using 'alert-danger'.
-    //         } else if (partnershipAdded && textType === 'partnership') {
-    //             const errorString = await getString(
-    //                 'connotaddmorethanonepartnership',
-    //                 'local_equipment',
-    //                 line
-    //             );
-    //             familyHTML.push(
-    //                 `<span class="pl-2 alert-danger">${errorString}</span>`
-    //             );
-    //         } else if (textType === 'partnership') {
-    //             ({ partnership, inStudentSection } =
-    //                 await processPartnershipInfo(line));
-    //             familyHTML.push(partnership.html);
-    //             // There can only be one partnership
-    //             familyData.partnership = partnership.data;
-    //             partnershipAdded = true;
-    //         } else if (!inStudentSection) {
-    //             // We haven't entered the student section yet.
-    //             ({ parent } = await processParentInfo(
-    //                 line,
-    //                 textType,
-    //                 parent
-    //             ));
-
-    //             // The 'email' line marks the end of a given parent, so we push the parent object to the 'parents' array.
-    //             if (textType === 'email') {
-    //                 parents.push(parent);
-    //                 parent = {};
-    //             }
-    //             familyHTML.push(parent[textType].html);
-    //         } else {
-    //             // Now we are in the student section.
-    //             ({ student } = await processStudentInfo(
-    //                 line,
-    //                 textType,
-    //                 student
-    //             ));
-    //             // line = student[textType].html;
-    //             if (textType === 'courses') {
-    //                 students.push(student);
-    //                 student = {};
-    //             }
-    //             familyHTML.push(student[textType].html);
-    //         }
-
-    //         // We're using this map function to change and update the variables above, so we don't need to return anything.
-    //     })
-    // );
 
     /**
      * Process a single family's data, a.k.a. a family chunk.
@@ -747,12 +591,11 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
             const lines = family
                 .split('\n')
                 .map((line) => line.trim())
-                .filter((line) => line); // Remove empty lines
+                .filter((line) => line); // This removes empty lines.
 
             for (const line of lines) {
                 try {
                     const textType = determineTextType(line);
-                    // Log.debug(`Processing line: ${line} of type: ${textType}`);
 
                     if (textType === 'student') {
                         inStudentSection = true;
@@ -801,7 +644,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                                 familyHTML.push(parent[textType].html);
                             }
                             if (textType === 'email') {
-                                parents.push({ ...parent }); // Create a deep copy
+                                parents.push({ ...parent });
                                 parent = {};
                             }
                             break;
@@ -818,7 +661,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                                 familyHTML.push(student[textType].html);
                             }
                             if (textType === 'courses') {
-                                students.push({ ...student }); // Create a deep copy
+                                students.push({ ...student });
                                 student = {};
                             }
                             break;
