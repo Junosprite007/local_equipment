@@ -43,6 +43,52 @@ $form = new addbulkfamilies_form();
 if ($form->is_cancelled()) {
     redirect(new moodle_url('/'));
 } else if ($data = $form->get_data()) {
+    $familiesdata = json_decode($data->familiesdata);
+
+    $families = [];
+
+    foreach ($familiesdata as $familydata) {
+        $family = new stdClass();
+        $family->partnership = $familydata->partnership->data;
+        $parents = $familydata->parents;
+        $students = $familydata->students;
+
+        foreach ($parents as $parent) {
+            
+        }
+
+        foreach ($students as $student) {
+
+        }
+
+
+
+        $result = process_bulk_family_data($familydata);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    echo '<br />';
+    echo '<br />';
+    echo '<br />';
+    echo '<pre>';
+    var_dump($familiesdata);
+    echo '</pre>';
+    die();
+
+
     $familydata = $data->familydata;
     $result = process_bulk_family_data($familydata);
 

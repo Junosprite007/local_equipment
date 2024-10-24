@@ -40,6 +40,7 @@ export const init = () => {
     const $submitButton = $('#id_submitbutton');
     const $partnershipData = $('#id_partnershipdata');
     const $courseData = $('#id_coursedata');
+    const $familiesDataInput = $('#id_familiesdata');
 
     // Parse initial data.
     const partnershipDataValue = JSON.parse(
@@ -64,6 +65,7 @@ export const init = () => {
             const families = await validateFamilyData(data);
             Log.debug('families: ');
             Log.debug(families);
+            $familiesDataInput.val(JSON.stringify(families.data));
 
             $preprocessDiv.html(families.html);
             $preprocessDiv.css('height', $textarea.outerHeight() + 'px');
@@ -344,6 +346,66 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
     };
 
     /**
+     * Parse a full name string into first, middle, and last name components.
+     *
+     * @param {string} fullName - The full name string to parse
+     * @returns {Object} Object containing name components
+     */
+    const parseName = async (fullName) => {
+        // First, clean up the input by removing extra spaces and standardizing whitespace
+        const cleanName = fullName.trim().replace(/\s+/g, ' ');
+
+        // Split the name into parts
+        const parts = cleanName.split(' ');
+
+        // Initialize the result object
+        const result = {
+            firstName: '',
+            middleName: '',
+            lastName: '',
+        };
+
+        if (parts.length === 0) {
+            return result;
+        }
+
+        if (parts.length === 1) {
+            // Only one name provided
+            result.firstName = parts[0];
+            return result;
+        }
+
+        if (parts.length === 2) {
+            // First and last name only
+            result.firstName = parts[0];
+            result.lastName = parts[1];
+            return result;
+        }
+
+        // For three or more parts
+        result.firstName = parts[0];
+        result.lastName = parts[parts.length - 1];
+        result.middleName = parts.slice(1, -1).join(' ');
+
+        return result;
+    };
+
+    // Example usage:
+    const processPersonName = async (nameString) => {
+        const {
+            firstName,
+            middleName = null,
+            lastName,
+        } = await parseName(nameString);
+
+        return {
+            firstName,
+            middleName,
+            lastName,
+        };
+    };
+
+    /**
      * Parse and reformat a phone number into +12345678910 format.
      * Take any phone number, and turn it into a U.S. phone number.
      * E.g +1 (234) 567-8910 -> +12345678910
@@ -395,11 +457,38 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
             },
         };
         switch (textType) {
-            // We'll separate full names into first, last, and middle (if it exists) in PHP during form submission.
+            case 'name': {
+                let nameHTML = line.trim();
+                let names = nameHTML.split(' ');
+                if (names.length === 1) {
+                    // Only one name provided.
+                    nameHTML =
+                        '<span class="pl-2 pr-2 alert-danger">' +
+                        (await getString(
+                            'onlyonenameprovided',
+                            'local_equipment',
+                            nameHTML
+                        )) +
+                        '</span>';
+                }
+                const nameParts = await processPersonName(line);
+
+                parent = {
+                    ...parent,
+                    [textType]: {
+                        data: {
+                            firstName: nameParts.firstName,
+                            middleName: nameParts.middleName,
+                            lastName: nameParts.lastName,
+                        },
+                        html: nameHTML,
+                    },
+                };
+                break;
+            }
             case 'email':
                 parent[textType].html =
                     '<span class="pl-4 pr-4">' + line + '</span>';
-
                 break;
             case 'phone': {
                 let formattedPhone = await parsePhoneNumber(line);
@@ -455,9 +544,18 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
      * @param {string} textType - The type of text determined.
      * @param {Object} student - The current student object.
      * @param {string} partnership - The partnership object.
+     * @param {boolean} partnershipAdded - Whether a partnership has been added.
+     * @param {Array} parents - The parent objects.
      * @return {Object} Updated student object.
      */
-    const processStudentInfo = async (line, textType, student, partnership) => {
+    const processStudentInfo = async (
+        line,
+        textType,
+        student,
+        partnership,
+        partnershipAdded,
+        parents
+    ) => {
         student = {
             ...student,
             [textType]: {
@@ -465,17 +563,42 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                 data: line,
             },
         };
+        const parentExists = parents.length > 0;
 
         switch (textType) {
             case 'student': {
-                // We'll separate full names into first, last, and middle (if it exists) in PHP during form submission.
                 // This refers to the student's name, which is the only line that is preceded by a single asterisk (*).
-                const name = line.replace('*', '').trim();
+                let name = line.replace('*', '').trim();
+                let names = name.split(' ');
+                const nameParts = await processPersonName(name);
+                if (names.length === 1 && parentExists) {
+                    // Only one name provided.
+                    name =
+                        name +
+                        ' ' +
+                        '<span class="pl-1 pr-1 alert-warning">' +
+                        parents[0]?.name?.data?.lastName +
+                        '</span>';
+                } else if (names.length === 1 && !parentExists) {
+                    // Only one name provided
+                    name =
+                        '<span class="pl-2 pr-2 alert-danger">' +
+                        (await getString(
+                            'onlyonenameprovided',
+                            'local_equipment',
+                            name
+                        )) +
+                        '</span>';
+                }
 
                 student = {
                     ...student,
                     [textType]: {
-                        data: name,
+                        data: {
+                            firstName: nameParts.firstName,
+                            middleName: nameParts.middleName,
+                            lastName: nameParts.lastName,
+                        },
                         html: name,
                     },
                 };
@@ -508,17 +631,21 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             c_id: id,
                             p_id: partnership.data,
                         };
-                        const courseExistsInPartnership =
-                            partnerships[partnership?.data].coursedata[id] !==
-                            undefined;
-                        Log.debug(courseExistsInPartnership);
+                        let courseExistsInPartnership = false;
                         const courseAlreadyProcessed =
                             processedCourses.includes(id);
                         let courseName = '';
+                        if (partnershipAdded) {
+                            courseExistsInPartnership =
+                                partnerships[partnership?.data].coursedata[
+                                    id
+                                ] !== undefined;
+                        }
                         if (
                             courses[id] &&
                             !courseAlreadyProcessed &&
-                            courseExistsInPartnership
+                            (!partnershipAdded ||
+                                (partnershipAdded && courseExistsInPartnership))
                         ) {
                             processedCourses.push(id);
                             // EN DASH character: '–' or \u2013
@@ -528,7 +655,8 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                         } else if (
                             courses[id] &&
                             courseAlreadyProcessed &&
-                            courseExistsInPartnership
+                            (!partnershipAdded ||
+                                (partnershipAdded && courseExistsInPartnership))
                         ) {
                             processedCourses.push(id);
                             const errorMessage = await getString(
@@ -537,7 +665,11 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                                 msg.c_id
                             );
                             courseName = `<span class="pl-2 pr-2 alert-danger">${errorMessage}</span>`;
-                        } else if (courses[id] && !courseExistsInPartnership) {
+                        } else if (
+                            courses[id] &&
+                            partnershipAdded &&
+                            !courseExistsInPartnership
+                        ) {
                             const errorMessage = await getString(
                                 'courseidnotfoundinpartnership',
                                 'local_equipment',
@@ -583,6 +715,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
             let students = [];
             let parent = {};
             let student = {};
+            let studentName = '';
             let partnership = {};
             let inStudentSection = false;
             let familyHTML = [];
@@ -654,13 +787,34 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                                 line,
                                 textType,
                                 student,
-                                partnership
+                                partnership,
+                                partnershipAdded,
+                                parents
                             );
                             student = result;
+
                             if (student[textType]) {
                                 familyHTML.push(student[textType].html);
                             }
+                            if (textType === 'student') {
+                                studentName = student[textType].data.firstName;
+                            }
+
                             if (textType === 'courses') {
+                                const needsEmail =
+                                    parents.length === 0 &&
+                                    student.email === undefined &&
+                                    studentName !== '';
+                                if (needsEmail) {
+                                    const errorMessage = await getString(
+                                        'studentneedsemail',
+                                        'local_equipment',
+                                        studentName
+                                    );
+                                    familyHTML.push(
+                                        `<span class="pl-2 alert-danger">${errorMessage}</span>`
+                                    );
+                                }
                                 students.push({ ...student });
                                 student = {};
                             }
@@ -668,7 +822,9 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                         }
                     }
                 } catch (lineError) {
-                    Log.error('Error processing line:', line, lineError);
+                    Log.error('Error processing line:');
+                    Log.error(line);
+                    Log.error(lineError);
                     const errorString = await getString(
                         'errorprocessingline',
                         'local_equipment',
@@ -718,7 +874,8 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
             .filter(Boolean);
         const familiesHTML = results.map((result) => result.html);
 
-        Log.debug('Processing complete:', {
+        Log.debug('Processing complete:');
+        Log.debug({
             familiesCount: familiesData.length,
             dataStructure: familiesData,
             htmlContent: familiesHTML,

@@ -98,6 +98,14 @@ class addbulkfamilies_form extends moodleform {
         );
         $mform->setType('coursedata', PARAM_RAW);
 
+        $mform->addElement(
+            'hidden',
+            'familiesdata',
+            '',
+            ['id' => 'id_familiesdata']
+        );
+        $mform->setType('familiesdata', PARAM_RAW);
+
         if (!empty($partnershipdata)) {
             $tablehtml = '<table class="generaltable">';
             $tablehtml .= '<thead><tr><th>' . get_string('partnershipid', 'local_equipment') . '</th><th>' . get_string('partnershipname', 'local_equipment') . '</th></tr></thead>';
@@ -109,13 +117,7 @@ class addbulkfamilies_form extends moodleform {
 
 
 
-                // echo '<br />';
-                // echo '<br />';
-                // echo '<br />';
-                // echo '<pre>';
-                // var_dump($partnership);
-                // echo '</pre>';
-                // die();
+
 
                 if (!empty($partnership->coursedata)) {
                     $courses = $partnership->coursedata;
