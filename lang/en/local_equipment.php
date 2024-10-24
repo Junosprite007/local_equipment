@@ -538,8 +538,9 @@ $string['uploadandenroll'] = 'Upload & enroll';
 $string['unrecognizedformat'] = '{$a}: Unrecognized format';
 $string['nocoursesfoundforthispartnership'] = 'No courses found for this partnership';
 $string['partnershipnumbernotfound'] = 'Partnership ID #{$a} not found';
-$string['coursealreadyadded'] = 'Course ID {$a} already added';
+$string['coursealreadyadded'] = 'Course ID #{$a} already added';
 $string['courseidnotfound'] = 'Course ID #{$a} not found';
+$string['courseidnotfoundinpartnership'] = 'Course ID #{$a->c_id} not found in partnership ID #{$a->p_id}';
 $string['preprocessing_success'] = 'Preprocessing successful';
 $string['preprocessing_failure'] = 'Preprocessing failed';
 

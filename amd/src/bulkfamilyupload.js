@@ -63,7 +63,8 @@ export const init = () => {
             };
 
             const families = await validateFamilyData(data);
-            Log.debug('families:', families);
+            Log.debug('families: ');
+            Log.debug(families);
 
             $preprocessDiv.html(families.html);
             $preprocessDiv.css('height', $textarea.outerHeight() + 'px');
@@ -123,11 +124,11 @@ export const init = () => {
     const getErrorLineInTextarea = ($error) => {
         const errorText = $error.text().trim();
         const lines = $textarea.val().split('\n');
-        Log.debug('errorText: ');
-        Log.debug(errorText);
+        // Log.debug('errorText: ');
+        // Log.debug(errorText);
 
-        Log.debug('lines: ');
-        Log.debug(lines);
+        // Log.debug('lines: ');
+        // Log.debug(lines);
 
         // Handle course ID errors
         if (errorText.includes('Course ID')) {
@@ -137,8 +138,8 @@ export const init = () => {
             // Log.debug('regex: ');
             // Log.debug(regex);
             const courseIdMatch = errorText.match(/Course ID #(.+) not found/);
-            Log.debug('courseIdMatch: ');
-            Log.debug(courseIdMatch);
+            // Log.debug('courseIdMatch: ');
+            // Log.debug(courseIdMatch);
 
             if (courseIdMatch) {
                 const courseId = courseIdMatch[1];
@@ -467,14 +468,49 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
     };
 
     /**
+     * Process partnership information from a line of text.
+     *
+     * @param {string} id - The partnership ID.
+     * @return {Object} The partnership object.
+     */
+
+    const processPartnershipInfo = async (id) => {
+        let partnership = {};
+        if (partnerships[id]) {
+            partnership = {
+                data: id,
+                html: partnerships[id].name,
+            };
+        } else {
+            partnership = {
+                data: id,
+                html:
+                    '<span class="pl-2 pr-2 alert-danger">' +
+                    (await getString(
+                        'partnershipnumbernotfound',
+                        'local_equipment',
+                        id
+                    )) +
+                    '</span>',
+            };
+        }
+
+        return {
+            partnership,
+            inStudentSection: true,
+        };
+    };
+
+    /**
      * Process student information from a line of text.
      *
      * @param {string} line - The line of text to process.
      * @param {string} textType - The type of text determined.
      * @param {Object} student - The current student object.
+     * @param {string} partnership - The partnership object.
      * @return {Object} Updated student object.
      */
-    const processStudentInfo = async (line, textType, student) => {
+    const processStudentInfo = async (line, textType, student, partnership) => {
         student = {
             ...student,
             [textType]: {
@@ -539,27 +575,51 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
 
                 const coursesHTML = await Promise.all(
                     coursesData.map(async (id) => {
+                        const msg = {
+                            c_id: id,
+                            p_id: partnership.data,
+                        };
+                        const courseExistsInPartnership =
+                            partnerships[partnership?.data].coursedata[id] !==
+                            undefined;
+                        Log.debug(courseExistsInPartnership);
+                        // Log.debug(partnerships[partnershipId].includes(id));
                         const courseAlreadyProcessed =
                             processedCourses.includes(id);
                         let courseName = '';
-                        if (courses[id] && !courseAlreadyProcessed) {
+                        if (
+                            courses[id] &&
+                            !courseAlreadyProcessed &&
+                            courseExistsInPartnership
+                        ) {
                             processedCourses.push(id);
                             const enDash = '–'; // EN DASH character: '–' or \u2013
                             const regex = new RegExp(`${id} ${enDash} `, 'g');
                             courseName = courses[id].replace(regex, '');
-                        } else if (courses[id] && courseAlreadyProcessed) {
+                        } else if (
+                            courses[id] &&
+                            courseAlreadyProcessed &&
+                            courseExistsInPartnership
+                        ) {
                             processedCourses.push(id);
                             const errorMessage = await getString(
                                 'coursealreadyadded',
                                 'local_equipment',
-                                id
+                                msg.c_id
+                            );
+                            courseName = `<span class="pl-2 pr-2 alert-danger">${errorMessage}</span>`;
+                        } else if (courses[id] && !courseExistsInPartnership) {
+                            const errorMessage = await getString(
+                                'courseidnotfoundinpartnership',
+                                'local_equipment',
+                                msg
                             );
                             courseName = `<span class="pl-2 pr-2 alert-danger">${errorMessage}</span>`;
                         } else {
                             const errorMessage = await getString(
                                 'courseidnotfound',
                                 'local_equipment',
-                                id
+                                msg.c_id
                             );
                             courseName = `<span class="pl-2 pr-2 alert-danger">${errorMessage}</span>`;
                         }
@@ -592,40 +652,6 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                 break;
         }
         return student;
-    };
-
-    /**
-     * Process partnership information from a line of text.
-     *
-     * @param {string} id - The partnership ID.
-     * @return {Object} The partnership object.
-     */
-
-    const processPartnershipInfo = async (id) => {
-        let partnership = {};
-        if (partnerships[id]) {
-            partnership = {
-                data: id,
-                html: partnerships[id].name,
-            };
-        } else {
-            partnership = {
-                data: id,
-                html:
-                    '<span class="pl-2 pr-2 alert-danger">' +
-                    (await getString(
-                        'partnershipnumbernotfound',
-                        'local_equipment',
-                        id
-                    )) +
-                    '</span>',
-            };
-        }
-
-        return {
-            partnership,
-            inStudentSection: true,
-        };
     };
 
     // We can use this for mapping below, instead of the for loop.
@@ -784,7 +810,8 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             const result = await processStudentInfo(
                                 line,
                                 textType,
-                                student
+                                student,
+                                partnership
                             );
                             student = result;
                             if (student[textType]) {
