@@ -341,6 +341,7 @@ function local_equipment_get_coordinator_info($id) {
 function local_equipment_get_master_courses($categoryname = 'ALL_COURSES_CURRENT') {
     global $DB;
 
+
     // Set variables to be used for error checking in ./partnerships/addpartnerships.php.
     $responseobject = new stdClass();
     $responseobject->courses_formatted = [];
@@ -1230,16 +1231,18 @@ function local_equipment_requires_signature($agreements) {
     return false;
 }
 
+
 /**
- * Generates a student email address.
- *
- * @param string $parentemail The parent's email address.
+ * Generate student email based on the primary parent's email.
+ * @param string $parentemail The primary parent's email. It doesn't matter which parent's email is used, but it's just easier to
+ * user which ever one is found first.
  * @param string $studentfirstname The student's first name.
  * @return string The generated student email address.
  */
 function local_equipment_generate_student_email($parentemail, $studentfirstname) {
     $parts = explode('@', $parentemail);
-    return $parts[0] . '+' . strtolower($studentfirstname) . '@' . $parts[1];
+    $newemail = $parts[0] . '+' . strtolower($studentfirstname) . '@' . $parts[1];
+    return $newemail;
 }
 
 /**
@@ -1520,6 +1523,13 @@ function local_equipment_vcc_phone_verified(\core\event\user_loggedin $event) {
     // }
 }
 
+
+/**
+ * Checks to see if phone exists.
+ *
+ * @param $userid A user id.
+ * @return string The phone number, if it exists; false otherwise.
+ */
 function local_equipment_vccsubmission_phone_exists($userid) {
     global $DB;
 
@@ -1535,6 +1545,13 @@ function local_equipment_vccsubmission_phone_exists($userid) {
 
     return $phone;
 }
+
+/**
+ * Checks to see if phone is verified on login.
+ *
+ * @param $userid A user id.
+ * @return string The phone number, if it exists; false otherwise.
+ */
 function local_equipment_user_phone_exists($userid) {
     global $DB;
 
@@ -1550,24 +1567,6 @@ function local_equipment_user_phone_exists($userid) {
 
     return $phone;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /**
@@ -2111,4 +2110,156 @@ function local_equipment_get_users_assigned_to_me($role) {
     }
 
     return $usersinfo;
+}
+
+/**
+ * Create a username, programitcally:
+ * first initial
+ * + last name (default to primary last name)
+ * + the amount of LIKE usernames in the mdl_user table +1
+ *
+ * E.g. John Doe -> jdoe1
+ *      John Doe -> jdoe2
+ *      John Doe -> jdoe3
+ *
+ * E.g. Jane G Harmon-Quest -> jharmon1
+ *      Jane G Harmon-Quest -> jharmon2
+ *      Jane G Harmon-Quest -> jharmon3
+ *
+ * E.g. Jord A O'neil -> oneil1
+ *      Jord A O'neil -> oneil2
+ *      Jord A O'neil -> oneil3
+ *
+ * @param stdClass $user The user object.
+ * @return string The generated username.
+ */
+function local_equipment_generate_username($user) {
+    global $DB;
+
+    $firstpart = strtolower($user->firstname)[0];
+    $secondpart = strtolower($user->lastname);
+    $secondpart = str_replace("'", '', $secondpart);
+    $secondpart = explode('-', $secondpart)[0];
+
+
+    $username = $firstpart . $secondpart;
+
+    $likeusernames = $DB->count_records_select('user', 'username LIKE ?', [$username . '%']);
+    $appendingnumber = $likeusernames + 1;
+
+
+    // Let's say there are usernames: jdoe2, jdoe3, jdoe4 (missing 'jdoe1').
+    // The variables $likeusernames above would be 3, $appendingnumber would be 4, and $username . $appendingnumber would be 'jdoe4',
+    // which already exists, so we need to find the missing 'jdoe' username and make that the output username instead.
+    // The statement below will fill in the missing 'jdoe' username and prevent the same issue from happening in the future.
+    // Ideally, this statment will never run, but you never know what the "LIKE" query will return.
+
+    if ($DB->record_exists('user', ['username' => $username . $appendingnumber])) {
+        for ($i = 1; $i < $appendingnumber; $i++) {
+            if (!$DB->record_exists('user', ['username' => $username . $i])) {
+                return $username .= $i;
+            }
+        }
+    }
+
+    return $username .= $appendingnumber;
+}
+
+
+/**
+ * Assign parent roles to parents for their students
+ *
+ * @param array $family Array containing parent and student users
+ * @return array Results of role assignments
+ */
+function assign_family_roles($family) {
+    global $DB;
+
+    $results = [
+        'success' => [],
+        'errors' => []
+    ];
+
+    // Get the parent role ID
+    $parentrole = $DB->get_record('role', ['shortname' => 'parent'], 'id');
+    if (!$parentrole) {
+        throw new moodle_exception('parentrolenotfound', 'local_equipment');
+    }
+
+    // For each student in the family
+    foreach ($family['students'] as $student) {
+        // Get the user context for this student
+        $studentcontext = context_user::instance($student->id);
+
+        // Assign each parent to this student
+        foreach ($family['parents'] as $parent) {
+            try {
+                // Check if role assignment already exists
+                $existing = $DB->get_record('role_assignments', [
+                    'roleid' => $parentrole->id,
+                    'contextid' => $studentcontext->id,
+                    'userid' => $parent->id
+                ]);
+
+                if (!$existing) {
+                    role_assign(
+                        $parentrole->id,
+                        $parent->id,
+                        $studentcontext->id,
+                        'local_equipment'  // Component string
+                    );
+
+                    $results['success'][] = [
+                        'parent' => $parent->id,
+                        'student' => $student->id,
+                        'role' => $parentrole->id
+                    ];
+
+                    // Trigger an event for the role assignment
+                    \core\event\role_assigned::create([
+                        'context' => $studentcontext,
+                        'objectid' => $parentrole->id,
+                        'relateduserid' => $student->id,
+                        'other' => ['roleId' => $parentrole->id]
+                    ])->trigger();
+                }
+            } catch (moodle_exception $e) {
+                $results['errors'][] = [
+                    'parent' => $parent->id,
+                    'student' => $student->id,
+                    'error' => $e->getMessage()
+                ];
+                debugging('Error assigning role: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            }
+        }
+    }
+
+    return $results;
+}
+
+/**
+ * Process role assignments for multiple families
+ *
+ * @param array $families Array of processed family data
+ * @return array Results of all role assignments
+ */
+function process_family_roles($families) {
+    $all_results = [
+        'success' => [],
+        'errors' => []
+    ];
+
+    foreach ($families as $family) {
+        try {
+            $result = assign_family_roles($family);
+            $all_results['success'] = array_merge($all_results['success'], $result['success']);
+            $all_results['errors'] = array_merge($all_results['errors'], $result['errors']);
+        } catch (moodle_exception $e) {
+            $all_results['errors'][] = [
+                'family_error' => $e->getMessage()
+            ];
+        }
+    }
+
+    return $all_results;
 }

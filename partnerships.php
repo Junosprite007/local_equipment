@@ -42,6 +42,7 @@ $PAGE->set_heading(get_string('partnerships', 'local_equipment'));
 require_capability('local/equipment:managepartnerships', $context);
 
 $columns = [
+    'id',
     'name',
     'pickups',
     'pickup_extrainstructions',
