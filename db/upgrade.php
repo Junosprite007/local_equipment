@@ -694,5 +694,41 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024092606, 'local', 'equipment');
     }
 
+    if ($oldversion < 2024110101) {
+        // Define table local_equipment_vccsubmission_student.
+        $table = new xmldb_table('local_equipment_partnership');
+
+        $field = new xmldb_field('listingid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'pickupid');
+
+        $key = new xmldb_key('listingid', XMLDB_KEY_FOREIGN, ['listingid'], 'local_equipment_partnership', ['id']);
+
+        if (!$dbman->field_exists($table, 'listingid')) {
+            $dbman->add_field($table, $field);
+            $dbman->add_key($table, $key);
+        }
+
+        $field = new xmldb_field('courseids', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        if ($dbman->field_exists($table, 'courseids')) {
+            $dbman->drop_field($table, $field);
+        }
+
+
+        // Equipment savepoint reached.
+        upgrade_plugin_savepoint(true, 2024110101, 'local', 'equipment');
+    }
+
+    // if ($oldversion < 2024110102) {
+    //     // Define table local_equipment_vccsubmission_student.
+    //     $fields = [];
+    //     // Add a parent table.
+    //     $table = new xmldb_table('local_equipment_parent');
+
+    //     // Add a table for defining the parent-student relationship.
+    //     $table = new xmldb_table('local_equipment_parent_student');
+
+    //     // Equipment savepoint reached.
+    //     upgrade_plugin_savepoint(true, 2024110102, 'local', 'equipment');
+    // }
+
     return true;
 }

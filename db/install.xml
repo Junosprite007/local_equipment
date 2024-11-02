@@ -7,7 +7,8 @@
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
                 <FIELD NAME="pickupid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
                 <FIELD NAME="liaisonids" TYPE="text" NOTNULL="false"/>
-                <FIELD NAME="courseids" TYPE="text" NOTNULL="false"/>
+                <FIELD NAME="listingid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <!-- <FIELD NAME="courseids" TYPE="text" NOTNULL="false"/> -->
                 <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
                 <FIELD NAME="active" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false"/>
                 <!-- Physical address -->

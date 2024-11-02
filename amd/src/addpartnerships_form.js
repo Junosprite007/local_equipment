@@ -41,6 +41,14 @@ const setupPartnershipsHandling = () => {
 
     $(document).on('click', '.local-equipment-remove-partnership', function () {
         const $fieldset = $(this).closest(selector);
+        const $select = $fieldset.find(
+            "select[id^='id_partnershipcourselist_']"
+        );
+        const containerId = $select
+            .attr('id')
+            .replace('partnershipcourselist', 'courses');
+        $(`#${containerId}`).remove();
+
         $fieldset.remove();
         updatePartnershipNumbers();
         updateHiddenFields();
@@ -111,4 +119,166 @@ const updateTrashIcons = () => {
     } else {
         $('.local-equipment-remove-partnership').hide();
     }
+};
+
+/**
+ * Display course listings for partnership dropdowns
+ */
+export const displayPartnershipCourseListing = () => {
+    const coursesData = JSON.parse(
+        $('#id_coursesthisyear').attr('data-coursesthisyear')
+    );
+
+    /**
+     * Create course listing for a specific partnership dropdown
+     * @param {jQuery} $select The partnership select element
+     */
+    const initializePartnershipSelect = async ($select) => {
+        // Create unique container for this partnership's courses
+        const containerId = $select
+            .attr('id')
+            .replace('partnershipcourselist', 'courses');
+        let $container = $(`#${containerId}`);
+
+        // If container doesn't exist, create it
+        if (!$container.length) {
+            $container = $('<div>', {
+                id: containerId,
+                class: 'local-equipment_partnership-courses-container mt-3',
+            });
+            $select.after($container);
+        }
+
+        // Get required strings
+        const strings = await Promise.all([
+            getString('nocoursesfoundforthispartnership', 'local_equipment'),
+            getString('courseid', 'local_equipment'),
+            getString('coursename', 'local_equipment'),
+            getString('totalcourses', 'local_equipment'),
+        ]);
+
+        const [
+            noCoursesFound,
+            courseIdLabel,
+            courseNameLabel,
+            totalCoursesLabel,
+        ] = strings;
+
+        /**
+         * Display courses for the selected partnership
+         * @param {string} partnershipId The selected partnership ID
+         */
+        const displayCourses = (partnershipId) => {
+            $container.empty();
+
+            const partnershipCourses = coursesData[partnershipId];
+
+            if (
+                !partnershipCourses ||
+                Object.keys(partnershipCourses).length === 0
+            ) {
+                $container.html(
+                    `<div class="alert alert-warning">${noCoursesFound}</div>`
+                );
+                // return;
+            }
+
+            // Create main container with fixed height layout
+            const $mainContainer = $('<div>').addClass(
+                'local-equipment_main-courses-container'
+            );
+
+            // Create fixed header
+            const $header = $('<div>')
+                .addClass('local-equipment_courses-header')
+                .append(
+                    $('<div>')
+                        .addClass('local-equipment_courses-header-row d-flex')
+                        .append(
+                            $('<div>')
+                                .addClass('local-equipment_course-id-col')
+                                .text(courseIdLabel),
+                            $('<div>')
+                                .addClass('local-equipment_course-name-col')
+                                .text(courseNameLabel)
+                        )
+                );
+
+            // Create scrollable content area
+            const $scrollContent = $('<div>').addClass(
+                'local-equipment_courses-scroll-content'
+            );
+            const $scrollTable = $('<div>').addClass(
+                'local-equipment_courses-table'
+            );
+
+            // Sort and add courses
+            const sortedCourseIds = Object.keys(partnershipCourses).sort(
+                (a, b) => parseInt(a) - parseInt(b)
+            );
+
+            sortedCourseIds.forEach((courseId) => {
+                $('<div>')
+                    .addClass('local-equipment_course-row d-flex')
+                    .append(
+                        $('<div>')
+                            .addClass('local-equipment_course-id-col')
+                            .text(courseId),
+                        $('<div>')
+                            .addClass('local-equipment_course-name-col')
+                            .text(partnershipCourses[courseId])
+                    )
+                    .appendTo($scrollTable);
+            });
+
+            $scrollContent.append($scrollTable);
+
+            // Create fixed footer
+            const $footer = $('<div>')
+                .addClass('local-equipment_courses-footer')
+                .text(`${totalCoursesLabel}: ${sortedCourseIds.length}`);
+
+            // Assemble the structure
+            $mainContainer
+                .append($header)
+                .append($scrollContent)
+                .append($footer);
+
+            $container.append($mainContainer);
+        };
+
+        // Handle changes to this select
+        $select.on('change', function () {
+            const selectedPartnership = $(this).val();
+            if (selectedPartnership) {
+                displayCourses(selectedPartnership);
+            } else {
+                $container.empty();
+            }
+        });
+
+        // Display initial courses if pre-selected
+        const initialPartnership = $select.val();
+        if (initialPartnership) {
+            displayCourses(initialPartnership);
+        }
+    };
+
+    // Initialize all existing partnership selects
+    $("select[id^='id_partnershipcourselist_']").each(function () {
+        initializePartnershipSelect($(this));
+    });
+
+    // Handle newly added partnerships
+    $(document).on('click', '[name="addpartnership"]', function () {
+        // Wait for DOM to update
+        setTimeout(() => {
+            const $newSelect = $(
+                "select[id^='id_partnershipcourselist_']:last"
+            );
+            if ($newSelect.length) {
+                initializePartnershipSelect($newSelect);
+            }
+        }, 100);
+    });
 };

@@ -152,10 +152,12 @@ foreach ($partnerships as $partnership) {
                 break;
 
             case 'courses':
-                // $row[] = local_equipment_get_courses($partnership);
+                // $row[] = local_equipment_get_courses_display($partnership);
+                $listingname = $DB->get_field('local_equipment_partnership', 'name', ['id' => $partnership->listingid]);
                 $row[] = html_writer::tag(
                     'div',
-                    local_equipment_get_courses($partnership),
+                    html_writer::tag('span', get_string('listingfrom', 'local_equipment', $listingname)) .
+                    local_equipment_generate_course_table($partnership->listingid),
                     ['class' => 'nowrap']
                 );
                 break;

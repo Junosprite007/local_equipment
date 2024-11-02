@@ -41,6 +41,7 @@ $PAGE->set_context($context);
 $PAGE->set_url($url, ['id' => $id]);
 $PAGE->set_title(get_string('editpartnership', 'local_equipment'));
 $PAGE->set_heading(get_string('editpartnership', 'local_equipment'));
+$PAGE->requires->js_call_amd('local_equipment/editpartnership_form', 'init');
 
 require_capability('local/equipment:managepartnerships', $context);
 
@@ -58,8 +59,13 @@ if ($mform->is_cancelled()) {
     $partnership->id = $data->partnershipid;
     $partnership->name = $data->name;
     $partnership->liaisonids = json_encode(local_equipment_convert_array_values_to_int($data->liaisons));
-    $partnership->courseids = json_encode(local_equipment_convert_array_values_to_int($data->courses));
+    // $partnership->courseids = json_encode(local_equipment_convert_array_values_to_int($data->courses)); // Needs to be removed from DB.
+    $partnership->listingid = $data->partnershipcourselist; // Needs to be added to DB.
     $partnership->active = $data->active;
+    // echo '<pre>';
+    // var_dump($data->partnershipcourselist);
+    // echo '</pre>';
+    // die();
 
     // Mailing address specific fields.
     if ($partnership->mailing_sameasphysical) {

@@ -105,4 +105,64 @@ td.local-equipment-nowrap-cell {
   overflow-y: auto;
 }
 
+.local-equipment_partnership-courses-container {
+  width: 100%;
+}
+.local-equipment_partnership-courses-container .local-equipment_main-courses-container {
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  background-color: #fff;
+}
+.local-equipment_partnership-courses-container .local-equipment_courses-header {
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  font-weight: 700;
+}
+.local-equipment_partnership-courses-container .local-equipment_courses-scroll-content {
+  height: 239px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #ced4da #f8f9fa;
+}
+.local-equipment_partnership-courses-container .local-equipment_courses-scroll-content::-webkit-scrollbar {
+  width: 6px;
+}
+.local-equipment_partnership-courses-container .local-equipment_courses-scroll-content::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+.local-equipment_partnership-courses-container .local-equipment_courses-scroll-content::-webkit-scrollbar-thumb {
+  background-color: #ced4da;
+  border-radius: 3px;
+}
+.local-equipment_partnership-courses-container .local-equipment_course-row {
+  display: flex;
+  padding: 0.75rem;
+  border-bottom: 1px solid #e9ecef;
+}
+.local-equipment_partnership-courses-container .local-equipment_course-row:last-child {
+  border-bottom: none;
+}
+.local-equipment_partnership-courses-container .local-equipment_course-row:nth-child(odd) {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+.local-equipment_partnership-courses-container .local-equipment_course-row:hover {
+  background-color: rgba(0, 0, 0, 0.075);
+}
+.local-equipment_partnership-courses-container .local-equipment_course-id-col {
+  width: 100px;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+.local-equipment_partnership-courses-container .local-equipment_course-name-col {
+  flex-grow: 1;
+}
+.local-equipment_partnership-courses-container .local-equipment_courses-footer {
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+  font-weight: 700;
+  text-align: right;
+}
+
 /*# sourceMappingURL=styles.css.map */

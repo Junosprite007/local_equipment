@@ -42,6 +42,8 @@ class addpartnerships_form extends \moodleform {
         $mform = $this->_form;
         $repeatarray = [];
         $repeatoptions = [];
+        $allpartnershipcourses = [];
+        $allpartnershipcourses_json = [];
         $address = new stdClass();
 
         $repeatno = optional_param('repeatno', 1, PARAM_INT);
@@ -55,14 +57,34 @@ class addpartnerships_form extends \moodleform {
         }
 
         $users = local_equipment_auto_complete_users();
-        $mastercourses = local_equipment_get_master_courses('ALL_COURSES_CURRENT');
-        $coursesformatted = $mastercourses->courses_formatted;
-        $nomastercategory = $mastercourses->nomastercategory;
-        $nomastercourses = $mastercourses->nomastercourses;
-        $createcategoriesurl = new \moodle_url('/course/editcategory.php?parent=0');
-        $createcategorieslink = \html_writer::link($createcategoriesurl, get_string('createcategoryhere', 'local_equipment'));
-        $createcoursesurl = new \moodle_url('/course/edit.php?category=92&returnto=catmanage', ['category' => $mastercourses->categoryid]);
-        $createcourseslink = \html_writer::link($createcoursesurl, get_string('createcoursehere', 'local_equipment'));
+        $partnershipcategories = local_equipment_get_partnership_categories_this_year(null, true);
+
+        foreach ($partnershipcategories->partnershipids as $id) {
+            $allpartnershipcourses[$id] = local_equipment_get_partnership_courses_this_year($id);
+        }
+
+        foreach ($allpartnershipcourses as $id => $courses) {
+            $allpartnershipcourses_json[$id] = $courses->courses_formatted;
+        }
+        // $mastercourses = local_equipment_get_master_courses('ALL_COURSES_CURRENT');
+        // $coursesformatted = $mastercourses->courses_formatted;
+        // $nomastercategory = $mastercourses->nomastercategory;
+        // $nomastercourses = $mastercourses->nomastercourses;
+        // $createcategoriesurl = new \moodle_url('/course/editcategory.php?parent=0');
+        // $createcategorieslink = \html_writer::link($createcategoriesurl, get_string('createcategoryhere', 'local_equipment'));
+        // $createcoursesurl = new \moodle_url('/course/edit.php?category=92&returnto=catmanage', ['category' => $mastercourses->categoryid]);
+        // $createcourseslink = \html_writer::link($createcoursesurl, get_string('createcoursehere', 'local_equipment'));
+
+        $mform->addElement(
+            'hidden',
+            'coursesthisyear',
+            get_string('coursesthisyear', 'local_equipment'),
+            [
+                'id' => 'id_coursesthisyear',
+                'data-coursesthisyear' => json_encode($allpartnershipcourses_json)
+            ]
+        );
+        $mform->setType('coursesthisyear', PARAM_RAW);
 
         $repeatarray['partnershipheader'] = $mform->createElement('header', 'partnershipheader', get_string('partnership', 'local_equipment'), ['class' => 'local-equipment-partnership-header']);
 
@@ -73,25 +95,40 @@ class addpartnerships_form extends \moodleform {
         // $repeatarray['delete'] = $mform->createElement('submit', $deletebuttonname, get_string('delete'), ['class' => 'local-equipment-remove-partnership btn']);
         $repeatarray['partnershipname'] = $mform->createElement('text', 'partnershipname', get_string('partnershipname', 'local_equipment'), ['class' => 'partnership-name-input']);
         $repeatarray['liaisons'] = $mform->createElement('autocomplete', 'liaisons', get_string('selectliaisons', 'local_equipment'), [], $users);
-        if ($nomastercategory) {
-            $repeatarray['courses'] = $mform->createElement(
-                'static',
-                'nomastercategoryfound',
-                get_string('selectcourses', 'local_equipment'),
-                new \lang_string('nocategoryfound', 'local_equipment', $mastercourses->categoryname) . ' '
-                    . $createcategorieslink
-            );
-        } else if ($nomastercourses) {
-            $repeatarray['courses'] = $mform->createElement(
-                'static',
-                'nomastercoursesfound',
-                get_string('selectcourses', 'local_equipment'),
-                new \lang_string('nocoursesfoundincategory', 'local_equipment', $mastercourses->categoryname) . ' '
-                    . $createcourseslink
-            );
-        } else {
-            $repeatarray['courses'] = $mform->createElement('select', 'courses', get_string('selectcourses', 'local_equipment'), $coursesformatted, ['multiple' => true, 'size' => 10]);
-        }
+
+
+        // $repeatarray['coursesthisyear'] = $mform->createElement(
+        //     'hidden',
+        //     'coursesthisyear',
+        //     get_string('coursesthisyear', 'local_equipment'),
+        //     [
+        //         'id' => 'id_coursesthisyear',
+        //         'data-coursesthisyear' => json_encode($allpartnershipcourses_json)
+        //     ]
+        // );
+        $repeatarray['partnershipcourselist'] = $mform->createElement('select', 'partnershipcourselist', get_string('partnershipcourselist', 'local_equipment'), $partnershipcategories->partnershipids_catnames);
+
+
+
+        // if ($nomastercategory) {
+        //     $repeatarray['courses'] = $mform->createElement(
+        //         'static',
+        //         'nomastercategoryfound',
+        //         get_string('selectcourses', 'local_equipment'),
+        //         new \lang_string('nocategoryfound', 'local_equipment', $mastercourses->categoryname) . ' '
+        //             . $createcategorieslink
+        //     );
+        // } else if ($nomastercourses) {
+        //     $repeatarray['courses'] = $mform->createElement(
+        //         'static',
+        //         'nomastercoursesfound',
+        //         get_string('selectcourses', 'local_equipment'),
+        //         new \lang_string('nocoursesfoundincategory', 'local_equipment', $mastercourses->categoryname) . ' '
+        //             . $createcourseslink
+        //     );
+        // } else {
+        //     $repeatarray['courses'] = $mform->createElement('select', 'courses', get_string('selectcourses', 'local_equipment'), $coursesformatted, ['multiple' => true, 'size' => 10]);
+        // }
 
         $repeatarray['active'] = $mform->createElement('advcheckbox', 'active', get_string('active'));
 
@@ -121,7 +158,9 @@ class addpartnerships_form extends \moodleform {
         $repeatoptions['partnershipname']['type'] = PARAM_TEXT;
         $repeatoptions['partnershipname']['rule'] = 'required';
         $repeatoptions['liaisons']['type'] = PARAM_TEXT;
-        $repeatoptions['courses']['type'] = PARAM_TEXT;
+        // $repeatoptions['coursesthisyear']['type'] = PARAM_RAW;
+        $repeatoptions['partnershipcourselist']['type'] = PARAM_RAW;
+        // $repeatoptions['courses']['type'] = PARAM_TEXT;
         $repeatoptions['active']['type'] = PARAM_BOOL;
         $repeatoptions['active']['default'] = 1;
 

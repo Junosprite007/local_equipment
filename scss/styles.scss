@@ -1,4 +1,7 @@
 @charset "UTF-8";
+@import "../../../theme/boost/scss/bootstrap/functions";
+@import "../../../theme/boost/scss/bootstrap/variables";
+@import "../../../theme/boost/scss/bootstrap/mixins";
 
 #page-admin-local-equipment-partnerships .nowrap {
     white-space: nowrap;
@@ -108,4 +111,81 @@ td.local-equipment-nowrap-cell {
     border: 1px solid #ccc;
     padding: 10px;
     overflow-y: auto;
+}
+
+// Partnership courses styles
+.local-equipment_partnership-courses-container {
+    width: 100%; // Full width to stack below dropdown
+
+    .local-equipment_main-courses-container {
+        border: 1px solid $border-color;
+        border-radius: $border-radius;
+        background-color: $white;
+    }
+
+    .local-equipment_courses-header {
+        padding: $spacer * 0.75;
+        background-color: $gray-100;
+        border-bottom: 1px solid $border-color;
+        font-weight: $font-weight-bold;
+    }
+
+    .local-equipment_courses-scroll-content {
+        height: 239px; // Fixed height matching your example
+        overflow-y: auto;
+
+        // Customize scrollbar for WebKit browsers
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: $gray-100;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background-color: $gray-400;
+            border-radius: 3px;
+        }
+
+        // Firefox scrollbar
+        scrollbar-width: thin;
+        scrollbar-color: $gray-400 $gray-100;
+    }
+
+    .local-equipment_course-row {
+        display: flex;
+        padding: $spacer * 0.75;
+        border-bottom: 1px solid $gray-200;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &:nth-child(odd) {
+            background-color: rgba($black, .03);
+        }
+
+        &:hover {
+            background-color: rgba($black, .075);
+        }
+    }
+
+    .local-equipment_course-id-col {
+        width: 100px;
+        flex-shrink: 0;
+        font-weight: $font-weight-bold;
+    }
+
+    .local-equipment_course-name-col {
+        flex-grow: 1;
+    }
+
+    .local-equipment_courses-footer {
+        padding: $spacer * 0.75;
+        background-color: $gray-100;
+        border-top: 1px solid $border-color;
+        font-weight: $font-weight-bold;
+        text-align: right;
+    }
 }

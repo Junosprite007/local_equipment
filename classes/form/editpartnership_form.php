@@ -44,6 +44,8 @@ class editpartnership_form extends \moodleform {
             'pickup',
             'billing',
         ];
+        $allpartnershipcourses = [];
+        $allpartnershipcourses_json = [];
 
 
         // var_dump($data);
@@ -54,12 +56,49 @@ class editpartnership_form extends \moodleform {
 
         // Autocomplete users.
         $users = local_equipment_auto_complete_users();
-        $mastercourses = local_equipment_get_master_courses('ALL_COURSES_CURRENT');
-        $coursesformatted = $mastercourses->courses_formatted;
+        $partnershipcategories = local_equipment_get_partnership_categories_this_year(null, true);
+
+        foreach ($partnershipcategories->partnershipids as $id) {
+            $allpartnershipcourses[$id] = local_equipment_get_partnership_courses_this_year($id);
+        }
+
+        foreach ($allpartnershipcourses as $id => $courses) {
+            $allpartnershipcourses_json[$id] = $courses->courses_formatted;
+        }
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<pre>';
+        // var_dump($allpartnershipcourses_json);
+        // echo '</pre>';
+        // die();
+
+
+        // $mastercourses = local_equipment_get_master_courses('ALL_COURSES_CURRENT');
+        // $coursesformatted = $mastercourses->courses_formatted;
+        // $coursesformatted = $partnershipcourses->courses_formatted;
+        // $categoriesformatted = $partnershipcategories->categories_formatted;
+
+        // echo '<pre>';
+        // var_dump($coursesformatted);
+        // echo '</pre>';
+
+        // $partnershipid = explode('#', array_keys($categoriesformatted)[0])[0];
 
         // Add form elements.
         $mform->addElement('hidden', 'partnershipid', $data->id);
         $mform->setType('partnershipid', PARAM_INT);
+
+        $mform->addElement(
+            'hidden',
+            'coursesthisyear',
+            get_string('coursesthisyear', 'local_equipment'),
+            [
+                'id' => 'id_coursesthisyear',
+                'data-coursesthisyear' => json_encode($allpartnershipcourses_json)
+            ]
+        );
+        $mform->setType('coursesthisyear', PARAM_RAW);
 
         $mform->addElement('text', 'name', get_string('name', 'local_equipment'));
         $mform->setType('name', PARAM_TEXT);
@@ -70,9 +109,14 @@ class editpartnership_form extends \moodleform {
         $mform->setType('liaisons', PARAM_RAW);
         $mform->setDefault('liaisons', json_decode($data->liaisonids));
 
-        $mform->addElement('select', 'courses', get_string('selectcourses', 'local_equipment'), $coursesformatted, ['multiple' => true, 'size' => 10]);
-        $mform->setType('courses', PARAM_RAW);
-        $mform->setDefault('courses', json_decode($data->courseids));
+        $mform->addElement('select', 'partnershipcourselist', get_string('partnershipcourselist', 'local_equipment'), $partnershipcategories->partnershipids_catnames);
+        $mform->setType('partnershipcourselist', PARAM_RAW);
+        // This will need to be changed to $data->partnershipidforcourselist or something like that.
+        $mform->setDefault('partnershipcourselist', $data->partnershipcourselist ?? $data->id);
+
+        // $mform->addElement('select', 'courses', get_string('selectcourses', 'local_equipment'), $coursesformatted, ['multiple' => true, 'size' => 10]);
+        // $mform->setType('courses', PARAM_RAW);
+        // $mform->setDefault('courses', json_decode($data->courseids));
 
         $mform->addElement('advcheckbox', 'active', get_string('active'));
         $mform->setType('active', PARAM_BOOL);

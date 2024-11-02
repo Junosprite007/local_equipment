@@ -25,6 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+require_once($CFG->dirroot . '/local/equipment/lib.php');
 
 if ($hassiteconfig) {
 
@@ -50,16 +51,66 @@ if ($hassiteconfig) {
     // This is just creating a standard settings page for the Equipment plugin.
     $settings = new admin_settingpage("{$component}_settings", get_string('equipmentsettings', 'local_equipment'));
 
-    // Add Pickups sub-settings
+    // Add Partnership sub-settings
     $settings->add(new admin_setting_heading(
-        "{$component}/pickupsheading",
+        "{$component}/partnershipheading",
         get_string(
-            'pickupsheading',
+            'partnershipsettings',
             'local_equipment'
         ),
-        get_string('pickupsheading_desc', 'local_equipment')
+        get_string('partnershipsettings_desc', 'local_equipment')
     ));
 
+    // The starting school year to use for displaying courses for a given partnership.
+    // Defaults to the starting year of the current school in the United States.
+    $settings->add(new admin_setting_configtext(
+        "{$component}/schoolyearrangetoautoselect_start",
+        get_string('schoolyearrangetoautoselect_start', 'local_equipment'),
+        get_string('schoolyearrangetoautoselect_start_desc', 'local_equipment') . ' ' .
+        get_string('schoolyearrangetoautoselect_appendingdesc', 'local_equipment'),
+        explode('-', local_equipment_get_school_year())[0],
+        PARAM_TEXT
+    ));
+
+    // The ending school year to use for displaying courses for a given partnership.
+    // Defaults to the ending year of the current school in the United States.
+    $settings->add(new admin_setting_configtext(
+        "{$component}/schoolyearrangetoautoselect_end",
+        get_string('schoolyearrangetoautoselect_end', 'local_equipment'),
+        get_string('schoolyearrangetoautoselect_end_desc', 'local_equipment') . ' ' .
+        get_string('schoolyearrangetoautoselect_appendingdesc', 'local_equipment'),
+        explode('-', local_equipment_get_school_year())[1],
+        PARAM_TEXT
+    ));
+
+
+    // Prefix keyword for each Partnerships' "idnumber" field in mdl_course_categories, as entered by a system administrator.
+    // Default is "partnership".
+    // Format is "{prefix}#{partnershipid}_{schoolyearrangetoautoselect_start}-{schoolyearrangetoautoselect_end}".
+    // Example: "partnership" prefix, a partnership with id of "8", "2024" schoolyear start, and "2025" school year end
+    //     would result in "partnership#8_2024-2025".
+    $settings->add(new admin_setting_configtext(
+        "{$component}/partnershipcategoryprefix",
+        get_string('partnershipcategoryprefix', 'local_equipment'),
+        get_string('partnershipcategoryprefix_desc', 'local_equipment'),
+        'partnership',
+        PARAM_TEXT
+    ));
+
+
+
+
+    // Add Pickups sub-settings
+    $settings->add(new admin_setting_heading(
+        "{$component}/pickupheading",
+        get_string(
+            'pickupsettings',
+            'local_equipment'
+        ),
+        get_string('pickupsettings_desc', 'local_equipment')
+    ));
+
+    // Number of ended pickups to show.
     $settings->add(new admin_setting_configtext(
         "{$component}/endedpickupstoshow",
         get_string('endedpickupstoshow', 'local_equipment'),

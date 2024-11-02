@@ -38,6 +38,7 @@ $PAGE->set_title(get_string('addpartnerships', 'local_equipment'));
 $PAGE->set_heading(get_string('addpartnerships', 'local_equipment'));
 $PAGE->requires->js_call_amd('local_equipment/addpartnerships_form', 'init', ['partnership']);
 $PAGE->requires->js_call_amd('local_equipment/formhandling', 'setupFieldsetNameUpdates', ['partnership', 'header']);
+$PAGE->requires->js_call_amd('local_equipment/addpartnerships_form', 'displayPartnershipCourseListing');
 
 require_capability('local/equipment:managepartnerships', $context);
 
@@ -54,13 +55,19 @@ if ($mform->is_cancelled()) {
         $partnership = new stdClass();
         // Convert the liaison and course IDs to arrays of integers instead of arrays of strings. Make sure you know what datatype is going into the functions below.
         $liaisonids = local_equipment_convert_array_values_to_int($data->{'liaisons'}[$i]);
-        $courseids = local_equipment_convert_array_values_to_int($data->{'courses'}[$i]);
+        // $courseids = local_equipment_convert_array_values_to_int($data->{'courses'}[$i]);
 
         // Fill in the partnership table fields.
         $partnership->name = $data->{'partnershipname'}[$i];
         $partnership->liaisonids = json_encode($liaisonids);
-        $partnership->courseids = json_encode($courseids);
+        // $partnership->courseids = json_encode($courseids); // Needs to be removed from DB.
+        $partnership->listingid = $data->partnershipcourselist[$i]; // Needs to be added to DB.
         $partnership->active = $data->{'active'}[$i];
+
+        // echo '<pre>';
+        // var_dump($data->partnershipcourselist);
+        // echo '</pre>';
+        // die();
 
         // Physical address specific fields.
         $partnership->physical_streetaddress = $data->physical_streetaddress[$i];

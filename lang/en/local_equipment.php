@@ -66,7 +66,9 @@ $string['physical_country'] = 'Country (physical)';
 $string['physicaladdress'] = 'Physical address';
 $string['pickup_country'] = 'Country (pickup)';
 $string['pickupaddress'] = 'Pickup address';
+$string['courseid'] = 'Course ID';
 $string['courseids'] = 'Course IDs';
+$string['coursename'] = 'Course name';
 $string['courses'] = 'Courses';
 $string['createcategoryhere'] = 'Create a category here.';
 $string['createcoursehere'] = 'Create a course here.';
@@ -113,6 +115,7 @@ $string['name'] = 'Name';
 $string['billing_name'] = 'Name (Billing)';
 $string['nocategoryfound'] = 'No category found with the name "{$a}".';
 $string['nocoursesavailable'] = 'No courses available';
+$string['nocoursesfoundforpartnershipwithid'] = 'No courses found where the partnership "idname" field is "{$a}".';
 $string['nocoursesfoundincategory'] = 'No courses found in category "{$a}".';
 $string['notasupportedcountry'] = '{$a} is not a supported country.';
 $string['partnership'] = 'Partnership';
@@ -125,6 +128,7 @@ $string['partnerships'] = 'Partnerships';
 $string['partnerships_desc'] = 'List any partnerships or agreements that are relevant to this equipment checkout service.';
 $string['partnershipsadded'] = 'Partnerships added successfully.';
 $string['partnershipsettings'] = 'Partnership settings';
+$string['partnershipsettings_desc'] = 'Settings related to the Partnership sub-feature of the Equipment plugin.';
 $string['partnershipupdated'] = 'Partnership updated';
 $string['physical'] = 'Physical';
 $string['physical_address'] = 'Physical address';
@@ -199,7 +203,22 @@ $string['zipcode'] = 'ZIP code';
 $string['attention'] = 'Attention';
 $string['extrainstructions'] = 'Extra {$a} instructions';
 
-
+// Partnership-specific strings.
+$string['coursesthisyear'] = 'Courses this year';
+$string['errorparsingcoursesdata'] = 'Error parsing courses data';
+$string['listingfrom'] = 'Listing from: {$a}';
+$string['partnershipcourselist'] = 'Partnership course list';
+$string['selectpartnershipforlisting'] = 'Select a partnership for listing';
+$string['schoolyearrangetoautoselect_start'] = 'Starting school year range to auto-select';
+$string['schoolyearrangetoautoselect_start_desc'] = 'The starting school year to use for displaying courses for a given partnership to select from.';
+$string['schoolyearrangetoautoselect_end'] = 'Ending school year range to auto-select';
+$string['schoolyearrangetoautoselect_end_desc'] = 'The ending school year to use for displaying courses for a given partnership to select from.';
+$string['schoolyearrangetoautoselect_appendingdesc'] = 'This setting will alway default to the currect school year, which is probably what you want, so keep this setting empty to default to whatever this school year is, unless you want to define a specific school year';
+$string['partnershipcategoryprefix'] = 'Partnership category prefix';
+$string['partnershipcategoryprefix_desc'] = 'The prefix keyword used for defining the "Category ID number" setting for a given Partnership course category.';
+$string['nopartnershipcategoriesfoundforschoolyear'] = 'No partnership categories found for the school year with \'idnumber\' "{$a}".';
+$string['nocoursesfoundforthispartnership'] = 'No courses found for this partnership.';
+$string['totalcourses'] = 'Total courses';
 
 
 // Pickups pages strings
@@ -221,8 +240,8 @@ $string['pickupdeleted'] = 'Pickup deleted';
 $string['pickupendtime'] = 'Pickup end time';
 $string['pickups'] = 'Pickups';
 $string['pickupsadded'] = 'Pickups added';
-$string['pickupsheading'] = 'Pickups settings';
-$string['pickupsheading_desc'] = 'Settings related to equipment pickups.';
+$string['pickupsettings'] = 'Pickups settings';
+$string['pickupsettings_desc'] = 'Settings related to the Pickups sub-feature of the Equipment plugin.';
 $string['pickupstarttime'] = 'Pickup start time';
 $string['selectflccoordinator'] = 'Select FLC coordinator';
 $string['selectpartnershipcoordinator'] = 'Select partnership coordinator';

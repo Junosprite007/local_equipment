@@ -341,7 +341,6 @@ function local_equipment_get_coordinator_info($id) {
 function local_equipment_get_master_courses($categoryname = 'ALL_COURSES_CURRENT') {
     global $DB;
 
-
     // Set variables to be used for error checking in ./partnerships/addpartnerships.php.
     $responseobject = new stdClass();
     $responseobject->courses_formatted = [];
@@ -401,6 +400,27 @@ function local_equipment_get_courses($partnership) {
     }
     return implode('<br />', $courseinfo);
 }
+
+// /**
+//  * Get all liaison names, emails, and contact phones for a given partnership.
+//  * Liaisons are simply users on the system, so they must of accounts.
+//  * Emails and phones will be taken from the user's profile, but admins will have the option to add phone numbers for them if they don't do it themselves.
+//  *
+//  * @param stdClass $partnership A database record that contains multiple types of addresses.
+//  * @return string True if the string exists, false otherwise.
+//  */
+// function local_equipment_get_courses_listing($partnership) {
+//     $courseids = json_decode($partnership->listingid);
+//     $courseinfo = [];
+
+//     foreach ($courseids as $id) {
+//         $course = get_course($id);
+//         $courseurl = new moodle_url('/course/view.php', ['id' => $course->id]);
+//         $courselink = html_writer::link($courseurl, $course->fullname);
+//         $courseinfo[] = $courselink;
+//     }
+//     return implode('<br />', $courseinfo);
+// }
 
 /**
  * Validates a mobile phone number to make sure it makes sense.
@@ -1154,6 +1174,204 @@ function local_equipment_get_partnership_courses($partnershipid) {
     $partnership = $DB->get_record('local_equipment_partnership', ['id' => $partnershipid]);
     $courseids = json_decode($partnership->courseids);
     return $DB->get_records_list('course', 'id', $courseids, '', 'id, fullname');
+}
+
+/**
+ * Retrieves partnership courses from the course category for this school year.
+ *
+ * @param int $partnershipid The ID of the partnership.
+ * @return stdClass An object containing the courses, or an error message if no courses are found.
+ */
+function local_equipment_get_partnership_courses_this_year($partnershipid) {
+    global $DB;
+
+    $responseobject = new stdClass();
+    $responseobject->courses_formatted = [];
+    $schoolyear = local_equipment_get_school_year();
+    $keyword = 'partnership';
+    // The following string will look something like "partnership#1_2024-2025".
+    // The word 'partnership' will be an admin-configurable string soon.
+    $partnershipid_string = $keyword . '#' . $partnershipid . '_' . $schoolyear;
+
+    // // Get all the courses at any depth under a given 'idnumber' from the course.
+    try {
+
+        $sql = "SELECT DISTINCT c.*
+            FROM mdl_course c
+            JOIN mdl_course_categories cc ON c.category = cc.id
+            WHERE cc.path LIKE (
+                SELECT CONCAT(path, '%')
+                FROM mdl_course_categories
+                WHERE idnumber = :idnumber
+            )";
+        $responseobject->courses = $DB->get_records_sql($sql, ['idnumber' => $partnershipid_string]);
+        if (empty($responseobject->courses)) {
+            $responseobject->nocourses = true;
+            throw new moodle_exception(get_string('nocoursesfoundforpartnershipwithid', 'local_equipment', $partnershipid_string));
+        }
+        foreach ($responseobject->courses as $course) {
+            // $responseobject->courses_formatted[$course->id] = $course->shortname;
+            $responseobject->courses_formatted[$course->id] = $course->fullname;
+        }
+    } catch (moodle_exception $e) {
+        // Handle the exception according to Moodle Coding Standards.
+        $responseobject->errors = $e->getMessage();
+    }
+    return $responseobject;
+}
+
+
+/**
+ * Retrieves partnership categories from the current school course category for this school year,
+ * where idnumber field = {schoolyearrange_start}-{schoolyearrange_end}.
+ *
+ * @param int $schoolyearrange The 'idnumber' field of the school year category.
+ * @return stdClass An object containing the partnership categories to choose from, or an error message if no partnership categories are found.
+ */
+function local_equipment_get_partnership_categories_this_year($schoolyearrange = null, $defualttoselection = false) {
+    global $DB;
+
+    // Default to the current school year.
+    if (!$schoolyearrange) {
+        $schoolyearrange = local_equipment_get_school_year();
+    }
+
+    $partnershipcategoriesobject = new stdClass();
+    $partnershipcategoriesobject->categories = [];
+
+    // Get all the courses at any depth under a given 'idnumber' from the course.
+    try {
+        $sql = "SELECT DISTINCT cc.id, cc.name, cc.idnumber, cc.path
+            FROM mdl_course_categories cc
+            WHERE cc.idnumber LIKE :idnumber";
+        $prefix = get_config('local_equipment', 'partnershipcategoryprefix');
+        $partnershipcategoriesobject->categories = $DB->get_records_sql($sql, ['idnumber' => "$prefix#%_$schoolyearrange"]);
+        if (empty($partnershipcategoriesobject->categories)) {
+            $partnershipcategoriesobject->nopartnershipcategories = true;
+            throw new moodle_exception(get_string('nopartnershipcategoriesfoundforschoolyear', 'local_equipment', $schoolyearrange));
+        } else {
+            // $partnershipcategoriesobject->categoryids = [];
+            // $partnershipcategoriesobject->partnershipids = [];
+            if ($defualttoselection) {
+                $string = get_string('selectpartnershipforlisting', 'local_equipment');
+                $partnershipcategoriesobject->catids_catnames[0] =
+                    $partnershipcategoriesobject->partnershipids_catnames[0] =
+                    $partnershipcategoriesobject->partnershipids_partnershipnames[0] =
+                    $partnershipcategoriesobject->catids_partnershipnames[0] =
+                    $partnershipcategoriesobject->partnershipids[0] = $string;
+            }
+            foreach ($partnershipcategoriesobject->categories as $category) {
+                $partnershipid = explode('#', $category->idnumber)[1];
+                $partnershipid = explode('_', $partnershipid)[0];
+                $partnership = $DB->get_record('local_equipment_partnership', ['id' => $partnershipid]);
+
+                $partnershipcategoriesobject->catids_catnames[$category->id] = $category->name;
+                $partnershipcategoriesobject->partnershipids_catnames[$partnershipid] = $category->name;
+                $partnershipcategoriesobject->partnershipids_partnershipnames[$partnershipid] = $partnership->name;
+                $partnershipcategoriesobject->catids_partnershipnames[$category->id] = $partnership->name;
+                $partnershipcategoriesobject->partnershipids[] = $partnershipid;
+                // $partnershipcategoriesobject->categories_formatted[$category->idnumber] = $category->name;
+
+            }
+        }
+    } catch (moodle_exception $e) {
+        // Handle the exception according to Moodle Coding Standards.
+        $partnershipcategoriesobject->errors = $e->getMessage();
+    }
+    return $partnershipcategoriesobject;
+}
+
+/**
+ * Generate HTML for partnership course table
+ *
+ * @package     local_equipment
+ * @param       int $partnershipid The partnership ID
+ * @return      string HTML for the course table
+ */
+function local_equipment_generate_course_table($partnershipid) {
+    global $OUTPUT;
+
+    $coursesthisyear = local_equipment_get_partnership_courses_this_year($partnershipid);
+    $courses = $coursesthisyear->courses_formatted;
+
+    if (!$coursesthisyear || empty($coursesthisyear->courses_formatted) || empty($courses)) {
+        return html_writer::div(
+            get_string('nocoursesfoundforthispartnership', 'local_equipment'),
+            'alert alert-warning'
+        );
+    }
+
+    // Start building the table structure
+    $html = html_writer::start_div('local-equipment_partnership-courses-container');
+    $html .= html_writer::start_div('local-equipment_main-courses-container');
+
+    // Header
+    $html .= html_writer::start_div('local-equipment_courses-header');
+    $html .= html_writer::start_div('local-equipment_courses-header-row d-flex');
+    $html .= html_writer::div(
+        get_string('courseid', 'local_equipment'),
+        'local-equipment_course-id-col'
+    );
+    $html .= html_writer::div(
+        get_string('coursename', 'local_equipment'),
+        'local-equipment_course-name-col'
+    );
+    $html .= html_writer::end_div(); // End header row
+    $html .= html_writer::end_div(); // End header
+
+    // Scrollable content
+    $html .= html_writer::start_div('local-equipment_courses-scroll-content');
+    $html .= html_writer::start_div('local-equipment_courses-table');
+
+    // Sort courses by ID
+    $courseids = array_keys($courses);
+    natsort($courseids);
+
+    // Add each course row
+    foreach ($courseids as $courseid) {
+        $courseurl = new moodle_url('/course/view.php', ['id' => $courseid]);
+        $html .= html_writer::start_div('local-equipment_course-row d-flex');
+        $html .= html_writer::div($courseid, 'local-equipment_course-id-col');
+        $html .= html_writer::div(
+            html_writer::link($courseurl, $courses[$courseid]),
+            'local-equipment_course-name-col'
+        );
+        $html .= html_writer::end_div();
+    }
+
+    $html .= html_writer::end_div(); // End courses table
+    $html .= html_writer::end_div(); // End scroll content
+
+    // Footer with count
+    $html .= html_writer::div(
+        get_string('totalcourses', 'local_equipment') . ': ' . count($courses),
+        'local-equipment_courses-footer'
+    );
+
+    $html .= html_writer::end_div(); // End main container
+    $html .= html_writer::end_div(); // End partnership courses container
+
+    return $html;
+}
+
+/**
+ * Get the school year string (2024-2025) given a unix timestamp.
+ *
+ * @param int $timestamp The timestamp to get the school year for.
+ * @return string The school year string.
+ */
+function local_equipment_get_school_year($timestamp = null) {
+    $timestamp ?: time();
+    $year = date('Y', $timestamp);
+    $month = date('n', $timestamp);
+
+    // Eventually, we'll need to get the school year start date from the plugin settings, probably on a Partnership basis.
+    // For now, we'll just use July 1st as the start date.
+    if ($month < 7) {
+        return ($year - 1) . '-' . $year;
+    } else {
+        return $year . '-' . ($year + 1);
+    }
 }
 
 /**
