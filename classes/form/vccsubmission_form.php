@@ -49,11 +49,6 @@ class vccsubmission_form extends \moodleform {
             // redirect(new \moodle_url('/'));
         }
 
-
-
-
-
-
         $repeatno = optional_param('repeatno', 1, PARAM_INT);
         $deletebuttonname = 'delete_student';
         $addfieldsname = 'addstudent';
@@ -237,7 +232,6 @@ class vccsubmission_form extends \moodleform {
         $repeatoptions['student_firstname']['rule'] = 'required';
         $repeatoptions['student_lastname']['rule'] = 'required';
         $repeatoptions['student_dob']['rule'] = 'required';
-        // $repeatoptions['student_courses']['rule'] = 'required';
 
         // Set other options.
         $repeatoptions['studentheader']['expanded'] = false; // This is not working for some reason.
@@ -257,17 +251,6 @@ class vccsubmission_form extends \moodleform {
         $formattedpickuptimes = ['0' => get_string('contactusforpickup', 'local_equipment')];
         $pickuptimedata = local_equipment_get_partnerships_with_pickuptimes();
         $pickuptimes = $DB->get_records('local_equipment_pickup', ['status' => 'confirmed']);
-
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<pre>';
-        // var_dump($pickuptimedata);
-        // echo '</pre>';
-        // echo '<br />';
-        // echo '<pre>';
-        // var_dump($pickuptimes);
-        // echo '</pre>';
 
         $i = 0;
         // Creates the list of formatted pickup locations and times for the user to select from.
@@ -296,18 +279,6 @@ class vccsubmission_form extends \moodleform {
             if ($partnership->pickup_streetaddress) {
                 $formattedpickuplocations[$id] = "$name — $datetime — $partnership->pickup_streetaddress, $partnership->pickup_city, $partnership->pickup_state $partnership->pickup_zipcode";
                 if (isset($pickuptimedata[$id]) && isset($pickuptimedata[$id][$i])) {
-                    // echo '<br />';
-                    // echo '<br />';
-                    // echo '<br />';
-                    // echo '<pre>';
-                    // var_dump($i);
-                    // var_dump($id);
-                    // var_dump($pickuptimedata);
-                    // echo '</pre>';
-
-                    // if ($i === 1) {
-                    //     die();
-                    // }
                     $formattedpickuptimes[$id] = $pickuptimedata[$id][$i];
                     $i++;
 

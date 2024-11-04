@@ -180,7 +180,6 @@ export const displayPartnershipCourseListing = () => {
                 $container.html(
                     `<div class="alert alert-warning">${noCoursesFound}</div>`
                 );
-                // return;
             }
 
             // Create main container with fixed height layout
@@ -204,7 +203,7 @@ export const displayPartnershipCourseListing = () => {
                         )
                 );
 
-            // Create scrollable content area
+            // Create scrollable content area.
             const $scrollContent = $('<div>').addClass(
                 'local-equipment_courses-scroll-content'
             );
@@ -212,7 +211,7 @@ export const displayPartnershipCourseListing = () => {
                 'local-equipment_courses-table'
             );
 
-            // Sort and add courses
+            // Sort and add courses.
             const sortedCourseIds = Object.keys(partnershipCourses).sort(
                 (a, b) => parseInt(a) - parseInt(b)
             );

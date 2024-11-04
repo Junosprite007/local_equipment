@@ -33,7 +33,7 @@ require_once($CFG->dirroot . '/local/equipment/lib.php');
 class addbulkfamilies_form extends moodleform {
     public function definition() {
         $mform = $this->_form;
-        global $DB;
+        global $DB, $OUTPUT;
 
 
         // Fetch partnerships and display in a table
@@ -52,6 +52,7 @@ class addbulkfamilies_form extends moodleform {
             // $courseids = [];
             $partnership->coursedata = [];
             // }
+
 
             foreach ($coursejoin as $join) {
                 $course = $DB->get_record('course', ['id' => $join->courseid]);
@@ -107,35 +108,88 @@ class addbulkfamilies_form extends moodleform {
         $mform->setType('familiesdata', PARAM_RAW);
 
         if (!empty($partnershipdata)) {
-            $tablehtml = '<table class="generaltable">';
+            $tablehtml = '<table class="local-equipment_generaltable">';
             $tablehtml .= '<thead><tr><th>' . get_string('partnershipid', 'local_equipment') . '</th><th>' . get_string('partnershipname', 'local_equipment') . '</th></tr></thead>';
             $tablehtml .= '<tbody>';
             $rowclass = 'r0';
+
             foreach ($partnershipdata as $partnership) {
                 $courses = [];
-
-
-
-
-
 
                 if (!empty($partnership->coursedata)) {
                     $courses = $partnership->coursedata;
                 } else {
                     $courses[] = get_string('nocoursesfoundforthispartnership', 'local_equipment');
                 }
-                $tablehtml .= '<tr class="collapsible ' . $rowclass . '">';
+
+                // Create unique ID for the collapsible section
+                $uniqueid = html_writer::random_id('partnership-');
+
+                // Header row
+                $tablehtml .= '<tr class="' . $rowclass . '">';
                 $tablehtml .= '<td>' . s($partnership->id) . '</td>';
-                $tablehtml .= '<td>'
-                    . s($partnership->name)
-                    . '<div class="ml-4">' . implode('<br />', $courses) . '</div>'
-                    . '</td>';
-                $tablehtml .= '</tr>';
-                $rowclass = ($rowclass === 'r0') ? 'r1' : 'r0'; // Alternate row class
+                $tablehtml .= '<td>';
+
+                // Create collapsible button
+                $button = html_writer::tag(
+                    'button',
+                    $OUTPUT->pix_icon('t/collapsed', '') . ' ' . $partnership->name,
+                    array(
+                        'class' => 'btn btn-link w-100 text-left d-flex align-items-center collapsed', // Added 'collapsed' class
+                        'type' => 'button',
+                        'data-toggle' => 'collapse',
+                        'data-target' => '#' . $uniqueid,
+                        'aria-expanded' => 'false',
+                        'aria-controls' => $uniqueid
+                    )
+                );
+
+                // Create collapsible content
+                $content = html_writer::div(
+                    local_equipment_generate_course_table($partnership->listingid),
+                    'collapse',
+                    array('id' => $uniqueid)
+                );
+
+                $tablehtml .= $button . $content;
+                $tablehtml .= '</td></tr>';
+
+                $rowclass = ($rowclass === 'r0') ? 'r1' : 'r0';
             }
+
             $tablehtml .= '</tbody></table>';
             $mform->addElement('html', $tablehtml);
         }
+
+
+
+// Use this chunk depending on how you want the courses for each partnership to be displayed.
+        // $allpartnershipcourses = [];
+        // $allpartnershipcourses_json = [];
+
+        // $partnershipcategories = local_equipment_get_partnership_categories_this_year(null, true);
+
+        // foreach ($partnershipcategories->partnershipids as $id) {
+        //     $allpartnershipcourses[$id] = local_equipment_get_partnership_courses_this_year($id);
+        // }
+
+        // foreach ($allpartnershipcourses as $id => $courses) {
+        //     $allpartnershipcourses_json[$id] = $courses->courses_formatted;
+        // }
+
+        // $mform->addElement(
+        //     'hidden',
+        //     'coursesthisyear',
+        //     get_string('coursesthisyear', 'local_equipment'),
+        //     [
+        //         'id' => 'id_coursesthisyear',
+        //         'data-coursesthisyear' => json_encode($allpartnershipcourses_json)
+        //     ]
+        // );
+        // $mform->setType('coursesthisyear', PARAM_RAW);
+
+        // $mform->addElement('select', 'partnershipcourselist', get_string('partnershipcourselist', 'local_equipment'), $partnershipcategories->partnershipids_catnames);
+        // $mform->setType('partnershipcourselist', PARAM_RAW);
 
 
         $buttonarray = array();

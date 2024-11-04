@@ -219,6 +219,9 @@ $string['partnershipcategoryprefix_desc'] = 'The prefix keyword used for definin
 $string['nopartnershipcategoriesfoundforschoolyear'] = 'No partnership categories found for the school year with \'idnumber\' "{$a}".';
 $string['nocoursesfoundforthispartnership'] = 'No courses found for this partnership.';
 $string['totalcourses'] = 'Total courses';
+$string['collapsepartnership'] = 'Toggle partnership courses';
+$string['expandall'] = 'Expand all partnerships';
+$string['collapseall'] = 'Collapse all partnerships';
 
 
 // Pickups pages strings

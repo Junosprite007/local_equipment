@@ -47,11 +47,6 @@ class editpartnership_form extends \moodleform {
         $allpartnershipcourses = [];
         $allpartnershipcourses_json = [];
 
-
-        // var_dump($data);
-        // die();
-
-
         $users = user_get_users_by_id(json_decode($data->liaisonids));
 
         // Autocomplete users.
@@ -65,25 +60,6 @@ class editpartnership_form extends \moodleform {
         foreach ($allpartnershipcourses as $id => $courses) {
             $allpartnershipcourses_json[$id] = $courses->courses_formatted;
         }
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<pre>';
-        // var_dump($allpartnershipcourses_json);
-        // echo '</pre>';
-        // die();
-
-
-        // $mastercourses = local_equipment_get_master_courses('ALL_COURSES_CURRENT');
-        // $coursesformatted = $mastercourses->courses_formatted;
-        // $coursesformatted = $partnershipcourses->courses_formatted;
-        // $categoriesformatted = $partnershipcategories->categories_formatted;
-
-        // echo '<pre>';
-        // var_dump($coursesformatted);
-        // echo '</pre>';
-
-        // $partnershipid = explode('#', array_keys($categoriesformatted)[0])[0];
 
         // Add form elements.
         $mform->addElement('hidden', 'partnershipid', $data->id);
@@ -112,11 +88,7 @@ class editpartnership_form extends \moodleform {
         $mform->addElement('select', 'partnershipcourselist', get_string('partnershipcourselist', 'local_equipment'), $partnershipcategories->partnershipids_catnames);
         $mform->setType('partnershipcourselist', PARAM_RAW);
         // This will need to be changed to $data->partnershipidforcourselist or something like that.
-        $mform->setDefault('partnershipcourselist', $data->partnershipcourselist ?? $data->id);
-
-        // $mform->addElement('select', 'courses', get_string('selectcourses', 'local_equipment'), $coursesformatted, ['multiple' => true, 'size' => 10]);
-        // $mform->setType('courses', PARAM_RAW);
-        // $mform->setDefault('courses', json_decode($data->courseids));
+        $mform->setDefault('partnershipcourselist', $data->listingid ?? '0');
 
         $mform->addElement('advcheckbox', 'active', get_string('active'));
         $mform->setType('active', PARAM_BOOL);

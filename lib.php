@@ -1406,33 +1406,6 @@ function local_equipment_get_active_agreements() {
     );
 }
 
-// /**
-//  * Retrieves active agreements.
-//  *
-//  * @param MoodleQuickForm $mform The form object.
-//  * @param array $agreements An array of active agreements (you can use local_equipment_get_active_agreements() function).
-//  *
-//  * @return array An array of agreement elements.
-//  */
-// function local_equipment_create_agreement_elements($mform, $agreements) {
-//     $elements = [];
-//     foreach ($agreements as $agreement) {
-
-//         $elements[] = $mform->createElement('static', 'agreement_' . $agreement->id, $agreement->title, format_text($agreement->contenttext, $agreement->contentformat));
-//         if ($agreement->agreementtype == 'optinout') {
-//             $radioarray = array();
-//             $radioarray[] = $mform->createElement('radio', "optionchoice_$agreement->id", '', get_string('optin', 'local_equipment'), 'optin');
-//             $radioarray[] = $mform->createElement('radio', "optionchoice_$agreement->id", '', get_string('optout', 'local_equipment'), 'optout');
-//             $mform->addGroup($radioarray, "optiongroup_$agreement->id", '', array(' '), false);
-
-//             // Make the field required
-//             $mform->addRule("optiongroup_$agreement->id", get_string('required'), 'required', null, 'client');
-
-//             // Set a default value (optional)
-//             // $mform->setDefault('optionchoice', 'optin');
-//         }
-//     }
-// }
 
 /**
  * Checks if an agreement requires an electronic signature.

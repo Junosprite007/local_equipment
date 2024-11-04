@@ -37,7 +37,6 @@ require_once($CFG->dirroot . '/local/equipment/lib.php');
  */
 class addpartnerships_form extends \moodleform {
     public function definition() {
-        // global $OUTPUT;
 
         $mform = $this->_form;
         $repeatarray = [];
@@ -53,7 +52,7 @@ class addpartnerships_form extends \moodleform {
 
         if (!empty($deletions)) {
             $repeatno = $repeatno - count($deletions);
-            $repeatno = max(1, $repeatno); // Ensure at least one partnership remains
+            $repeatno = max(1, $repeatno);
         }
 
         $users = local_equipment_auto_complete_users();
@@ -66,14 +65,6 @@ class addpartnerships_form extends \moodleform {
         foreach ($allpartnershipcourses as $id => $courses) {
             $allpartnershipcourses_json[$id] = $courses->courses_formatted;
         }
-        // $mastercourses = local_equipment_get_master_courses('ALL_COURSES_CURRENT');
-        // $coursesformatted = $mastercourses->courses_formatted;
-        // $nomastercategory = $mastercourses->nomastercategory;
-        // $nomastercourses = $mastercourses->nomastercourses;
-        // $createcategoriesurl = new \moodle_url('/course/editcategory.php?parent=0');
-        // $createcategorieslink = \html_writer::link($createcategoriesurl, get_string('createcategoryhere', 'local_equipment'));
-        // $createcoursesurl = new \moodle_url('/course/edit.php?category=92&returnto=catmanage', ['category' => $mastercourses->categoryid]);
-        // $createcourseslink = \html_writer::link($createcoursesurl, get_string('createcoursehere', 'local_equipment'));
 
         $mform->addElement(
             'hidden',
@@ -88,48 +79,11 @@ class addpartnerships_form extends \moodleform {
 
         $repeatarray['partnershipheader'] = $mform->createElement('header', 'partnershipheader', get_string('partnership', 'local_equipment'), ['class' => 'local-equipment-partnership-header']);
 
-        // $repeatno = optional_param('repeatno', 1, PARAM_INT);
-        // $mform->addElement('hidden', 'partnerships', $repeatno);
         // Add a delete button for each repeated element (except the first one).
         $repeatarray['delete'] = $mform->createElement('html', '<button type="button" class="local-equipment-remove-partnership btn btn-secondary"><i class="fa fa-trash"></i>&nbsp;&nbsp;' . get_string('deletepartnership', 'local_equipment') . '</button>');
-        // $repeatarray['delete'] = $mform->createElement('submit', $deletebuttonname, get_string('delete'), ['class' => 'local-equipment-remove-partnership btn']);
         $repeatarray['partnershipname'] = $mform->createElement('text', 'partnershipname', get_string('partnershipname', 'local_equipment'), ['class' => 'partnership-name-input']);
         $repeatarray['liaisons'] = $mform->createElement('autocomplete', 'liaisons', get_string('selectliaisons', 'local_equipment'), [], $users);
-
-
-        // $repeatarray['coursesthisyear'] = $mform->createElement(
-        //     'hidden',
-        //     'coursesthisyear',
-        //     get_string('coursesthisyear', 'local_equipment'),
-        //     [
-        //         'id' => 'id_coursesthisyear',
-        //         'data-coursesthisyear' => json_encode($allpartnershipcourses_json)
-        //     ]
-        // );
         $repeatarray['partnershipcourselist'] = $mform->createElement('select', 'partnershipcourselist', get_string('partnershipcourselist', 'local_equipment'), $partnershipcategories->partnershipids_catnames);
-
-
-
-        // if ($nomastercategory) {
-        //     $repeatarray['courses'] = $mform->createElement(
-        //         'static',
-        //         'nomastercategoryfound',
-        //         get_string('selectcourses', 'local_equipment'),
-        //         new \lang_string('nocategoryfound', 'local_equipment', $mastercourses->categoryname) . ' '
-        //             . $createcategorieslink
-        //     );
-        // } else if ($nomastercourses) {
-        //     $repeatarray['courses'] = $mform->createElement(
-        //         'static',
-        //         'nomastercoursesfound',
-        //         get_string('selectcourses', 'local_equipment'),
-        //         new \lang_string('nocoursesfoundincategory', 'local_equipment', $mastercourses->categoryname) . ' '
-        //             . $createcourseslink
-        //     );
-        // } else {
-        //     $repeatarray['courses'] = $mform->createElement('select', 'courses', get_string('selectcourses', 'local_equipment'), $coursesformatted, ['multiple' => true, 'size' => 10]);
-        // }
-
         $repeatarray['active'] = $mform->createElement('advcheckbox', 'active', get_string('active'));
 
         $groupview = false;
@@ -158,25 +112,13 @@ class addpartnerships_form extends \moodleform {
         $repeatoptions['partnershipname']['type'] = PARAM_TEXT;
         $repeatoptions['partnershipname']['rule'] = 'required';
         $repeatoptions['liaisons']['type'] = PARAM_TEXT;
-        // $repeatoptions['coursesthisyear']['type'] = PARAM_RAW;
         $repeatoptions['partnershipcourselist']['type'] = PARAM_RAW;
-        // $repeatoptions['courses']['type'] = PARAM_TEXT;
         $repeatoptions['active']['type'] = PARAM_BOOL;
         $repeatoptions['active']['default'] = 1;
 
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<pre>';
-        // // var_dump($partnershiprepeats);
-        // var_dump($repeatoptions); // Continue from here.
-        // echo '</pre>';
-        // die();
-
         // Use this later if it helps.
         // $numberofrepeats = $this->repeat_elements(
-
         // This string gets added to the <div> after the last fieldset element from the repeat_elements function.
-
 
         $this->repeat_elements(
             $repeatarray,
@@ -187,8 +129,6 @@ class addpartnerships_form extends \moodleform {
             1,
             get_string('addmorepartnerships', 'local_equipment')
         );
-
-        // $PAGE->requires->js_call_amd('local_equipment/deletepartnership_button', 'init');
         $this->add_action_buttons(true, get_string('submit'));
     }
 

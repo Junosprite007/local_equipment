@@ -189,3 +189,36 @@ td.local-equipment-nowrap-cell {
         text-align: right;
     }
 }
+
+.local-equipment_generaltable {
+    td {
+        .btn-link {
+            padding: $spacer * .5;
+            text-decoration: none;
+            color: $body-color;
+
+            &:hover {
+                background-color: rgba($primary, .1);
+            }
+
+            .icon {
+                margin-right: $spacer * .5;
+                transition: transform 0.2s ease;
+            }
+
+            // Start with no rotation when collapsed
+            &.collapsed .icon {
+                transform: rotate(0deg);
+            }
+
+            // Rotate when expanded (not collapsed)
+            &:not(.collapsed) .icon {
+                transform: rotate(90deg);
+            }
+        }
+
+        .collapse {
+            padding: $spacer;
+        }
+    }
+}

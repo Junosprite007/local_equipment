@@ -165,4 +165,26 @@ td.local-equipment-nowrap-cell {
   text-align: right;
 }
 
+.local-equipment_generaltable td .btn-link {
+  padding: 0.5rem;
+  text-decoration: none;
+  color: #212529;
+}
+.local-equipment_generaltable td .btn-link:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+.local-equipment_generaltable td .btn-link .icon {
+  margin-right: 0.5rem;
+  transition: transform 0.2s ease;
+}
+.local-equipment_generaltable td .btn-link.collapsed .icon {
+  transform: rotate(0deg);
+}
+.local-equipment_generaltable td .btn-link:not(.collapsed) .icon {
+  transform: rotate(90deg);
+}
+.local-equipment_generaltable td .collapse {
+  padding: 1rem;
+}
+
 /*# sourceMappingURL=styles.css.map */
