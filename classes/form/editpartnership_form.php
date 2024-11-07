@@ -87,7 +87,6 @@ class editpartnership_form extends \moodleform {
 
         $mform->addElement('select', 'partnershipcourselist', get_string('partnershipcourselist', 'local_equipment'), $partnershipcategories->partnershipids_catnames);
         $mform->setType('partnershipcourselist', PARAM_RAW);
-        // This will need to be changed to $data->partnershipidforcourselist or something like that.
         $mform->setDefault('partnershipcourselist', $data->listingid ?? '0');
 
         $mform->addElement('advcheckbox', 'active', get_string('active'));

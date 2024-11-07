@@ -39,14 +39,18 @@ export const init = () => {
     const $noerrorsfoundButton = $noerrorsfoundContainer.find('button');
     const $submitButton = $('#id_submitbutton');
     const $partnershipData = $('#id_partnershipdata');
-    const $courseData = $('#id_coursedata');
+    const $courseData = $('#id_coursesthisyear');
     const $familiesDataInput = $('#id_familiesdata');
 
     // Parse initial data.
     const partnershipDataValue = JSON.parse(
         $partnershipData.attr('data-partnerships')
     );
-    const courseDataValue = JSON.parse($courseData.attr('data-courses'));
+    const courseDataValue = JSON.parse(
+        $courseData.attr('data-coursesthisyear')
+    );
+    // Log.debug('courseDataValue: ');
+    // Log.debug(courseDataValue);
 
     // Error navigation state.
     let currentErrorIndex = -1;
@@ -61,6 +65,8 @@ export const init = () => {
                 partnerships: partnershipDataValue,
                 courses: courseDataValue,
             };
+            // Log.debug('data: ');
+            // Log.debug(data.courses);
 
             const families = await validateFamilyData(data);
             Log.debug('families: ');
@@ -286,6 +292,8 @@ export const init = () => {
  * @return {Promise<string>} The HTML feedback string.
  */
 export const validateFamilyData = async ({ input, partnerships, courses }) => {
+    Log.debug('courses');
+    Log.debug(courses);
     if (!input || typeof input !== 'string') {
         throw new Error(
             getString(
@@ -565,6 +573,9 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
         };
         const parentExists = parents.length > 0;
 
+        // Log.debug('Checking student partnership:');
+        // Log.debug(partnership);
+
         switch (textType) {
             case 'student': {
                 // This refers to the student's name, which is the only line that is preceded by a single asterisk (*).
@@ -623,6 +634,8 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                     .split(',')
                     .map((course) => course.trim());
 
+                // Log.debug('partnerships:');
+                // Log.debug(partnerships);
                 const processedCourses = [];
 
                 const coursesHTML = await Promise.all(
@@ -636,6 +649,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             processedCourses.includes(id);
                         let courseName = '';
                         if (partnershipAdded) {
+                            // Log.debug('if (partnershipAdded) {');
                             courseExistsInPartnership =
                                 partnerships[partnership?.data].coursedata[
                                     id
@@ -647,6 +661,9 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             (!partnershipAdded ||
                                 (partnershipAdded && courseExistsInPartnership))
                         ) {
+                            // This is the successful case.
+
+                            // Log.debug('if (');
                             processedCourses.push(id);
                             // EN DASH character: '–' or \u2013
                             const enDash = '–';
@@ -658,6 +675,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             (!partnershipAdded ||
                                 (partnershipAdded && courseExistsInPartnership))
                         ) {
+                            // Log.debug('} else if (');
                             processedCourses.push(id);
                             const errorMessage = await getString(
                                 'coursealreadyadded',
@@ -670,6 +688,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             partnershipAdded &&
                             !courseExistsInPartnership
                         ) {
+                            // Log.debug('} else if ( 2');
                             const errorMessage = await getString(
                                 'courseidnotfoundinpartnership',
                                 'local_equipment',
@@ -677,6 +696,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             );
                             courseName = `<span class="pl-2 pr-2 alert-danger">${errorMessage}</span>`;
                         } else {
+                            // Log.debug('} else {');
                             const errorMessage = await getString(
                                 'courseidnotfound',
                                 'local_equipment',
@@ -720,6 +740,8 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
             let inStudentSection = false;
             let familyHTML = [];
             let partnershipAdded = false;
+            let parentNum = 0;
+            // let studentNum = 0;
 
             const lines = family
                 .split('\n')
@@ -762,24 +784,42 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                         case textType === 'partnership': {
                             const result = await processPartnershipInfo(line);
                             partnership = result.partnership;
-                            inStudentSection = result.inStudentSection;
+                            // inStudentSection = result.inStudentSection;
                             familyHTML.push(partnership.html);
                             partnershipAdded = true;
                             break;
                         }
+                        // This means we are in the parent section.
                         case !inStudentSection: {
+                            if (textType === 'courses') {
+                                const errorMessage = await getString(
+                                    'thesecoursesneedastudent',
+                                    'local_equipment',
+                                    line
+                                );
+                                familyHTML.push(
+                                    `<span class="pl-2 alert-danger">${errorMessage}</span>`
+                                );
+                                break;
+                            }
                             parent = await processParentInfo(
                                 line,
                                 textType,
                                 parent
                             );
+                            if (textType === 'name') {
+                                parents.push({ ...parent });
+                            }
                             if (parent[textType]) {
                                 familyHTML.push(parent[textType].html);
                             }
+
                             if (textType === 'email') {
-                                parents.push({ ...parent });
+                                parents[parentNum] = { ...parent };
                                 parent = {};
+                                parentNum++;
                             }
+
                             break;
                         }
                         case inStudentSection: {
@@ -798,6 +838,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             }
                             if (textType === 'student') {
                                 studentName = student[textType].data.firstName;
+                                // students.push({ ...student });
                             }
 
                             if (textType === 'courses') {
@@ -815,8 +856,25 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                                         `<span class="pl-2 alert-danger">${errorMessage}</span>`
                                     );
                                 }
+                                // Log.debug('Checking student:');
+                                // const needsStudentName =
+                                //     student.student.data === '' ||
+                                //     student.student.data === undefined;
+                                // if (needsStudentName) {
+                                //     const errorMessage = await getString(
+                                //         'thesecoursesneedastudent',
+                                //         'local_equipment'
+                                //     );
+                                //     familyHTML.push(
+                                //         `<span class="pl-2 alert-danger">${errorMessage}</span>`
+                                //     );
+                                // }
+
+                                // students[studentNum] = { ...student };
                                 students.push({ ...student });
                                 student = {};
+                                // studentName = '';
+                                // studentNum++;
                             }
                             break;
                         }
@@ -840,6 +898,48 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
             if (Object.keys(student).length > 0) {
                 students.push({ ...student });
             }
+
+            // Log.debug('Checking parents:');
+            // let i = 0;
+            for (parent of parents) {
+                // Log.debug('1');
+                if (parent.email === undefined) {
+                    const errorMessage = await getString(
+                        'parentneedsemail',
+                        'local_equipment',
+                        parent.name.data.firstName
+                    );
+                    Log.debug(errorMessage);
+                    // parent.email.html = `<span class="pl-2 alert-danger">${errorMessage}</span>`;
+                    // parent = {
+                    //     ...parent,
+                    //     email: {
+                    //         data: '',
+                    //         html: `<span class="pl-2 alert-danger">${errorMessage}</span>`,
+                    //     },
+                    // };
+                    familyHTML.unshift(
+                        `<span class="pl-2 alert-danger">${errorMessage}</span>`
+                    );
+                    // parents[i] = parent;
+                }
+                // i++;
+            }
+
+            // if (
+            //     parent.name !== undefined &&
+            //     parent.email === undefined
+            // ) {
+            //     const errorMessage = await getString(
+            //         'parentneedsemail',
+            //         'local_equipment',
+            //         parent.name.data.firstName
+            //     );
+
+            //     familyHTML.push(
+            //         `<span class="pl-2 alert-danger">${errorMessage}</span>`
+            //     );
+            // }
 
             const familyData = { parents, students, partnership };
             const htmlOutput = `<div class="bg-light border p-3">${familyHTML.join(

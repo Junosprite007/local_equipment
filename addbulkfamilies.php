@@ -106,12 +106,12 @@ if ($form->is_cancelled()) {
 
             try {
                 $user = $DB->get_record('user', ['username' => $student->username]);
-                echo '<br />';
-                echo '<br />';
-                echo '<pre>';
-                var_dump($user);
-                echo '</pre>';
-                die();
+                // echo '<br />';
+                // echo '<br />';
+                // echo '<pre>';
+                // var_dump($user);
+                // echo '</pre>';
+                // die();
                 $userid = user_create_user($student);
                 if ($userid) {
                     $student->id = $userid;

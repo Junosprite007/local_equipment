@@ -386,7 +386,7 @@ function local_equipment_get_master_courses($categoryname = 'ALL_COURSES_CURRENT
  * Emails and phones will be taken from the user's profile, but admins will have the option to add phone numbers for them if they don't do it themselves.
  *
  * @param stdClass $partnership A database record that contains multiple types of addresses.
- * @return string True if the string exists, false otherwise.
+ * @return string The HTML links for the courses, false otherwise.
  */
 function local_equipment_get_courses($partnership) {
     $courseids = json_decode($partnership->courseids);
@@ -1180,6 +1180,9 @@ function local_equipment_get_partnership_courses($partnershipid) {
  * Retrieves partnership courses from the course category for this school year.
  *
  * @param int $partnershipid The ID of the partnership.
+ * @param string $listingtype The type of listing to return:
+ * 'categories' to get listings from course_categories
+ * or 'partnerships' to get listings using 'listid' from local_equipment_partnership.
  * @return stdClass An object containing the courses, or an error message if no courses are found.
  */
 function local_equipment_get_partnership_courses_this_year($partnershipid) {
@@ -1226,9 +1229,11 @@ function local_equipment_get_partnership_courses_this_year($partnershipid) {
  * where idnumber field = {schoolyearrange_start}-{schoolyearrange_end}.
  *
  * @param int $schoolyearrange The 'idnumber' field of the school year category.
+ * @param bool $defualttoselection Whether or not to default to the 'selectpartnershipforlisting' string.
+ * @param bool $showidnumber Whether or not to show the ID test in the selectable list.
  * @return stdClass An object containing the partnership categories to choose from, or an error message if no partnership categories are found.
  */
-function local_equipment_get_partnership_categories_this_year($schoolyearrange = null, $defualttoselection = false) {
+function local_equipment_get_partnership_categories_this_year($schoolyearrange = null, $defualttoselection = false, $showidnumber = false) {
     global $DB;
 
     // Default to the current school year.
@@ -1238,6 +1243,30 @@ function local_equipment_get_partnership_categories_this_year($schoolyearrange =
 
     $partnershipcategoriesobject = new stdClass();
     $partnershipcategoriesobject->categories = [];
+    $partnershipcategoriesobject->partnerships = [];
+
+    $sql = "SELECT DISTINCT cc.id, cc.name, cc.idnumber, cc.path
+            FROM mdl_course_categories cc
+            WHERE cc.idnumber LIKE :idnumber";
+    $prefix = get_config('local_equipment', 'partnershipcategoryprefix');
+    $partnershipcategoriesobject->categories = $DB->get_records_sql($sql, ['idnumber' => "$prefix#%_$schoolyearrange"]);
+    if (empty($partnershipcategoriesobject->categories)) {
+        $partnershipcategoriesobject->nopartnershipcategories = true;
+        throw new moodle_exception(get_string('nopartnershipcategoriesfoundforschoolyear', 'local_equipment', $schoolyearrange));
+    } else {
+        // $partnershipcategoriesobject->categoryids = [];
+        // $partnershipcategoriesobject->partnershipids = [];
+        if ($defualttoselection) {
+            $string = get_string('selectpartnershipforlisting', 'local_equipment');
+            $partnershipcategoriesobject->catids_catnames[0] =
+                $partnershipcategoriesobject->partnershipids_catnames[0] =
+                $partnershipcategoriesobject->partnershipids_partnershipnames[0] =
+                $partnershipcategoriesobject->catids_partnershipnames[0] =
+                $partnershipcategoriesobject->partnershipids[0] = $string;
+        }
+        foreach ($partnershipcategoriesobject->categories as $category) {
+        }
+    }
 
     // Get all the courses at any depth under a given 'idnumber' from the course.
     try {
@@ -1246,6 +1275,8 @@ function local_equipment_get_partnership_categories_this_year($schoolyearrange =
             WHERE cc.idnumber LIKE :idnumber";
         $prefix = get_config('local_equipment', 'partnershipcategoryprefix');
         $partnershipcategoriesobject->categories = $DB->get_records_sql($sql, ['idnumber' => "$prefix#%_$schoolyearrange"]);
+        $partnershipcategoriesobject->partnerships = $DB->get_records('local_equipment_partnership', ['active' => 1]);
+
         if (empty($partnershipcategoriesobject->categories)) {
             $partnershipcategoriesobject->nopartnershipcategories = true;
             throw new moodle_exception(get_string('nopartnershipcategoriesfoundforschoolyear', 'local_equipment', $schoolyearrange));
@@ -1260,19 +1291,59 @@ function local_equipment_get_partnership_categories_this_year($schoolyearrange =
                     $partnershipcategoriesobject->catids_partnershipnames[0] =
                     $partnershipcategoriesobject->partnershipids[0] = $string;
             }
+            // switch ($listingtype) {
+            // case 'categories':
             foreach ($partnershipcategoriesobject->categories as $category) {
+                // $partnershipid = explode('#', $category->idnumber)[1];
+                // $partnershipid = explode('_', $partnershipid)[0];
+                // $partnership = $DB->get_record('local_equipment_partnership', ['id' => $partnershipid]);
+
+                // $partnershipcategoriesobject->catids_catnames[$category->id] = $showidnumber ? "$category->id – $category->name" : $category->name;
+                // $partnershipcategoriesobject->partnershipids_catnames[$partnershipid] = $showidnumber ? "$category->id – $category->name" : $category->name;
+                // $partnershipcategoriesobject->catids_partnershipnames[$category->id] = $showidnumber ? "$partnership->id – $partnership->name" : $partnership->name;
                 $partnershipid = explode('#', $category->idnumber)[1];
                 $partnershipid = explode('_', $partnershipid)[0];
                 $partnership = $DB->get_record('local_equipment_partnership', ['id' => $partnershipid]);
 
-                $partnershipcategoriesobject->catids_catnames[$category->id] = $category->name;
-                $partnershipcategoriesobject->partnershipids_catnames[$partnershipid] = $category->name;
-                $partnershipcategoriesobject->partnershipids_partnershipnames[$partnershipid] = $partnership->name;
-                $partnershipcategoriesobject->catids_partnershipnames[$category->id] = $partnership->name;
+                $partnershipcategoriesobject->catids_catnames[$category->id] = $showidnumber ? "$category->id – $category->name" : $category->name;
+                $partnershipcategoriesobject->partnershipids_catnames[$partnershipid] = $showidnumber ? "$category->id – $category->name" : $category->name;
+                // $partnershipcategoriesobject->partnershipids_partnershipnames[$partnershipid] = $showidnumber ? "$partnership->id – $partnership->name" : $partnership->name;
+                $partnershipcategoriesobject->catids_partnershipnames[$category->id] = $showidnumber ? "$partnership->id – $partnership->name" : $partnership->name;
                 $partnershipcategoriesobject->partnershipids[] = $partnershipid;
                 // $partnershipcategoriesobject->categories_formatted[$category->idnumber] = $category->name;
 
+                ksort($partnershipcategoriesobject->partnershipids_catnames);
+                // $partnershipcategoriesobject->partnershipids[] = $partnershipid;
+                // $partnershipcategoriesobject->categories_formatted[$category->idnumber] = $category->name;
+
+                // ksort($partnershipcategoriesobject->partnershipids_catnames);
+                // ksort($partnershipcategoriesobject->partnershipids_partnershipnames);
             }
+
+            //     break;
+            // case 'partnerships':
+            // $partnershipcategoriesobject->partnershipids = [];
+            foreach ($partnershipcategoriesobject->partnerships as $id => $partnership) {
+                $partnershipcategoriesobject->partnershipids_partnershipnames[$id] = $showidnumber ? "$partnership->id – $partnership->name" : $partnership->name;
+                ksort($partnershipcategoriesobject->partnershipids_partnershipnames);
+                // $partnershiplisting = $partnership->listingid;
+                // $partnershipid = explode('#', $category->idnumber)[1];
+                // $partnershipid = explode('_', $partnershipid)[0];
+
+                // // $partnershipcategoriesobject->catids_catnames[$category->id] = $showidnumber ? "$category->id – $category->name" : $category->name;
+                // // $partnershipcategoriesobject->partnershipids_catnames[$partnershipid] = $showidnumber ? "$category->id – $category->name" : $category->name;
+                // $partnershipcategoriesobject->partnershipids_partnershipnames[$partnership->id] = $showidnumber ? "$partnership->id – $partnership->name" : $partnership->name;
+                // // $partnershipcategoriesobject->catids_partnershipnames[$category->id] = $showidnumber ? "$partnership->id – $partnership->name" : $partnership->name;
+                // $partnershipcategoriesobject->partnershipids[] = $partnershipid;
+                // // $partnershipcategoriesobject->categories_formatted[$category->idnumber] = $category->name;
+
+                // ksort($partnershipcategoriesobject->partnershipids_catnames);
+                // ksort($partnershipcategoriesobject->partnershipids_partnershipnames);
+            }
+                    // $partnershipcategoriesobject->partnershipids = $DB->get_records('local_equipment_partnership', ['active' => '1'], 'id', 'id');
+
+                    // break;
+            // }
         }
     } catch (moodle_exception $e) {
         // Handle the exception according to Moodle Coding Standards.
