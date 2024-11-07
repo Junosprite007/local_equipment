@@ -2525,3 +2525,56 @@ function process_family_roles($families) {
 
     return $all_results;
 }
+
+function create_partnership_profile_field() {
+    global $DB;
+
+    // Check if the field already exists
+    $existing = $DB->get_record('user_info_field', ['shortname' => 'partnership']);
+    if ($existing) {
+        return; // Field already exists
+    }
+
+    // Get all active partnerships for the dropdown menu
+    $partnerships = $DB->get_records('local_equipment_partnership', ['active' => 1]);
+    $menu_options = [];
+    foreach ($partnerships as $partnership) {
+        $menu_options[] = $partnership->id . '|' . $partnership->name;
+    }
+
+    // Configure the custom field
+    $field = new stdClass();
+    $field->shortname = 'partnership';
+    $field->name = 'Partnership';
+    $field->datatype = 'menu';  // Dropdown menu type
+    $field->description = 'The partnership this user belongs to';
+    $field->descriptionformat = 1;
+    $field->categoryid = 1;     // Default "Other fields" category
+    $field->sortorder = 1;
+    $field->required = 0;       // Not required by default
+    $field->locked = 0;         // Not locked by default
+    $field->visible = 2;        // Visible to users
+    $field->forceunique = 0;    // Allow duplicate values
+    $field->signup = 0;         // Don't show on signup
+    $field->defaultdata = '';   // No default value
+    $field->defaultdataformat = 0;
+    $field->param1 = implode("\n", $menu_options); // Menu options
+
+    // Insert the field
+    try {
+        $field->id = $DB->insert_record('user_info_field', $field);
+
+        // Add any necessary capabilities
+        $systemcontext = context_system::instance();
+        assign_capability('moodle/user:editownprofile',
+            CAP_ALLOW,
+            get_config('moodle', 'defaultuserroleid'),
+            $systemcontext->id
+        );
+
+        return $field->id;
+    } catch (dml_exception $e) {
+        debugging('Error creating partnership profile field: ' . $e->getMessage());
+        return false;
+    }
+}

@@ -105,16 +105,20 @@ if ($form->is_cancelled()) {
             $student->username = local_equipment_generate_username($student);
 
             try {
-                $user = $DB->get_record('user', ['username' => $student->username]);
+                $user_student = $DB->get_record('user', ['username' => $student->username]);
+
+                if (!$user_student) {
+                    $studentid = user_create_user($student);
+                } else {
+                }
                 // echo '<br />';
                 // echo '<br />';
                 // echo '<pre>';
                 // var_dump($user);
                 // echo '</pre>';
                 // die();
-                $userid = user_create_user($student);
-                if ($userid) {
-                    $student->id = $userid;
+                if ($studentid) {
+                    $student->id = $studentid;
                     $created_users[] = $student;
                     user_delete_user($student);
                 } else {
@@ -136,7 +140,7 @@ if ($form->is_cancelled()) {
         $families[] = $family;
     }
 
-    $familydata = $data->familydata;
+    // $familydata = $data->familydata;
 
     // Display results
     echo $OUTPUT->header();

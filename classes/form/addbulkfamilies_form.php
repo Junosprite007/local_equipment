@@ -71,12 +71,12 @@ class addbulkfamilies_form extends moodleform {
         // echo '</pre>';
         // die();
 
-        echo '<br />';
-        echo '<br />';
-        echo '<pre>';
-        var_dump($allpartnershipcourses);
-        echo '</pre>';
-        die();
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<pre>';
+        // var_dump($allpartnershipcourses);
+        // echo '</pre>';
+        // die();
 
         foreach ($allpartnershipcourses as $id => $courses) {
             $allpartnershipcourses_json[$id] = $courses->courses_formatted;

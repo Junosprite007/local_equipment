@@ -292,8 +292,11 @@ export const init = () => {
  * @return {Promise<string>} The HTML feedback string.
  */
 export const validateFamilyData = async ({ input, partnerships, courses }) => {
-    Log.debug('courses');
-    Log.debug(courses);
+    // Log.debug('courses');
+    // Log.debug(courses);
+    courses = Object.assign({}, ...Object.values(courses));
+    // Log.debug('combined');
+    // Log.debug(combined);
     if (!input || typeof input !== 'string') {
         throw new Error(
             getString(
