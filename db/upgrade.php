@@ -717,17 +717,11 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024110101, 'local', 'equipment');
     }
 
-    // if ($oldversion < 2024110102) {
-    //     // Define table local_equipment_vccsubmission_student.
-    //     $fields = [];
-    //     // Add a parent table.
-    //     $table = new xmldb_table('local_equipment_parent');
-
-    //     // Add a table for defining the parent-student relationship.
-    //     $table = new xmldb_table('local_equipment_parent_student');
-
-    //     // Equipment savepoint reached.
-    //     upgrade_plugin_savepoint(true, 2024110102, 'local', 'equipment');
+    // if ($oldversion < 2024110709) {
+    //     // if (!local_equipment_create_partnership_profile_field()) {
+    //     //     return false;
+    //     // }
+    //     upgrade_plugin_savepoint(true, 2024110709, 'local', 'equipment');
     // }
 
     return true;

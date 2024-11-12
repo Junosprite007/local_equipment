@@ -33,6 +33,13 @@ $capabilities = [
             'manager' => CAP_ALLOW,
         ],
     ],
+    'local/equipment:viewpartnerships' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => [
+            'manager' => CAP_ALLOW,
+        ],
+    ],
     'local/equipment:seedetails' => [
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,

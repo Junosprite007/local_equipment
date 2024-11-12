@@ -222,6 +222,14 @@ $string['totalcourses'] = 'Total courses';
 $string['collapsepartnership'] = 'Toggle partnership courses';
 $string['expandall'] = 'Expand all partnerships';
 $string['collapseall'] = 'Collapse all partnerships';
+$string['partnershipfielddesc'] = 'The partnership this user belongs to';
+$string['searchpartnerships'] = 'Search partnerships...';
+$string['nopartnershipselected'] = 'No partnership selected';
+$string['nopartnershipsfound'] = 'No partnership found';
+$string['privacy:metadata:user_info_data'] = 'User partnership data';
+$string['privacy:metadata:userid'] = 'User ID';
+$string['privacy:metadata:fieldid'] = 'Field ID';
+$string['privacy:metadata:data'] = 'Partnership data';
 
 
 // Pickups pages strings
@@ -508,6 +516,7 @@ $string['strftimetime24'] = '%H:%M';
 
 // Bulk family upload and enroll strings
 
+$string['addbulkfamilies'] = 'Add bulk families';
 $string['bulkfamilyupload'] = 'Bulk family upload and enroll';
 $string['familiesinputdata'] = 'Families data';
 $string['familiesinputdata_help'] = 'Enter family data in the following format:
@@ -568,6 +577,10 @@ $string['courseidnotfound'] = 'Course ID #{$a} not found';
 $string['courseidnotfoundinpartnership'] = 'Course ID #{$a->c_id} not found in partnership ID #{$a->p_id}';
 $string['preprocessing_success'] = 'Preprocessing successful';
 $string['preprocessing_failure'] = 'Preprocessing failed';
+$string['useralreadyenrolled'] = '{$a->firstname} {$a->lastname} is already enrolled in course {$a->coursename}.';
+$string['userenrolled'] = '{$a->firstname} {$a->lastname} enrolled successfully in course {$a->coursename}.';
+$string['userassignedtootheruserwithrole'] = '{$a->parent} assigned as {$a->role} to {$a->student}';
+$string['rolealreadyassigned'] = '{$a->parent} is already assigned as {$a->role} to {$a->student}';
 
 
 

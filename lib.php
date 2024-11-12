@@ -1254,8 +1254,6 @@ function local_equipment_get_partnership_categories_this_year($schoolyearrange =
         $partnershipcategoriesobject->nopartnershipcategories = true;
         throw new moodle_exception(get_string('nopartnershipcategoriesfoundforschoolyear', 'local_equipment', $schoolyearrange));
     } else {
-        // $partnershipcategoriesobject->categoryids = [];
-        // $partnershipcategoriesobject->partnershipids = [];
         if ($defualttoselection) {
             $string = get_string('selectpartnershipforlisting', 'local_equipment');
             $partnershipcategoriesobject->catids_catnames[0] =
@@ -1281,8 +1279,6 @@ function local_equipment_get_partnership_categories_this_year($schoolyearrange =
             $partnershipcategoriesobject->nopartnershipcategories = true;
             throw new moodle_exception(get_string('nopartnershipcategoriesfoundforschoolyear', 'local_equipment', $schoolyearrange));
         } else {
-            // $partnershipcategoriesobject->categoryids = [];
-            // $partnershipcategoriesobject->partnershipids = [];
             if ($defualttoselection) {
                 $string = get_string('selectpartnershipforlisting', 'local_equipment');
                 $partnershipcategoriesobject->catids_catnames[0] =
@@ -1291,59 +1287,23 @@ function local_equipment_get_partnership_categories_this_year($schoolyearrange =
                     $partnershipcategoriesobject->catids_partnershipnames[0] =
                     $partnershipcategoriesobject->partnershipids[0] = $string;
             }
-            // switch ($listingtype) {
-            // case 'categories':
             foreach ($partnershipcategoriesobject->categories as $category) {
-                // $partnershipid = explode('#', $category->idnumber)[1];
-                // $partnershipid = explode('_', $partnershipid)[0];
-                // $partnership = $DB->get_record('local_equipment_partnership', ['id' => $partnershipid]);
-
-                // $partnershipcategoriesobject->catids_catnames[$category->id] = $showidnumber ? "$category->id – $category->name" : $category->name;
-                // $partnershipcategoriesobject->partnershipids_catnames[$partnershipid] = $showidnumber ? "$category->id – $category->name" : $category->name;
-                // $partnershipcategoriesobject->catids_partnershipnames[$category->id] = $showidnumber ? "$partnership->id – $partnership->name" : $partnership->name;
                 $partnershipid = explode('#', $category->idnumber)[1];
                 $partnershipid = explode('_', $partnershipid)[0];
                 $partnership = $DB->get_record('local_equipment_partnership', ['id' => $partnershipid]);
 
                 $partnershipcategoriesobject->catids_catnames[$category->id] = $showidnumber ? "$category->id – $category->name" : $category->name;
                 $partnershipcategoriesobject->partnershipids_catnames[$partnershipid] = $showidnumber ? "$category->id – $category->name" : $category->name;
-                // $partnershipcategoriesobject->partnershipids_partnershipnames[$partnershipid] = $showidnumber ? "$partnership->id – $partnership->name" : $partnership->name;
                 $partnershipcategoriesobject->catids_partnershipnames[$category->id] = $showidnumber ? "$partnership->id – $partnership->name" : $partnership->name;
                 $partnershipcategoriesobject->partnershipids[] = $partnershipid;
-                // $partnershipcategoriesobject->categories_formatted[$category->idnumber] = $category->name;
 
                 ksort($partnershipcategoriesobject->partnershipids_catnames);
-                // $partnershipcategoriesobject->partnershipids[] = $partnershipid;
-                // $partnershipcategoriesobject->categories_formatted[$category->idnumber] = $category->name;
-
-                // ksort($partnershipcategoriesobject->partnershipids_catnames);
-                // ksort($partnershipcategoriesobject->partnershipids_partnershipnames);
             }
 
-            //     break;
-            // case 'partnerships':
-            // $partnershipcategoriesobject->partnershipids = [];
             foreach ($partnershipcategoriesobject->partnerships as $id => $partnership) {
                 $partnershipcategoriesobject->partnershipids_partnershipnames[$id] = $showidnumber ? "$partnership->id – $partnership->name" : $partnership->name;
                 ksort($partnershipcategoriesobject->partnershipids_partnershipnames);
-                // $partnershiplisting = $partnership->listingid;
-                // $partnershipid = explode('#', $category->idnumber)[1];
-                // $partnershipid = explode('_', $partnershipid)[0];
-
-                // // $partnershipcategoriesobject->catids_catnames[$category->id] = $showidnumber ? "$category->id – $category->name" : $category->name;
-                // // $partnershipcategoriesobject->partnershipids_catnames[$partnershipid] = $showidnumber ? "$category->id – $category->name" : $category->name;
-                // $partnershipcategoriesobject->partnershipids_partnershipnames[$partnership->id] = $showidnumber ? "$partnership->id – $partnership->name" : $partnership->name;
-                // // $partnershipcategoriesobject->catids_partnershipnames[$category->id] = $showidnumber ? "$partnership->id – $partnership->name" : $partnership->name;
-                // $partnershipcategoriesobject->partnershipids[] = $partnershipid;
-                // // $partnershipcategoriesobject->categories_formatted[$category->idnumber] = $category->name;
-
-                // ksort($partnershipcategoriesobject->partnershipids_catnames);
-                // ksort($partnershipcategoriesobject->partnershipids_partnershipnames);
             }
-                    // $partnershipcategoriesobject->partnershipids = $DB->get_records('local_equipment_partnership', ['active' => '1'], 'id', 'id');
-
-                    // break;
-            // }
         }
     } catch (moodle_exception $e) {
         // Handle the exception according to Moodle Coding Standards.
@@ -2272,6 +2232,7 @@ function local_equipment_get_users_by_role($role) {
  * of yours—your mentee in this case—will appear in this list along with all user info and the role that connects you to them.
  *
  * @param string $asrole The 'shortname' of the role for which you need to get students. E.g. 'parent', 'mentor'.
+ * @param int $userid The ID of the user whose students you want to get.
  * @return object An object containing two arrays of equal length, each with a key: roles[] and users[].
  * roles[] contains one matching role for each student of this user, but the role itself is actually the relative role the current
  * user has been assigned to by their students, such as a 'Parent' or 'Mentor' role id, as well as the context in which it's
@@ -2282,9 +2243,9 @@ function local_equipment_get_users_by_role($role) {
  * Returns false if no students are found.
  */
 
-function local_equipment_get_my_students($asrole) {
+function local_equipment_get_students_of_user_as($asrole, $userid) {
     // Get my students as a 'parent'; get them as a 'mentor'; etc.
-    global $DB, $USER;
+    global $DB;
     $users = [];
     $usersinfo = new stdClass();
     $usersinfo->roles = [];
@@ -2296,9 +2257,19 @@ function local_equipment_get_my_students($asrole) {
         JOIN {context} context ON role_assignments.contextid = context.id
         WHERE role_assignments.userid = :userid
         AND role.shortname = :shortname;";
-    $params = ['userid' => $USER->id, 'shortname' => $asrole];
+    $params = ['userid' => $userid, 'shortname' => $asrole];
 
     $rolesassignments = $DB->get_records_sql($sql, $params);
+
+    // echo '<br />';
+    // echo '<br />';
+    // echo '<br />';
+    // echo '<pre>';
+    // var_dump('rolesassignments: ');
+    // var_dump($rolesassignments);
+    // echo '</pre>';
+    // die();
+
 
     // Now we can iterate through the role assignments to get the records of this user's students/mentees.
     $i = 0;
@@ -2325,6 +2296,7 @@ function local_equipment_get_my_students($asrole) {
  *
  * @param string $role The 'shortname' of the role for which the logged in user needs to get their relative role assignments. If the
  * currently logged in user is a student who wants to see their parents or mentors, use 'parent' or 'mentor'.
+ * @param int $userid The ID of the user whose assigned users you want to get. This should be the ID of the supposed student.
  * @return object An object containing two arrays of equal length, each with a key: roles[] and users[].
  * roles[] contains one matching role for each student of this user, but the role itself is actually the relative role the current
  * user has been assigned to by their students, such as a 'Parent' or 'Mentor' role id, as well as the context in which it's
@@ -2335,9 +2307,9 @@ function local_equipment_get_my_students($asrole) {
  * Returns false if no one is assigned to this user via specified role.
  */
 
-function local_equipment_get_users_assigned_to_me($role) {
+function local_equipment_get_users_assigned_to_user($role, $userid) {
     // i.e get my parents; get my mentors; etc.
-    global $DB, $USER;
+    global $DB;
     $users = [];
     $roles = [];
     $usersinfo = new stdClass();
@@ -2354,7 +2326,7 @@ function local_equipment_get_users_assigned_to_me($role) {
 
     // This is how you get the all assigned users of the currently logged in user.
     foreach ($allusersofthisrole as $userrole) {
-        $params = ['userid' => $userrole->id, 'shortname' => $role, 'instanceid' => $USER->id];
+        $params = ['userid' => $userrole->id, 'shortname' => $role, 'instanceid' => $userid];
         $records = $DB->get_records_sql($sql, $params);
         if (!empty($records)) {
             $roles[$userrole->id] = array_values($records)[0];
@@ -2373,6 +2345,164 @@ function local_equipment_get_users_assigned_to_me($role) {
 
     return $usersinfo;
 }
+
+
+
+/**
+ * Add a role relative to a given user, such as a parent or mentor role.
+ * If the role assignment already exists, displays a warning but continues.
+ *
+ * @param object $user The user to whom the role will be assigned (e.g., student)
+ * @param object $relativeuser The user who will be assigned the role (e.g., parent)
+ * @param string $role The 'shortname' of the role to assign
+ * @return bool True if the role was newly assigned, false if it already existed
+ */
+function local_equipment_assign_role_relative_to_user(object $user, object $relativeuser, string $role): bool {
+    global $DB;
+
+    try {
+        // Get role ID and user context
+        $roleid = $DB->get_field('role', 'id', ['shortname' => $role]);
+        $context = context_user::instance($user->id);
+
+        // Check if assignment already exists
+        $existing = $DB->record_exists('role_assignments', [
+            'roleid' => $roleid,
+            'contextid' => $context->id,
+            'userid' => $relativeuser->id
+        ]);
+
+        if (!$existing) {
+            role_assign($roleid, $relativeuser->id, $context->id, 'local_equipment');
+            \core\notification::add(
+                get_string(
+                    'userassignedtootheruserwithrole',
+                    'local_equipment',
+                    (object)[
+                        'parent' => fullname($relativeuser),
+                        'student' => fullname($user),
+                        'role' => $role
+                    ]
+                ),
+                \core\output\notification::NOTIFY_SUCCESS
+            );
+            return true;
+        } else {
+            // Get required user fields for fullname()
+            // $fields = 'id, firstname, lastname, firstnamephonetic, lastnamephonetic, middlename, alternatename';
+            // $student = $DB->get_record('user', ['id' => $user->id], $fields);
+            // $parent = $DB->get_record('user', ['id' => $relativeuser->id], $fields);
+
+            \core\notification::add(
+                get_string(
+                    'rolealreadyassigned',
+                    'local_equipment',
+                    (object)[
+                        'parent' => fullname($relativeuser),
+                        'student' => fullname($user),
+                        'role' => $role
+                    ]
+                ),
+                \core\output\notification::NOTIFY_WARNING
+            );
+            // \core\notification::warning(get_string(
+            //     'rolealreadyassigned',
+            //     'local_equipment',
+            //     $msg
+            // ));
+            return false;
+        }
+    } catch (moodle_exception $e) {
+        debugging('Error in role assignment: ' . $e->getMessage(), DEBUG_DEVELOPER);
+        return false;
+    }
+}
+
+/**
+ * Get all parents assigned to a specific user (student).
+ *
+ * @param int $studentid The ID of the student whose parents we want to find
+ * @return array Array of parent user objects, or empty array if none found
+ */
+function local_equipment_get_parents_of_student(int $studentid): array {
+    global $DB;
+
+    // Get the parent role ID
+    $parentrole = $DB->get_record('role', ['shortname' => 'parent'], '*', MUST_EXIST);
+
+    // Get user context for the student
+    $usercontext = context_user::instance($studentid);
+
+    // Get all users assigned as parents in this context
+    $sql = "SELECT u.*
+            FROM {role_assignments} ra
+            JOIN {user} u ON ra.userid = u.id
+            WHERE ra.contextid = :contextid
+            AND ra.roleid = :roleid
+            AND u.deleted = 0";
+
+    $params = [
+        'contextid' => $usercontext->id,
+        'roleid' => $parentrole->id
+    ];
+
+    return $DB->get_records_sql($sql, $params);
+}
+
+/**
+ * Get all students for whom a specific user is assigned as parent.
+ *
+ * @param int $parentid The ID of the parent whose students we want to find
+ * @return array Array of student user objects, or empty array if none found
+ */
+function local_equipment_get_students_of_parent(int $parentid): array {
+    global $DB;
+
+    // Get the parent role ID
+    $parentrole = $DB->get_record('role', ['shortname' => 'parent'], '*', MUST_EXIST);
+
+    // This query finds all users (students) where the given parent has a parent role in their user context
+    $sql = "SELECT u.*
+            FROM {role_assignments} ra
+            JOIN {context} ctx ON ra.contextid = ctx.id
+            JOIN {user} u ON ctx.instanceid = u.id
+            WHERE ra.userid = :parentid
+            AND ra.roleid = :roleid
+            AND ctx.contextlevel = :contextlevel
+            AND u.deleted = 0";
+
+    $params = [
+        'parentid' => $parentid,
+        'roleid' => $parentrole->id,
+        'contextlevel' => CONTEXT_USER
+    ];
+
+    return $DB->get_records_sql($sql, $params);
+}
+
+/**
+ * Check if a user is a parent of a specific student.
+ *
+ * @param int $parentid The ID of the potential parent
+ * @param int $studentid The ID of the student
+ * @return bool True if parent relationship exists, false otherwise
+ */
+function local_equipment_is_parent_of_student(int $parentid, int $studentid): bool {
+    global $DB;
+
+    // Get the parent role ID
+    $parentrole = $DB->get_record('role', ['shortname' => 'parent'], '*', MUST_EXIST);
+
+    // Get user context for the student
+    $usercontext = context_user::instance($studentid);
+
+    return $DB->record_exists('role_assignments', [
+        'roleid' => $parentrole->id,
+        'contextid' => $usercontext->id,
+        'userid' => $parentid
+    ]);
+}
+
 
 /**
  * Create a username, programitcally:
@@ -2434,7 +2564,7 @@ function local_equipment_generate_username($user) {
  * @param array $family Array containing parent and student users
  * @return array Results of role assignments
  */
-function assign_family_roles($family) {
+function local_equipment_assign_family_roles($family) {
     global $DB;
 
     $results = [
@@ -2505,7 +2635,7 @@ function assign_family_roles($family) {
  * @param array $families Array of processed family data
  * @return array Results of all role assignments
  */
-function process_family_roles($families) {
+function local_equipment_process_family_roles($families) {
     $all_results = [
         'success' => [],
         'errors' => []
@@ -2513,7 +2643,7 @@ function process_family_roles($families) {
 
     foreach ($families as $family) {
         try {
-            $result = assign_family_roles($family);
+            $result = local_equipment_assign_family_roles($family);
             $all_results['success'] = array_merge($all_results['success'], $result['success']);
             $all_results['errors'] = array_merge($all_results['errors'], $result['errors']);
         } catch (moodle_exception $e) {
@@ -2526,55 +2656,266 @@ function process_family_roles($families) {
     return $all_results;
 }
 
-function create_partnership_profile_field() {
-    global $DB;
+/**
+ * Helper function to enroll a user in a course using manual enrollment method.
+ *
+ * @param stdClass $user The user object to enroll
+ * @param int $courseid The ID of the course to enroll into
+ * @param int|null $roleid The ID of the role to assign (default student role if not specified)
+ * @param int $timestart Timestamp when the enrollment should start (optional)
+ * @param int $timeend Timestamp when the enrollment should end (optional)
+ * @return array Array containing success status and any messages
+ */
+function local_equipment_enrol_user_in_course(
+    stdClass $user,
+    int $courseid,
+    ?int $roleid = null,
+    int $timestart = 0,
+    int $timeend = 0
+): array {
+    global $DB, $USER;
 
-    // Check if the field already exists
-    $existing = $DB->get_record('user_info_field', ['shortname' => 'partnership']);
-    if ($existing) {
-        return; // Field already exists
+    $result = [
+        'success' => false,
+        'message' => '',
+        'coursename' => '',
+    ];
+
+    // Validate parameters.
+    if ($user->id <= 0 || $courseid <= 0) {
+        throw new coding_exception('Invalid user or course ID provided');
     }
 
-    // Get all active partnerships for the dropdown menu
-    $partnerships = $DB->get_records('local_equipment_partnership', ['active' => 1]);
-    $menu_options = [];
-    foreach ($partnerships as $partnership) {
-        $menu_options[] = $partnership->id . '|' . $partnership->name;
-    }
+    // Check the course exists and get its name.
+    $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
+    $result['coursename'] = $course->fullname;
+    $coursecontext = context_course::instance($courseid);
+    $msg = new stdClass();
+    $msg->firstname = $user->firstname;
+    $msg->lastname = $user->lastname;
+    $msg->coursename = $result['coursename'];
 
-    // Configure the custom field
-    $field = new stdClass();
-    $field->shortname = 'partnership';
-    $field->name = 'Partnership';
-    $field->datatype = 'menu';  // Dropdown menu type
-    $field->description = 'The partnership this user belongs to';
-    $field->descriptionformat = 1;
-    $field->categoryid = 1;     // Default "Other fields" category
-    $field->sortorder = 1;
-    $field->required = 0;       // Not required by default
-    $field->locked = 0;         // Not locked by default
-    $field->visible = 2;        // Visible to users
-    $field->forceunique = 0;    // Allow duplicate values
-    $field->signup = 0;         // Don't show on signup
-    $field->defaultdata = '';   // No default value
-    $field->defaultdataformat = 0;
-    $field->param1 = implode("\n", $menu_options); // Menu options
+    // Verify current user has capability to enrol users.
+    require_capability('enrol/manual:enrol', $coursecontext);
 
-    // Insert the field
     try {
-        $field->id = $DB->insert_record('user_info_field', $field);
+        // Get the manual enrolment plugin.
+        $enrol = enrol_get_plugin('manual');
+        if (empty($enrol)) {
+            $result['message'] = get_string('manualpluginnotinstalled', 'enrol_manual');
+            return $result;
+        }
 
-        // Add any necessary capabilities
-        $systemcontext = context_system::instance();
-        assign_capability('moodle/user:editownprofile',
-            CAP_ALLOW,
-            get_config('moodle', 'defaultuserroleid'),
-            $systemcontext->id
-        );
+        // Get course enrolment instance.
+        $instance = $DB->get_record('enrol', [
+            'courseid' => $courseid,
+            'enrol' => 'manual',
+            'status' => ENROL_INSTANCE_ENABLED
+        ], '*', MUST_EXIST);
 
-        return $field->id;
-    } catch (dml_exception $e) {
-        debugging('Error creating partnership profile field: ' . $e->getMessage());
-        return false;
+        // If no role specified, get the default student role.
+        if (is_null($roleid)) {
+            $studentrole = $DB->get_record('role', ['shortname' => 'student'], '*', MUST_EXIST);
+            $roleid = $studentrole->id;
+        }
+
+        // Check if user is already enrolled.
+        if (!is_enrolled($coursecontext, $user->id)) {
+            // Set up enrollment parameters.
+            $timestart = ($timestart > 0) ? $timestart : time();
+            $timeend = ($timeend > 0) ? $timeend : 0;
+
+            // Enrol the user.
+            $enrol->enrol_user(
+                $instance,
+                $user->id,
+                $roleid,
+                $timestart,
+                $timeend,
+                ENROL_USER_ACTIVE
+            );
+
+            $result['success'] = true;
+            $result['message'] = get_string('userenrolled', 'local_equipment', $msg);
+        } else {
+            $result['success'] = false;
+            $result['message'] = get_string(
+                'useralreadyenrolled',
+                'local_equipment',
+                $msg
+            );
+        }
+
+        return $result;
+    } catch (moodle_exception $e) {
+        debugging('Error enrolling user: ' . $e->getMessage(), DEBUG_DEVELOPER);
+        $result['success'] = false;
+        $result['message'] = $e->getMessage();
+        return $result;
     }
 }
+
+/**
+ * Bulk enroll a student in multiple courses.
+ *
+ * @param stdClass $user The user object to enroll
+ * @param array $courseids Array of course IDs
+ * @return array Array of enrollment results
+ */
+function local_equipment_bulk_enrol_student(stdClass $user, array $courseids): array {
+    $results = [
+        'success' => [],
+        'failed' => [],
+        'messages' => []
+    ];
+
+    foreach ($courseids as $courseid) {
+        $enrollResult = local_equipment_enrol_user_in_course($user, $courseid);
+
+        if ($enrollResult['success']) {
+            $results['success'][] = $courseid;
+        } else {
+            $results['failed'][] = $courseid;
+            $results['messages'][] = $enrollResult['message'];
+        }
+    }
+
+    return $results;
+}
+
+// function create_partnership_profile_field() {
+//     global $DB;
+
+//     // Check if the field already exists
+//     $existing = $DB->get_record('user_info_field', ['shortname' => 'partnership']);
+//     if ($existing) {
+//         return; // Field already exists
+//     }
+
+//     // Get all active partnerships for the dropdown menu
+//     $partnerships = $DB->get_records('local_equipment_partnership', ['active' => 1]);
+//     $menu_options = [];
+//     foreach ($partnerships as $partnership) {
+//         $menu_options[] = $partnership->id . '|' . $partnership->name;
+//     }
+
+//     // Configure the custom field
+//     $field = new stdClass();
+//     $field->shortname = 'partnership';
+//     $field->name = 'Partnership';
+//     $field->datatype = 'menu';  // Dropdown menu type
+//     $field->description = 'The partnership this user belongs to';
+//     $field->descriptionformat = 1;
+//     $field->categoryid = 1;     // Default "Other fields" category
+//     $field->sortorder = 1;
+//     $field->required = 0;       // Not required by default
+//     $field->locked = 0;         // Not locked by default
+//     $field->visible = 2;        // Visible to users
+//     $field->forceunique = 0;    // Allow duplicate values
+//     $field->signup = 0;         // Don't show on signup
+//     $field->defaultdata = '';   // No default value
+//     $field->defaultdataformat = 0;
+//     $field->param1 = implode("\n", $menu_options); // Menu options
+
+//     // Insert the field
+//     try {
+//         $field->id = $DB->insert_record('user_info_field', $field);
+
+//         // Add any necessary capabilities
+//         $systemcontext = context_system::instance();
+//         assign_capability('moodle/user:editownprofile',
+//             CAP_ALLOW,
+//             get_config('moodle', 'defaultuserroleid'),
+//             $systemcontext->id
+//         );
+
+//         return $field->id;
+//     } catch (dml_exception $e) {
+//         debugging('Error creating partnership profile field: ' . $e->getMessage());
+//         return false;
+//     }
+// }
+
+// /**
+//  * Create or update the partnership profile field.
+//  *
+//  * @return bool true if successful, false otherwise
+//  * @throws dml_exception
+//  */
+// function local_equipment_create_partnership_profile_field(): bool {
+//     global $DB;
+
+//     $transaction = $DB->start_delegated_transaction();
+
+//     try {
+//         // Create category if it doesn't exist
+//         $catname = 'Equipment (local_equipment)';
+//         $category = $DB->get_record('user_info_category', ['name' => $catname]);
+//         if (!$category) {
+//             $category = new stdClass();
+//             $category->name = $catname;
+//             $category->sortorder = $DB->get_field_sql(
+//                 'SELECT COALESCE(MAX(sortorder) + 1, 1) FROM {user_info_category}'
+//             );
+//             $category->id = $DB->insert_record('user_info_category', $category);
+//         }
+
+//         // Get ALL partnerships
+//         $partnerships = $DB->get_records_menu(
+//                 'local_equipment_partnership',
+//                 [],
+//                 'name ASC',
+//                 'id, name'
+//             );
+
+//         // Create menu options array
+//         $options = [0 => get_string('nopartnershipselected', 'local_equipment')];
+//         foreach ($partnerships as $id => $name) {
+//             $options[$id] = "$name – $id";
+//         }
+
+//         // Create or update the field
+//         $fieldname = 'local_equipment_partnership';
+//         $field = $DB->get_record('user_info_field', ['shortname' => $fieldname]);
+//         if (!$field) {
+//             $field = new stdClass();
+//             $field->shortname = $fieldname;
+//             $field->name = get_string('partnership', 'local_equipment');
+//             $field->datatype = 'menu';
+//             $field->description = get_string('partnershipfielddesc', 'local_equipment');
+//             $field->descriptionformat = FORMAT_HTML;
+//             $field->categoryid = $category->id;
+//             $field->sortorder = $DB->get_field_sql(
+//                 'SELECT COALESCE(MAX(sortorder) + 1, 1) FROM {user_info_field} WHERE categoryid = ?',
+//                 [$category->id]
+//             );
+//             $field->required = 0;
+//             $field->locked = 1;           // Field is locked from normal editing
+//             $field->visible = PROFILE_VISIBLE_TEACHERS;  // Only visible to teachers and above
+//             $field->forceunique = 0;
+//             $field->signup = 0;
+//             $field->defaultdata = '0';    // Default to "No partnership selected"
+//             $field->defaultdataformat = 0;
+//             $field->param1 = implode("\n", array_values($options));
+//             $field->param2 = 'readonly';  // Make the field display-only
+
+//             $DB->insert_record('user_info_field', $field);
+//         } else {
+//             // Update existing field
+//             $field->param1 = implode("\n", array_values($options));
+
+//             // $field->locked = 1;
+//             // $field->defaultdata = '0';
+//             // $field->param2 = 'readonly';
+
+//             $DB->update_record('user_info_field', $field);
+//         }
+
+//         $transaction->allow_commit();
+//         return true;
+//     } catch (Exception $e) {
+//         $transaction->rollback($e);
+//         debugging('Error creating partnership profile field: ' . $e->getMessage(), DEBUG_DEVELOPER);
+//         return false;
+//     }
+// }

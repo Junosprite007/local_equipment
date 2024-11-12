@@ -38,7 +38,7 @@ class vccsubmission_form extends \moodleform {
         $mform = $this->_form;
         $customdata = $this->_customdata;
 
-        $students = local_equipment_get_my_students('parent');
+        $students = local_equipment_get_students_of_user_as('parent', $USER->id);
 
         // Use the following when you're ready to prevent non-parents from accessing the form.
         if ($students === false) {
