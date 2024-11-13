@@ -203,6 +203,7 @@ function local_equipment_auto_complete_users() {
         'valuehtmlcallback' => 'local_equipment_user_selector_callback',
     ];
 }
+
 /**
  * Generate a user selector with autocomplete for the user's liaison.
  *
@@ -401,27 +402,6 @@ function local_equipment_get_courses($partnership) {
     return implode('<br />', $courseinfo);
 }
 
-// /**
-//  * Get all liaison names, emails, and contact phones for a given partnership.
-//  * Liaisons are simply users on the system, so they must of accounts.
-//  * Emails and phones will be taken from the user's profile, but admins will have the option to add phone numbers for them if they don't do it themselves.
-//  *
-//  * @param stdClass $partnership A database record that contains multiple types of addresses.
-//  * @return string True if the string exists, false otherwise.
-//  */
-// function local_equipment_get_courses_listing($partnership) {
-//     $courseids = json_decode($partnership->listingid);
-//     $courseinfo = [];
-
-//     foreach ($courseids as $id) {
-//         $course = get_course($id);
-//         $courseurl = new moodle_url('/course/view.php', ['id' => $course->id]);
-//         $courselink = html_writer::link($courseurl, $course->fullname);
-//         $courseinfo[] = $courselink;
-//     }
-//     return implode('<br />', $courseinfo);
-// }
-
 /**
  * Validates a mobile phone number to make sure it makes sense.
  *
@@ -609,116 +589,6 @@ function local_equipment_add_address_group($mform, $addresstype, $label) {
         'types' => $types,
         'rules' => $rules
     ];
-
-
-    // function format_address_block($addressinput) {
-
-    //     $mform->createElement('html', '<div class="col-md-6">');
-    //     $mform->createElement(
-    //         'static',
-    //         $addresstype . '_' . $addressinput,
-    //         '',
-    //         html_writer::div(get_string('streetaddress', 'local_equipment'), 'local-equipment-pickups-addpickups-time-selectors')
-    //     );
-    //     $mform->createElement('text', $addresstype . '_' . $addressinput, get_string($addresstype . '_' . $addressinput, 'local_equipment'));
-    //     $mform->createElement('html', '</div>');
-    // }
-    // // $starttag = $mform->createElement('html', '<div class="col-md-6">');
-
-    // $elements = [
-    //     $mform->createElement('html', '<div class="form-group row">'),
-    //     format_address_block('streetaddress'),
-    //     format_address_block('apartment'),
-    //     format_address_block('city'),
-    //     format_address_block('state'),
-    //     format_address_block('country'),
-    //     format_address_block('zipcode'),
-
-    //     // $mform->createElement('text', 'streetaddress_' . $addresstype, get_string('streetaddress_' . $addresstype, 'local_equipment')),
-    //     // $mform->createElement('text', 'apartment_' . $addresstype, get_string('apartment_' . $addresstype, 'local_equipment')),
-    //     // $mform->createElement('text', 'city_' . $addresstype, get_string('city_' . $addresstype, 'local_equipment')),
-    //     // $mform->createElement('select', 'state_' . $addresstype, get_string('state_' . $addresstype, 'local_equipment'), local_equipment_get_states()),
-    //     // $mform->createElement('select', 'country_' . $addresstype, get_string('country_' . $addresstype, 'local_equipment'), local_equipment_get_countries()),
-    //     // $mform->createElement('text', 'zipcode_' . $addresstype, get_string('zipcode_' . $addresstype, 'local_equipment')),
-    //     $mform->createElement('html', '</div>'),
-    // ];
-    // $mform->createElement('text', 'streetaddress_' . $addresstype, get_string('streetaddress', 'local_equipment'));
-    // $mform->createElement('text', 'apartment_' . $addresstype, get_string('apartment', 'local_equipment'));
-    // $mform->createElement('text', 'city_' . $addresstype, get_string('city', 'local_equipment'));
-    // $mform->createElement('select', 'state_' . $addresstype, get_string('state', 'local_equipment'), local_equipment_get_states());
-    // $mform->createElement('select', 'country_' . $addresstype, get_string('country', 'local_equipment'), local_equipment_get_countries());
-
-
-
-
-    // $mform->createElement('text', 'zipcode_' . $addresstype, get_string('zipcode', 'local_equipment'));
-    // $mform->setType('streetaddress_' . $addresstype, PARAM_TEXT);
-    // $mform->setType('city_' . $addresstype, PARAM_TEXT);
-    // $mform->setType('state_' . $addresstype, PARAM_TEXT);
-    // $mform->setType('country_' . $addresstype, PARAM_TEXT);
-    // $mform->setType('zipcode_' . $addresstype, PARAM_TEXT);
-
-    // if (false) {
-    //     $mform->setDefault('streetaddress_' . $addresstype, $data->{"{$addresstype}_streetaddress"});
-    //     $mform->setDefault('city_' . $addresstype, $data->{"{$addresstype}_city"});
-    //     $mform->setDefault('state_' . $addresstype, $data->{"{$addresstype}_state"});
-    //     $mform->setDefault('country_' . $addresstype, $data->{"{$addresstype}_country"});
-    //     $mform->setDefault('zipcode_' . $addresstype, $data->{"{$addresstype}_zipcode"});
-    // }
-
-    // Set the default starting hour and minute if it exists.
-    // if ($defaulttime) {
-    //     $mform->setDefault($addresstype . 'hour', date('H', $defaulttime));
-    //     $mform->setDefault($addresstype . 'minute', date('i', $defaulttime));
-    // }
-    // Set the default ending hour and minute if it exists.
-
-    // $elements = array(
-    //     $mform->createElement('html', '<div class="form-group row">'),
-    //     $mform->createElement('html', '<div class="col-md-6">'),
-    //     $mform->createElement(
-    //         'static',
-    //         $addresstype . '_hourlabel',
-    //         '',
-    //         html_writer::div(get_string('hour', 'local_equipment'), 'local-equipment-pickups-addpickups-time-selectors')
-    //     ),
-    //     $hourelement,
-    //     $mform->createElement('html', '</div>'),
-    //     $mform->createElement('html', '<div class="col-md-6">'),
-    //     $mform->createElement(
-    //         'static',
-    //         $addresstype . '_minutelabel',
-    //         '',
-    //         html_writer::div(get_string('minute', 'local_equipment'), 'local-equipment-pickups-addpickups-time-selectors')
-    //     ),
-    //     $minuteelement,
-    //     $mform->createElement('html', '</div>'),
-    //     $mform->createElement('html', '</div>')
-    // );
-    // return $mform->createElement('group', $addresstype, $label, $elements, ' ', false);
-
-
-
-
-    // $group = [];
-
-    // // $mform->addElement('header', $groupname . '_header', $label);
-    // $mform->addElement('static', 'streetaddress_label_' . $groupname, get_string('streetaddress_' . $groupname, 'local_equipment'), \html_writer::tag('span', get_string('streetaddress_' . $groupname, 'local_equipment')));
-    // $mform->addElement('static', 'city_label_' . $groupname, '', \html_writer::tag('label', get_string('city_' . $groupname, 'local_equipment')));
-    // $mform->addElement('static', 'state_label_' . $groupname, '', \html_writer::tag('label', get_string('state_' . $groupname, 'local_equipment')));
-    // $mform->addElement('static', 'zipcode_label_' . $groupname, '', \html_writer::tag('label', get_string('zipcode_' . $groupname, 'local_equipment')));
-    // $group[] = $mform->createElement('text', 'streetaddress_' . $groupname, get_string('streetaddress_' . $groupname, 'local_equipment'));
-    // $group[] = $mform->createElement('text', 'city_' . $groupname, get_string('city_' . $groupname, 'local_equipment'));
-    // $group[] = $mform->createElement('text', 'state_' . $groupname, get_string('state_' . $groupname, 'local_equipment'));
-    // $group[] = $mform->createElement('text', 'zipcode_' . $groupname, get_string('zipcode_' . $groupname, 'local_equipment'));
-
-    // $mform->addGroup($group, $groupname . '_group', $label, '<br>', false);
-
-    // // Set types for elements within the group
-    // $mform->setType('streetaddress_' . $groupname, PARAM_TEXT);
-    // $mform->setType('city_' . $groupname, PARAM_TEXT);
-    // $mform->setType('state_' . $groupname, PARAM_TEXT);
-    // $mform->setType('zipcode_' . $groupname, PARAM_TEXT);
 }
 
 /**
@@ -865,8 +735,6 @@ function local_equipment_add_address_block(
     }
     return $block;
 }
-
-
 
 /**
  * Add an address block that may have default values populated from the database.
@@ -1039,34 +907,6 @@ function local_equipment_agreement_get_status($agreement) {
     return $status;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Virtual course consent (vcc) functions.
 /**
  * Retrieves active partnerships.
  *
@@ -1177,12 +1017,18 @@ function local_equipment_get_partnership_courses($partnershipid) {
 }
 
 /**
- * Retrieves partnership courses from the course category for this school year.
+ * Retrieves partnership courses from the course category for the current school year. Courses can be a direct child of a parent
+ * category with the matching 'idnumber' field, or the courses can be nested an arbitrary number of levels deep under the parent
+ * category.
+ *
+ * Remember that the 'idnumber' field must be manually entered by a course manager with a prefix that matches the prefix given in
+ * the plugin's configuration settings. This will be in the format of
+ * {prefix}#{partnershipid}_{schoolyearrange_start}-{schoolyearrange_end}, e.g. partnership#10_2024-2025.  In other words, in this
+ * example, an admin would manually enter partnership#10_2024-2025 in this 'idnumber' field for the course category.
  *
  * @param int $partnershipid The ID of the partnership.
- * @param string $listingtype The type of listing to return:
- * 'categories' to get listings from course_categories
- * or 'partnerships' to get listings using 'listid' from local_equipment_partnership.
+ * @param string $listingtype The type of listing to return: 'categories' to get listings from course_categories or 'partnerships'
+ * to get listings using 'listid' from local_equipment_partnership.
  * @return stdClass An object containing the courses, or an error message if no courses are found.
  */
 function local_equipment_get_partnership_courses_this_year($partnershipid) {
@@ -1223,20 +1069,21 @@ function local_equipment_get_partnership_courses_this_year($partnershipid) {
     return $responseobject;
 }
 
-
 /**
- * Retrieves partnership categories from the current school course category for this school year,
- * where idnumber field = {schoolyearrange_start}-{schoolyearrange_end}.
+ * Retrieve partnership categories from the course category for the given school year, where the 'idnumber' field =
+ * {prefix}#{partnershipid}_{schoolyearrange_start}-{schoolyearrange_end}, e.g. partnership#10_2024-2025 or partnerships#3_2032-2033
+ * or location#6022_4626-4627. The {prefix} is an admin-configurable string, but the overall format is hard-coded below.
  *
- * @param int $schoolyearrange The 'idnumber' field of the school year category.
- * @param bool $defualttoselection Whether or not to default to the 'selectpartnershipforlisting' string.
- * @param bool $showidnumber Whether or not to show the ID test in the selectable list.
- * @return stdClass An object containing the partnership categories to choose from, or an error message if no partnership categories are found.
+ * @param int $schoolyearrange The school year range within the 'idnumber' field of the school year category.
+ * @param bool $defualttoselection Whether or not to add the 'selectpartnershipforlisting' string to index 0 of the array.
+ * @param bool $showidnumber Whether or not to show the ID number of the partnership to the left of its name in the dropdown menu.
+ * @return stdClass An object containing the partnership categories to choose from, or an error message if no partnership categories
+ * are found.
  */
-function local_equipment_get_partnership_categories_this_year($schoolyearrange = null, $defualttoselection = false, $showidnumber = false) {
+function local_equipment_get_partnership_categories_for_school_year($schoolyearrange = null, $defualttoselection = false, $showidnumber = false) {
     global $DB;
 
-    // Default to the current school year.
+    // Default to the current school year if no $schoolyearrange argument is given.
     if (!$schoolyearrange) {
         $schoolyearrange = local_equipment_get_school_year();
     }
@@ -1261,8 +1108,6 @@ function local_equipment_get_partnership_categories_this_year($schoolyearrange =
                 $partnershipcategoriesobject->partnershipids_partnershipnames[0] =
                 $partnershipcategoriesobject->catids_partnershipnames[0] =
                 $partnershipcategoriesobject->partnershipids[0] = $string;
-        }
-        foreach ($partnershipcategoriesobject->categories as $category) {
         }
     }
 
@@ -1386,7 +1231,7 @@ function local_equipment_generate_course_table($partnershipid) {
 }
 
 /**
- * Get the school year string (2024-2025) given a unix timestamp.
+ * Get the school year string (yyyy-yyyy) given a unix timestamp. TODO: Accept years larger than 4-digits.
  *
  * @param int $timestamp The timestamp to get the school year for.
  * @return string The school year string.
@@ -1396,8 +1241,10 @@ function local_equipment_get_school_year($timestamp = null) {
     $year = date('Y', $timestamp);
     $month = date('n', $timestamp);
 
-    // Eventually, we'll need to get the school year start date from the plugin settings, probably on a Partnership basis.
-    // For now, we'll just use July 1st as the start date.
+    // Eventually, we'll need to get the school year start date from the plugin settings, probably on a Partnership basis. Meaning,
+    // there should be a field in the local_equipment_partnership table the defines the start and end date for that partnership. We
+    // could also automate this further to scrape government websites to fine official start dates for states and/or school
+    // districts. For now, we'll just use July 1st of the given year as the start date.
     if ($month < 7) {
         return ($year - 1) . '-' . $year;
     } else {
@@ -1437,7 +1284,6 @@ function local_equipment_get_active_agreements() {
     );
 }
 
-
 /**
  * Checks if an agreement requires an electronic signature.
  *
@@ -1452,7 +1298,6 @@ function local_equipment_requires_signature($agreements) {
     }
     return false;
 }
-
 
 /**
  * Generate student email based on the primary parent's email.
@@ -1501,7 +1346,6 @@ function local_equipment_save_vcc_form($data) {
         // Insert vccsubmission record.
         $vccsubmission->id = $DB->insert_record('local_equipment_vccsubmission', $vccsubmission);
 
-
         // Make record updates for Moodle Core user.
         $userrecord = new stdClass();
         $userrecord->id = $USER->id;
@@ -1511,7 +1355,6 @@ function local_equipment_save_vcc_form($data) {
 
         // Update core user record.
         $DB->update_record('user', $userrecord);
-
 
         // Insert extended user (parent) record.
         $parentrecord = new stdClass();
@@ -1648,7 +1491,6 @@ function local_equipment_save_vcc_form($data) {
     }
 }
 
-
 /**
  * Get all student names, emails, and contact phones for a given Virtual Course Consent submission.
  *
@@ -1694,8 +1536,8 @@ function local_equipment_vcc_phone_verified(\core\event\user_loggedin $event) {
     $redirecturl = new moodle_url('/local/equipment/phonecommunication/verifyphone.php');
     $msg = get_string('mustverifyphone', 'local_equipment');
 
-    // We must use a strict type here since $phone_verified can be NULL as well as false.
-    // NULL will go to the 'if' part of the statement.
+    // We must use a strict type here since $phone_verified can be NULL as well as false. NULL will go to the 'if' part of the
+    // statement.
     if ($phone_verified !== false) {
         if ($phone_verified === 1) {
             $SESSION->local_equipment_phone_verified = true;
@@ -1704,47 +1546,7 @@ function local_equipment_vcc_phone_verified(\core\event\user_loggedin $event) {
             $SESSION->local_equipment_phone_verified = false;
         }
     }
-
-
-    // $sixmonthsago = time() - (YEARSECS / 2);
-    // $uservcc = $DB->get_record('local_equipment_user', ['userid' => $USER->id, 'timecreated' =>]);
-
-    // $records = $DB->get_records('local_equipment_vccsubmission', ['userid' => $USER->id], 'timecreated DESC', 'id, phone');
-    // foreach($records as $record) {
-
-    //     $phone = $record->phone;
-    //     if ($phone) {
-    //         $SESSION->local_equipment_phone = $phone;
-    //         break;
-    //     }
-    // }
-
-    // $phone1 = $USER->phone1;
-    // $phone2 = $USER->phone2;
-    // $vccphone = '';
-
-    // $message = "Here's phone: $phone, phone1: $phone1, phone2: $phone2 ";
-
-    // if (!$phone1 && !$phone2) {
-    //     // User has no phone numbers on their profile.
-    //     \core\notification::add($message, \core\output\notification::NOTIFY_INFO);
-    //     $message = get_string('musthaveaphoneonrecord', 'local_equipment');
-    // }
-
-    // if ()
-
-    // var_dump($phone1, $phone2);
-    // die();
-
-    // Check if the notification has already been shown in this session
-    // if (empty($SESSION->local_equipment_shown)) {
-    //     // $message = get_string('welcomemessage', 'local_equipment', $USER->firstname);
-
-    //     // Set a flag to avoid showing the message multiple times in the same session
-    //     $SESSION->local_equipment_shown = true;
-    // }
 }
-
 
 /**
  * Checks to see if phone exists.
@@ -1790,7 +1592,6 @@ function local_equipment_user_phone_exists($userid) {
     return $phone;
 }
 
-
 /**
  * Get all current equipment pickup methods for parents to select.
  * @return array An associative array of pickup methods.
@@ -1803,7 +1604,6 @@ function local_equipment_get_pickup_methods() {
         'purchased' => get_string('pickuppurchased', 'local_equipment')
     ];
 }
-
 
 /**
  * Validates a cell phone number to make sure it makes sense.
@@ -1820,7 +1620,6 @@ function local_equipment_providers_to_show($allphoneconfigs) {
 
     return $providers;
 }
-
 
 /**
  * Gets all the phone providers that are available based on whether or not the API setting exist.
@@ -2014,8 +1813,8 @@ function local_equipment_send_secure_otp($provider, $tophonenumber, $ttl = 600, 
             $isverified = $SESSION->otps->{$record->tophonename}->phoneisverified;
         }
 
-        // At this point, we are guaranteed that there are as many records in the DB
-        // as there are in $SESSION->otps, and they hold the same info, though formatted differently.
+        // At this point, we are guaranteed that there are as many records in the DB as there are in $SESSION->otps, and they hold
+        // the same info, though formatted differently.
         if (!$recordexists && $dbotpcount < 2) {
 
             // Create new record.
@@ -2093,8 +1892,7 @@ function local_equipment_verify_otp($otp) {
             }
         }
 
-        // The DB will not be access if a session record was alread found by this point
-        // because of the 'return' statement above.
+        // The DB will not be access if a session record was alread found by this point because of the 'return' statement above.
         $dbrecords = $DB->get_records('local_equipment_phonecommunication_otp', $sqlconditions);
 
         if (!empty($dbrecords)) {
@@ -2133,12 +1931,12 @@ function local_equipment_verify_otp($otp) {
             throw new moodle_exception('novalidotpsfound', 'local_equipment', '', $link);
         }
     } catch (moodle_exception $e) {
-        // Step 2: Catch the exception and add it to the array
+        // Catch the exception and add it to the array
         $responseobject->success = false;
         $responseobject->errormessage = $e->getMessage();
     }
 
-    // OTP is valid and has not expired
+    // OTP is valid and has not expired.
     return $responseobject;
 }
 
@@ -2157,17 +1955,10 @@ function local_equipment_combine_user_records_by_userid($userid) {
     $vccsubmissionids = [];
     // $userrecord->phoneverificationids = [];
     $existingrecords = $DB->get_records('local_equipment_user', ['userid' => $userid]);
-    // echo '<pre>';
-    // var_dump($existingrecords);
-    // echo '</pre>';
+
     $count = 1;
     $userrecord->size = sizeof($existingrecords);
-    // var_dump($recordscount);
     foreach ($existingrecords as $record) {
-
-        // echo '<pre>';
-        // var_dump(json_decode($record->studentids));
-        // echo '</pre>';
 
         // These are arrays.
         $studentids = array_merge($studentids, json_decode($record->studentids));
@@ -2187,22 +1978,11 @@ function local_equipment_combine_user_records_by_userid($userid) {
         }
         $count++;
     }
-    // echo '<pre>';
-    // var_dump(json_encode($studentids));
-    // var_dump(json_encode($vccsubmissionids));
-    // echo '</pre>';
-    // echo 'next!';
-    // echo '<pre>';
-    // var_dump(json_encode(array_unique($studentids)));
-    // var_dump(json_encode(array_unique($vccsubmissionids)));
-    // echo '</pre>';
-    // die();
 
     $userrecord->studentids = json_encode(array_unique($studentids));
     $userrecord->vccsubmissionids = json_encode(array_unique($vccsubmissionids));
     return $userrecord;
 }
-
 
 /**
  * Get all users who have a specific role assigned to them.
@@ -2234,9 +2014,11 @@ function local_equipment_get_users_by_role($role) {
  * @param string $asrole The 'shortname' of the role for which you need to get students. E.g. 'parent', 'mentor'.
  * @param int $userid The ID of the user whose students you want to get.
  * @return object An object containing two arrays of equal length, each with a key: roles[] and users[].
+ *
  * roles[] contains one matching role for each student of this user, but the role itself is actually the relative role the current
  * user has been assigned to by their students, such as a 'Parent' or 'Mentor' role id, as well as the context in which it's
  * assigned, and other relavent IDs.
+ *
  * users[] contains one entry for each student student of the current user, filled with all student info from the core mdl_user
  * table
  *
@@ -2260,16 +2042,6 @@ function local_equipment_get_students_of_user_as($asrole, $userid) {
     $params = ['userid' => $userid, 'shortname' => $asrole];
 
     $rolesassignments = $DB->get_records_sql($sql, $params);
-
-    // echo '<br />';
-    // echo '<br />';
-    // echo '<br />';
-    // echo '<pre>';
-    // var_dump('rolesassignments: ');
-    // var_dump($rolesassignments);
-    // echo '</pre>';
-    // die();
-
 
     // Now we can iterate through the role assignments to get the records of this user's students/mentees.
     $i = 0;
@@ -2298,11 +2070,14 @@ function local_equipment_get_students_of_user_as($asrole, $userid) {
  * currently logged in user is a student who wants to see their parents or mentors, use 'parent' or 'mentor'.
  * @param int $userid The ID of the user whose assigned users you want to get. This should be the ID of the supposed student.
  * @return object An object containing two arrays of equal length, each with a key: roles[] and users[].
- * roles[] contains one matching role for each student of this user, but the role itself is actually the relative role the current
- * user has been assigned to by their students, such as a 'Parent' or 'Mentor' role id, as well as the context in which it's
- * assigned, and other relavent IDs.
- * users[] contains one entry for each student student of the current user, filled with all student info from the core mdl_user
- * table
+ *
+ * roles[] contains one
+ * matching role for each student of this user, but the role itself is actually the relative role the current user has been assigned
+ * to by their students, such as a 'Parent' or 'Mentor' role id, as well as the context in which it's assigned, and other relavent
+ * IDs.
+ *
+ * users[] contains one entry for each student student of the current user, filled with all student info from the core
+ * mdl_user table
  *
  * Returns false if no one is assigned to this user via specified role.
  */
@@ -2346,11 +2121,9 @@ function local_equipment_get_users_assigned_to_user($role, $userid) {
     return $usersinfo;
 }
 
-
-
 /**
- * Add a role relative to a given user, such as a parent or mentor role.
- * If the role assignment already exists, displays a warning but continues.
+ * Add a role relative to a given user, such as a parent or mentor role. If the role assignment already exists, displays a warning
+ * but continues.
  *
  * @param object $user The user to whom the role will be assigned (e.g., student)
  * @param object $relativeuser The user who will be assigned the role (e.g., parent)
@@ -2365,7 +2138,7 @@ function local_equipment_assign_role_relative_to_user(object $user, object $rela
         $roleid = $DB->get_field('role', 'id', ['shortname' => $role]);
         $context = context_user::instance($user->id);
 
-        // Check if assignment already exists
+        // Check if assignment already exists.
         $existing = $DB->record_exists('role_assignments', [
             'roleid' => $roleid,
             'contextid' => $context->id,
@@ -2388,11 +2161,6 @@ function local_equipment_assign_role_relative_to_user(object $user, object $rela
             );
             return true;
         } else {
-            // Get required user fields for fullname()
-            // $fields = 'id, firstname, lastname, firstnamephonetic, lastnamephonetic, middlename, alternatename';
-            // $student = $DB->get_record('user', ['id' => $user->id], $fields);
-            // $parent = $DB->get_record('user', ['id' => $relativeuser->id], $fields);
-
             \core\notification::add(
                 get_string(
                     'rolealreadyassigned',
@@ -2405,11 +2173,6 @@ function local_equipment_assign_role_relative_to_user(object $user, object $rela
                 ),
                 \core\output\notification::NOTIFY_WARNING
             );
-            // \core\notification::warning(get_string(
-            //     'rolealreadyassigned',
-            //     'local_equipment',
-            //     $msg
-            // ));
             return false;
         }
     } catch (moodle_exception $e) {
@@ -2503,7 +2266,6 @@ function local_equipment_is_parent_of_student(int $parentid, int $studentid): bo
     ]);
 }
 
-
 /**
  * Create a username, programitcally:
  * first initial
@@ -2533,18 +2295,16 @@ function local_equipment_generate_username($user) {
     $secondpart = str_replace("'", '', $secondpart);
     $secondpart = explode('-', $secondpart)[0];
 
-
     $username = $firstpart . $secondpart;
 
     $likeusernames = $DB->count_records_select('user', 'username LIKE ?', [$username . '%']);
     $appendingnumber = $likeusernames + 1;
 
-
-    // Let's say there are usernames: jdoe2, jdoe3, jdoe4 (missing 'jdoe1').
-    // The variables $likeusernames above would be 3, $appendingnumber would be 4, and $username . $appendingnumber would be 'jdoe4',
-    // which already exists, so we need to find the missing 'jdoe' username and make that the output username instead.
-    // The statement below will fill in the missing 'jdoe' username and prevent the same issue from happening in the future.
-    // Ideally, this statment will never run, but you never know what the "LIKE" query will return.
+    // Let's say there are usernames: jdoe2, jdoe3, jdoe4 (missing 'jdoe1').  The variables $likeusernames above would be 3,
+    // $appendingnumber would be 4, and $username . $appendingnumber would be 'jdoe4', which already exists, so we need to find the
+    // missing 'jdoe' username and make that the output username instead.  The statement below will fill in the missing 'jdoe'
+    // username and prevent the same issue from happening in the future.  Ideally, this statment will never run, but you never know
+    // what the "LIKE" query will return.
 
     if ($DB->record_exists('user', ['username' => $username . $appendingnumber])) {
         for ($i = 1; $i < $appendingnumber; $i++) {
@@ -2556,7 +2316,6 @@ function local_equipment_generate_username($user) {
 
     return $username .= $appendingnumber;
 }
-
 
 /**
  * Assign parent roles to parents for their students
@@ -2782,140 +2541,3 @@ function local_equipment_bulk_enrol_student(stdClass $user, array $courseids): a
 
     return $results;
 }
-
-// function create_partnership_profile_field() {
-//     global $DB;
-
-//     // Check if the field already exists
-//     $existing = $DB->get_record('user_info_field', ['shortname' => 'partnership']);
-//     if ($existing) {
-//         return; // Field already exists
-//     }
-
-//     // Get all active partnerships for the dropdown menu
-//     $partnerships = $DB->get_records('local_equipment_partnership', ['active' => 1]);
-//     $menu_options = [];
-//     foreach ($partnerships as $partnership) {
-//         $menu_options[] = $partnership->id . '|' . $partnership->name;
-//     }
-
-//     // Configure the custom field
-//     $field = new stdClass();
-//     $field->shortname = 'partnership';
-//     $field->name = 'Partnership';
-//     $field->datatype = 'menu';  // Dropdown menu type
-//     $field->description = 'The partnership this user belongs to';
-//     $field->descriptionformat = 1;
-//     $field->categoryid = 1;     // Default "Other fields" category
-//     $field->sortorder = 1;
-//     $field->required = 0;       // Not required by default
-//     $field->locked = 0;         // Not locked by default
-//     $field->visible = 2;        // Visible to users
-//     $field->forceunique = 0;    // Allow duplicate values
-//     $field->signup = 0;         // Don't show on signup
-//     $field->defaultdata = '';   // No default value
-//     $field->defaultdataformat = 0;
-//     $field->param1 = implode("\n", $menu_options); // Menu options
-
-//     // Insert the field
-//     try {
-//         $field->id = $DB->insert_record('user_info_field', $field);
-
-//         // Add any necessary capabilities
-//         $systemcontext = context_system::instance();
-//         assign_capability('moodle/user:editownprofile',
-//             CAP_ALLOW,
-//             get_config('moodle', 'defaultuserroleid'),
-//             $systemcontext->id
-//         );
-
-//         return $field->id;
-//     } catch (dml_exception $e) {
-//         debugging('Error creating partnership profile field: ' . $e->getMessage());
-//         return false;
-//     }
-// }
-
-// /**
-//  * Create or update the partnership profile field.
-//  *
-//  * @return bool true if successful, false otherwise
-//  * @throws dml_exception
-//  */
-// function local_equipment_create_partnership_profile_field(): bool {
-//     global $DB;
-
-//     $transaction = $DB->start_delegated_transaction();
-
-//     try {
-//         // Create category if it doesn't exist
-//         $catname = 'Equipment (local_equipment)';
-//         $category = $DB->get_record('user_info_category', ['name' => $catname]);
-//         if (!$category) {
-//             $category = new stdClass();
-//             $category->name = $catname;
-//             $category->sortorder = $DB->get_field_sql(
-//                 'SELECT COALESCE(MAX(sortorder) + 1, 1) FROM {user_info_category}'
-//             );
-//             $category->id = $DB->insert_record('user_info_category', $category);
-//         }
-
-//         // Get ALL partnerships
-//         $partnerships = $DB->get_records_menu(
-//                 'local_equipment_partnership',
-//                 [],
-//                 'name ASC',
-//                 'id, name'
-//             );
-
-//         // Create menu options array
-//         $options = [0 => get_string('nopartnershipselected', 'local_equipment')];
-//         foreach ($partnerships as $id => $name) {
-//             $options[$id] = "$name – $id";
-//         }
-
-//         // Create or update the field
-//         $fieldname = 'local_equipment_partnership';
-//         $field = $DB->get_record('user_info_field', ['shortname' => $fieldname]);
-//         if (!$field) {
-//             $field = new stdClass();
-//             $field->shortname = $fieldname;
-//             $field->name = get_string('partnership', 'local_equipment');
-//             $field->datatype = 'menu';
-//             $field->description = get_string('partnershipfielddesc', 'local_equipment');
-//             $field->descriptionformat = FORMAT_HTML;
-//             $field->categoryid = $category->id;
-//             $field->sortorder = $DB->get_field_sql(
-//                 'SELECT COALESCE(MAX(sortorder) + 1, 1) FROM {user_info_field} WHERE categoryid = ?',
-//                 [$category->id]
-//             );
-//             $field->required = 0;
-//             $field->locked = 1;           // Field is locked from normal editing
-//             $field->visible = PROFILE_VISIBLE_TEACHERS;  // Only visible to teachers and above
-//             $field->forceunique = 0;
-//             $field->signup = 0;
-//             $field->defaultdata = '0';    // Default to "No partnership selected"
-//             $field->defaultdataformat = 0;
-//             $field->param1 = implode("\n", array_values($options));
-//             $field->param2 = 'readonly';  // Make the field display-only
-
-//             $DB->insert_record('user_info_field', $field);
-//         } else {
-//             // Update existing field
-//             $field->param1 = implode("\n", array_values($options));
-
-//             // $field->locked = 1;
-//             // $field->defaultdata = '0';
-//             // $field->param2 = 'readonly';
-
-//             $DB->update_record('user_info_field', $field);
-//         }
-
-//         $transaction->allow_commit();
-//         return true;
-//     } catch (Exception $e) {
-//         $transaction->rollback($e);
-//         debugging('Error creating partnership profile field: ' . $e->getMessage(), DEBUG_DEVELOPER);
-//         return false;
-//     }
-// }

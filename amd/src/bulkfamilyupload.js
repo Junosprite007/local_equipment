@@ -49,8 +49,6 @@ export const init = () => {
     const courseDataValue = JSON.parse(
         $courseData.attr('data-coursesthisyear')
     );
-    // Log.debug('courseDataValue: ');
-    // Log.debug(courseDataValue);
 
     // Error navigation state.
     let currentErrorIndex = -1;
@@ -65,8 +63,6 @@ export const init = () => {
                 partnerships: partnershipDataValue,
                 courses: courseDataValue,
             };
-            // Log.debug('data: ');
-            // Log.debug(data.courses);
 
             const families = await validateFamilyData(data);
             Log.debug('families: ');
@@ -292,11 +288,7 @@ export const init = () => {
  * @return {Promise<string>} The HTML feedback string.
  */
 export const validateFamilyData = async ({ input, partnerships, courses }) => {
-    // Log.debug('courses');
-    // Log.debug(courses);
     courses = Object.assign({}, ...Object.values(courses));
-    // Log.debug('combined');
-    // Log.debug(combined);
     if (!input || typeof input !== 'string') {
         throw new Error(
             getString(
@@ -306,7 +298,8 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
             )
         );
     }
-    // This creates and objext with text types as keys and regexes to match as values.
+
+    // This creates and object with text types as keys and regexes to match as values.
     const regexes = {
         email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
         phone: /^(\+?\d{1,2}\s?)?(\(?\d{3}\)?[\s.-]?)?\d{3}[\s.-]?\d{4}$/,
@@ -576,17 +569,17 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
         };
         const parentExists = parents.length > 0;
 
-        // Log.debug('Checking student partnership:');
-        // Log.debug(partnership);
-
         switch (textType) {
             case 'student': {
                 // This refers to the student's name, which is the only line that is preceded by a single asterisk (*).
                 let name = line.replace('*', '').trim();
                 let names = name.split(' ');
                 const nameParts = await processPersonName(name);
+
+                // All users in Moodle need a first and last name. If only one name is provided for the student, we'll automatically
+                // append the first listed parent's last name and warn the admin user about the automated addition; otherwise
+                // display an error message.
                 if (names.length === 1 && parentExists) {
-                    // Only one name provided.
                     name =
                         name +
                         ' ' +
@@ -594,7 +587,6 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                         parents[0]?.name?.data?.lastName +
                         '</span>';
                 } else if (names.length === 1 && !parentExists) {
-                    // Only one name provided
                     name =
                         '<span class="pl-2 pr-2 alert-danger">' +
                         (await getString(
@@ -636,9 +628,6 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                     .trim()
                     .split(',')
                     .map((course) => course.trim());
-
-                // Log.debug('partnerships:');
-                // Log.debug(partnerships);
                 const processedCourses = [];
 
                 const coursesHTML = await Promise.all(
@@ -652,7 +641,6 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             processedCourses.includes(id);
                         let courseName = '';
                         if (partnershipAdded) {
-                            // Log.debug('if (partnershipAdded) {');
                             courseExistsInPartnership =
                                 partnerships[partnership?.data].coursedata[
                                     id
@@ -665,10 +653,8 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                                 (partnershipAdded && courseExistsInPartnership))
                         ) {
                             // This is the successful case.
-
-                            // Log.debug('if (');
                             processedCourses.push(id);
-                            // EN DASH character: '–' or \u2013
+                            // Below utilizes the EN DASH character: '–' or \u2013
                             const enDash = '–';
                             const regex = new RegExp(`${id} ${enDash} `, 'g');
                             courseName = courses[id].replace(regex, '');
@@ -678,7 +664,6 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             (!partnershipAdded ||
                                 (partnershipAdded && courseExistsInPartnership))
                         ) {
-                            // Log.debug('} else if (');
                             processedCourses.push(id);
                             const errorMessage = await getString(
                                 'coursealreadyadded',
@@ -691,7 +676,6 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             partnershipAdded &&
                             !courseExistsInPartnership
                         ) {
-                            // Log.debug('} else if ( 2');
                             const errorMessage = await getString(
                                 'courseidnotfoundinpartnership',
                                 'local_equipment',
@@ -699,7 +683,6 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             );
                             courseName = `<span class="pl-2 pr-2 alert-danger">${errorMessage}</span>`;
                         } else {
-                            // Log.debug('} else {');
                             const errorMessage = await getString(
                                 'courseidnotfound',
                                 'local_equipment',
@@ -727,7 +710,6 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
 
     /**
      * Process a single family's data, a.k.a. a family chunk.
-     * This const will be used as input for the map() function below.
      *
      * @param {string} family - The raw family data string.
      * @return {string} HTML feedback for the family.
@@ -744,12 +726,12 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
             let familyHTML = [];
             let partnershipAdded = false;
             let parentNum = 0;
-            // let studentNum = 0;
 
+            // Trim the shit out of it.
             const lines = family
                 .split('\n')
                 .map((line) => line.trim())
-                .filter((line) => line); // This removes empty lines.
+                .filter((line) => line);
 
             for (const line of lines) {
                 try {
@@ -787,7 +769,6 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                         case textType === 'partnership': {
                             const result = await processPartnershipInfo(line);
                             partnership = result.partnership;
-                            // inStudentSection = result.inStudentSection;
                             familyHTML.push(partnership.html);
                             partnershipAdded = true;
                             break;

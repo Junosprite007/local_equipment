@@ -56,7 +56,7 @@ class addpartnerships_form extends \moodleform {
         }
 
         $users = local_equipment_auto_complete_users();
-        $partnershipcategories = local_equipment_get_partnership_categories_this_year(null, true);
+        $partnershipcategories = local_equipment_get_partnership_categories_for_school_year(null, true);
 
         foreach ($partnershipcategories->partnershipids as $id) {
             $allpartnershipcourses[$id] = local_equipment_get_partnership_courses_this_year($id);

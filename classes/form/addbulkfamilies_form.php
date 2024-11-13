@@ -31,31 +31,18 @@ require_once($CFG->dirroot . '/local/equipment/lib.php');
 class addbulkfamilies_form extends moodleform {
     public function definition() {
         $mform = $this->_form;
-        global $DB, $OUTPUT;
+        global $DB;
 
-        // Fetch partnerships and display in a table
-        $activepartnerships = $DB->get_records('local_equipment_partnership', ['active' => 1]);
-
+        // Fetch partnerships and display in a table. I think it's a pretty snazzy-lookin' table.
         $allpartnershipcourses = [];
         $allpartnershipcourses_json = [];
-        // $partnershipdata = [];
-        // $coursedata = [];
-
-
-        $partnershipcategories = local_equipment_get_partnership_categories_this_year(null, false, true, 'partnerships');
-
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<pre>';
-        // var_dump($partnershipcategories);
-        // echo '</pre>';
-        // die();
+        $partnershipcategories = local_equipment_get_partnership_categories_for_school_year(null, false, true);
 
         foreach ($partnershipcategories->partnerships as $id => $partnership) {
             $partnership->coursedata = [];
-            // $partnership = $DB->get_record('local_equipment_partnership', ['id' => $id]);
             $allpartnershipcourses[$id] = local_equipment_get_partnership_courses_this_year($partnership->listingid);
             $courses = $allpartnershipcourses[$id]->courses_formatted;
+
             foreach ($courses as $id => $course) {
                 $coursedata[$id] = "$id – $course";
                 $partnership->coursedata[$id] = $coursedata[$id];
@@ -64,76 +51,12 @@ class addbulkfamilies_form extends moodleform {
             $partnershipdata[$partnership->id] = $partnership;
         }
 
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<pre>';
-        // var_dump(array_keys($allpartnershipcourses));
-        // echo '</pre>';
-        // die();
-
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<pre>';
-        // var_dump($allpartnershipcourses);
-        // echo '</pre>';
-        // die();
-
         foreach ($allpartnershipcourses as $id => $courses) {
             $allpartnershipcourses_json[$id] = $courses->courses_formatted;
         }
 
-
-
-
-        // foreach ($partnershipcategories->partnershipids as $id) {
-        //     $allpartnershipcourses[$id] = local_equipment_get_partnership_courses_this_year($id);
-        // }
-
-        // foreach ($allpartnershipcourses as $id => $courses) {
-        //     $allpartnershipcourses_json[$id] = $courses->courses_formatted;
-        // }
-
-
-        // $i = 0;
-        // foreach ($activepartnerships as $partnership) {
-        //     // echo '<br />';
-        //     // echo '<pre>';
-        //     // var_dump($partnership);
-        //     // echo '</pre>';
-        //     // die();
-        //     // $coursejoin = $DB->get_records('local_equipment_partnership_course', ['partnershipid' => $partnership->id]);
-        //     if ($coursesobj = local_equipment_get_partnership_courses_this_year($partnership->id)) {
-        //         $courses = $coursesobj->courses_formatted;
-
-        //         foreach ($courses as $id => $course) {
-        //             $coursedata[$id] = "$id – $course";
-        //             $partnership->coursedata[$id] = $coursedata[$id];
-        //         }
-        //     }
-
-
-        //     // foreach ($coursejoin as $join) {
-
-        //     //     $course = $DB->get_record('course', ['id' => $join->courseid]);
-
-        //     //     if ($course) {
-        //     //         $coursedata[$course->id] = "$course->id – $course->fullname";
-        //     //         $partnership->coursedata[$course->id] = "$course->id – $course->fullname";
-        //     //     }
-        //     // }
-
-        //     $partnershipdata[$partnership->id] = $partnership;
-        // }
-
-
-
-
-        // echo '<pre>';
-        // var_dump($coursedata);
-        // echo '</pre>';
-        // echo '<br />';
-
-        // Use hidden field for sending partnership data over to JavaScript
+        // Use hidden field for sending partnership data over to JavaScript. Only admins are using this, so it shouldn't be a
+        // security risk... I don't think anyway.
         $mform->addElement(
             'hidden',
             'partnershipdata',
@@ -142,7 +65,7 @@ class addbulkfamilies_form extends moodleform {
         );
         $mform->setType('partnershipdata', PARAM_RAW);
 
-        // Use hidden field for sending course data over to JavaScript
+        // Use hidden field for sending course data over to JavaScript. Again, admins only.
         $mform->addElement(
             'hidden',
             'coursesthisyear',
@@ -154,6 +77,10 @@ class addbulkfamilies_form extends moodleform {
         );
         $mform->setType('coursesthisyear', PARAM_RAW);
 
+        // This field will be empty at first but will be populated upon error free, pre-processing of the text input. This data will
+        // be used for the final user creation, update, and course enrollment process.
+        // TODO: This value should default to text input stored within the user's $SESSION, but I'm not currently sure how to update
+        // Moodle session data from JavaScript.
         $mform->addElement(
             'hidden',
             'familiesdata',
@@ -162,78 +89,26 @@ class addbulkfamilies_form extends moodleform {
         );
         $mform->setType('familiesdata', PARAM_RAW);
 
+        // This dropdown menu is purely for admin users' convenience. It will allow them to select a partnership, see its ID, and
+        // view all its courses with corresponding course IDs.
         $mform->addElement('select', 'partnershipcourselist', get_string('partnershipcourselist', 'local_equipment'), $partnershipcategories->partnershipids_partnershipnames);
         $mform->setType('partnershipcourselist', PARAM_RAW);
-        // $mform->setDefault('partnershipcourselist', '0');
-
-        // if (!empty($partnershipdata)) {
-        //     $tablehtml = '<table class="local-equipment_generaltable">';
-        //     $tablehtml .= '<thead><tr><th>' . get_string('partnershipid', 'local_equipment') . '</th><th>' . get_string('partnershipname', 'local_equipment') . '</th></tr></thead>';
-        //     $tablehtml .= '<tbody>';
-        //     $rowclass = 'r0';
-
-        //     foreach ($partnershipdata as $partnership) {
-        //         $courses = [];
-
-        //         if (!empty($partnership->coursedata)) {
-        //             $courses = $partnership->coursedata;
-        //         } else {
-        //             $courses[] = get_string('nocoursesfoundforthispartnership', 'local_equipment');
-        //         }
-
-        //         // Create unique ID for the collapsible section
-        //         $uniqueid = html_writer::random_id('partnership-');
-
-        //         // Header row
-        //         $tablehtml .= '<tr class="' . $rowclass . '">';
-        //         $tablehtml .= '<td>' . s($partnership->id) . '</td>';
-        //         $tablehtml .= '<td>';
-
-        //         // Create collapsible button
-        //         $button = html_writer::tag(
-        //             'button',
-        //             $OUTPUT->pix_icon('t/collapsed', '') . ' ' . $partnership->name,
-        //             array(
-        //                 'class' => 'btn btn-link w-100 text-left d-flex align-items-center collapsed', // Added 'collapsed' class
-        //                 'type' => 'button',
-        //                 'data-toggle' => 'collapse',
-        //                 'data-target' => '#' . $uniqueid,
-        //                 'aria-expanded' => 'false',
-        //                 'aria-controls' => $uniqueid
-        //             )
-        //         );
-
-        //         // Create collapsible content
-        //         $content = html_writer::div(
-        //             local_equipment_generate_course_table($partnership->listingid),
-        //             'collapse',
-        //             array('id' => $uniqueid)
-        //         );
-
-        //         $tablehtml .= $button . $content;
-        //         $tablehtml .= '</td></tr>';
-
-        //         $rowclass = ($rowclass === 'r0') ? 'r1' : 'r0';
-        //     }
-
-        //     $tablehtml .= '</tbody></table>';
-        //     $mform->addElement('html', $tablehtml);
-        // }
 
         $buttonarray = array();
         $buttonarray[] = &$mform->createElement('button', 'preprocess', get_string('preprocess', 'local_equipment'), ['class' => 'preprocessbutton']);
         $buttonarray[] = &$mform->createElement('button', 'shownexterror', get_string('shownexterror', 'local_equipment'), ['disabled' => true, 'class' => 'shownexterror-container']);
         $buttonarray[] = &$mform->createElement('button', 'noerrorsfound', get_string('noerrorsfound', 'local_equipment'), ['disabled' => true, 'class' => 'noerrorsfound-container alert-success', 'hidden' => true]);
 
-
         $mform->addElement('html', '<div class="local-equipment-errornavigation-container">');
         $mform->addGroup($buttonarray, 'preprocessanderrors_before', '', [' '], false);
         $mform->addElement('html', '</div>');
 
-        // Add a container div for flex layout.
+        // Add a container div for flex layout for viewing the text input area and pre-process box.
         $mform->addElement('html', '<div class="local-equipment-bulkfamilyupload-container">');
 
-        // Add the textarea.
+        // This is intentionally a basic text area, not tinyMCE, since I want to process the text input using a single or double
+        // new line character: '\n' to define data for a given user or '\n\n' to define a new family. See 'processFamily' in the
+        // JavaScript for more details.
         $mform->addElement(
             'textarea',
             'familiesinputdata',
@@ -243,17 +118,18 @@ class addbulkfamilies_form extends moodleform {
         $mform->setType('familiesinputdata', PARAM_RAW);
         $mform->addRule('familiesinputdata', null, 'required', null, 'client');
 
-        // Add the feedback div.
+        // Add the pre-process div to show the output of the pre-processed text input. This is where errors are shown. This div
+        // determines whether or not the "Upload & enroll" button is enabled.
         $mform->addElement('html', '<div id="id_familypreprocessdisplay" class="local-equipment-bulkfamilyupload-preprocess-output"></div>');
 
-        // Close the container div.
+        // Close the container div with the input and pre-process info.
         $mform->addElement('html', '</div>');
 
         $mform->addElement('html', '<div class="local-equipment-errornavigation-container">');
         $mform->addGroup($buttonarray, 'preprocessanderrors_after', '', [' '], false);
         $mform->addElement('html', '</div>');
 
-        // Add action buttons, but don't use add_action_buttons()
+        // Add action buttons, but don't use add_action_buttons().
         $mform->addElement('submit', 'submitbutton', get_string('uploadandenroll', 'local_equipment'), ['id' => 'id_submitbutton', 'disabled' => 'disabled']);
         $mform->closeHeaderBefore('buttonar');
     }
