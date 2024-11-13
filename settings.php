@@ -155,6 +155,14 @@ if ($hassiteconfig) {
             new lang_string('virtualcourseconsent', 'local_equipment')
         )
     );
+    // Add 'Add bulk families' subcategory.
+    $ADMIN->add(
+        $component,
+        new admin_category(
+            "{$component}_addbulkfamilies_cat",
+            new lang_string('addbulkfamilies', 'local_equipment')
+        )
+    );
 
     // An external page is a link to a page outside of the Moodle admin settings, i.e. to a file within the custom plugin.
     // Add the manage partnerships page.
@@ -217,6 +225,13 @@ if ($hassiteconfig) {
         'local_equipment_vccsubmissions',
         new lang_string('managevccsubmissions', 'local_equipment'),
         new moodle_url('/local/equipment/vccsubmissions.php')
+    ));
+
+    // Add the 'Add bulk families' form page.
+    $ADMIN->add('local_equipment', new admin_externalpage(
+        'local_equipment_addbulkfamilies',
+        new lang_string('addbulkfamilies', 'local_equipment'),
+        new moodle_url('/local/equipment/addbulkfamilies.php')
     ));
 
     // Virtual course consent (vcc) submissions should not be limited to managers. All users will have access to this page for now.
