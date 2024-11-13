@@ -1949,6 +1949,7 @@ function local_equipment_verify_otp($otp) {
 function local_equipment_combine_user_records_by_userid($userid) {
     global $DB;
     $userrecord = new stdClass();
+    $userrecord->errors = [];
 
     // These are the things being combined in this function.
     $studentids = [];
@@ -1956,31 +1957,36 @@ function local_equipment_combine_user_records_by_userid($userid) {
     // $userrecord->phoneverificationids = [];
     $existingrecords = $DB->get_records('local_equipment_user', ['userid' => $userid]);
 
+
     $count = 1;
     $userrecord->size = sizeof($existingrecords);
-    foreach ($existingrecords as $record) {
+    if (!$existingrecords || sizeof($existingrecords) === 0) {
+        $userrecord->errors[] = get_string('nousersfound', 'local_equipment');
+    } else {
+        foreach ($existingrecords as $record) {
 
-        // These are arrays.
-        $studentids = array_merge($studentids, json_decode($record->studentids));
-        $vccsubmissionids = array_merge($vccsubmissionids, json_decode($record->vccsubmissionids));
-        // The phone feature is not yet implemented, so we don't actually need the following line.
-        // $userrecord->phoneverificationids = array_merge($userrecord->phoneverificationids, json_decode($record->phoneverificationids));
+            // These are arrays.
+            $studentids = array_merge($studentids, json_decode($record->studentids));
+            $vccsubmissionids = array_merge($vccsubmissionids, json_decode($record->vccsubmissionids));
+            // The phone feature is not yet implemented, so we don't actually need the following line.
+            // $userrecord->phoneverificationids = array_merge($userrecord->phoneverificationids, json_decode($record->phoneverificationids));
 
-        // Get the ID of the most recently added record for this user.
-        if ($count == $userrecord->size) {
-            $userrecord->id = $record->id;
-        } else {
-            // Delete the record if there is more than one.
-            // echo '<pre>';
-            // echo "Deleting record with ID: $record->id";
-            // echo '</pre>';
-            // $DB->delete_records('local_equipment_user', ['id' => $record->id]);
+            // Get the ID of the most recently added record for this user.
+            if ($count == $userrecord->size) {
+                $userrecord->id = $record->id;
+                $userrecord->studentids = json_encode(array_unique($studentids));
+                $userrecord->vccsubmissionids = json_encode(array_unique($vccsubmissionids));
+                $DB->update_record('local_equipment_user', $userrecord);
+            } else {
+                // Delete the record if there is more than one.
+                // echo '<pre>';
+                // var_dump("Deleting record with ID: $record->id");
+                // echo '</pre>';
+                $DB->delete_records('local_equipment_user', ['id' => $record->id]);
+            }
+            $count++;
         }
-        $count++;
     }
-
-    $userrecord->studentids = json_encode(array_unique($studentids));
-    $userrecord->vccsubmissionids = json_encode(array_unique($vccsubmissionids));
     return $userrecord;
 }
 

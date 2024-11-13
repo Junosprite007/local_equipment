@@ -45,6 +45,7 @@ $form = new addbulkfamilies_form();
 if ($form->is_cancelled()) {
     redirect(new moodle_url('/'));
 } else if ($data = $form->get_data()) {
+    global $DB;
     // Get the JSON content of the 'value' attribute from the hidden #id_familiesdata input element.
     $familiesdata = json_decode($data->familiesdata);
     $created_users = [];
@@ -113,6 +114,7 @@ if ($form->is_cancelled()) {
                 // By the end of the last iteration of this parent loop, $allstudentsofallparents should contain all students with
                 // unique IDs that have these parents already assigned to them. This is used later in this file.
                 $allstudentsofallparents = $allstudentsofallparents + local_equipment_get_students_of_parent($parent->id);
+                $parent->partnershipid = $familydata->partnership->data ?? '';
                 $parents[] = $parent;
             }
 
@@ -201,8 +203,8 @@ if ($form->is_cancelled()) {
                 foreach ($parents as $p) {
                     $userassigned = local_equipment_assign_role_relative_to_user($student, $p, 'parent');
                 }
+                $student->partnershipid = $familydata->partnership->data ?? '';
                 $students[] = $student;
-                // die();
             }
 
             // Fill the family array with the parents, students, partnership, and unique courses (each student in the $students
@@ -229,6 +231,63 @@ if ($form->is_cancelled()) {
         }
 
         $allusers = array_merge($created_users, $existing_users);
+
+        // Insert all the users into the local_equipment_user table. At this point all users are garanteed to have an ID, so we
+        // should be able to check if they already exist in the plugin's user table, add them if they don't, and update them if they
+        // do.
+        foreach ($allusers as $u) {
+            $record = new stdClass();
+            $le_user = $DB->get_record('local_equipment_user', ['userid' => $u->id]);
+
+            if ($le_user) {
+                $record = $le_user;
+                // We should update the partnership ID here, just in case it has changed from the previous school year.
+                $record->partnershipid = $u->partnershipid;
+                $record->timemodified = time();
+
+                $DB->update_record('local_equipment_user', $record);
+            } else {
+                $record->userid = $u->id;
+                $record->partnershipid = $u->partnershipid;
+                $record->studentids = '[]';
+                $record->vccsubmissionids = '[]';
+                $record->phoneverificationids = '[]';
+                $record->phone = null;
+                $record->phone_verified = null;
+                $record->mailing_extrainput = '';
+                $record->mailing_streetaddress = '';
+                $record->mailing_apartment = '';
+                $record->mailing_city = '';
+                $record->mailing_state = '';
+                $record->mailing_country = '';
+                $record->mailing_zipcode = '';
+                $record->mailing_extrainstructions = null;
+                $record->billing_extrainput = '';
+                $record->billing_sameasmailing = '0';
+                $record->billing_streetaddress = '';
+                $record->billing_apartment = '';
+                $record->billing_city = '';
+                $record->billing_state = '';
+                $record->billing_country = '';
+                $record->billing_zipcode = '';
+                $record->billing_extrainstructions = null;
+                $record->timecreated = time();
+                $record->timemodified = time();
+
+                $record->id = $DB->insert_record('local_equipment_user', $record);
+            }
+        }
+
+
+        // Get all the user IDs in the entire system. This will be used to merge duplicate user entries in the local_equipment_user
+        // table. This should be removed in the next update.
+        $alluseridsinwholesystem = $DB->get_records('user', null, '', 'id');
+        foreach ($alluseridsinwholesystem as $id => $u) {
+            $recordcount = $DB->count_records('local_equipment_user', ['userid' => $id]);
+            if ($recordcount > 1) {
+                local_equipment_combine_user_records_by_userid($id);
+            }
+        }
 
         // For development purposes, we can delete all the users we just created if we want.
         // var_dump('Deleting users...');
