@@ -133,8 +133,6 @@ if ($form->is_cancelled()) {
                 $student->lang = $USER->lang ?? $CFG->lang ?? 'en';
                 $student->password = generate_password(6);
                 $student->phone2 = clean_param($s->phone->data ?? '', PARAM_TEXT);
-                $student->courses = $s->courses->data;
-
                 $student->firstnamephonetic = '';
                 $student->lastnamephonetic = '';
                 $student->alternatename = '';
@@ -169,18 +167,17 @@ if ($form->is_cancelled()) {
                 if (!$user) {
                     foreach ($allstudentsofallparents as $sofp) {
                         if (strcasecmp($student->firstname, $sofp->firstname) === 0 && strcasecmp($student->lastname, $sofp->lastname) === 0) {
-                            $student->id = $sofp->id;
-                            $student->username = $sofp->username;
-                            $student->email = $sofp->email;
-                        } else {
-                            // Add an entirely new student user.
-                            $userid = user_create_user($student);
+                            $user = $DB->get_record('user', ['email' => $sofp->email]);
+                            $student = $user;
+                            break;
                         }
+                    }
+                    if (!$user) {
+                        $userid = user_create_user($student);
                     }
                 } else {
                     // Update an existing student user to the matched user. I can't think of anything that needs to be updated at
                     // the moment.
-                    $student_old = $student;
                     $student = $user;
                 }
 
@@ -190,6 +187,10 @@ if ($form->is_cancelled()) {
                 } else {
                     $existing_users[] = $student;
                 }
+
+                $student->courses = $s->courses->data;
+
+
                 foreach ($student->courses as $c) {
                     // Enroll the student into each course.
                     $student->courses_results[$c] = local_equipment_enrol_user_in_course($student, $c, $roleid_student);
@@ -201,6 +202,7 @@ if ($form->is_cancelled()) {
                     $userassigned = local_equipment_assign_role_relative_to_user($student, $p, 'parent');
                 }
                 $students[] = $student;
+                // die();
             }
 
             // Fill the family array with the parents, students, partnership, and unique courses (each student in the $students
@@ -233,6 +235,7 @@ if ($form->is_cancelled()) {
         // foreach ($allusers as $u) {
         //     user_delete_user($u);
         // }
+        // die();
 
     } catch (moodle_exception $e) {
         // Errors will be caught here. In general, we'll need to be displaying success and non-fatal warning messages to the admin
@@ -245,6 +248,7 @@ if ($form->is_cancelled()) {
 
     // We should display the results/notifications here.
 
+    $form->display();
     echo $OUTPUT->footer();
 } else {
     echo $OUTPUT->header();

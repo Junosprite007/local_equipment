@@ -310,14 +310,16 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
     };
 
     /**
-     * Determine the type of text based on regex patterns.
-     * Below, we are defining a function that will take the above oject using and convert it into an array of key/values.
-     * So instead of having an object like this:
+     * Determine the type of text based on regex patterns. Below, we are defining a function that will take the above oject using
+     * and convert it into an array of key/values, so instead of having an object like this:
+     *
      * textType1: /regex1/
      * textType2: /regex2/
      * textType3: /regex3/
      * textType4: /regex4/
-     * We will have only the one matched key/value pair returned in the form of an array like this:
+     *
+     * we will have only the one matched key/value pair returned in the form of an array like this:
+     *
      * ['textTypeX', /regexX/]
      * ('X' representing whichever key/value pair was matched).
      * It's the Object.entries(regexes) function that does all that. Then, the find() function comes in.
