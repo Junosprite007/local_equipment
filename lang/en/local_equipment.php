@@ -536,7 +536,11 @@ $string['uploadresults'] = 'Upload Results';
 $string['newparentcreated'] = 'Created new parent: {$a}';
 $string['connotaddmorethanonepartnership'] = '{$a}: cannot add more than one partnership per family. Please remove the extra partnership ID.';
 $string['existingparentfound'] = 'Found existing parent: {$a}';
-$string['errorprocessingfamily'] = 'Error processing family.';
+$string['errorprocessingfamily'] = 'Error processing family. Please check make sure the family has all the required fields and is formatted correctly.';
+$string['errorprocessingparents'] = 'Error processing parents. Please check make sure each parent has all the required fields and is formatted correctly.';
+$string['errorprocessingstudents'] = 'Error processing students. Please check make sure each student has all the required fields and is formatted correctly.';
+$string['familyhasnousers'] = 'Family has no users.';
+$string['familyaddedsuccessfully'] = '{$a} family added successfully.';
 $string['errorprocessingline'] = 'Error processing line: {$a}';
 $string['onlyonenameprovided'] = 'Only one name provided: {$a}';
 $string['newstudentcreated'] = 'Created new student: {$a}';
@@ -555,6 +559,8 @@ $string['invalidcourseid'] = 'Invalid course ID: {$a}';
 $string['invalidpartnershipid'] = 'Invalid partnership ID: {$a}';
 $string['nopermission'] = 'You do not have permission to perform this action.';
 $string['studentneedsemail'] = '{$a} needs an email if there are no parents defined.';
+$string['studentneedscourse'] = '{$a} needs at least one course to enroll into.';
+$string['studentneedsname'] = '{$a} needs a name listed. You can also make sure the courses are listed last for each student.';
 $string['errorvalidatingfamilydata'] = 'Error validating family data:';
 $string['newfamily'] = 'Line {$a}: New family';
 $string['parentname'] = 'p_name: {$a}';
@@ -581,7 +587,14 @@ $string['useralreadyenrolled'] = '{$a->firstname} {$a->lastname} is already enro
 $string['userenrolled'] = '{$a->firstname} {$a->lastname} enrolled successfully in course {$a->coursename}.';
 $string['userassignedtootheruserwithrole'] = '{$a->parent} assigned as {$a->role} to {$a->student}';
 $string['rolealreadyassigned'] = '{$a->parent} is already assigned as {$a->role} to {$a->student}';
-
+$string['errorcreatinguser'] = 'For some reason, {$a->firstname} {$a->lastname} was not created but also was not found in the database.';
+$string['usernotaddedtofamily'] = '{$a->firstname} {$a->lastname} was not added to their family.';
+$string['accountcreatedsuccessfully'] = '{$a->firstname} {$a->lastname}\'s account was created successfully.';
+$string['accountalreadyexists'] = '{$a->firstname} {$a->lastname}\'s account already exists.';
+$string['nocoursesfoundforuser'] = 'No courses found for {$a->firstname} {$a->lastname}.';
+$string['familyaddedwithwarnings'] = 'The {$a} family was added with some warnings';
+$string['familyaddedwitherrors'] = 'The {$a} family was added with errors';
+$string['familyprocessingresults'] = 'Processing results for {$a} family';
 
 
 

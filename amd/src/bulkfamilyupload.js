@@ -728,6 +728,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
             let familyHTML = [];
             let partnershipAdded = false;
             let parentNum = 0;
+            let studentNum = 0;
 
             // Trim the shit out of it.
             const lines = family
@@ -824,7 +825,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             }
                             if (textType === 'student') {
                                 studentName = student[textType].data.firstName;
-                                // students.push({ ...student });
+                                students.push({ ...student });
                             }
 
                             if (textType === 'courses') {
@@ -857,10 +858,10 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                                 // }
 
                                 // students[studentNum] = { ...student };
-                                students.push({ ...student });
+                                students[studentNum] = { ...student };
                                 student = {};
                                 // studentName = '';
-                                // studentNum++;
+                                studentNum++;
                             }
                             break;
                         }
@@ -926,6 +927,25 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
             //         `<span class="pl-2 alert-danger">${errorMessage}</span>`
             //     );
             // }
+            if (parents.length !== parentNum) {
+                const errorMessage = await getString(
+                    'errorprocessingparents',
+                    'local_equipment'
+                );
+                familyHTML.unshift(
+                    `<span class="pl-2 alert-danger">${errorMessage}</span>`
+                );
+            }
+
+            if (students.length !== studentNum) {
+                const errorMessage = await getString(
+                    'errorprocessingstudents',
+                    'local_equipment'
+                );
+                familyHTML.unshift(
+                    `<span class="pl-2 alert-danger">${errorMessage}</span>`
+                );
+            }
 
             const familyData = { parents, students, partnership };
             const htmlOutput = `<div class="bg-light border p-3">${familyHTML.join(
@@ -982,4 +1002,20 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
             html: `<div class="alert alert-danger">${errorMessage}</div>`,
         };
     }
+};
+
+/**
+ * Rotate the symbol on click.
+ *
+ */
+export const rotateSymbol = () => {
+    const headers = document.querySelectorAll(
+        '.local-equipment-notification-header'
+    );
+    headers.forEach((header) => {
+        header.addEventListener('click', () => {
+            const expanded = header.getAttribute('aria-expanded') === 'true';
+            header.setAttribute('aria-expanded', !expanded);
+        });
+    });
 };

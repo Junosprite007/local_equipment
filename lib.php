@@ -2134,10 +2134,15 @@ function local_equipment_get_users_assigned_to_user($role, $userid) {
  * @param object $user The user to whom the role will be assigned (e.g., student)
  * @param object $relativeuser The user who will be assigned the role (e.g., parent)
  * @param string $role The 'shortname' of the role to assign
- * @return bool True if the role was newly assigned, false if it already existed
+ * @return stdClass returns an object of success, warning, and error messages.
  */
-function local_equipment_assign_role_relative_to_user(object $user, object $relativeuser, string $role): bool {
+function local_equipment_assign_role_relative_to_user(object $user, object $relativeuser, string $role): stdClass {
     global $DB;
+
+    $result = new stdClass();
+    $result->successes = [];
+    $result->warnings = [];
+    $result->errors = [];
 
     try {
         // Get role ID and user context
@@ -2153,37 +2158,31 @@ function local_equipment_assign_role_relative_to_user(object $user, object $rela
 
         if (!$existing) {
             role_assign($roleid, $relativeuser->id, $context->id, 'local_equipment');
-            \core\notification::add(
-                get_string(
-                    'userassignedtootheruserwithrole',
-                    'local_equipment',
-                    (object)[
-                        'parent' => fullname($relativeuser),
-                        'student' => fullname($user),
-                        'role' => $role
-                    ]
-                ),
-                \core\output\notification::NOTIFY_SUCCESS
+            $result->successes[] = get_string(
+                'userassignedtootheruserwithrole',
+                'local_equipment',
+                (object)[
+                    'parent' => fullname($relativeuser),
+                    'student' => fullname($user),
+                    'role' => $role
+                ]
             );
-            return true;
         } else {
-            \core\notification::add(
-                get_string(
-                    'rolealreadyassigned',
-                    'local_equipment',
-                    (object)[
-                        'parent' => fullname($relativeuser),
-                        'student' => fullname($user),
-                        'role' => $role
-                    ]
-                ),
-                \core\output\notification::NOTIFY_WARNING
+            $result->warnings[] = get_string(
+                'rolealreadyassigned',
+                'local_equipment',
+                (object)[
+                    'parent' => fullname($relativeuser),
+                    'student' => fullname($user),
+                    'role' => $role
+                ]
             );
-            return false;
         }
+        return $result;
     } catch (moodle_exception $e) {
-        debugging('Error in role assignment: ' . $e->getMessage(), DEBUG_DEVELOPER);
-        return false;
+        debugging($e->getMessage(), DEBUG_DEVELOPER);
+        $result->errors[] = $e->getMessage();
+        return $result;
     }
 }
 
@@ -2429,7 +2428,7 @@ function local_equipment_process_family_roles($families) {
  * @param int|null $roleid The ID of the role to assign (default student role if not specified)
  * @param int $timestart Timestamp when the enrollment should start (optional)
  * @param int $timeend Timestamp when the enrollment should end (optional)
- * @return array Array containing success status and any messages
+ * @return stdClass Object containing messages and course name.
  */
 function local_equipment_enrol_user_in_course(
     stdClass $user,
@@ -2437,14 +2436,14 @@ function local_equipment_enrol_user_in_course(
     ?int $roleid = null,
     int $timestart = 0,
     int $timeend = 0
-): array {
-    global $DB, $USER;
+): stdClass {
+    global $DB;
 
-    $result = [
-        'success' => false,
-        'message' => '',
-        'coursename' => '',
-    ];
+    $result = new stdClass();
+    $result->successes = [];
+    $result->warnings = [];
+    $result->errors = [];
+    $result->coursename = '';
 
     // Validate parameters.
     if ($user->id <= 0 || $courseid <= 0) {
@@ -2453,12 +2452,12 @@ function local_equipment_enrol_user_in_course(
 
     // Check the course exists and get its name.
     $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
-    $result['coursename'] = $course->fullname;
+    $result->coursename = $course->fullname;
     $coursecontext = context_course::instance($courseid);
     $msg = new stdClass();
     $msg->firstname = $user->firstname;
     $msg->lastname = $user->lastname;
-    $msg->coursename = $result['coursename'];
+    $msg->coursename = $result->coursename;
 
     // Verify current user has capability to enrol users.
     require_capability('enrol/manual:enrol', $coursecontext);
@@ -2467,7 +2466,7 @@ function local_equipment_enrol_user_in_course(
         // Get the manual enrolment plugin.
         $enrol = enrol_get_plugin('manual');
         if (empty($enrol)) {
-            $result['message'] = get_string('manualpluginnotinstalled', 'enrol_manual');
+            $result->errors[] = get_string('manualpluginnotinstalled', 'enrol_manual');
             return $result;
         }
 
@@ -2500,11 +2499,9 @@ function local_equipment_enrol_user_in_course(
                 ENROL_USER_ACTIVE
             );
 
-            $result['success'] = true;
-            $result['message'] = get_string('userenrolled', 'local_equipment', $msg);
+            $result->successes[] = get_string('userenrolled', 'local_equipment', $msg);
         } else {
-            $result['success'] = false;
-            $result['message'] = get_string(
+            $result->errors[] = get_string(
                 'useralreadyenrolled',
                 'local_equipment',
                 $msg
@@ -2513,9 +2510,8 @@ function local_equipment_enrol_user_in_course(
 
         return $result;
     } catch (moodle_exception $e) {
-        debugging('Error enrolling user: ' . $e->getMessage(), DEBUG_DEVELOPER);
-        $result['success'] = false;
-        $result['message'] = $e->getMessage();
+        debugging($e->getMessage(), DEBUG_DEVELOPER);
+        $result->errors[] = $e->getMessage();
         return $result;
     }
 }
@@ -2546,4 +2542,91 @@ function local_equipment_bulk_enrol_student(stdClass $user, array $courseids): a
     }
 
     return $results;
+}
+
+
+/**
+ * Generate HTML for family processing notifications.
+ *
+ * @param string $familyname The name of the family
+ * @param stdClass $messages Object containing success, warning, and error messages
+ * @param string $status Overall status (success, warning, or error)
+ * @return string HTML for the notification
+ */
+function local_equipment_generate_family_notification(string $familyname, stdClass $messages, string $status): string {
+    global $OUTPUT;
+
+    $notificationid = html_writer::random_id('family_notification_');
+
+    $data = new stdClass();
+    $data->familyname = $familyname;
+
+    // Get notification title based on status.
+    switch ($status) {
+        case 'success':
+            $title = get_string('familyaddedsuccessfully', 'local_equipment', $familyname);
+            $alert = 'alert-success';
+            break;
+        case 'warning':
+            $title = get_string('familyaddedwithwarnings', 'local_equipment', $familyname);
+            $alert = 'alert-warning';
+            break;
+        case 'error':
+            $title = get_string('familyaddedwitherrors', 'local_equipment', $familyname);
+            $alert = 'alert-danger';
+            break;
+        default:
+            $title = get_string('familyprocessingresults', 'local_equipment', $familyname);
+    }
+
+    $html = html_writer::start_div('local-equipment-family-notification mb-4 ' . $alert);
+
+    // Header attributes.
+    $headerattrs = [
+        'class' => "local-equipment-notification-header $status d-flex justify-content-between align-items-center p-3 rounded",
+        'data-toggle' => 'collapse',
+        'href' => "#$notificationid",
+        'role' => 'button',
+        'aria-expanded' => 'false',
+        'aria-controls' => $notificationid
+    ];
+
+    // Build header.
+    $html .= html_writer::start_div('', $headerattrs);
+    $html .= html_writer::tag('h4', $title, ['class' => 'mb-0 local-equipment-notification-title']);
+    $html .= html_writer::div(
+        html_writer::tag('i', '', ['class' => 'fa fa-chevron-right']),
+        'icon-container'
+    );
+    $html .= html_writer::end_div();
+
+    // Build content.
+    $html .= html_writer::start_div('collapse local-equipment-notification-content', ['id' => $notificationid]);
+    $html .= html_writer::start_div('content-wrapper p-3 border-left border-right border-bottom rounded-bottom');
+
+    // Add messages.
+    foreach (['successes', 'warnings', 'errors'] as $type) {
+        if (!empty($messages->$type)) {
+            foreach ($messages->$type as $message) {
+                switch ($type) {
+                    case 'successes':
+                        $notification = $OUTPUT->notification($message, 'success');
+                        break;
+                    case 'warnings':
+                        $notification = $OUTPUT->notification($message, 'warning');
+                        break;
+                    case 'errors':
+                        $notification = $OUTPUT->notification($message, 'error');
+                        break;
+                }
+                $html .= html_writer::div($notification);
+            }
+        }
+    }
+
+    $html .= html_writer::end_div(); // content-wrapper
+    $html .= html_writer::end_div(); // notification-content
+    $html .= html_writer::end_div(); // local-equipment-family-notification
+
+    return $html;
 }

@@ -38,6 +38,7 @@ $PAGE->set_url(new moodle_url('/local/equipment/addbulkfamilies.php'));
 $PAGE->set_title(get_string('bulkfamilyupload', 'local_equipment'));
 $PAGE->set_heading(get_string('bulkfamilyupload', 'local_equipment'));
 $PAGE->requires->js_call_amd('local_equipment/bulkfamilyupload', 'init');
+$PAGE->requires->js_call_amd('local_equipment/bulkfamilyupload', 'rotateSymbol');
 $PAGE->requires->js_call_amd('local_equipment/editpartnership_form', 'init');
 
 $form = new addbulkfamilies_form();
@@ -46,6 +47,14 @@ if ($form->is_cancelled()) {
     redirect(new moodle_url('/'));
 } else if ($data = $form->get_data()) {
     global $DB;
+
+
+    echo $OUTPUT->header();
+    echo $OUTPUT->heading(get_string('uploadresults', 'local_equipment'));
+
+    // Start a container for results
+    echo html_writer::start_div('local-equipment-upload-results');
+
     // Get the JSON content of the 'value' attribute from the hidden #id_familiesdata input element.
     $familiesdata = json_decode($data->familiesdata);
     $created_users = [];
@@ -57,6 +66,7 @@ if ($form->is_cancelled()) {
     $roleid_parent = $DB->get_field('role', 'id', ['shortname' => 'parent']);
     $roleid_student = $DB->get_field('role', 'id', ['shortname' => 'student']);
 
+
     try {
         // Start processing the families.
         foreach ($familiesdata as $familydata) {
@@ -66,12 +76,14 @@ if ($form->is_cancelled()) {
             $allcourses = [];
             $allstudentsofallparents = [];
             $messages = new stdClass();
-            $messages->success = [];
-            $messages->error = [];
+            $messages->successes = [];
+            $messages->warnings = [];
+            $messages->errors = [];
 
             // First pass of the parents to get all their current students
             foreach ($familydata->parents as $p) {
                 $userid = null;
+                $user = null;
                 $parent = new stdClass();
                 $parent->firstname = clean_param($p->name->data->firstName, PARAM_TEXT);
                 $parent->middlename = clean_param($p->name->data->middleName ?? '', PARAM_TEXT);
@@ -94,24 +106,33 @@ if ($form->is_cancelled()) {
 
                 $user = $DB->get_record('user', ['email' => $parent->email]);
 
-                // If the parent doesn't exist based on their email, we'll create a new user. If the do exist, we'll override the
+                // If the parent doesn't exist based on their email, we'll create a new user. If they do exist, we'll override the
                 // $parent user we made above to the matching user found in the DB.
                 if (!$user) {
                     // Add an entirely new parent user.
-                    $userid = user_create_user($parent, false, false);
+                    $userid = user_create_user($parent);
                 } else {
-                    // Update an existing parent user while keeping the previously created parent object as $parent_old before overriding it, just in case. Not sure if
-                    // we'll actually need it, though.
+                    // Update an existing parent user while keeping the previously created parent object as $parent_old before
+                    // overriding it, just in case. Not sure if we'll actually need it, though.
                     $parent_old = $parent;
                     $parent = $user;
                 }
+
                 if ($userid !== null) {
+                    // When $userid is set (in the previous if statement), it means a new user was created.
                     $parent->id = $userid;
                     $created_users[] = $parent;
-                } else {
+                    $messages->successes[] = get_string('accountcreatedsuccessfully', 'local_equipment', $parent);
+                } else if ($user) {
+                    $messages->warnings[] = get_string('accountalreadyexists', 'local_equipment', $parent);
                     $existing_users[] = $parent;
+                } else {
+                    // This will probably never run, but it's here just in case. If the user doesn't exist but somehow wasn't
+                    // created successfully, then there was an error, so don't add the parent to the family.
+                    $messages->errors[] = get_string('usernotaddedtofamily', 'local_equipment', $parent) . ' ' . get_string('errorcreatinguser', 'local_equipment', $parent);
+                    continue;
                 }
-                // By the end of the last iteration of this parent loop, $allstudentsofallparents should contain all students with
+                // By the end of the last iteration of this parents loop, $allstudentsofallparents should contain all students with
                 // unique IDs that have these parents already assigned to them. This is used later in this file.
                 $allstudentsofallparents = $allstudentsofallparents + local_equipment_get_students_of_parent($parent->id);
                 $parent->partnershipid = $familydata->partnership->data ?? '';
@@ -119,9 +140,10 @@ if ($form->is_cancelled()) {
             }
 
             // By this point, we should have all the parents in the current family, as well as any existing students they have, so
-            // now it's time to start processing the students listed in the form by the admin user.
+            // now it's time to start processing the students.
             foreach ($familydata->students as $s) {
                 $userid = null;
+                $user = null;
                 $student = new stdClass();
                 // Below, $s->student is basically the same as $p->name above; it just gets the student's name. At the time, I
                 // needed a different word 'name' when it came to the student, so I used 'student' instead. This can make things a
@@ -183,25 +205,87 @@ if ($form->is_cancelled()) {
                     $student = $user;
                 }
 
+                // if ($userid !== null) {
+                //     $student->id = $userid;
+                //     $created_users[] = $student;
+                // } else {
+                //     $existing_users[] = $student;
+                // }
+
                 if ($userid !== null) {
+                    // When $userid is set (in the previous if statement), it means a new user was created.
                     $student->id = $userid;
                     $created_users[] = $student;
-                } else {
+                    $messages->successes[] = get_string('accountcreatedsuccessfully', 'local_equipment', $student);
+                } else if ($user) {
+                    $messages->warnings[] = get_string('accountalreadyexists', 'local_equipment', $student);
                     $existing_users[] = $student;
+                } else {
+                    // This will probably never run, but it's here just in case. If the user doesn't exist but somehow wasn't
+                    // created successfully, then there was an error, so don't add the parent to the family.
+                    $messages->errors[] = get_string('usernotaddedtofamily', 'local_equipment', $student) . ' ' . get_string('errorcreatinguser', 'local_equipment', $student);
+                    continue;
                 }
 
+                // echo '<br />';
+                // echo '<br />';
+                // echo '<br />';
+                // echo '<pre>';
+                // var_dump('$s');
+                // var_dump($s);
+                // echo '</pre>';
+                // die();
                 $student->courses = $s->courses->data;
 
+                if (empty($student->courses)) {
+                    $messages->errors[] = get_string('nocoursesfoundforuser', 'local_equipment', $student);
+                } else {
+                    foreach ($student->courses as $c) {
+                        // Enroll the student into each course.
+                        // The $c variable is simply the course ID.
+                        $student->courses_results[$c] = local_equipment_enrol_user_in_course($student, $c, $roleid_student);
 
-                foreach ($student->courses as $c) {
-                    // Enroll the student into each course.
-                    $student->courses_results[$c] = local_equipment_enrol_user_in_course($student, $c, $roleid_student);
+                        // echo '<br />';
+                        // echo '<br />';
+                        // echo '<br />';
+                        // echo '<pre>';
+                        // var_dump('$student->courses_results[$c]');
+                        // var_dump($student->courses_results[$c]);
+                        // echo '</pre>';
+                        // echo '<br />';
+                        // echo '<br />';
+                        // echo '<br />';
+                        // echo '<pre>';
+                        // var_dump('$messages before: ');
+                        // // var_dump($messages->warnings + $student->courses_results[$c]->warnings);
+                        // // var_dump();
+                        // echo '</pre>';
+                        // $msg = new stdClass();
+                        // $msg->firstname = $student->firstname;
+                        // $msg->lastname = $student->lastname;
+                        // $msg->coursename = $student->courses_results[$c]->coursename;
+                        array_push($messages->successes, ...$student->courses_results[$c]->successes);
+                        array_push($messages->warnings, ...$student->courses_results[$c]->warnings);
+                        array_push($messages->errors, ...$student->courses_results[$c]->errors);
+
+                        // echo '<br />';
+                        // echo '<br />';
+                        // echo '<br />';
+                        // echo '<pre>';
+                        // var_dump('$messages after: ');
+                        // var_dump($messages);
+                        // echo '</pre>';
+                    }
+                    $allcourses = array_merge($allcourses, $student->courses);
                 }
-                $allcourses = array_merge($allcourses, $student->courses);
 
                 // Assign each parent to the current student.
                 foreach ($parents as $p) {
                     $userassigned = local_equipment_assign_role_relative_to_user($student, $p, 'parent');
+
+                    array_push($messages->successes, ...$userassigned->successes);
+                    array_push($messages->warnings, ...$userassigned->warnings);
+                    array_push($messages->errors, ...$userassigned->errors);
                 }
                 $student->partnershipid = $familydata->partnership->data ?? '';
                 $students[] = $student;
@@ -223,11 +307,60 @@ if ($form->is_cancelled()) {
                         $c,
                         $roleid_parent
                     );
+                    array_push($messages->successes, ...$p->courses_results[$c]->successes);
+                    array_push($messages->warnings, ...$p->courses_results[$c]->warnings);
+                    array_push($messages->errors, ...$p->courses_results[$c]->errors);
                 }
             }
 
             // Poopulate the $families array with the current family. HAH. Poop...
             $families[] = $family;
+
+            // This is where we create or update the local_equipment_user
+            // $familyname = '';
+
+            // $familyhasparents = count($family->parents) > 0;
+            // $familyhasstudents = count($family->students) > 0;
+            // $familyhasusers = $familyhasparents || $familyhasstudents;
+
+            // if ($familyhasusers && !$familyhasstudents) {
+            //     $familyname = $family->parents[0]->lastname;
+            //     $messages->successes[] = get_string('familyaddedsuccessfully', 'local_equipment', $familyname);
+            // } else if ($familyhasusers) {
+            //     $familyname = $family->students[0]->lastname;
+            //     $messages->successes[] = get_string('familyaddedsuccessfully', 'local_equipment', $familyname);
+            // } else {
+            //     $messages->errors[] = ();
+            // }
+
+            // Determine overall status
+            $status = 'success';
+            if (!empty($messages->errors)) {
+                $status = 'error';
+            } else if (!empty($messages->warnings)) {
+                $status = 'warning';
+            }
+
+            // Get family name for the notification
+            $familyname = '';
+            if (count($family->parents) > 0) {
+                $familyname = $family->parents[0]->lastname;
+            } else if (count($family->students) > 0) {
+                $familyname = $family->students[0]->lastname;
+            } else {
+                throw new moodle_exception('familyhasnousers', 'local_equipment');
+            }
+
+
+            // echo '<br />';
+            // echo '<br />';
+            // echo '<br />';
+            // echo '<pre>';
+            // var_dump($messages);
+            // echo '</pre>';
+            // die();
+            // Generate and output the notification
+            echo local_equipment_generate_family_notification($familyname, $messages, $status);
         }
 
         $allusers = array_merge($created_users, $existing_users);
@@ -300,14 +433,15 @@ if ($form->is_cancelled()) {
         // Errors will be caught here. In general, we'll need to be displaying success and non-fatal warning messages to the admin
         // user as the form is processing. Even if there is an error, the script should continue to process the rest of the family
         // in question as well as the rest of the families in the form.
+        echo $OUTPUT->notification($e->getMessage(), 'error');
     }
 
-    echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('uploadresults', 'local_equipment'));
+    echo html_writer::end_div(); // local-equipment-upload-results container
 
-    // We should display the results/notifications here.
+    // Add continue button that returns to the previous page or a specific destination
+    $continueurl = new moodle_url('/local/equipment/addbulkfamilies.php'); // Or whatever destination URL you prefer
+    echo $OUTPUT->continue_button($continueurl);
 
-    $form->display();
     echo $OUTPUT->footer();
 } else {
     echo $OUTPUT->header();
