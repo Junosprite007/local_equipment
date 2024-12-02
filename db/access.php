@@ -101,4 +101,16 @@ $capabilities = [
             'manager' => CAP_ALLOW,
         ],
     ],
+    'local/equipment:receivewelcomemessage' => [
+        'captype' => 'read',  // Type of capability
+        'contextlevel' => CONTEXT_SYSTEM,  // Context level where this capability is checked
+        'archetypes' => [
+            'user' => CAP_ALLOW,  // Allow all users to receive welcome messages
+            'student' => CAP_ALLOW,
+            'teacher' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
+        ],
+        'clonepermissionsfrom' => 'moodle/course:view'  // Inherit permissions from this capability
+    ],
 ];

@@ -221,18 +221,65 @@ if ($hassiteconfig) {
     );
 
     // Add the manage virtual course consent (vcc) form page.
-    $ADMIN->add('local_equipment', new admin_externalpage(
+    $ADMIN->add($component, new admin_externalpage(
         'local_equipment_vccsubmissions',
         new lang_string('managevccsubmissions', 'local_equipment'),
         new moodle_url('/local/equipment/vccsubmissions.php')
     ));
 
     // Add the 'Add bulk families' form page.
-    $ADMIN->add('local_equipment', new admin_externalpage(
+    $ADMIN->add($component, new admin_externalpage(
         'local_equipment_addbulkfamilies',
         new lang_string('addbulkfamilies', 'local_equipment'),
         new moodle_url('/local/equipment/addbulkfamilies.php')
     ));
+
+    // settings.php
+    // $ADMIN->add($component, new admin_settingpage("{$component}_notifications", get_string('notificationsettings', 'local_equipment')));
+
+    $settings = new admin_settingpage("{$component}_notifications", get_string('notificationsettings', 'local_equipment'));
+
+    // Parent notification settings
+    $settings->add(new admin_setting_configcheckbox(
+        'local_equipment/notify_parents',
+        get_string('notifyparents', 'local_equipment'),
+        get_string('notifyparents_desc', 'local_equipment'),
+        1
+    ));
+
+    // Student notification settings
+    $settings->add(new admin_setting_configcheckbox(
+        'local_equipment/notify_students',
+        get_string('notifystudents', 'local_equipment'),
+        get_string('notifystudents_desc', 'local_equipment'),
+        1
+    ));
+
+    // Message sender setting
+    $options = [
+        ENROL_SEND_EMAIL_FROM_COURSE_CONTACT => get_string(
+            'fromcoursecontact',
+            'local_equipment'
+        ),
+        ENROL_SEND_EMAIL_FROM_KEY_HOLDER => get_string('fromkeyholder', 'local_equipment'),
+        ENROL_SEND_EMAIL_FROM_NOREPLY => get_string(
+            'fromnoreply',
+            'local_equipment'
+        )
+    ];
+
+    $settings->add(new admin_setting_configselect(
+        'local_equipment/messagesender',
+        get_string('messagesender', 'local_equipment'),
+        get_string('messagesender_desc', 'local_equipment'),
+        ENROL_SEND_EMAIL_FROM_COURSE_CONTACT,  // default value
+        $options
+    ));
+
+    $ADMIN->add(
+        $component,
+        $settings
+    );
 
     // Virtual course consent (vcc) submissions should not be limited to managers. All users will have access to this page for now.
     // $ADMIN->add(
@@ -245,7 +292,7 @@ if ($hassiteconfig) {
     // );
 
     $ADMIN->add('server', new admin_externalpage(
-        'local_equipment_testoutgoingtextconf',
+        "{$component}_testoutgoingtextconf",
         new lang_string('testoutgoingtextconf', 'local_equipment'),
         new moodle_url('/local/equipment/phonecommunication/testoutgoingtextconf.php'),
         'moodle/site:config',

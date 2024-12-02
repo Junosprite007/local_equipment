@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * The log in observer for the Equipment plugin.
+ * Event observers for the Equipment plugin.
  *
  * @package     local_equipment
  * @copyright   2024 onward Joshua Kirby <josh@funlearningcompany.com>
@@ -31,5 +31,11 @@ $observers = [
         'callback' => 'local_equipment_vcc_phone_verified',
         'includefile' => '/local/equipment/lib.php',
         'internal' => false,
+    ],
+    [
+        'eventname' => '\core\event\user_enrolment_created',
+        'callback' => '\local_equipment\observer::handle_enrolment_created',
+        'priority' => 9999, // Higher priority to run before enrol_manual processes it
+        'internal' => false
     ],
 ];

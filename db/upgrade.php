@@ -717,12 +717,25 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024110101, 'local', 'equipment');
     }
 
-    // if ($oldversion < 2024110709) {
-    //     // if (!local_equipment_create_partnership_profile_field()) {
-    //     //     return false;
-    //     // }
-    //     upgrade_plugin_savepoint(true, 2024110709, 'local', 'equipment');
-    // }
+    if ($oldversion < 2024112100) {
+        // Ensure capability exists
+        $capabilities = [
+            'local/equipment:receivewelcomemessage' => [
+                'riskbitmask' => RISK_PERSONAL,
+                'captype' => 'read',
+                'contextlevel' => CONTEXT_SYSTEM,
+                'archetypes' => [
+                    'user' => CAP_ALLOW,
+                    'student' => CAP_ALLOW,
+                    'teacher' => CAP_ALLOW,
+                ],
+            ],
+        ];
+
+        // Update capabilities
+        update_capabilities('local_equipment', $capabilities);
+        upgrade_plugin_savepoint(true, 2024112100, 'local', 'equipment');
+    }
 
     return true;
 }

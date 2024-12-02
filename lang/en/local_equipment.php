@@ -518,20 +518,63 @@ $string['strftimetime24'] = '%H:%M';
 
 $string['addbulkfamilies'] = 'Add bulk families';
 $string['bulkfamilyupload'] = 'Bulk family upload and enroll';
-$string['familiesinputdata'] = 'Families data';
-$string['familiesinputdata_help'] = 'Enter family data in the following format:
-Parent Name
-parent@email.com
-Phone Number (optional)
-Partnership ID
-* Student Name
-student@email.com (optional)
-Phone Number (optional)
-** courseid1, courseid2, courseid3, etc.
-* Next Student Name (if applicable)
-...
 
-Use a blank line to separate families.';
+$string['familiesinputdata'] = 'Families data';
+$string['familiesinputdata_help'] = 'Be sure to format your text input to match the format of the template below:<br /><br />
+Parent 1 Name <br />
+555-555-5555 <br />
+parent1email@domain.com <br />
+Parent 2 Name <br />
+555-555-5555 <br />
+parent2email@domain.com <br />
+1
+* Student 1 Name <br />
+555-555-5555 <br />
+student1email@domain.com <br />
+** courseid1, courseid2, courseid3, etc. <br />
+* Student 2 Name <br />
+555-555-5555 <br />
+student2email@domain.com <br />
+** courseid1, courseid2, courseid3, etc. <br />
+<br />
+<br />
+Parent 3 Name <br />
+555-555-5555 <br />
+parent3email@domain.com <br />
+Parent 4 Name <br />
+555-555-5555 <br />
+parent4email@domain.com <br />
+2
+* Student 3 Name <br />
+555-555-5555 <br />
+student3email@domain.com <br />
+** courseid1, courseid2, courseid3, etc. <br />
+* Student 4 Name <br />
+555-555-5555 <br />
+student4email@domain.com <br />
+** courseid1, courseid2, courseid3, etc. <br />
+<br />
+Here are the formatting rules: <br />
+- Each family must be separated by a blank line. <br />
+- You can have an arbitrary number of parents or students. <br />
+- The family\'s partnership ID must be listed at the end of the parent list. <br />
+- If the partnership ID is not listed, the family will not be assigned to any partnership. <br />
+- Phone numbers are optional but can be written in most common formats. <br />
+- Parents must have at least a name and email. <br />
+- Parents without students will be added as normal users, not associated with any student or course. <br />
+- Emails should be the final thing listed for a given parent. <br />
+- Student names must start with a single asterisk character (*). <br />
+- Students with at least one parent must have at least a first name and a list of courses. <br />
+- If no last name is provided for a student, the last name of the first listed parent will be used. <br />
+- Students without parents must have both a first AND last name, an email, and a list of courses. <br />
+- Students only need an email listed if there are no parents defined. <br />
+- If no email is listed for a student, one will be generated automatically based on the first listed parent\'s email <br />
+- A generated student email will not be used if the parent already has a student by the same name. <br />
+- A list of courses must start with two asterisk characters (**). <br />
+- The list of courses should be the final thing listed for a given student. <br />
+- You can add as many families as you want, but the more you add, the longer it will take the data to process. <br />
+- This form will create accounts if they do not already exist (based on the user\'s email), enroll students in their courses, assign parents to their students, and enroll parents in all the courses their students were enrolled in.
+';
 $string['uploadresults'] = 'Upload Results';
 $string['newparentcreated'] = 'Created new parent: {$a}';
 $string['connotaddmorethanonepartnership'] = '{$a}: cannot add more than one partnership per family. Please remove the extra partnership ID.';
@@ -550,7 +593,7 @@ $string['parentneedsemail'] = 'The parent, {$a}, needs an email';
 $string['parentroleassigned'] = 'Assigned parent role to: {$a}';
 $string['studentroleassigned'] = 'Assigned student role to: {$a}';
 $string['thesecoursesneedastudent'] = 'These courses need a student: {$a}';
-$string['userenrolled'] = 'Enrolled user {$a->user} in course {$a->course}';
+$string['userenrolled'] = 'Enrolled user {$a->firstname} {$a->firstname} in course {$a->coursename}';
 $string['invalidformat'] = 'Invalid data format on line {$a}';
 $string['invalidinput'] = 'Invalid input: {$a}';
 $string['processingcompleted'] = 'Processing completed. {$a->created} users created, {$a->updated} users updated.';
@@ -595,7 +638,82 @@ $string['nocoursesfoundforuser'] = 'No courses found for {$a->firstname} {$a->la
 $string['familyaddedwithwarnings'] = 'The {$a} family was added with some warnings';
 $string['familyaddedwitherrors'] = 'The {$a} family was added with errors';
 $string['familyprocessingresults'] = 'Processing results for {$a} family';
+$string['notificationsettings'] = 'Notification settings';
+$string['notificationsettings'] = 'Notification settings';
+$string['notifyparents'] = 'Notify parents';
+$string['notifyparents_desc'] = 'Send welcome messages to parents when they are given access to their child\'s courses.';
+$string['notifystudents'] = 'Notify students';
+$string['notifystudents_desc'] = 'Send welcome messages to students when they are enrolled in courses.';
+$string['studentwelcomesubject'] = 'Welcome to {$a}';
+$string['parentwelcomesubject'] = 'Parent access granted for {$a}';
+$string['messagesender'] = 'Send welcome message from';
+$string['messagesender_desc'] = 'When sending course welcome messages, who should the message appear to be from?';
+$string['fromcoursecontact'] = 'From the course contact';
+$string['fromkeyholder'] = 'From the key holder';
+$string['fromnoreply'] = 'From the no-reply address';
+$string['welcomemessagesenttouserforcourse'] = 'Welcome message sent to {$a->firstname} {$a->lastname} for course {$a->coursename}.';
+$string['welcomemessagenotsenttouserforcourse'] = 'Welcome message not sent to {$a->firstname} {$a->lastname} for course {$a->coursename}.';
+$string['receivewelcomemessage'] = 'Receive course welcome messages';
+$string['receivewelcomemessagedesc'] = 'Receive welcome messages when enrolled in a course';
+$string['studentwelcomemessage'] = 'Hi {$a->firstname},
 
+Welcome to {$a->coursename}! You have been enrolled as a {$a->roletype}.
 
+To access your course, visit: {$a->courseurl}
+
+Best regards,
+{$a->sitename} Team';
+
+$string['parentwelcomemessage'] =
+    'Hi {$a->firstname},
+
+You have been granted parent access to {$a->coursename}.
+
+You can monitor your student\'s progress at: {$a->courseurl}
+
+Best regards,
+{$a->sitename} Team';
+
+$string['usernotenrolled_coursenotvisible'] = '{$a->firstname} {$a->lastname} was not enrolled in {$a->coursename} because the course is set to not visible.';
+$string['usernotenrolled_courseended'] = '{$a->firstname} {$a->lastname} was not enrolled in {$a->coursename} because the course has ended.';
+$string['usernotenrolled_enrolmentnotstarted'] = '{$a->firstname} {$a->lastname} was not enrolled in {$a->coursename} because enrolment hasn\'t started yet.';
+$string['usernotenrolled_enrolmentended'] = '{$a->firstname} {$a->lastname} was not enrolled in {$a->coursename} because enrolment has ended.';
 
 $string['welcomemessage'] = 'Hey there, {$a}!';
+
+// Notification settings
+$string['notificationsettings'] = 'Notification settings';
+$string['notifyparents'] = 'Notify parents';
+$string['notifyparents_desc'] = 'Send welcome messages to parents when they are given access to their child\'s courses.';
+$string['notifystudents'] = 'Notify students';
+$string['notifystudents_desc'] = 'Send welcome messages to students when they are enrolled in courses.';
+$string['messagesender'] = 'Send welcome message from';
+$string['messagesender_desc'] = 'When sending course welcome messages, who should the message appear to be from?';
+$string['fromcoursecontact'] = 'From the course contact';
+$string['fromkeyholder'] = 'From the key holder';
+$string['fromnoreply'] = 'From the no-reply address';
+
+// Welcome messages
+$string['studentwelcomesubject'] = 'Welcome to {$a}';
+$string['parentwelcomesubject'] = 'Parent access granted for {$a}';
+$string['studentwelcomemessage'] = 'Hi {$a->firstname},
+
+Welcome to {$a->coursename}! You have been enrolled as a {$a->roletype}.
+
+To access your course, visit: {$a->courseurl}
+
+Best regards,
+{$a->sitename} Team';
+
+$string['parentwelcomemessage'] = 'Hi {$a->firstname},
+
+You have been granted parent access to {$a->coursename}.
+
+You can monitor your student\'s progress at: {$a->courseurl}
+
+Best regards,
+{$a->sitename} Team';
+
+$string['messageprovider:coursewelcome'] = 'Course welcome notifications';
+$string['coursewelcome'] = 'Course welcome message';
+$string['coursewelcome_help'] = 'Notifications sent to users when they are enrolled in a course through the Equipment plugin.';

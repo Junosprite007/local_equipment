@@ -423,10 +423,10 @@ if ($form->is_cancelled()) {
         }
 
         // For development purposes, we can delete all the users we just created if we want.
-        // var_dump('Deleting users...');
-        // foreach ($allusers as $u) {
-        //     user_delete_user($u);
-        // }
+        var_dump('Deleting users...');
+        foreach ($allusers as $u) {
+            user_delete_user($u);
+        }
         // die();
 
     } catch (moodle_exception $e) {

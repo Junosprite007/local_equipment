@@ -94,6 +94,12 @@ class addbulkfamilies_form extends moodleform {
         $mform->addElement('select', 'partnershipcourselist', get_string('partnershipcourselist', 'local_equipment'), $partnershipcategories->partnershipids_partnershipnames);
         $mform->setType('partnershipcourselist', PARAM_RAW);
 
+        // Add a description and a template for how administrators should format their text input.
+        // $mform->addElement('html', '<div class="local-equipment-bulkfamilyupload-description">');
+        // $mform->addElement('html', '<p>' . get_string('bulkfamilyupload_desc', 'local_equipment') . '</p>');
+        // $mform->addElement('html', '<p>' . get_string('bulkfamilyupload_template', 'local_equipment') . '</p>');
+        // $mform->addElement('html', '</div>');
+
         $buttonarray = array();
         $buttonarray[] = &$mform->createElement('button', 'preprocess', get_string('preprocess', 'local_equipment'), ['class' => 'preprocessbutton']);
         $buttonarray[] = &$mform->createElement('button', 'shownexterror', get_string('shownexterror', 'local_equipment'), ['disabled' => true, 'class' => 'shownexterror-container']);
@@ -117,6 +123,7 @@ class addbulkfamilies_form extends moodleform {
         );
         $mform->setType('familiesinputdata', PARAM_RAW);
         $mform->addRule('familiesinputdata', null, 'required', null, 'client');
+        $mform->addHelpButton('familiesinputdata', 'familiesinputdata', 'local_equipment');
 
         // Add the pre-process div to show the output of the pre-processed text input. This is where errors are shown. This div
         // determines whether or not the "Upload & enroll" button is enabled.
