@@ -2180,7 +2180,7 @@ function local_equipment_assign_role_relative_to_user(object $user, object $rela
         }
         return $result;
     } catch (moodle_exception $e) {
-        debugging($e->getMessage(), DEBUG_DEVELOPER);
+        // debugging($e->getMessage(), DEBUG_DEVELOPER);
         $result->errors[] = $e->getMessage();
         return $result;
     }
@@ -2385,7 +2385,7 @@ function local_equipment_assign_family_roles($family) {
                     'student' => $student->id,
                     'error' => $e->getMessage()
                 ];
-                debugging('Error assigning role: ' . $e->getMessage(), DEBUG_DEVELOPER);
+                // debugging('Error assigning role: ' . $e->getMessage(), DEBUG_DEVELOPER);
             }
         }
     }
@@ -2523,11 +2523,9 @@ function local_equipment_enrol_user_in_course(
                 }
             }
         } catch (\Throwable $e) {
-            debugging('Enrollment process error: ' . $e->getMessage(), DEBUG_DEVELOPER);
             $result->errors[] = $e->getMessage();
         }
     } catch (\Throwable $e) {
-        debugging('Enrollment setup error: ' . $e->getMessage(), DEBUG_DEVELOPER);
         $result->errors[] = $e->getMessage();
     } finally {
         // Always clean up our session flag
