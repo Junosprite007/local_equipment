@@ -39,6 +39,7 @@ $string['address'] = 'Address';
 $string['addressee'] = 'Addressee';
 $string['agreements'] = 'Agreements';
 $string['agreements_desc'] = 'List of agreements that users must accept in order to use this equipment checkout service.';
+$string['and'] = 'and';
 $string['apartment'] = 'Apartment';
 $string['billing_apartment'] = 'Apartment';
 $string['mailing_apartment'] = 'Apartment';
@@ -634,50 +635,35 @@ $string['errorcreatinguser'] = 'For some reason, {$a->firstname} {$a->lastname} 
 $string['usernotaddedtofamily'] = '{$a->firstname} {$a->lastname} was not added to their family.';
 $string['accountcreatedsuccessfully'] = '{$a->firstname} {$a->lastname}\'s account was created successfully.';
 $string['accountalreadyexists'] = '{$a->firstname} {$a->lastname}\'s account already exists.';
+$string['accountalreadyexistsbutwithdifferentname'] = 'An account already exists with the email {$a->email}, but it\'s under a different name. You entered {$a->firstname} {$a->lastname}, but we\'re keeping the existing account\'s name: {$a->otherfirst} {$a->otherlast}. Changing the user\'s name must be done within their preferences.';
 $string['nocoursesfoundforuser'] = 'No courses found for {$a->firstname} {$a->lastname}.';
 $string['familyaddedwithwarnings'] = 'The {$a} family was added with some warnings';
 $string['familyaddedwitherrors'] = 'The {$a} family was added with errors';
 $string['familyprocessingresults'] = 'Processing results for {$a} family';
-$string['notificationsettings'] = 'Notification settings';
-$string['notificationsettings'] = 'Notification settings';
-$string['notifyparents'] = 'Notify parents';
-$string['notifyparents_desc'] = 'Send welcome messages to parents when they are given access to their child\'s courses.';
-$string['notifystudents'] = 'Notify students';
-$string['notifystudents_desc'] = 'Send welcome messages to students when they are enrolled in courses.';
-$string['studentwelcomesubject'] = 'Welcome to {$a}';
-$string['parentwelcomesubject'] = 'Parent access granted for {$a}';
-$string['messagesender'] = 'Send welcome message from';
-$string['messagesender_desc'] = 'When sending course welcome messages, who should the message appear to be from?';
-$string['fromcoursecontact'] = 'From the course contact';
-$string['fromkeyholder'] = 'From the key holder';
-$string['fromnoreply'] = 'From the no-reply address';
-$string['welcomemessagesenttouserforcourse'] = 'Welcome message sent to {$a->firstname} {$a->lastname} for course {$a->coursename}.';
-$string['welcomemessagenotsenttouserforcourse'] = 'Welcome message not sent to {$a->firstname} {$a->lastname} for course {$a->coursename}.';
-$string['receivewelcomemessage'] = 'Receive course welcome messages';
-$string['receivewelcomemessagedesc'] = 'Receive welcome messages when enrolled in a course';
-$string['studentwelcomemessage'] = 'Hi {$a->firstname},
+$string['enrollmentinstancedoesnotexist'] = 'Enrollment instance does not exist, so we\'re creating it.';
 
-Welcome to {$a->coursename}! You have been enrolled as a {$a->roletype}.
+$string['welcomemessage_user'] = 'To {$a->user}, welcome from {$a->sitename}!';
+$string['parentenrollmessage_partnership'] = 'One or more of your students ({$a->students}) have been enrolled in FLIP via {$a->partnership}, and they are taking the following courses:<br /><br />
+{$a->courses}.
 
-To access your course, visit: {$a->courseurl}
+<br /><br />
 
-Best regards,
-{$a->sitename} Team';
+You have been assigned as a parent to each of the above students. You can view your students or their courses by clicking on the names&mdash;right within this email! Remember, you\'ll need to login to you personal {$a->sitename} account to be able to view everything. <br /><br />
 
-$string['parentwelcomemessage'] =
-    'Hi {$a->firstname},
+Please contact the course instructors or your partnership coordinator with any questions. We\'re excited to have {$a->students} learning with us!
+';
+$string['parentenrollmessage'] = 'One or more of your students ({$a->students}) have been enrolled in FLIP, and they are taking the following courses:<br /><br />
+{$a->courses}.
 
-You have been granted parent access to {$a->coursename}.
+<br /><br />
 
-You can monitor your student\'s progress at: {$a->courseurl}
+You have been assigned as a parent to each of the above students. You can view your students or their courses by clicking on the names&mdash;right within this email! Remember, you\'ll need to login to you personal {$a->sitename} account to be able to view everything. <br /><br />
 
-Best regards,
-{$a->sitename} Team';
+Please contact the course instructors with any questions. We\'re excited to have {$a->students} learning with us!
+';
 
-$string['usernotenrolled_coursenotvisible'] = '{$a->firstname} {$a->lastname} was not enrolled in {$a->coursename} because the course is set to not visible.';
-$string['usernotenrolled_courseended'] = '{$a->firstname} {$a->lastname} was not enrolled in {$a->coursename} because the course has ended.';
-$string['usernotenrolled_enrolmentnotstarted'] = '{$a->firstname} {$a->lastname} was not enrolled in {$a->coursename} because enrolment hasn\'t started yet.';
-$string['usernotenrolled_enrolmentended'] = '{$a->firstname} {$a->lastname} was not enrolled in {$a->coursename} because enrolment has ended.';
+
+
 
 $string['welcomemessage'] = 'Hey there, {$a}!';
 
