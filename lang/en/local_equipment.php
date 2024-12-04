@@ -663,27 +663,7 @@ Please contact the course instructors with any questions. We\'re excited to have
 ';
 
 
-Welcome to {$a->coursename}! You have been enrolled as a {$a->roletype}.
 
-To access your course, visit: {$a->courseurl}
-
-Best regards,
-{$a->sitename} Team';
-
-$string['parentwelcomemessage'] =
-    'Hi {$a->firstname},
-
-You have been granted parent access to {$a->coursename}.
-
-You can monitor your student\'s progress at: {$a->courseurl}
-
-Best regards,
-{$a->sitename} Team';
-
-$string['usernotenrolled_coursenotvisible'] = '{$a->firstname} {$a->lastname} was not enrolled in {$a->coursename} because the course is set to not visible.';
-$string['usernotenrolled_courseended'] = '{$a->firstname} {$a->lastname} was not enrolled in {$a->coursename} because the course has ended.';
-$string['usernotenrolled_enrolmentnotstarted'] = '{$a->firstname} {$a->lastname} was not enrolled in {$a->coursename} because enrolment hasn\'t started yet.';
-$string['usernotenrolled_enrolmentended'] = '{$a->firstname} {$a->lastname} was not enrolled in {$a->coursename} because enrolment has ended.';
 
 $string['welcomemessage'] = 'Hey there, {$a}!';
 

@@ -419,8 +419,8 @@ function local_equipment_parse_phone_number($phonenumber, $country = 'US') {
     if (($phonenumber == '')) {
         $parsedphoneobj->errors[] = get_string('phonedoesnotexist', 'local_equipment');
     } else {
-    // Remove commonly used characters from the phone number that are not numbers: ().-+ and the white space char.
-    $parsedphoneobj->phone = preg_replace("/[\(\)\-\s+\.]/", "", $phonenumber);
+        // Remove commonly used characters from the phone number that are not numbers: ().-+ and the white space char.
+        $parsedphoneobj->phone = preg_replace("/[\(\)\-\s+\.]/", "", $phonenumber);
 
         try {
             if (!ctype_digit($parsedphoneobj->phone)) {
@@ -456,7 +456,6 @@ function local_equipment_parse_phone_number($phonenumber, $country = 'US') {
     //     }
     // }
     return $parsedphoneobj;
-
 }
 
 /**
@@ -2450,6 +2449,30 @@ function local_equipment_enrol_user_in_course(
     $result->errors = [];
     $result->coursename = '';
 
+    // Validate parameters.
+    if ($user->id <= 0 || $courseid <= 0) {
+        throw new coding_exception('Invalid user or course ID provided');
+    }
+
+    // Get course and context - we need these for various checks
+    $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
+    $coursecontext = \context_course::instance($courseid);
+
+    // Store course name for messages
+    $result->coursename = $course->fullname;
+
+    // Verify permissions
+    require_capability('enrol/manual:enrol', $coursecontext);
+
+    // Create message object for string parameters
+    $msg = new stdClass();
+    $msg->firstname = $user->firstname;
+    $msg->lastname = $user->lastname;
+    $msg->coursename = $result->coursename;
+
+    // Verify current user has capability to enrol users.
+    require_capability('enrol/manual:enrol', $coursecontext);
+
     try {
         // Get the manual enrolment plugin.
         $instance = $DB->get_record('enrol', [
@@ -2483,8 +2506,11 @@ function local_equipment_enrol_user_in_course(
             $roleid = $studentrole->id;
         }
 
-        // Set bulk enrollment flag for hooks system
-        $SESSION->local_equipment_bulk_enrollment = true;
+        // Check if user is already enrolled.
+        if (!is_enrolled($coursecontext, $user->id)) {
+            // Set up enrollment parameters.
+            $timestart = ($timestart > 0) ? $timestart : time();
+            $timeend = ($timeend > 0) ? $timeend : 0;
 
             // Enrol the user.
             $enrolplugin->enrol_user(
@@ -2509,43 +2535,9 @@ function local_equipment_enrol_user_in_course(
     } catch (moodle_exception $e) {
         // debugging($e->getMessage(), DEBUG_DEVELOPER);
         $result->errors[] = $e->getMessage();
-    } finally {
-        // Always clean up our session flag
-        unset($SESSION->local_equipment_bulk_enrollment);
+        return $result;
     }
-
-    return $result;
 }
-
-// /**
-//  * Helper function to enroll a user in a course using manual enrollment method.
-//  *
-//  * @param stdClass $user The user object to enroll
-//  * @param int $courseid The ID of the course to enroll into
-//  * @param int|null $roleid The ID of the role to assign (default student role if not specified)
-//  * @param int $timestart Timestamp when the enrollment should start (optional)
-//  * @param int $timeend Timestamp when the enrollment should end (optional)
-//  * @return stdClass Object containing messages and course name.
-//  */
-// function local_equipment_enrol_user_in_course(
-//     stdClass $user,
-//     int $courseid,
-//     ?int $roleid = null,
-//     int $timestart = 0,
-//     int $timeend = 0
-// ): stdClass {
-//     try {
-//         $enroller = new \local_equipment\enroller($courseid);
-//         return $enroller->enrol_user($user, $roleid, $timestart, $timeend);
-//     } catch (\Throwable $e) {
-//         $result = new stdClass();
-//         $result->success = [];
-//         $result->warnings = [];
-//         $result->errors = [$e->getMessage()];
-//         $result->coursename = '';
-//         return $result;
-//     }
-// }
 
 /**
  * Bulk enroll a student in multiple courses.
