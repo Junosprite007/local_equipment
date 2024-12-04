@@ -23,6 +23,7 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core\plugininfo\local;
 use media_videojs\external\get_language;
 
 defined('MOODLE_INTERNAL') || die();
@@ -2579,8 +2580,22 @@ function local_equipment_bulk_enrol_student(stdClass $user, array $courseids): a
  * @param bool $notifyuser Whether to send notification (from plugin settings)
  * @return object Object containing success/error information
  */
-function local_equipment_send_enrollment_message($user, $coursenames, $roletype, $partnershipid = null, $usersofuser = null, $notifyuser = true) {
+function local_equipment_send_enrollment_message($user, $coursenames, $roletype = 'generic', $partnershipid = null, $usersofuser = null, $notifyuser = true) {
     global $SITE, $DB;
+
+
+    $result = new stdClass();
+    $result->success = false;
+    $result->successes = [];
+    $result->warnings = [];
+    $result->errors = [];
+
+    // return $result; // delete this line when done testing.
+
+    if (empty($coursenames)) {
+        $result->warnings[] = get_string('notsendingemailtouser_nocourses', 'local_equipment', $user);
+        return $result;
+    }
 
     // Site name, parent name, student name(s), course name(s),
     $partnership = $DB->get_field('local_equipment_partnership', 'name', ['id' => $partnershipid]);
@@ -2598,7 +2613,6 @@ function local_equipment_send_enrollment_message($user, $coursenames, $roletype,
 
     // $coursenames[sizeof($coursenames) - 1] = 'and ' . $coursenames[sizeof($coursenames) - 1];
     // $coursenames = implode(', ', $coursenames);
-    $coursenames = implode('<br />', $coursenames);
     // echo $coursenames;
     // echo '<br />';
     if ($usersofuser) {
@@ -2609,28 +2623,36 @@ function local_equipment_send_enrollment_message($user, $coursenames, $roletype,
     }
     // echo '<br />';
     // $messageinput = new stdClass();
+    $name = $user->firstname;
+    if ($user->lastname !== '') {
+        $name .= ' ' . $user->lastname;
+    }
     $messageinput = new stdClass();
-    $messageinput->user = "$user->firstname $user->lastname";
+    $messageinput->user = $name;
     $messageinput->sitename = $SITE->shortname;
     $messageinput->partnership = $partnership;
     $messageinput->students = $usersofuser;
-    $messageinput->courses = $coursenames;
+    $messageinput->courses = implode('<br />', $coursenames);
+    $messageinput->courses_comma = implode(', ', $coursenames);
+    $messageinput->schoolyear = local_equipment_get_school_year();
 
 
 
-    $result = new stdClass();
-    $result->success = false;
-    $result->message = '';
+
+    // if ($usersofuser === null && $roletype === 'parent') {
+    //     $result->errors[] = get_string('noparentsfound', 'local_equipment');
+    //     return $result;
+    // }
 
     // Check if notifications are enabled for this role type
     $notifyenabled = get_config('local_equipment', 'notify_' . $roletype . 's');
-    echo '<br />';
-    echo '<br />';
-    echo '<br />';
-    echo '<pre>';
-    var_dump('$notifyenabled: ');
-    var_dump($notifyenabled);
-    echo '</pre>';
+    // echo '<br />';
+    // echo '<br />';
+    // echo '<br />';
+    // echo '<pre>';
+    // var_dump('$notifyenabled: ');
+    // var_dump($notifyenabled);
+    // echo '</pre>';
     if (!$notifyenabled || !$notifyuser) {
         return $result;
     }
@@ -2640,9 +2662,9 @@ function local_equipment_send_enrollment_message($user, $coursenames, $roletype,
 
     // Determine the from user based on settings
     switch ($messagesender) {
-        case ENROL_SEND_EMAIL_FROM_COURSE_CONTACT:
-            $contactuser = local_equipment_get_course_contact($course);
-            break;
+        // case ENROL_SEND_EMAIL_FROM_COURSE_CONTACT:
+        //     $contactuser = local_equipment_get_course_contact($course);
+        //     break;
         case ENROL_SEND_EMAIL_FROM_KEY_HOLDER:
             $contactuser = get_admin();
             break;
@@ -2651,31 +2673,33 @@ function local_equipment_send_enrollment_message($user, $coursenames, $roletype,
             $contactuser = $noreplyuser;
     }
 
-    $message = '';
+    $addpartnershipstring = ($partnershipid && $roletype === 'parent') ? '_partnership' : '';
+    $stringkey = $roletype . 'enrollmessage' . $addpartnershipstring;
 
+    $message =  get_string('welcomemessage_user', 'local_equipment', $messageinput);
+    $message .= '<br /><br />';
+    $message .= get_string($stringkey, 'local_equipment', $messageinput);
 
     // Get subject and message templates based on role
     if ($roletype === 'student') {
-        // $subject = get_string('studentwelcomesubject', 'local_equipment', $course->fullname);
-        // $message = get_string('studentwelcomemessage', 'local_equipment', $data);
+        // $message .= get_string('studentenrollmessage', 'local_equipment', $messageinput);
+        $subject = get_string('studentwelcomesubject', 'local_equipment', $messageinput);
     } else if ($roletype === 'parent') {
-        $message =  get_string('welcomemessage_user', 'local_equipment', $messageinput)
-            . '<br /><br />'
-            . $partnershipid ? get_string('parentenrollmessage_partnership', 'local_equipment', $messageinput) : get_string('parentenrollmessage', 'local_equipment', $messageinput);
+        // $message .= $partnershipid ? get_string('parentenrollmessage_partnership', 'local_equipment', $messageinput) : get_string('parentenrollmessage', 'local_equipment', $messageinput);
+        $subject = get_string('parentwelcomesubject', 'local_equipment', $messageinput);
     } else {
-        // $subject = get_string('parentwelcomesubject', 'local_equipment', $messageinput);
-        // $message = get_string('parentwelcomemessage', 'local_equipment', $messageinput);
+        // $message .= get_string('genericenrollmessage', 'local_equipment', $messageinput);
+        $subject = get_string('genericwelcomesubject', 'local_equipment', $messageinput);
     }
 
     // Send the email
-    echo '<br />';
-    echo '<br />';
-    echo '<br />';
-    echo '<pre>';
-    var_dump('$message: ');
-    var_dump($message);
-    echo '</pre>';
-    die();
+    // echo '<br />';
+    // echo '<br />';
+    // echo '<br />';
+    // echo '<pre>';
+    // var_dump('$message: ');
+    // var_dump($message);
+    // echo '</pre>';
     try {
         $success = email_to_user(
             $user,              // To user
@@ -2687,28 +2711,21 @@ function local_equipment_send_enrollment_message($user, $coursenames, $roletype,
 
         if ($success) {
             $result->success = true;
-            $result->message = get_string(
-                'welcomemessagesenttouserforcourse',
+            $result->successes[] = get_string(
+                'enrollmentemailsenttouserforcourses',
                 'local_equipment',
-                (object)[
-                    'firstname' => $user->firstname,
-                    'lastname' => $user->lastname,
-                    'coursename' => $course->fullname
-                ]
+                $messageinput
             );
         } else {
-            $result->message = get_string(
-                'welcomemessagenotsenttouserforcourse',
+            $result->errors[] = get_string(
+                'enrollmentemailnotsenttouserforcourses',
                 'local_equipment',
-                (object)[
-                    'firstname' => $user->firstname,
-                    'lastname' => $user->lastname,
-                    'coursename' => $course->fullname
-                ]
+                $messageinput
             );
         }
+    // die();
     } catch (moodle_exception $e) {
-        $result->message = $e->getMessage();
+        $result->errors[] = $e->getMessage();
     }
 
     return $result;

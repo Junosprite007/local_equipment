@@ -80,6 +80,8 @@ if ($form->is_cancelled()) {
             $messages->warnings = [];
             $messages->errors = [];
 
+            $family->partnership = $familydata->partnership->data ?? '';
+
             // First pass of the parents to get all their current students
             foreach ($familydata->parents as $p) {
                 $userid = null;
@@ -261,12 +263,30 @@ if ($form->is_cancelled()) {
                         array_push($messages->successes, ...$student->courses_results[$c]->successes);
                         array_push($messages->warnings, ...$student->courses_results[$c]->warnings);
                         array_push($messages->errors, ...$student->courses_results[$c]->errors);
-                        $coursenames[] = $student->courses_results[$c]->coursename;
 
-                        // Send email here.
+                        // echo '<br />';
+                        // echo '<br />';
+                        // echo '<br />';
+                        // echo '<pre>';
+                        // var_dump('$s');
+                        // var_dump($student->courses_results[$c]);
+                        // echo '</pre>';
 
-                        $coursenames = [];
+                        if (!empty($student->courses_results[$c]->successes)) {
+                            $courseurl = new moodle_url('/course/view.php',
+                                ['id' => $c]
+                            );
+                            $courselink = html_writer::link($courseurl, $student->courses_results[$c]->coursename);
+                            $coursenames[] = $courselink;
+                        }
                     }
+                    // die();
+                    // Send the enrollment email to the student only if they were successfully enrolled in at least one course.
+                    $emailsentstatus = local_equipment_send_enrollment_message($student, $coursenames, 'student', $family->partnership);
+                    array_push($messages->successes, ...$emailsentstatus->successes);
+                    array_push($messages->warnings, ...$emailsentstatus->warnings);
+                    array_push($messages->errors, ...$emailsentstatus->errors);
+
                     $allcourses = array_merge($allcourses, $student->courses);
                 }
 
@@ -284,7 +304,6 @@ if ($form->is_cancelled()) {
                 $userurl = new moodle_url('/user/profile.php', ['id' => $student->id]);
                 $userlink = html_writer::link($userurl, $student->firstname);
                 $studentfirstnames[] = $userlink;
-
                 $students[] = $student;
             }
 
@@ -294,7 +313,6 @@ if ($form->is_cancelled()) {
             // array already contains a list of their individual courses).
             $family->parents = $parents;
             $family->students = $students;
-            $family->partnership = $familydata->partnership->data ?? '';
             $family->all_courses = array_unique($allcourses);
 
             // Enroll all the parents into each course with the role of "parent". This is so they can see the grades of their
@@ -317,18 +335,23 @@ if ($form->is_cancelled()) {
                     $coursenames[] = $courselink;
                 }
                 // If courses_results->successes is NOT empty, then we should include that course in the email.
-                $emailsent = local_equipment_send_enrollment_message($p, $coursenames, 'parent', $family->partnership, $studentfirstnames);
+
+                $emailsentstatus = local_equipment_send_enrollment_message($p, $coursenames, 'parent', $family->partnership, $studentfirstnames);
+                array_push($messages->successes, ...$emailsentstatus->successes);
+                array_push($messages->warnings, ...$emailsentstatus->warnings);
+                array_push($messages->errors, ...$emailsentstatus->errors);
+
 
                 // This is were we should send parent emails.
                 // $coursenames = [];
-                echo '<br />';
-                echo '<br />';
-                echo '<br />';
-                echo '<pre>';
-                var_dump('$emailsent: ');
-                var_dump($emailsent);
-                echo '</pre>';
-                die();
+                // echo '<br />';
+                // echo '<br />';
+                // echo '<br />';
+                // echo '<pre>';
+                // var_dump('$emailsentstatus: ');
+                // var_dump($emailsentstatus);
+                // echo '</pre>';
+                // die();
             }
 
             // Poopulate the $families array with the current family. HAH. Poop...

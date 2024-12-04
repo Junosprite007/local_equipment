@@ -257,10 +257,10 @@ if ($hassiteconfig) {
 
     // Message sender setting
     $options = [
-        ENROL_SEND_EMAIL_FROM_COURSE_CONTACT => get_string(
-            'fromcoursecontact',
-            'local_equipment'
-        ),
+        // ENROL_SEND_EMAIL_FROM_COURSE_CONTACT => get_string(
+        //     'fromcoursecontact',
+        //     'local_equipment'
+        // ),
         ENROL_SEND_EMAIL_FROM_KEY_HOLDER => get_string('fromkeyholder', 'local_equipment'),
         ENROL_SEND_EMAIL_FROM_NOREPLY => get_string(
             'fromnoreply',
@@ -272,7 +272,7 @@ if ($hassiteconfig) {
         'local_equipment/messagesender',
         get_string('messagesender', 'local_equipment'),
         get_string('messagesender_desc', 'local_equipment'),
-        ENROL_SEND_EMAIL_FROM_COURSE_CONTACT,  // default value
+        ENROL_SEND_EMAIL_FROM_NOREPLY,  // default value
         $options
     ));
 
