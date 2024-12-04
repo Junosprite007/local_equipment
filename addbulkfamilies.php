@@ -124,7 +124,17 @@ if ($form->is_cancelled()) {
                     $created_users[] = $parent;
                     $messages->successes[] = get_string('accountcreatedsuccessfully', 'local_equipment', $parent);
                 } else if ($user) {
-                    $messages->warnings[] = get_string('accountalreadyexists', 'local_equipment', $parent);
+                    if (strcasecmp($parent_old->firstname, $user->firstname) !== 0 || strcasecmp($parent_old->lastname, $user->lastname) !== 0) {
+                        $parent_old->otherfirst = $user->firstname;
+                        $parent_old->otherlast = $user->lastname;
+                        $messages->warnings[] = get_string('accountalreadyexistsbutwithdifferentname', 'local_equipment', $parent_old);
+                        unset($parent_old->otherfirst);
+                        unset($parent_old->otherlast);
+                    } else {
+                        $messages->successes[] = get_string('accountalreadyexists', 'local_equipment', $parent);
+                        unset($parent->otherfirst);
+                        unset($parent->otherlast);
+                    }
                     $existing_users[] = $parent;
                 } else {
                     // This will probably never run, but it's here just in case. If the user doesn't exist but somehow wasn't
@@ -141,6 +151,7 @@ if ($form->is_cancelled()) {
 
             // By this point, we should have all the parents in the current family, as well as any existing students they have, so
             // now it's time to start processing the students.
+            $studentfirstnames = [];
             foreach ($familydata->students as $s) {
                 $userid = null;
                 $user = null;
@@ -218,7 +229,9 @@ if ($form->is_cancelled()) {
                     $created_users[] = $student;
                     $messages->successes[] = get_string('accountcreatedsuccessfully', 'local_equipment', $student);
                 } else if ($user) {
-                    $messages->warnings[] = get_string('accountalreadyexists', 'local_equipment', $student);
+                    $messages->successes[] = get_string('accountalreadyexists', 'local_equipment', $student);
+                    unset($parent->otherfirst);
+                    unset($parent->otherlast);
                     $existing_users[] = $student;
                 } else {
                     // This will probably never run, but it's here just in case. If the user doesn't exist but somehow wasn't
@@ -237,6 +250,7 @@ if ($form->is_cancelled()) {
                 // die();
                 $student->courses = $s->courses->data;
 
+                $coursenames = [];
                 if (empty($student->courses)) {
                     $messages->errors[] = get_string('nocoursesfoundforuser', 'local_equipment', $student);
                 } else {
@@ -244,37 +258,14 @@ if ($form->is_cancelled()) {
                         // Enroll the student into each course.
                         // The $c variable is simply the course ID.
                         $student->courses_results[$c] = local_equipment_enrol_user_in_course($student, $c, $roleid_student);
-
-                        // echo '<br />';
-                        // echo '<br />';
-                        // echo '<br />';
-                        // echo '<pre>';
-                        // var_dump('$student->courses_results[$c]');
-                        // var_dump($student->courses_results[$c]);
-                        // echo '</pre>';
-                        // echo '<br />';
-                        // echo '<br />';
-                        // echo '<br />';
-                        // echo '<pre>';
-                        // var_dump('$messages before: ');
-                        // // var_dump($messages->warnings + $student->courses_results[$c]->warnings);
-                        // // var_dump();
-                        // echo '</pre>';
-                        // $msg = new stdClass();
-                        // $msg->firstname = $student->firstname;
-                        // $msg->lastname = $student->lastname;
-                        // $msg->coursename = $student->courses_results[$c]->coursename;
                         array_push($messages->successes, ...$student->courses_results[$c]->successes);
                         array_push($messages->warnings, ...$student->courses_results[$c]->warnings);
                         array_push($messages->errors, ...$student->courses_results[$c]->errors);
+                        $coursenames[] = $student->courses_results[$c]->coursename;
 
-                        // echo '<br />';
-                        // echo '<br />';
-                        // echo '<br />';
-                        // echo '<pre>';
-                        // var_dump('$messages after: ');
-                        // var_dump($messages);
-                        // echo '</pre>';
+                        // Send email here.
+
+                        $coursenames = [];
                     }
                     $allcourses = array_merge($allcourses, $student->courses);
                 }
@@ -288,8 +279,16 @@ if ($form->is_cancelled()) {
                     array_push($messages->errors, ...$userassigned->errors);
                 }
                 $student->partnershipid = $familydata->partnership->data ?? '';
+
+                // Create links to each student's profile to be included in the email.
+                $userurl = new moodle_url('/user/profile.php', ['id' => $student->id]);
+                $userlink = html_writer::link($userurl, $student->firstname);
+                $studentfirstnames[] = $userlink;
+
                 $students[] = $student;
             }
+
+            // die();
 
             // Fill the family array with the parents, students, partnership, and unique courses (each student in the $students
             // array already contains a list of their individual courses).
@@ -301,6 +300,7 @@ if ($form->is_cancelled()) {
             // Enroll all the parents into each course with the role of "parent". This is so they can see the grades of their
             // students, as well as the courses in which their students are enrolled.
             foreach ($family->parents as $p) {
+                $coursenames = [];
                 foreach ($family->all_courses as $c) {
                     $p->courses_results[$c] = local_equipment_enrol_user_in_course(
                         $p,
@@ -310,7 +310,25 @@ if ($form->is_cancelled()) {
                     array_push($messages->successes, ...$p->courses_results[$c]->successes);
                     array_push($messages->warnings, ...$p->courses_results[$c]->warnings);
                     array_push($messages->errors, ...$p->courses_results[$c]->errors);
+
+                    // Create links for each course to be included in the email.
+                    $courseurl = new moodle_url('/course/view.php', ['id' => $c]);
+                    $courselink = html_writer::link($courseurl, $p->courses_results[$c]->coursename);
+                    $coursenames[] = $courselink;
                 }
+                // If courses_results->successes is NOT empty, then we should include that course in the email.
+                $emailsent = local_equipment_send_enrollment_message($p, $coursenames, 'parent', $family->partnership, $studentfirstnames);
+
+                // This is were we should send parent emails.
+                // $coursenames = [];
+                echo '<br />';
+                echo '<br />';
+                echo '<br />';
+                echo '<pre>';
+                var_dump('$emailsent: ');
+                var_dump($emailsent);
+                echo '</pre>';
+                die();
             }
 
             // Poopulate the $families array with the current family. HAH. Poop...
