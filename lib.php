@@ -23,6 +23,8 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use media_videojs\external\get_language;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -2180,7 +2182,7 @@ function local_equipment_assign_role_relative_to_user(object $user, object $rela
         }
         return $result;
     } catch (moodle_exception $e) {
-        debugging($e->getMessage(), DEBUG_DEVELOPER);
+        // debugging($e->getMessage(), DEBUG_DEVELOPER);
         $result->errors[] = $e->getMessage();
         return $result;
     }
@@ -2385,7 +2387,7 @@ function local_equipment_assign_family_roles($family) {
                     'student' => $student->id,
                     'error' => $e->getMessage()
                 ];
-                debugging('Error assigning role: ' . $e->getMessage(), DEBUG_DEVELOPER);
+                // debugging('Error assigning role: ' . $e->getMessage(), DEBUG_DEVELOPER);
             }
         }
     }
@@ -2464,18 +2466,30 @@ function local_equipment_enrol_user_in_course(
 
     try {
         // Get the manual enrolment plugin.
-        $enrol = enrol_get_plugin('manual');
-        if (empty($enrol)) {
-            $result->errors[] = get_string('manualpluginnotinstalled', 'enrol_manual');
-            return $result;
-        }
-
-        // Get course enrolment instance.
         $instance = $DB->get_record('enrol', [
             'courseid' => $courseid,
             'enrol' => 'manual',
             'status' => ENROL_INSTANCE_ENABLED
         ], '*', MUST_EXIST);
+
+        $enrolplugin = enrol_get_plugin($instance->enrol);
+        if (empty($enrolplugin)) {
+            $result->errors[] = get_string('manualpluginnotinstalled', 'enrol_manual');
+            return $result;
+        }
+
+        // Get course enrolment instance.
+
+        // Turn off email notification for this enrolment without changing the user's preferences. We'll still send custom emails
+        // using this plugin, though.
+        $customint1_old = $instance->customint1;
+        $instance->customint1 = ENROL_DO_NOT_SEND_EMAIL;
+
+        // echo '<pre>';
+        // var_dump('$instance->customint1 after from local_equipment: ');
+        // var_dump($instance->customint1);
+        // echo '</pre>';
+
 
         // If no role specified, get the default student role.
         if (is_null($roleid)) {
@@ -2490,7 +2504,7 @@ function local_equipment_enrol_user_in_course(
             $timeend = ($timeend > 0) ? $timeend : 0;
 
             // Enrol the user.
-            $enrol->enrol_user(
+            $enrolplugin->enrol_user(
                 $instance,
                 $user->id,
                 $roleid,
@@ -2501,7 +2515,7 @@ function local_equipment_enrol_user_in_course(
 
             $result->successes[] = get_string('userenrolled', 'local_equipment', $msg);
         } else {
-            $result->errors[] = get_string(
+            $result->warnings[] = get_string(
                 'useralreadyenrolled',
                 'local_equipment',
                 $msg
@@ -2510,7 +2524,7 @@ function local_equipment_enrol_user_in_course(
 
         return $result;
     } catch (moodle_exception $e) {
-        debugging($e->getMessage(), DEBUG_DEVELOPER);
+        // debugging($e->getMessage(), DEBUG_DEVELOPER);
         $result->errors[] = $e->getMessage();
         return $result;
     }
@@ -2544,6 +2558,202 @@ function local_equipment_bulk_enrol_student(stdClass $user, array $courseids): a
     return $results;
 }
 
+
+/**
+ * Send welcome emails to newly enrolled users.
+ *
+ * @param stdClass $user The user object containing id, firstname, lastname, email
+ * @param array $coursenames An array of course names with their IDs as the keys
+ * @param string $roletype The role shortname ('student' or 'parent')
+ * @param string|null $partnershipid The partnership ID (optional)
+ * @param array|null $usersofuser An array of user first/last names relative to the user with their IDs as the keys, i.e. array of students.
+ * @param bool $notifyuser Whether to send notification (from plugin settings)
+ * @return object Object containing success/error information
+ */
+function local_equipment_send_enrollment_message($user, $coursenames, $roletype, $partnershipid = null, $usersofuser = null, $notifyuser = true) {
+    global $SITE, $DB;
+
+    // Site name, parent name, student name(s), course name(s),
+    $partnership = $DB->get_field('local_equipment_partnership', 'name', ['id' => $partnershipid]);
+
+    // Prepare email data
+
+    // $data->lastname = $user->lastname;
+    // $data->coursename = $course->fullname;
+    // $data->roletype = get_string($roletype, 'local_equipment');
+    // $data->courseurl = new moodle_url('/course/view.php', ['id' => $course->id]);
+
+    // echo $user->firstname;
+
+
+
+    // $coursenames[sizeof($coursenames) - 1] = 'and ' . $coursenames[sizeof($coursenames) - 1];
+    // $coursenames = implode(', ', $coursenames);
+    $coursenames = implode('<br />', $coursenames);
+    // echo $coursenames;
+    // echo '<br />';
+    if ($usersofuser) {
+        $usersofuser = local_equipment_convert_list_string($usersofuser);
+        // echo $usersofuser;
+        // echo '<br />';
+        // }
+    }
+    // echo '<br />';
+    // $messageinput = new stdClass();
+    $messageinput = new stdClass();
+    $messageinput->user = "$user->firstname $user->lastname";
+    $messageinput->sitename = $SITE->shortname;
+    $messageinput->partnership = $partnership;
+    $messageinput->students = $usersofuser;
+    $messageinput->courses = $coursenames;
+
+
+
+    $result = new stdClass();
+    $result->success = false;
+    $result->message = '';
+
+    // Check if notifications are enabled for this role type
+    $notifyenabled = get_config('local_equipment', 'notify_' . $roletype . 's');
+    echo '<br />';
+    echo '<br />';
+    echo '<br />';
+    echo '<pre>';
+    var_dump('$notifyenabled: ');
+    var_dump($notifyenabled);
+    echo '</pre>';
+    if (!$notifyenabled || !$notifyuser) {
+        return $result;
+    }
+
+    // Get message sender configuration
+    $messagesender = get_config('local_equipment', 'messagesender');
+
+    // Determine the from user based on settings
+    switch ($messagesender) {
+        case ENROL_SEND_EMAIL_FROM_COURSE_CONTACT:
+            $contactuser = local_equipment_get_course_contact($course);
+            break;
+        case ENROL_SEND_EMAIL_FROM_KEY_HOLDER:
+            $contactuser = get_admin();
+            break;
+        default:
+            $noreplyuser = core_user::get_noreply_user();
+            $contactuser = $noreplyuser;
+    }
+
+    $message = '';
+
+
+    // Get subject and message templates based on role
+    if ($roletype === 'student') {
+        // $subject = get_string('studentwelcomesubject', 'local_equipment', $course->fullname);
+        // $message = get_string('studentwelcomemessage', 'local_equipment', $data);
+    } else if ($roletype === 'parent') {
+        $message =  get_string('welcomemessage_user', 'local_equipment', $messageinput)
+            . '<br /><br />'
+            . $partnershipid ? get_string('parentenrollmessage_partnership', 'local_equipment', $messageinput) : get_string('parentenrollmessage', 'local_equipment', $messageinput);
+    } else {
+        // $subject = get_string('parentwelcomesubject', 'local_equipment', $messageinput);
+        // $message = get_string('parentwelcomemessage', 'local_equipment', $messageinput);
+    }
+
+    // Send the email
+    echo '<br />';
+    echo '<br />';
+    echo '<br />';
+    echo '<pre>';
+    var_dump('$message: ');
+    var_dump($message);
+    echo '</pre>';
+    die();
+    try {
+        $success = email_to_user(
+            $user,              // To user
+            $contactuser,       // From user
+            $subject,
+            html_to_text($message),  // Plain text version
+            $message               // HTML version
+        );
+
+        if ($success) {
+            $result->success = true;
+            $result->message = get_string(
+                'welcomemessagesenttouserforcourse',
+                'local_equipment',
+                (object)[
+                    'firstname' => $user->firstname,
+                    'lastname' => $user->lastname,
+                    'coursename' => $course->fullname
+                ]
+            );
+        } else {
+            $result->message = get_string(
+                'welcomemessagenotsenttouserforcourse',
+                'local_equipment',
+                (object)[
+                    'firstname' => $user->firstname,
+                    'lastname' => $user->lastname,
+                    'coursename' => $course->fullname
+                ]
+            );
+        }
+    } catch (moodle_exception $e) {
+        $result->message = $e->getMessage();
+    }
+
+    return $result;
+}
+
+/**
+ * Get the primary contact user for a course.
+ *
+ * @param array $list A list of text to be turned into a written list.
+ * @return string The contact user object
+ */
+function local_equipment_convert_list_string($list) {
+    global $USER;
+
+    if (sizeof($list) <= 1) {
+        return $list[0];
+    }
+
+    switch ($USER->lang) {
+        case 'en':
+        case 'en_us':
+        case 'es':
+            $list[sizeof($list) - 1] = get_string('and', 'local_equipment') . ' ' . $list[sizeof($list) - 1];
+            $string = implode(', ', $list);
+            break;
+        default:
+            $list[sizeof($list) - 1] = get_string('and', 'local_equipment') . ' ' . $list[sizeof($list) - 1];
+            $string = implode(', ', $list);
+    }
+    return $string;
+
+    // Fallback to admin user if no course contacts found
+}
+
+/**
+ * Get the primary contact user for a course.
+ *
+ * @param stdClass $course The course object
+ * @return stdClass The contact user object
+ */
+function local_equipment_get_course_contact($course) {
+    global $DB;
+
+    // Try to get the primary course contact
+    $context = context_course::instance($course->id);
+    $teachers = get_enrolled_users($context, 'moodle/course:update');
+
+    if (!empty($teachers)) {
+        return reset($teachers); // Return first teacher
+    }
+
+    // Fallback to admin user if no course contacts found
+    return get_admin();
+}
 
 /**
  * Generate HTML for family processing notifications.

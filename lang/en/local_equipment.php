@@ -39,6 +39,7 @@ $string['address'] = 'Address';
 $string['addressee'] = 'Addressee';
 $string['agreements'] = 'Agreements';
 $string['agreements_desc'] = 'List of agreements that users must accept in order to use this equipment checkout service.';
+$string['and'] = 'and';
 $string['apartment'] = 'Apartment';
 $string['billing_apartment'] = 'Apartment';
 $string['mailing_apartment'] = 'Apartment';
@@ -591,10 +592,33 @@ $string['errorcreatinguser'] = 'For some reason, {$a->firstname} {$a->lastname} 
 $string['usernotaddedtofamily'] = '{$a->firstname} {$a->lastname} was not added to their family.';
 $string['accountcreatedsuccessfully'] = '{$a->firstname} {$a->lastname}\'s account was created successfully.';
 $string['accountalreadyexists'] = '{$a->firstname} {$a->lastname}\'s account already exists.';
+$string['accountalreadyexistsbutwithdifferentname'] = 'An account already exists with the email {$a->email}, but it\'s under a different name. You entered {$a->firstname} {$a->lastname}, but we\'re keeping the existing account\'s name: {$a->otherfirst} {$a->otherlast}. Changing the user\'s name must be done within their preferences.';
 $string['nocoursesfoundforuser'] = 'No courses found for {$a->firstname} {$a->lastname}.';
 $string['familyaddedwithwarnings'] = 'The {$a} family was added with some warnings';
 $string['familyaddedwitherrors'] = 'The {$a} family was added with errors';
 $string['familyprocessingresults'] = 'Processing results for {$a} family';
+$string['enrollmentinstancedoesnotexist'] = 'Enrollment instance does not exist, so we\'re creating it.';
+
+$string['welcomemessage_user'] = 'To {$a->user}, welcome from {$a->sitename}!';
+$string['parentenrollmessage_partnership'] = 'One or more of your students ({$a->students}) have been enrolled in FLIP via {$a->partnership}, and they are taking the following courses:<br /><br />
+{$a->courses}.
+
+<br /><br />
+
+You have been assigned as a parent to each of the above students. You can view your students or their courses by clicking on the names&mdash;right within this email! Remember, you\'ll need to login to you personal {$a->sitename} account to be able to view everything. <br /><br />
+
+Please contact the course instructors or your partnership coordinator with any questions. We\'re excited to have {$a->students} learning with us!
+';
+$string['parentenrollmessage'] = 'One or more of your students ({$a->students}) have been enrolled in FLIP, and they are taking the following courses:<br /><br />
+{$a->courses}.
+
+<br /><br />
+
+You have been assigned as a parent to each of the above students. You can view your students or their courses by clicking on the names&mdash;right within this email! Remember, you\'ll need to login to you personal {$a->sitename} account to be able to view everything. <br /><br />
+
+Please contact the course instructors with any questions. We\'re excited to have {$a->students} learning with us!
+';
+
 
 
 
