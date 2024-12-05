@@ -642,6 +642,9 @@ $string['familyaddedwitherrors'] = 'The {$a} family was added with errors';
 $string['familyprocessingresults'] = 'Processing results for {$a} family';
 $string['enrollmentinstancedoesnotexist'] = 'Enrollment instance does not exist, so we\'re creating it.';
 
+$string['studentwelcomesubject'] = '{$a->sitename} Courses Access for Students';
+$string['parentwelcomesubject'] = '{$a->sitename} Courses Access for Parents';
+$string['genericwelcomesubject'] = '{$a->sitename} Courses Access';
 $string['welcomemessage_user'] = 'To {$a->user}, hello from {$a->sitename}!';
 $string['parentenrollmessage_partnership'] = 'One or more of your students ({$a->students}) have been enrolled in {$a->sitename} via {$a->partnership}, and they are taking the following courses:<br /><br />
 {$a->courses}
@@ -670,7 +673,7 @@ You can view your courses by clicking on the names&mdash;right within this email
 
 Please contact the course instructors with any questions. We\'re excited to have you learning with us!
 ';
-$string['genericwelcomesubject'] = 'Welcome to the {$a->schoolyear} school year in {$a->sitename}! You\'ve been enrolled in the following courses:<br /><br />
+$string['genericenrollmessage'] = 'Welcome to the {$a->schoolyear} school year in {$a->sitename}! You\'ve been enrolled in the following courses:<br /><br />
 {$a->courses}
 
 <br /><br />
@@ -680,9 +683,19 @@ You can view your courses by clicking on the names&mdash;right within this email
 Please contact the course instructors with any questions. We\'re excited to have you learning with us!
 ';
 
-$string['studentwelcomesubject'] = '{$a->sitename} Courses Access for Students';
-$string['parentwelcomesubject'] = '{$a->sitename} Courses Access for Parents';
-$string['genericwelcomesubject'] = '{$a->sitename} Courses Access';
+
+$string['welcomeemail_subject'] = '{$a->siteshortname} Login Information';
+$string['welcomeemail_body'] = 'This message is for {$a->personname} and contains their login information for {$a->sitefullname}.<br /><br />
+
+Welcome! Here\'s your login information:<br /><br />
+Login URL: {$a->loginurl}<br />
+Email: {$a->email}<br />
+Username: {$a->username}<br />
+Password: {$a->password}<br /><br />
+
+Note that you\'ll need to change your password upon your first login. Please login in as soon as possible to make sure you can successfully access everything you need!<br /><br />
+
+Thanks!';
 
 
 
@@ -725,4 +738,7 @@ $string['coursewelcome_help'] = 'Notifications sent to users when they are enrol
 $string['enrollmentemailsenttouserforcourses'] = 'Enrollment email sent to user {$a->user} for courses: {$a->courses_comma}';
 $string['enrollmentemailnotsenttouserforcourses'] = 'Welcome Enrollment email not sent to user {$a->user} for courses: {$a->courses_comma}';
 $string['notsendingemailtouser_nocourses'] = 'Not sending email to {$a->firstname} {$a->lastname} because they weren\'t enrolled in any new courses.';
+$string['newuseremailsenttouser'] = 'New user email sent to {$a->personname}.';
+$string['emailfailedtosendtouser'] = 'Email failed to send to {$a->personname}.';
+$string['contactusforyourpassword'] = 'Contact us for your password.';
 

@@ -23,6 +23,8 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core_user\route\api\preferences;
+
 // File location: local/equipment/addbulkfamilies.php
 
 require_once(__DIR__ . '/../../config.php');
@@ -46,7 +48,7 @@ $form = new addbulkfamilies_form();
 if ($form->is_cancelled()) {
     redirect(new moodle_url('/'));
 } else if ($data = $form->get_data()) {
-    global $DB;
+    global $DB, $SITE;
 
 
     echo $OUTPUT->header();
@@ -97,22 +99,41 @@ if ($form->is_cancelled()) {
                 $parent->email = clean_param($p->email->data, PARAM_EMAIL);
                 $parent->phone2 = clean_param($p->phone->data ?? '', PARAM_TEXT);
                 $parent->password = generate_password(6);
+                // $parent->preference_auth_forcepasswordchange = 1;
                 $parent->firstnamephonetic = '';
                 $parent->lastnamephonetic = '';
                 $parent->alternatename = '';
+                echo '<br />';
+                echo '<br />';
+                echo '<br />';
+                echo '<pre>';
+                var_dump('$parent before');
+                var_dump($parent);
+                echo '</pre>';
 
                 // We'll need to get all the usernames that are the same, then append the next sequential number to the end of the
                 // new username below.
                 $parent->username = local_equipment_generate_username($parent);
+
                 $parent->username = clean_param($parent->username, PARAM_USERNAME);
 
                 $user = $DB->get_record('user', ['email' => $parent->email]);
+                $password = null;
 
                 // If the parent doesn't exist based on their email, we'll create a new user. If they do exist, we'll override the
                 // $parent user we made above to the matching user found in the DB.
                 if (!$user) {
-                    // Add an entirely new parent user.
+                    $password = $parent->password;
+                    // Add an entirely new parent user. This overrides the $parent object with the new user object.
                     $userid = user_create_user($parent);
+                    echo '<br />';
+                    echo '<br />';
+                    echo '<br />';
+                    echo '<pre>';
+                    var_dump('$parent after');
+                    var_dump($parent);
+                    echo '</pre>';
+                    passwo
                 } else {
                     // Update an existing parent user while keeping the previously created parent object as $parent_old before
                     // overriding it, just in case. Not sure if we'll actually need it, though.
@@ -125,6 +146,51 @@ if ($form->is_cancelled()) {
                     $parent->id = $userid;
                     $created_users[] = $parent;
                     $messages->successes[] = get_string('accountcreatedsuccessfully', 'local_equipment', $parent);
+                    // Send a welcome email to the parent.
+                    try {
+                        $email_messageinput = new stdClass();
+                        $email_messageinput->siteshortname = $SITE->shortname;
+                        $email_messageinput->sitefullname = $SITE->fullname;
+                        $email_messageinput->sitefullname .= $SITE->shortname ? " ($SITE->shortname)" : '';
+                        $email_messageinput->personname = $parent->firstname;
+                        $email_messageinput->personname .= $parent->lastname ? " $parent->lastname" : '';
+                        $email_messageinput->email = $parent->email;
+                        $email_messageinput->username = $parent->username;
+                        $email_messageinput->password = $password ?? get_string('contactusforyourpassword', 'local_equipment');
+
+                        $loginurl = new moodle_url('/login/index.php');
+                        $loginlink = html_writer::link($loginurl, $loginurl);
+                        $email_messageinput->loginurl = $loginlink;
+
+                        $contactuser = core_user::get_noreply_user();
+                        $subject = get_string('welcomeemail_subject', 'local_equipment', $email_messageinput);
+                        $email_message = get_string('welcomeemail_body', 'local_equipment', $email_messageinput);
+
+                        $success = email_to_user(
+                            $parent,              // To user
+                            $contactuser,       // From user
+                            $subject,
+                            html_to_text($email_message),  // Plain text version
+                            $email_message               // HTML version
+                        );
+
+                        if ($success) {
+                            $messages->successes[] = get_string(
+                                'newuseremailsenttouser',
+                                'local_equipment',
+                                $email_messageinput
+                            );
+                        } else {
+                            $messages->errors[] = get_string(
+                                'emailfailedtosendtouser',
+                                'local_equipment',
+                                $email_messageinput
+                            );
+                        }
+                        // die();
+                    } catch (moodle_exception $e) {
+                        $messages->errors[] = $e->getMessage();
+                    }
                 } else if ($user) {
                     if (strcasecmp($parent_old->firstname, $user->firstname) !== 0 || strcasecmp($parent_old->lastname, $user->lastname) !== 0) {
                         $parent_old->otherfirst = $user->firstname;
@@ -163,12 +229,13 @@ if ($form->is_cancelled()) {
                 // little confusing, so sorry about that.
                 $student->firstname = clean_param($s->student->data->firstName, PARAM_TEXT);
                 $student->middlename = clean_param($s->student->data->middleName ?? '', PARAM_TEXT);
-                $student->lastname = clean_param($s->student->data->lastName, PARAM_TEXT);
+                $student->lastname = $s->student->data->lastName !== '' ? clean_param($s->student->data->lastName, PARAM_TEXT) : $parents[0]->lastname;
                 $student->auth = 'manual';
                 $student->confirmed = 1;
                 $student->mnethostid = $CFG->mnet_localhost_id;
                 $student->lang = $USER->lang ?? $CFG->lang ?? 'en';
                 $student->password = generate_password(6);
+                // $student->preference_auth_forcepasswordchange = 1;
                 $student->phone2 = clean_param($s->phone->data ?? '', PARAM_TEXT);
                 $student->firstnamephonetic = '';
                 $student->lastnamephonetic = '';
@@ -201,6 +268,7 @@ if ($form->is_cancelled()) {
                 // manually entering a version of the generated email, like parent1+child1@example.com and
                 // parent1+child2@example.com for each student is a solution, so admins can just do that I guess.
                 $user = $DB->get_record('user', ['email' => $student->email]);
+                $password = null;
                 if (!$user) {
                     foreach ($allstudentsofallparents as $sofp) {
                         if (strcasecmp($student->firstname, $sofp->firstname) === 0 && strcasecmp($student->lastname, $sofp->lastname) === 0) {
@@ -210,6 +278,7 @@ if ($form->is_cancelled()) {
                         }
                     }
                     if (!$user) {
+                        $password = $student->password;
                         $userid = user_create_user($student);
                     }
                 } else {
@@ -230,6 +299,59 @@ if ($form->is_cancelled()) {
                     $student->id = $userid;
                     $created_users[] = $student;
                     $messages->successes[] = get_string('accountcreatedsuccessfully', 'local_equipment', $student);
+                    // Send a welcome email to the parent.
+                    try {
+                        // echo '<br />';
+                        // echo '<br />';
+                        // echo '<br />';
+                        // echo '<pre>';
+                        // var_dump('$student');
+                        // var_dump($student);
+                        // echo '</pre>';
+                        // die();
+                        $email_messageinput = new stdClass();
+                        $email_messageinput->siteshortname = $SITE->shortname;
+                        $email_messageinput->sitefullname = $SITE->fullname;
+                        $email_messageinput->sitefullname .= $SITE->shortname ? " ($SITE->shortname)" : '';
+                        $email_messageinput->personname = $student->firstname;
+                        $email_messageinput->personname .= $student->lastname ? " $student->lastname" : '';
+                        $email_messageinput->email = $student->email;
+                        $email_messageinput->username = $student->username;
+                        $email_messageinput->password = $password ?? get_string('contactusforyourpassword', 'local_equipment');
+
+                        $loginurl = new moodle_url('/login/index.php');
+                        $loginlink = html_writer::link($loginurl, $loginurl);
+                        $email_messageinput->loginurl = $loginlink;
+
+                        $contactuser = core_user::get_noreply_user();
+                        $subject = get_string('welcomeemail_subject', 'local_equipment', $email_messageinput);
+                        $email_message = get_string('welcomeemail_body', 'local_equipment', $email_messageinput);
+
+                        $success = email_to_user(
+                            $student,              // To user
+                            $contactuser,       // From user
+                            $subject,
+                            html_to_text($email_message),  // Plain text version
+                            $email_message               // HTML version
+                        );
+
+                        if ($success) {
+                            $messages->successes[] = get_string(
+                                'newuseremailsenttouser',
+                                'local_equipment',
+                                $email_messageinput
+                            );
+                        } else {
+                            $messages->errors[] = get_string(
+                                'emailfailedtosendtouser',
+                                'local_equipment',
+                                $email_messageinput
+                            );
+                        }
+                        // die();
+                    } catch (moodle_exception $e) {
+                        $messages->errors[] = $e->getMessage();
+                    }
                 } else if ($user) {
                     $messages->successes[] = get_string('accountalreadyexists', 'local_equipment', $student);
                     unset($parent->otherfirst);
@@ -329,10 +451,12 @@ if ($form->is_cancelled()) {
                     array_push($messages->warnings, ...$p->courses_results[$c]->warnings);
                     array_push($messages->errors, ...$p->courses_results[$c]->errors);
 
-                    // Create links for each course to be included in the email.
-                    $courseurl = new moodle_url('/course/view.php', ['id' => $c]);
-                    $courselink = html_writer::link($courseurl, $p->courses_results[$c]->coursename);
-                    $coursenames[] = $courselink;
+                    if (!empty($p->courses_results[$c]->successes)) {
+                        // Create links for each course to be included in the email.
+                        $courseurl = new moodle_url('/course/view.php', ['id' => $c]);
+                        $courselink = html_writer::link($courseurl, $p->courses_results[$c]->coursename);
+                        $coursenames[] = $courselink;
+                    }
                 }
                 // If courses_results->successes is NOT empty, then we should include that course in the email.
 
@@ -464,10 +588,10 @@ if ($form->is_cancelled()) {
         }
 
         // For development purposes, we can delete all the users we just created if we want.
-        var_dump('Deleting users...');
-        foreach ($allusers as $u) {
-            user_delete_user($u);
-        }
+        // var_dump('Deleting users...');
+        // foreach ($allusers as $u) {
+        //     user_delete_user($u);
+        // }
         // die();
 
     } catch (moodle_exception $e) {
