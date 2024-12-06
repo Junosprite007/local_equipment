@@ -665,9 +665,9 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             // partnership. The partnership does NOT get added to the student object here, but it does get added to
                             // the family object in the processFamily() function.
 
-                            // TODO: Because of how this currently works, we can't add the partnership to the student object. Basically,
-                            // the partnership getting added could be wrong since some partnership use the course from other
-                            // partnerships. I'll figure out how to do this later.
+                            // TODO: Because of how this currently works, we can't add the partnership to the student object.
+                            // Basically, the partnership getting added could be wrong since some partnership use the course from
+                            // other partnerships. I'll figure out how to do this later.
 
                             // if (!partnershipAdded) {
                             //     // Find which partnership this course belongs to
