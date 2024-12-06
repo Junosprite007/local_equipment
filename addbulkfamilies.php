@@ -66,6 +66,42 @@ if ($form->is_cancelled()) {
     $roleid_parent = $DB->get_field('role', 'id', ['shortname' => 'parent']);
     $roleid_student = $DB->get_field('role', 'id', ['shortname' => 'student']);
 
+    $notifyenabled_parents = get_config('local_equipment', 'notify_parents');
+    $notifyenabled_students = get_config('local_equipment', 'notify_students');
+
+    if (!$notifyenabled_parents && !$notifyenabled_students) {
+        $url = new moodle_url('/admin/settings.php?section=local_equipment_notifications');
+        $link = html_writer::link($url, get_string('notificationsettings', 'local_equipment'));
+        $str = (object) [
+            'role1' => strtolower(get_string('parent', 'local_equipment')),
+            'role2' => strtolower(get_string('student', 'local_equipment')),
+            'user' => $USER->firstname,
+            'link' => $link,
+        ];
+        echo $OUTPUT->notification(get_string('notificationsdisabledforusertypes', 'local_equipment', $str), 'warning');
+    } else {
+        if (!$notifyenabled_parents) {
+            $url = new moodle_url('/admin/settings.php?section=local_equipment_notifications');
+            $link = html_writer::link($url, get_string('notificationsettings', 'local_equipment'));
+            $str = (object) [
+                'role' => strtolower(get_string('parent', 'local_equipment')),
+                'user' => $USER->firstname,
+                'link' => $link,
+            ];
+            echo $OUTPUT->notification(get_string('notificationsdisabledforusertype', 'local_equipment', $str), 'warning');
+        }
+
+        if (!$notifyenabled_students) {
+            $url = new moodle_url('/admin/settings.php?section=local_equipment_notifications');
+            $link = html_writer::link($url, get_string('notificationsettings', 'local_equipment'));
+            $str = (object) [
+                'role' => strtolower(get_string('student', 'local_equipment')),
+                'user' => $USER->firstname,
+                'link' => $link,
+            ];
+            echo $OUTPUT->notification(get_string('notificationsdisabledforusertype', 'local_equipment', $str), 'warning');
+        }
+    }
 
     try {
         // Start processing the families.
@@ -146,49 +182,52 @@ if ($form->is_cancelled()) {
 
                     $created_users[] = $parent;
                     $messages->successes[] = get_string('accountcreatedsuccessfully', 'local_equipment', $parent);
-                    // Send a welcome email to the parent.
-                    try {
-                        $email_messageinput = new stdClass();
-                        $email_messageinput->siteshortname = $SITE->shortname;
-                        $email_messageinput->sitefullname = $SITE->fullname;
-                        $email_messageinput->sitefullname .= $SITE->shortname ? " ($SITE->shortname)" : '';
-                        $email_messageinput->personname = $parent->firstname;
-                        $email_messageinput->personname .= $parent->lastname ? " $parent->lastname" : '';
-                        $email_messageinput->email = $parent->email;
-                        $email_messageinput->username = $parent->username;
-                        $email_messageinput->password = $password ?? get_string('contactusforyourpassword', 'local_equipment');
 
-                        $loginurl = new moodle_url('/login/index.php');
-                        $loginlink = html_writer::link($loginurl, $loginurl);
-                        $email_messageinput->loginurl = $loginlink;
+                    if ($notifyenabled_parents) {
+                        // Send a welcome email to the parent.
+                        try {
+                            $email_messageinput = new stdClass();
+                            $email_messageinput->siteshortname = $SITE->shortname;
+                            $email_messageinput->sitefullname = $SITE->fullname;
+                            $email_messageinput->sitefullname .= $SITE->shortname ? " ($SITE->shortname)" : '';
+                            $email_messageinput->personname = $parent->firstname;
+                            $email_messageinput->personname .= $parent->lastname ? " $parent->lastname" : '';
+                            $email_messageinput->email = $parent->email;
+                            $email_messageinput->username = $parent->username;
+                            $email_messageinput->password = $password ?? get_string('contactusforyourpassword', 'local_equipment');
 
-                        $contactuser = core_user::get_noreply_user();
-                        $subject = get_string('welcomeemail_subject', 'local_equipment', $email_messageinput);
-                        $email_message = get_string('welcomeemail_body', 'local_equipment', $email_messageinput);
+                            $loginurl = new moodle_url('/login/index.php');
+                            $loginlink = html_writer::link($loginurl, $loginurl);
+                            $email_messageinput->loginurl = $loginlink;
 
-                        $success = email_to_user(
-                            $parent,                        // To user
-                            $contactuser,                   // From user
-                            $subject,
-                            html_to_text($email_message),   // Plain text version
-                            $email_message                  // HTML version
-                        );
+                            $contactuser = core_user::get_noreply_user();
+                            $subject = get_string('welcomeemail_subject', 'local_equipment', $email_messageinput);
+                            $email_message = get_string('welcomeemail_body', 'local_equipment', $email_messageinput);
 
-                        if ($success) {
-                            $messages->successes[] = get_string(
-                                'newuseremailsenttouser',
-                                'local_equipment',
-                                $email_messageinput
+                            $success = email_to_user(
+                                $parent,                        // To user
+                                $contactuser,                   // From user
+                                $subject,
+                                html_to_text($email_message),   // Plain text version
+                                $email_message                  // HTML version
                             );
-                        } else {
-                            $messages->errors[] = get_string(
-                                'emailfailedtosendtouser',
-                                'local_equipment',
-                                $email_messageinput
-                            );
+
+                            if ($success) {
+                                $messages->successes[] = get_string(
+                                    'newuseremailsenttouser',
+                                    'local_equipment',
+                                    $email_messageinput
+                                );
+                            } else {
+                                $messages->errors[] = get_string(
+                                    'emailfailedtosendtouser',
+                                    'local_equipment',
+                                    $email_messageinput
+                                );
+                            }
+                        } catch (moodle_exception $e) {
+                            $messages->errors[] = $e->getMessage();
                         }
-                    } catch (moodle_exception $e) {
-                        $messages->errors[] = $e->getMessage();
                     }
                 } else if ($user) {
                     if (strcasecmp($parent_old->firstname, $user->firstname) !== 0 || strcasecmp($parent_old->lastname, $user->lastname) !== 0) {
@@ -302,50 +341,54 @@ if ($form->is_cancelled()) {
                     }
                     $created_users[] = $student;
                     $messages->successes[] = get_string('accountcreatedsuccessfully', 'local_equipment', $student);
-                    // Send a welcome email to the parent.
-                    try {
-                        $email_messageinput = new stdClass();
-                        $email_messageinput->siteshortname = $SITE->shortname;
-                        $email_messageinput->sitefullname = $SITE->fullname;
-                        $email_messageinput->sitefullname .= $SITE->shortname ? " ($SITE->shortname)" : '';
-                        $email_messageinput->personname = $student->firstname;
-                        $email_messageinput->personname .= $student->lastname ? " $student->lastname" : '';
-                        $email_messageinput->email = $student->email;
-                        $email_messageinput->username = $student->username;
-                        $email_messageinput->password = $password ?? get_string('contactusforyourpassword', 'local_equipment');
 
-                        $loginurl = new moodle_url('/login/index.php');
-                        $loginlink = html_writer::link($loginurl, $loginurl);
-                        $email_messageinput->loginurl = $loginlink;
+                    if ($notifyenabled_students) {
+                        // Send a welcome email to the parent.
+                        try {
+                            $email_messageinput = new stdClass();
+                            $email_messageinput->siteshortname = $SITE->shortname;
+                            $email_messageinput->sitefullname = $SITE->fullname;
+                            $email_messageinput->sitefullname .= $SITE->shortname ? " ($SITE->shortname)" : '';
+                            $email_messageinput->personname = $student->firstname;
+                            $email_messageinput->personname .= $student->lastname ? " $student->lastname" : '';
+                            $email_messageinput->email = $student->email;
+                            $email_messageinput->username = $student->username;
+                            $email_messageinput->password = $password ?? get_string('contactusforyourpassword', 'local_equipment');
 
-                        $contactuser = core_user::get_noreply_user();
-                        $subject = get_string('welcomeemail_subject', 'local_equipment', $email_messageinput);
-                        $email_message = get_string('welcomeemail_body', 'local_equipment', $email_messageinput);
+                            $loginurl = new moodle_url('/login/index.php');
+                            $loginlink = html_writer::link($loginurl, $loginurl);
+                            $email_messageinput->loginurl = $loginlink;
 
-                        $success = email_to_user(
-                            $student,                       // To user
-                            $contactuser,                   // From user
-                            $subject,
-                            html_to_text($email_message),   // Plain text version
-                            $email_message                  // HTML version
-                        );
+                            $contactuser = core_user::get_noreply_user();
+                            $subject = get_string('welcomeemail_subject', 'local_equipment', $email_messageinput);
+                            $email_message = get_string('welcomeemail_body', 'local_equipment', $email_messageinput);
 
-                        if ($success) {
-                            $messages->successes[] = get_string(
-                                'newuseremailsenttouser',
-                                'local_equipment',
-                                $email_messageinput
+                            $success = email_to_user(
+                                $student,                       // To user
+                                $contactuser,                   // From user
+                                $subject,
+                                html_to_text($email_message),   // Plain text version
+                                $email_message                  // HTML version
                             );
-                        } else {
-                            $messages->errors[] = get_string(
-                                'emailfailedtosendtouser',
-                                'local_equipment',
-                                $email_messageinput
-                            );
+
+                            if ($success) {
+                                $messages->successes[] = get_string(
+                                    'newuseremailsenttouser',
+                                    'local_equipment',
+                                    $email_messageinput
+                                );
+                            } else {
+                                $messages->errors[] = get_string(
+                                    'emailfailedtosendtouser',
+                                    'local_equipment',
+                                    $email_messageinput
+                                );
+                            }
+                        } catch (moodle_exception $e) {
+                            $messages->errors[] = $e->getMessage();
                         }
-                    } catch (moodle_exception $e) {
-                        $messages->errors[] = $e->getMessage();
                     }
+
                 } else if ($user) {
                     $messages->successes[] = get_string('accountalreadyexists', 'local_equipment', $student);
                     unset($parent->otherfirst);
@@ -382,15 +425,18 @@ if ($form->is_cancelled()) {
                     }
 
                     // Send the enrollment email to the student only if they were successfully enrolled in at least one course.
-                    $emailsentstatus = local_equipment_send_enrollment_message(
-                        $student,
-                        $coursenames,
-                        'student',
-                        $family->partnership
-                    );
-                    array_push($messages->successes, ...$emailsentstatus->successes);
-                    array_push($messages->warnings, ...$emailsentstatus->warnings);
-                    array_push($messages->errors, ...$emailsentstatus->errors);
+
+                    if ($notifyenabled_students) {
+                        $emailsentstatus = local_equipment_send_enrollment_message(
+                            $student,
+                            $coursenames,
+                            'student',
+                            $family->partnership
+                        );
+                        array_push($messages->successes, ...$emailsentstatus->successes);
+                        array_push($messages->warnings, ...$emailsentstatus->warnings);
+                        array_push($messages->errors, ...$emailsentstatus->errors);
+                    }
 
                     $allcourses = array_merge($allcourses, $student->courses);
                 }
@@ -440,18 +486,21 @@ if ($form->is_cancelled()) {
                     }
                 }
 
-                // If courses_results->successes is NOT empty, then we should include that course in the email. Those errors are
-                // handled in the enrollment email function, though.
-                $emailsentstatus = local_equipment_send_enrollment_message(
-                    $p,
-                    $coursenames,
-                    'parent',
-                    $family->partnership,
-                    $studentfirstnames
-                );
-                array_push($messages->successes, ...$emailsentstatus->successes);
-                array_push($messages->warnings, ...$emailsentstatus->warnings);
-                array_push($messages->errors, ...$emailsentstatus->errors);
+
+                if ($notifyenabled_parents) {
+                    // If courses_results->successes is NOT empty, then we should include that course in the email. Those errors are
+                    // handled in the enrollment email function, though.
+                    $emailsentstatus = local_equipment_send_enrollment_message(
+                        $p,
+                        $coursenames,
+                        'parent',
+                        $family->partnership,
+                        $studentfirstnames
+                    );
+                    array_push($messages->successes, ...$emailsentstatus->successes);
+                    array_push($messages->warnings, ...$emailsentstatus->warnings);
+                    array_push($messages->errors, ...$emailsentstatus->errors);
+                }
             }
 
             // Poopulate the $families array with the current family. HAH. Poop...

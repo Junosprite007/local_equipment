@@ -712,6 +712,9 @@ $string['messagesender_desc'] = 'When sending course welcome messages, who shoul
 $string['fromcoursecontact'] = 'From the course contact';
 $string['fromkeyholder'] = 'From the key holder';
 $string['fromnoreply'] = 'From the no-reply address';
+$string['notificationsdisabledforusertype'] = 'Yo, {$a->user}. Just so you know, notification emails are currently disabled for {$a->role}s, so no {$a->role} will receive an email notification during this enrolment process. If you\'d like to enable email notifications specifically for {$a->role}s, you can do that here: {$a->link}.';
+$string['notificationsdisabledforusertypes'] = 'Yo, {$a->user}. Just so you know, notification emails are currently disabled for {$a->role1}s and {$a->role2}s, so none of these users will receive an email notification during this enrolment process. If you\'d like to enable email notifications, you can do that here: {$a->link}.';
+
 
 // Welcome messages
 $string['studentwelcomemessage'] = 'Hi {$a->firstname},

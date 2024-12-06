@@ -346,6 +346,13 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                 if (type === 'phone' && line.length < 10) {
                     return 'unknown';
                 }
+                if (type === 'name') {
+                    // We have to add something like this currently because the regex for names is too broad and encapsulates all
+                    // partnerships, too, so we'll test again to see if it's also a 'partnership' match (strictly number digits).
+                    if (regexes.partnership.test(line)) {
+                        return 'partnership';
+                    }
+                }
                 return type;
             }
         }
