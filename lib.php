@@ -2300,14 +2300,21 @@ function local_equipment_is_parent_of_student(int $parentid, int $studentid): bo
 function local_equipment_generate_username($user) {
     global $DB;
 
-    $firstname = transliterator_transliterate('Any-Latin; Latin-ASCII; Lower()', $user->firstname);
-    // $firstname = transliterator_transliterate('Any-Latin; Latin-ASCII', $firstname);
+    // $firstname = transliterator_transliterate('Any-Latin; Latin-ASCII; Lower()', $user->firstname);
+    // $lastname = transliterator_transliterate('Any-Latin; Latin-ASCII; Lower()', $user->lastname);
+    // First normalize to decomposed form (separate letters from diacritics)
+    $firstname = Normalizer::normalize($user->firstname, Normalizer::FORM_D);
+    $lastname = Normalizer::normalize($user->lastname, Normalizer::FORM_D);
 
-    $lastname = transliterator_transliterate('Any-Latin; Latin-ASCII; Lower()', $user->lastname);
-    // $lastname = transliterator_transliterate('Any-Latin; Latin-ASCII', $user->lastname);
+    // Then remove non-ASCII characters
+    $firstname = preg_replace('/[^\x20-\x7E]/u', '', $firstname);
+    $lastname = preg_replace('/[^\x20-\x7E]/u', '', $lastname);
 
+    // Fallback in case name becomes empty after processing
+    if (empty($firstname)) $firstname = '';
+    if (empty($lastname)) $lastname = 'user';
 
-    $firstpart = strtolower($firstname)[0];
+    $firstpart = strtolower($firstname)[0] ?? '';
     $secondpart = strtolower($lastname);
     $secondpart = str_replace("'", '', $secondpart);
     $secondpart = explode('-', $secondpart)[0];
