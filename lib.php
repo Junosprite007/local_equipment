@@ -2590,10 +2590,19 @@ function local_equipment_send_enrollment_message($user, $coursenames, $roletype 
     $result->warnings = [];
     $result->errors = [];
 
+    $name = $user->firstname;
+    if ($user->lastname !== '') {
+        $name .= ' ' . $user->lastname;
+    }
+    $name = html_writer::link(
+        new moodle_url('/user/profile.php', ['id' => $user->id]),
+        $name
+    );
+
     // return $result; // delete this line when done testing.
 
     if (empty($coursenames)) {
-        $result->warnings[] = get_string('notsendingemailtouser_nocourses', 'local_equipment', $user);
+        $result->warnings[] = get_string('notsendingemailtouser_nocourses', 'local_equipment', $name);
         return $result;
     }
 
@@ -2623,10 +2632,6 @@ function local_equipment_send_enrollment_message($user, $coursenames, $roletype 
     }
     // echo '<br />';
     // $messageinput = new stdClass();
-    $name = $user->firstname;
-    if ($user->lastname !== '') {
-        $name .= ' ' . $user->lastname;
-    }
     $messageinput = new stdClass();
     $messageinput->user = $name;
     $messageinput->sitename = $SITE->shortname;

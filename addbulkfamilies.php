@@ -103,13 +103,13 @@ if ($form->is_cancelled()) {
                 $parent->firstnamephonetic = '';
                 $parent->lastnamephonetic = '';
                 $parent->alternatename = '';
-                echo '<br />';
-                echo '<br />';
-                echo '<br />';
-                echo '<pre>';
-                var_dump('$parent before');
-                var_dump($parent);
-                echo '</pre>';
+                // echo '<br />';
+                // echo '<br />';
+                // echo '<br />';
+                // echo '<pre>';
+                // var_dump('$parent before');
+                // var_dump($parent);
+                // echo '</pre>';
 
                 // We'll need to get all the usernames that are the same, then append the next sequential number to the end of the
                 // new username below.
@@ -126,14 +126,14 @@ if ($form->is_cancelled()) {
                     $password = $parent->password;
                     // Add an entirely new parent user. This overrides the $parent object with the new user object.
                     $userid = user_create_user($parent);
-                    echo '<br />';
-                    echo '<br />';
-                    echo '<br />';
-                    echo '<pre>';
-                    var_dump('$parent after');
-                    var_dump($parent);
-                    echo '</pre>';
-                    passwo
+                    // echo '<br />';
+                    // echo '<br />';
+                    // echo '<br />';
+                    // echo '<pre>';
+                    // var_dump('$parent after');
+                    // var_dump($parent);
+                    // echo '</pre>';
+                    // die();
                 } else {
                     // Update an existing parent user while keeping the previously created parent object as $parent_old before
                     // overriding it, just in case. Not sure if we'll actually need it, though.
@@ -144,6 +144,20 @@ if ($form->is_cancelled()) {
                 if ($userid !== null) {
                     // When $userid is set (in the previous if statement), it means a new user was created.
                     $parent->id = $userid;
+
+                    // Force passord update for the parent's on next login.
+                    if ($newparent_preferenceupdate = $DB->get_record('user_preferences', ['userid' => $userid, 'name' => 'auth_forcepasswordchange', 'value' => 0])
+                    ) {
+                        $newparent_preferenceupdate->value = 1;
+                        $DB->update_record('user_preferences', $newparent_preferenceupdate);
+                    } else {
+                        $newparent_preferenceupdate = new stdClass();
+                        $newparent_preferenceupdate->userid = $userid;
+                        $newparent_preferenceupdate->name = 'auth_forcepasswordchange';
+                        $newparent_preferenceupdate->value = 1;
+                        $newparent_preferenceupdate_id = $DB->insert_record('user_preferences', $newparent_preferenceupdate);
+                    }
+
                     $created_users[] = $parent;
                     $messages->successes[] = get_string('accountcreatedsuccessfully', 'local_equipment', $parent);
                     // Send a welcome email to the parent.
@@ -297,6 +311,27 @@ if ($form->is_cancelled()) {
                 if ($userid !== null) {
                     // When $userid is set (in the previous if statement), it means a new user was created.
                     $student->id = $userid;
+
+                    // Force passord update for the student's on next login.
+                    if ($newstudent_preferenceupdate = $DB->get_record('user_preferences', ['userid' => $userid, 'name' => 'auth_forcepasswordchange', 'value' => 0])) {
+                        $newstudent_preferenceupdate->value = 1;
+                        $DB->update_record('user_preferences', $newstudent_preferenceupdate);
+                    } else {
+                        $newstudent_preferenceupdate = new stdClass();
+                        $newstudent_preferenceupdate->userid = $userid;
+                        $newstudent_preferenceupdate->name = 'auth_forcepasswordchange';
+                        $newstudent_preferenceupdate->value = 1;
+                        $newstudent_preferenceupdate_id = $DB->insert_record('user_preferences', $newstudent_preferenceupdate);
+                    }
+                    // echo '<br />';
+                    // echo '<br />';
+                    // echo '<br />';
+                    // echo '<pre>';
+                    // var_dump($newstudent_preferenceupdate_id);
+                    // $student->password = $password;
+                    // var_dump($student);
+                    // echo '</pre>';
+
                     $created_users[] = $student;
                     $messages->successes[] = get_string('accountcreatedsuccessfully', 'local_equipment', $student);
                     // Send a welcome email to the parent.
@@ -458,6 +493,9 @@ if ($form->is_cancelled()) {
                         $coursenames[] = $courselink;
                     }
                 }
+
+
+
                 // If courses_results->successes is NOT empty, then we should include that course in the email.
 
                 $emailsentstatus = local_equipment_send_enrollment_message($p, $coursenames, 'parent', $family->partnership, $studentfirstnames);

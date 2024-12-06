@@ -303,7 +303,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
     const regexes = {
         email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
         phone: /^(\+?\d{1,2}\s?)?(\(?\d{3}\)?[\s.-]?)?\d{3}[\s.-]?\d{4}$/,
-        name: /^[a-zA-Z\s'-]+$/,
+        name: /^[a-zA-ZÀ-ÿ\u00f1\u00d1\u0100-\u017f\s'-]+$/,
         partnership: /^-?\d+$/,
         student: /^\*(?!\*)(.)/,
         courses: /^\*\*.*$/,
