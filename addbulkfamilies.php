@@ -23,8 +23,6 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use core_user\route\api\preferences;
-
 // File location: local/equipment/addbulkfamilies.php
 
 require_once(__DIR__ . '/../../config.php');
@@ -99,17 +97,9 @@ if ($form->is_cancelled()) {
                 $parent->email = clean_param($p->email->data, PARAM_EMAIL);
                 $parent->phone2 = clean_param($p->phone->data ?? '', PARAM_TEXT);
                 $parent->password = generate_password(6);
-                // $parent->preference_auth_forcepasswordchange = 1;
                 $parent->firstnamephonetic = '';
                 $parent->lastnamephonetic = '';
                 $parent->alternatename = '';
-                // echo '<br />';
-                // echo '<br />';
-                // echo '<br />';
-                // echo '<pre>';
-                // var_dump('$parent before');
-                // var_dump($parent);
-                // echo '</pre>';
 
                 // We'll need to get all the usernames that are the same, then append the next sequential number to the end of the
                 // new username below.
@@ -126,14 +116,6 @@ if ($form->is_cancelled()) {
                     $password = $parent->password;
                     // Add an entirely new parent user. This overrides the $parent object with the new user object.
                     $userid = user_create_user($parent);
-                    // echo '<br />';
-                    // echo '<br />';
-                    // echo '<br />';
-                    // echo '<pre>';
-                    // var_dump('$parent after');
-                    // var_dump($parent);
-                    // echo '</pre>';
-                    // die();
                 } else {
                     // Update an existing parent user while keeping the previously created parent object as $parent_old before
                     // overriding it, just in case. Not sure if we'll actually need it, though.
@@ -146,7 +128,11 @@ if ($form->is_cancelled()) {
                     $parent->id = $userid;
 
                     // Force passord update for the parent's on next login.
-                    if ($newparent_preferenceupdate = $DB->get_record('user_preferences', ['userid' => $userid, 'name' => 'auth_forcepasswordchange', 'value' => 0])
+                    if ($newparent_preferenceupdate = $DB->get_record('user_preferences', [
+                            'userid' => $userid,
+                            'name' => 'auth_forcepasswordchange',
+                            'value' => 0
+                        ])
                     ) {
                         $newparent_preferenceupdate->value = 1;
                         $DB->update_record('user_preferences', $newparent_preferenceupdate);
@@ -181,11 +167,11 @@ if ($form->is_cancelled()) {
                         $email_message = get_string('welcomeemail_body', 'local_equipment', $email_messageinput);
 
                         $success = email_to_user(
-                            $parent,              // To user
-                            $contactuser,       // From user
+                            $parent,                        // To user
+                            $contactuser,                   // From user
                             $subject,
-                            html_to_text($email_message),  // Plain text version
-                            $email_message               // HTML version
+                            html_to_text($email_message),   // Plain text version
+                            $email_message                  // HTML version
                         );
 
                         if ($success) {
@@ -201,7 +187,6 @@ if ($form->is_cancelled()) {
                                 $email_messageinput
                             );
                         }
-                        // die();
                     } catch (moodle_exception $e) {
                         $messages->errors[] = $e->getMessage();
                     }
@@ -249,7 +234,6 @@ if ($form->is_cancelled()) {
                 $student->mnethostid = $CFG->mnet_localhost_id;
                 $student->lang = $USER->lang ?? $CFG->lang ?? 'en';
                 $student->password = generate_password(6);
-                // $student->preference_auth_forcepasswordchange = 1;
                 $student->phone2 = clean_param($s->phone->data ?? '', PARAM_TEXT);
                 $student->firstnamephonetic = '';
                 $student->lastnamephonetic = '';
@@ -301,13 +285,6 @@ if ($form->is_cancelled()) {
                     $student = $user;
                 }
 
-                // if ($userid !== null) {
-                //     $student->id = $userid;
-                //     $created_users[] = $student;
-                // } else {
-                //     $existing_users[] = $student;
-                // }
-
                 if ($userid !== null) {
                     // When $userid is set (in the previous if statement), it means a new user was created.
                     $student->id = $userid;
@@ -323,27 +300,10 @@ if ($form->is_cancelled()) {
                         $newstudent_preferenceupdate->value = 1;
                         $newstudent_preferenceupdate_id = $DB->insert_record('user_preferences', $newstudent_preferenceupdate);
                     }
-                    // echo '<br />';
-                    // echo '<br />';
-                    // echo '<br />';
-                    // echo '<pre>';
-                    // var_dump($newstudent_preferenceupdate_id);
-                    // $student->password = $password;
-                    // var_dump($student);
-                    // echo '</pre>';
-
                     $created_users[] = $student;
                     $messages->successes[] = get_string('accountcreatedsuccessfully', 'local_equipment', $student);
                     // Send a welcome email to the parent.
                     try {
-                        // echo '<br />';
-                        // echo '<br />';
-                        // echo '<br />';
-                        // echo '<pre>';
-                        // var_dump('$student');
-                        // var_dump($student);
-                        // echo '</pre>';
-                        // die();
                         $email_messageinput = new stdClass();
                         $email_messageinput->siteshortname = $SITE->shortname;
                         $email_messageinput->sitefullname = $SITE->fullname;
@@ -363,11 +323,11 @@ if ($form->is_cancelled()) {
                         $email_message = get_string('welcomeemail_body', 'local_equipment', $email_messageinput);
 
                         $success = email_to_user(
-                            $student,              // To user
-                            $contactuser,       // From user
+                            $student,                       // To user
+                            $contactuser,                   // From user
                             $subject,
-                            html_to_text($email_message),  // Plain text version
-                            $email_message               // HTML version
+                            html_to_text($email_message),   // Plain text version
+                            $email_message                  // HTML version
                         );
 
                         if ($success) {
@@ -383,7 +343,6 @@ if ($form->is_cancelled()) {
                                 $email_messageinput
                             );
                         }
-                        // die();
                     } catch (moodle_exception $e) {
                         $messages->errors[] = $e->getMessage();
                     }
@@ -399,14 +358,6 @@ if ($form->is_cancelled()) {
                     continue;
                 }
 
-                // echo '<br />';
-                // echo '<br />';
-                // echo '<br />';
-                // echo '<pre>';
-                // var_dump('$s');
-                // var_dump($s);
-                // echo '</pre>';
-                // die();
                 $student->courses = $s->courses->data;
 
                 $coursenames = [];
@@ -421,14 +372,6 @@ if ($form->is_cancelled()) {
                         array_push($messages->warnings, ...$student->courses_results[$c]->warnings);
                         array_push($messages->errors, ...$student->courses_results[$c]->errors);
 
-                        // echo '<br />';
-                        // echo '<br />';
-                        // echo '<br />';
-                        // echo '<pre>';
-                        // var_dump('$s');
-                        // var_dump($student->courses_results[$c]);
-                        // echo '</pre>';
-
                         if (!empty($student->courses_results[$c]->successes)) {
                             $courseurl = new moodle_url('/course/view.php',
                                 ['id' => $c]
@@ -437,9 +380,14 @@ if ($form->is_cancelled()) {
                             $coursenames[] = $courselink;
                         }
                     }
-                    // die();
+
                     // Send the enrollment email to the student only if they were successfully enrolled in at least one course.
-                    $emailsentstatus = local_equipment_send_enrollment_message($student, $coursenames, 'student', $family->partnership);
+                    $emailsentstatus = local_equipment_send_enrollment_message(
+                        $student,
+                        $coursenames,
+                        'student',
+                        $family->partnership
+                    );
                     array_push($messages->successes, ...$emailsentstatus->successes);
                     array_push($messages->warnings, ...$emailsentstatus->warnings);
                     array_push($messages->errors, ...$emailsentstatus->errors);
@@ -463,8 +411,6 @@ if ($form->is_cancelled()) {
                 $studentfirstnames[] = $userlink;
                 $students[] = $student;
             }
-
-            // die();
 
             // Fill the family array with the parents, students, partnership, and unique courses (each student in the $students
             // array already contains a list of their individual courses).
@@ -494,47 +440,25 @@ if ($form->is_cancelled()) {
                     }
                 }
 
-
-
-                // If courses_results->successes is NOT empty, then we should include that course in the email.
-
-                $emailsentstatus = local_equipment_send_enrollment_message($p, $coursenames, 'parent', $family->partnership, $studentfirstnames);
+                // If courses_results->successes is NOT empty, then we should include that course in the email. Those errors are
+                // handled in the enrollment email function, though.
+                $emailsentstatus = local_equipment_send_enrollment_message(
+                    $p,
+                    $coursenames,
+                    'parent',
+                    $family->partnership,
+                    $studentfirstnames
+                );
                 array_push($messages->successes, ...$emailsentstatus->successes);
                 array_push($messages->warnings, ...$emailsentstatus->warnings);
                 array_push($messages->errors, ...$emailsentstatus->errors);
-
-
-                // This is were we should send parent emails.
-                // $coursenames = [];
-                // echo '<br />';
-                // echo '<br />';
-                // echo '<br />';
-                // echo '<pre>';
-                // var_dump('$emailsentstatus: ');
-                // var_dump($emailsentstatus);
-                // echo '</pre>';
-                // die();
             }
 
             // Poopulate the $families array with the current family. HAH. Poop...
             $families[] = $family;
 
             // This is where we create or update the local_equipment_user
-            // $familyname = '';
 
-            // $familyhasparents = count($family->parents) > 0;
-            // $familyhasstudents = count($family->students) > 0;
-            // $familyhasusers = $familyhasparents || $familyhasstudents;
-
-            // if ($familyhasusers && !$familyhasstudents) {
-            //     $familyname = $family->parents[0]->lastname;
-            //     $messages->successes[] = get_string('familyaddedsuccessfully', 'local_equipment', $familyname);
-            // } else if ($familyhasusers) {
-            //     $familyname = $family->students[0]->lastname;
-            //     $messages->successes[] = get_string('familyaddedsuccessfully', 'local_equipment', $familyname);
-            // } else {
-            //     $messages->errors[] = ();
-            // }
 
             // Determine overall status
             $status = 'success';
@@ -554,14 +478,6 @@ if ($form->is_cancelled()) {
                 throw new moodle_exception('familyhasnousers', 'local_equipment');
             }
 
-
-            // echo '<br />';
-            // echo '<br />';
-            // echo '<br />';
-            // echo '<pre>';
-            // var_dump($messages);
-            // echo '</pre>';
-            // die();
             // Generate and output the notification
             echo local_equipment_generate_family_notification($familyname, $messages, $status);
         }
@@ -613,7 +529,6 @@ if ($form->is_cancelled()) {
                 $record->id = $DB->insert_record('local_equipment_user', $record);
             }
         }
-
 
         // Get all the user IDs in the entire system. This will be used to merge duplicate user entries in the local_equipment_user
         // table. This should be removed in the next update.

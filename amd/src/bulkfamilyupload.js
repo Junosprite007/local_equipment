@@ -660,6 +660,33 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             const enDash = '–';
                             const regex = new RegExp(`${id} ${enDash} `, 'g');
                             courseName = courses[id].replace(regex, '');
+
+                            // Add this block to validate that the students in a given family are taking courses from the same
+                            // partnership. The partnership does NOT get added to the student object here, but it does get added to
+                            // the family object in the processFamily() function.
+
+                            // TODO: Because of how this currently works, we can't add the partnership to the student object. Basically,
+                            // the partnership getting added could be wrong since some partnership use the course from other
+                            // partnerships. I'll figure out how to do this later.
+
+                            // if (!partnershipAdded) {
+                            //     // Find which partnership this course belongs to
+                            //     for (const [pid, pdata] of Object.entries(
+                            //         partnerships
+                            //     )) {
+                            //         if (
+                            //             pdata.coursedata &&
+                            //             pdata.coursedata[id]
+                            //         ) {
+                            //             partnership = {
+                            //                 data: pid,
+                            //                 html: pdata.name,
+                            //             };
+                            //             partnershipAdded = true;
+                            //             break;
+                            //         }
+                            //     }
+                            // }
                         } else if (
                             courses[id] &&
                             courseAlreadyProcessed &&
@@ -843,24 +870,9 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                                         `<span class="pl-2 alert-danger">${errorMessage}</span>`
                                     );
                                 }
-                                // Log.debug('Checking student:');
-                                // const needsStudentName =
-                                //     student.student.data === '' ||
-                                //     student.student.data === undefined;
-                                // if (needsStudentName) {
-                                //     const errorMessage = await getString(
-                                //         'thesecoursesneedastudent',
-                                //         'local_equipment'
-                                //     );
-                                //     familyHTML.push(
-                                //         `<span class="pl-2 alert-danger">${errorMessage}</span>`
-                                //     );
-                                // }
 
-                                // students[studentNum] = { ...student };
                                 students[studentNum] = { ...student };
                                 student = {};
-                                // studentName = '';
                                 studentNum++;
                             }
                             break;
@@ -886,10 +898,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                 students.push({ ...student });
             }
 
-            // Log.debug('Checking parents:');
-            // let i = 0;
             for (parent of parents) {
-                // Log.debug('1');
                 if (parent.email === undefined) {
                     const errorMessage = await getString(
                         'parentneedsemail',
@@ -897,36 +906,12 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                         parent.name.data.firstName
                     );
                     Log.debug(errorMessage);
-                    // parent.email.html = `<span class="pl-2 alert-danger">${errorMessage}</span>`;
-                    // parent = {
-                    //     ...parent,
-                    //     email: {
-                    //         data: '',
-                    //         html: `<span class="pl-2 alert-danger">${errorMessage}</span>`,
-                    //     },
-                    // };
                     familyHTML.unshift(
                         `<span class="pl-2 alert-danger">${errorMessage}</span>`
                     );
-                    // parents[i] = parent;
                 }
-                // i++;
             }
 
-            // if (
-            //     parent.name !== undefined &&
-            //     parent.email === undefined
-            // ) {
-            //     const errorMessage = await getString(
-            //         'parentneedsemail',
-            //         'local_equipment',
-            //         parent.name.data.firstName
-            //     );
-
-            //     familyHTML.push(
-            //         `<span class="pl-2 alert-danger">${errorMessage}</span>`
-            //     );
-            // }
             if (parents.length !== parentNum) {
                 const errorMessage = await getString(
                     'errorprocessingparents',
@@ -946,6 +931,36 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                     `<span class="pl-2 alert-danger">${errorMessage}</span>`
                 );
             }
+
+            // TODO: This is where we should eventually add the partnership to the family based on the
+            // partnership that the first course ID belongs to 'cause at this point, we already know that the
+            // course exists somewhere.
+
+            // If no partnership specified but courses exist, try to find partnership from first course
+
+            // TODO: Because of how this currently works, we can't add the partnership to the student object. Basically,
+            // the partnership getting added could be wrong since some partnership use the course from other
+            // partnerships. I'll figure out how to do this later.
+
+            // if (
+            //     !partnershipAdded &&
+            //     students.length > 0 &&
+            //     students[0].courses?.data
+            // ) {
+            //     const firstCourseId = students[0].courses.data[0];
+            //     // Find partnership that contains this course
+            //     for (const [pid, pdata] of Object.entries(partnerships)) {
+            //         if (pdata.coursedata && pdata.coursedata[firstCourseId]) {
+            //             partnership = {
+            //                 data: pid,
+            //                 html: pdata.name,
+            //             };
+            //             partnershipAdded = true;
+            //             familyHTML.unshift(partnership.html); // Add to start of HTML
+            //             break;
+            //         }
+            //     }
+            // }
 
             const familyData = { parents, students, partnership };
             const htmlOutput = `<div class="bg-light border p-3">${familyHTML.join(

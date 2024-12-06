@@ -2287,9 +2287,12 @@ function local_equipment_is_parent_of_student(int $parentid, int $studentid): bo
  *      Jane G Harmon-Quest -> jharmon2
  *      Jane G Harmon-Quest -> jharmon3
  *
- * E.g. Jord A O'neil -> oneil1
- *      Jord A O'neil -> oneil2
- *      Jord A O'neil -> oneil3
+ * E.g. Jord A O'neil -> joneil1
+ *      Jord A O'neil -> joneil2
+ *      Jord A O'neil -> joneil3
+ *
+ * E.g. Ümit Ñet -> unet1
+ * E.g. Üma ÑetøéÒLë -> unetoeole1
  *
  * @param stdClass $user The user object.
  * @return string The generated username.
@@ -2297,8 +2300,15 @@ function local_equipment_is_parent_of_student(int $parentid, int $studentid): bo
 function local_equipment_generate_username($user) {
     global $DB;
 
-    $firstpart = strtolower($user->firstname)[0];
-    $secondpart = strtolower($user->lastname);
+    $firstname = transliterator_transliterate('Any-Latin; Latin-ASCII; Lower()', $user->firstname);
+    // $firstname = transliterator_transliterate('Any-Latin; Latin-ASCII', $firstname);
+
+    $lastname = transliterator_transliterate('Any-Latin; Latin-ASCII; Lower()', $user->lastname);
+    // $lastname = transliterator_transliterate('Any-Latin; Latin-ASCII', $user->lastname);
+
+
+    $firstpart = strtolower($firstname)[0];
+    $secondpart = strtolower($lastname);
     $secondpart = str_replace("'", '', $secondpart);
     $secondpart = explode('-', $secondpart)[0];
 
@@ -2590,6 +2600,8 @@ function local_equipment_send_enrollment_message($user, $coursenames, $roletype 
     $result->warnings = [];
     $result->errors = [];
 
+    return $result; // delete this line when done testing.
+
     $name = $user->firstname;
     if ($user->lastname !== '') {
         $name .= ' ' . $user->lastname;
@@ -2598,8 +2610,6 @@ function local_equipment_send_enrollment_message($user, $coursenames, $roletype 
         new moodle_url('/user/profile.php', ['id' => $user->id]),
         $name
     );
-
-    // return $result; // delete this line when done testing.
 
     if (empty($coursenames)) {
         $result->warnings[] = get_string('notsendingemailtouser_nocourses', 'local_equipment', $name);
