@@ -738,10 +738,10 @@ Best regards,
 $string['messageprovider:coursewelcome'] = 'Course welcome notifications';
 $string['coursewelcome'] = 'Course welcome message';
 $string['coursewelcome_help'] = 'Notifications sent to users when they are enrolled in a course through the Equipment plugin.';
-$string['enrollmentemailsenttouserforcourses'] = 'Enrollment email sent to user {$a->user} for courses: {$a->courses_comma}';
-$string['enrollmentemailnotsenttouserforcourses'] = 'Welcome Enrollment email not sent to user {$a->user} for courses: {$a->courses_comma}';
+$string['enrollmentemailsenttouserforcourses'] = 'Enrollment email sent to user {$a->user} ({$a->email}) for courses: {$a->courses_comma}';
+$string['enrollmentemailnotsenttouserforcourses'] = 'Welcome Enrollment email not sent to user {$a->user} ({$a->email}) for courses: {$a->courses_comma}';
 $string['notsendingemailtouser_nocourses'] = 'Not sending email to {$a} because they weren\'t enrolled in any new courses.';
-$string['newuseremailsenttouser'] = 'New user email sent to {$a->personname}.';
-$string['emailfailedtosendtouser'] = 'Email failed to send to {$a->personname}.';
+$string['newuseremailsenttouser'] = 'New user email sent to {$a->personname} at the address: {$a->email}.';
+$string['emailfailedtosendtouser'] = 'Email failed to send to {$a->personname} at the address: {$a->email}.';
 $string['contactusforyourpassword'] = 'Contact us for your password.';
 

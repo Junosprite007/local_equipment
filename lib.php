@@ -2628,6 +2628,7 @@ function local_equipment_send_enrollment_message($user, $coursenames, $roletype 
     }
     $messageinput = new stdClass();
     $messageinput->user = $name;
+    $messageinput->email = $user->email;
     $messageinput->sitename = $SITE->shortname;
     $messageinput->partnership = $partnership;
     $messageinput->students = $usersofuser;
