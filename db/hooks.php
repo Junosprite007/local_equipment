@@ -12,21 +12,23 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other meta-data are defined here.
+ * Hook callback registrations for equipment plugin.
  *
  * @package     local_equipment
- * @copyright   2024 onward Joshua Kirby <josh@funlearningcompany.com>
- * @author      Joshua Kirby - CTO @ Fun Learning Company - funlearningcompany.com
+ * @category    hook
+ * @copyright   2024 onwards Joshua Kirby <josh@funlearningcompany.com>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_equipment';
-$plugin->release = '0.1.0';
-$plugin->version = 2025010300;
-$plugin->requires = 2024042201;
-$plugin->maturity = MATURITY_STABLE;
+$callbacks = [
+    [
+        'hook' => \core_user\hook\after_login_completed::class,
+        'callback' => [\local_equipment\hook\callbacks::class, 'check_phone_verification'],
+        'priority' => 500,
+    ],
+];

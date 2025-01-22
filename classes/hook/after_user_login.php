@@ -12,21 +12,26 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other meta-data are defined here.
+ * Hook handler for after user login completion.
  *
  * @package     local_equipment
- * @copyright   2024 onward Joshua Kirby <josh@funlearningcompany.com>
- * @author      Joshua Kirby - CTO @ Fun Learning Company - funlearningcompany.com
+ * @copyright   2024 onwards Joshua Kirby <josh@funlearningcompany.com>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace local_equipment\hook;
 
-$plugin->component = 'local_equipment';
-$plugin->release = '0.1.0';
-$plugin->version = 2025010300;
-$plugin->requires = 2024042201;
-$plugin->maturity = MATURITY_STABLE;
+use core\attribute;
+
+#[attribute\label('Hook dispatched after user login to verify phone number for parents')]
+#[attribute\tags('login', 'phone', 'verification')]
+final class after_user_login {
+    public function __construct(
+        public readonly int $userid,
+        public readonly string $username,
+    ) {
+    }
+}

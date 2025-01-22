@@ -322,7 +322,7 @@ The 'Add bulk families' sub-features generates an array of objects (families) fr
             ],
         partnership: '4',
     },
-    
+
     // Family 2
     {
         parents:
@@ -374,10 +374,91 @@ The 'Add bulk families' sub-features generates an array of objects (families) fr
 
 
 
+Warning: Undefined property: stdClass::$api_key in /opt/homebrew/var/www/html/flip.funlearningco.com/local/equipment/lib.php on line 1643
 
 
+### Issue
+Error reading from database
 
+More information about this error
 
+Debug info: Unknown column 'sub_students' in 'ORDER BY'
+SELECT
+vccsubmission.id,
+vccsubmission.userid,
+vccsubmission.partnershipid,
+vccsubmission.pickupid,
+vccsubmission.studentids,
+vccsubmission.agreementids,
+vccsubmission.confirmationid,
+vccsubmission.confirmationexpired,
+vccsubmission.email,
+vccsubmission.email_confirmed,
+vccsubmission.firstname,
+vccsubmission.lastname,
+vccsubmission.phone,
+vccsubmission.phone_confirmed,
+vccsubmission.partnership_name,
+vccsubmission.mailing_extrainput,
+vccsubmission.mailing_streetaddress,
+vccsubmission.mailing_apartment,
+vccsubmission.mailing_city,
+vccsubmission.mailing_state,
+vccsubmission.mailing_country,
+vccsubmission.mailing_zipcode,
+vccsubmission.mailing_extrainstructions,
+vccsubmission.billing_extrainput,
+vccsubmission.billing_sameasmailing,
+vccsubmission.billing_streetaddress,
+vccsubmission.billing_apartment,
+vccsubmission.billing_city,
+vccsubmission.billing_state,
+vccsubmission.billing_country,
+vccsubmission.billing_zipcode,
+vccsubmission.billing_extrainstructions,
+vccsubmission.pickup_locationtime,
+vccsubmission.electronicsignature,
+vccsubmission.pickupmethod,
+vccsubmission.pickuppersonname,
+vccsubmission.pickuppersonphone,
+vccsubmission.pickuppersondetails,
+vccsubmission.usernotes,
+vccsubmission.adminnotes,
+vccsubmission.timecreated,
+vccsubmission.timemodified,
+
+u.id AS u_id,
+u.firstname AS u_firstname,
+u.lastname AS u_lastname,
+u.email AS u_email,
+u.phone1 AS u_phone1,
+u.phone2 AS u_phone2,
+
+partnership.name AS p_name,
+partnership.pickup_extrainstructions,
+partnership.pickup_apartment,
+partnership.pickup_streetaddress,
+partnership.pickup_city,
+partnership.pickup_state,
+partnership.pickup_zipcode,
+
+pickup.starttime AS pickup_starttime,
+pickup.endtime AS pickup_endtime
+FROM
+mdl_local_equipment_vccsubmission vccsubmission
+LEFT JOIN mdl_user u ON vccsubmission.userid = u.id
+LEFT JOIN mdl_local_equipment_partnership partnership ON vccsubmission.partnershipid = partnership.id
+LEFT JOIN mdl_local_equipment_pickup pickup ON vccsubmission.pickupid = pickup.id
+WHERE 1=1 ORDER BY sub_students DESC, timecreated DESC
+-- line 212 of /local/equipment/vccsubmissions.php: call to mysqli_native_moodle_database->get_records_sql()
+[array (
+)]
+Error code: dmlreadexception×Dismiss this notification
+Stack trace:
+line 497 of /lib/dml/moodle_database.php: dml_read_exception thrown
+line 293 of /lib/dml/moodle_read_slave_trait.php: call to moodle_database->query_end()
+line 1364 of /lib/dml/mysqli_native_moodle_database.php: call to mysqli_native_moodle_database->query_end()
+line 212 of /local/equipment/vccsubmissions.php: call to mysqli_native_moodle_database->get_records_sql()
 
 
 

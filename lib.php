@@ -1640,9 +1640,9 @@ function local_equipment_get_phone_providers() {
     $provider = get_config('factor_sms');
 
     if (
-        $provider->api_key &&
-        $provider->api_region &&
-        $provider->api_secret
+        isset($provider->api_key) &&
+        isset($provider->api_region) &&
+        isset($provider->api_secret)
     ) {
         $providers['aws'] = get_string('aws', 'local_equipment');
     }
@@ -2311,8 +2311,12 @@ function local_equipment_generate_username($user) {
     $lastname = preg_replace('/[^\x20-\x7E]/u', '', $lastname);
 
     // Fallback in case name becomes empty after processing
-    if (empty($firstname)) $firstname = '';
-    if (empty($lastname)) $lastname = 'user';
+    if (empty($firstname)) {
+        $firstname = '';
+    }
+    if (empty($lastname)) {
+        $lastname = 'user';
+    }
 
     $firstpart = strtolower($firstname)[0] ?? '';
     $secondpart = strtolower($lastname);

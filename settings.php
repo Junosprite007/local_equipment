@@ -318,13 +318,11 @@ if ($hassiteconfig) {
             new lang_string('infobip', 'local_equipment'),
             new lang_string('infobip_desc', 'local_equipment', $link)
         ));
-        $settingspage->add(new admin_setting_configtext(
+        $settingspage->add(new admin_setting_configpasswordunmask(
             'local_equipment/infobipapikey',
             new lang_string('infobipapikey', 'local_equipment'),
             new lang_string('infobipapikey_desc', 'local_equipment'),
             '',
-            PARAM_TEXT,
-            69
         ));
         $settingspage->add(new admin_setting_configtext(
             'local_equipment/infobipapibaseurl',
@@ -363,6 +361,38 @@ if ($hassiteconfig) {
         //     new lang_string('twilionumber_desc', 'local_equipment'),
         //     '',
         //     PARAM_TEXT
+        // ));
+
+        // // AWS End User Messaging
+        // $link = html_writer::link('https://console.aws.amazon.com/sms-voice/', get_string('here', 'local_equipment'));
+        // $settingspage->add(new admin_setting_heading(
+        //     'local_equipment_awssmsvoice',
+        //     new lang_string('awssmsvoice', 'local_equipment'),
+        //     new lang_string('awssmsvoice_desc', 'local_equipment', $link)
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/awssmsvoiceaccesskey',
+        //     new lang_string('awssmsvoiceaccesskey', 'local_equipment'),
+        //     new lang_string('awssmsvoiceaccesskey_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_TEXT,
+        //     69
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/awssmsvoicesecretkey',
+        //     new lang_string('awssmsvoicesecretkey', 'local_equipment'),
+        //     new lang_string('awssmsvoicesecretkey_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_TEXT,
+        //     69
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/awssmsvoiceregion',
+        //     new lang_string('awssmsvoiceregion', 'local_equipment'),
+        //     new lang_string('awssmsvoiceregion_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_TEXT,
+        //     69
         // ));
 
         // // AWS SNS
