@@ -25,10 +25,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$callbacks = [
-    [
-        'hook' => \core_user\hook\after_login_completed::class,
-        'callback' => [\local_equipment\hook\callbacks::class, 'check_phone_verification'],
-        'priority' => 500,
-    ],
-];
+// UNCOMMENT ALL OF THE BELOW AFTER TEXTING IS IMPLEMENTED.
+
+// $callbacks = [
+//     [
+//         'hook' => \core_user\hook\after_login_completed::class,
+//         'callback' => [\local_equipment\hook\callbacks::class, 'check_phone_verification'],
+//         'priority' => 500,
+//     ],
+// ];

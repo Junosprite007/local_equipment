@@ -23,8 +23,15 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use block_xp\di;
 use core\plugininfo\local;
 use media_videojs\external\get_language;
+use core\exception\moodle_exception;
+// use core\user;
+// use core_user;
+// use html_writer;
+// use moodle_url;
+// use moodle_url;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -910,6 +917,43 @@ function local_equipment_agreement_get_status($agreement) {
 }
 
 /**
+ * Remove partnership-course relationship from the local_equipment_partnership_course table.
+ *
+ * @param string $id The partnership ID
+ * @return bool True if all rows for the partnership were deleted, false otherwise
+ */
+function local_equipment_remove_partnership_course_entries($id) {
+    global $DB;
+
+    return $DB->delete_records('local_equipment_partnership_course', ['partnershipid' => $id]);
+}
+
+/**
+ * Add partnership-course relationship to the local_equipment_partnership_course table.
+ *
+ * @param string $id The partnership ID
+ * @return bool True if at least one relationship was added, false otherwise
+ */
+function local_equipment_add_partnership_course_entries($id, $courseids) {
+    global $DB;
+
+    $success = false;
+    foreach ($courseids as $courseid) {
+        $record = new stdClass();
+        $record->partnershipid = $id;
+        $record->courseid = $courseid;
+        $success = $DB->insert_record('local_equipment_partnership_course', $record);
+        if (!$success) {
+            $msg = new stdClass();
+            $msg->partnershipid = $id;
+            $msg->courseid = $courseid;
+            \core\notification::add(get_string('partnershipcourserelationshipnotadded', 'local_equipment', $msg), \core\output\notification::NOTIFY_ERROR);
+        }
+    }
+    return $success;
+}
+
+/**
  * Retrieves active partnerships.
  *
  * @return array An associative array of active partnerships, with partnership ID as the key and partnership name as the value.
@@ -930,13 +974,27 @@ function local_equipment_get_partnerships_with_courses() {
     $partnerships = $DB->get_records('local_equipment_partnership', ['active' => 1]);
     $partnershipdata = array();
 
+
     foreach ($partnerships as $partnership) {
-        $courseids = json_decode($partnership->courseids);
-        if (!empty($courseids)) {
-            $courses = $DB->get_records_list('course', 'id', $courseids, '', 'id, fullname');
-            $partnershipdata[$partnership->id] = array_values($courses);
+
+        // echo '<pre>';
+        // var_dump($partnership->name);
+        // echo '</pre>';
+        $courses = local_equipment_get_partnership_courses_this_year($partnership->id);
+        // echo '<pre>';
+        // var_dump($courses->courses_formatted);
+        // echo '</pre>';
+        // echo '<br />';
+        // echo '<br />';
+        // echo '<br />';
+
+        // $courseids = json_decode($partnership->courseids);
+        if (!isset($courses->nocourses)) {
+            // $courses = $DB->get_records_list('course', 'id', $courseids->, '', 'id, fullname');
+            $partnershipdata[$partnership->id] = array_values($courses->courses);
         }
     }
+    // die();
 
     return $partnershipdata;
 }
@@ -1042,7 +1100,8 @@ function local_equipment_get_partnership_courses_this_year($partnershipid) {
     $keyword = 'partnership';
     // The following string will look something like "partnership#1_2024-2025".
     // The word 'partnership' will be an admin-configurable string soon.
-    $partnershipid_string = $keyword . '#' . $partnershipid . '_' . $schoolyear;
+    $listingid = $DB->get_field('local_equipment_partnership', 'listingid', ['id' => $partnershipid]);
+    $partnershipid_string = $keyword . '#' . $listingid . '_' . $schoolyear;
 
     // // Get all the courses at any depth under a given 'idnumber' from the course.
     try {
@@ -1660,6 +1719,7 @@ function local_equipment_get_phone_providers() {
  */
 function local_equipment_send_sms($provider, $tonumber, $message) {
     global $SITE;
+    var_dump('Sending SMS');
 
     $responseobject = new stdClass();
     try {
@@ -1690,6 +1750,9 @@ function local_equipment_send_sms($provider, $tonumber, $message) {
                 $info = $curl->get_info();
                 $responseobject->errormessage = '';
                 $responseobject->errorobject = new stdClass();
+                echo '<pre>';
+                var_dump($responseobject);
+                echo '</pre>';
 
                 if ($info['http_code'] >= 200 && $info['http_code'] < 300) {
                     // The request was successful
@@ -1704,10 +1767,54 @@ function local_equipment_send_sms($provider, $tonumber, $message) {
                 }
                 break;
             case 'twilio':
+                // Just for testing:
+                // $responseobject->success = true;
+                // break;
                 // $twilioaccountsid = get_config('local_equipment', 'twilioaccountsid');
                 // $twilioauthtoken = get_config('local_equipment', 'twilioauthtoken');
                 // $twilionumber = get_config('local_equipment', 'twilionumber');
 
+                // $curl = new curl();
+
+                // // Set headers
+                // $headers = [
+                //         'Content-Type: application/x-www-form-urlencoded'
+                //     ];
+
+                // $curl->setHeader($headers);
+
+                // // Set post data
+                // $postdata = http_build_query([
+                //     'To' => $tonumber,
+                //     'From' => $twilionumber,
+                //     'Body' => $message
+                // ]);
+
+                // // Set Twilio API URL
+                // $twilioapiurl = 'https://api.twilio.com/2010-04-01/Accounts/' . $twilioaccountsid . '/Messages.json';
+
+                // // Set authentication
+                // $curl->setopt(CURLOPT_USERPWD, $twilioaccountsid . ':' . $twilioauthtoken);
+
+                // // Make the request
+                // $responseobject->response = $curl->post($twilioapiurl, $postdata);
+
+                // // Get the HTTP response code
+                // $info = $curl->get_info();
+                // $responseobject->errormessage = '';
+                // $responseobject->errorobject = new stdClass();
+
+                // if ($info['http_code'] >= 200 && $info['http_code'] < 300) {
+                //     // The request was successful
+                //     $responseobject->success = true;
+                // } else {
+                //     // The request failed
+                //     $responseobject->errorobject->httpcode = $info['http_code'];
+                //     $responseobject->errorobject->curlcode = $curl->get_errno();
+                //     $responseobject->errormessage = get_string('httprequestfailedwithcode', 'local_equipment', $responseobject->errorobject);
+                //     $responseobject->success = false;
+                //     throw new moodle_exception('httprequestfailed', 'local_equipment', '', null, $responseobject->errormessage);
+                // }
                 break;
             case 'awssns':
                 // $awssnsaccesskey = get_config('local_equipment', 'awssnsaccesskey');
@@ -1756,7 +1863,7 @@ function local_equipment_send_secure_otp($provider, $tophonenumber, $ttl = 600, 
         $otp = mt_rand(100000, 999999);
 
         // Test OTP
-        $testotp = 345844;
+        // $testotp = 345844;
         $msgparams = ['otp' => $otp, 'site' => $SITE->shortname];
         $message = get_string('phoneverificationcodefor', 'local_equipment', $msgparams);
         $phone1obj = local_equipment_parse_phone_number($USER->phone1);
@@ -1835,15 +1942,20 @@ function local_equipment_send_secure_otp($provider, $tophonenumber, $ttl = 600, 
             $message = get_string('phoneverificationcodefor', 'local_equipment', $msgparams);
             $responseobject = local_equipment_send_sms($provider, $tophonenumber, $message);
         } elseif ($recordexists && $isverified) {
+            $responseobject->errorcode = 0;
             throw new moodle_exception('phonealreadyverified', 'local_equipment');
         } elseif ($recordexists && !$isverified) {
+            $responseobject->errorcode = 1;
             throw new moodle_exception('otpforthisnumberalreadyexists', 'local_equipment');
             throw new moodle_exception('wait10minutes', 'local_equipment');
         } else {
+            $responseobject->errorcode = 2;
             throw new moodle_exception('somethingwentwrong', 'local_equipment');
         }
+        $responseobject->verifyurl = $verifyurl;
     } catch (moodle_exception $e) {
         // Catch the exception and add it to the array
+        $responseobject->verifyurl = $verifyurl;
         $responseobject->success = false;
         $responseobject->errormessage = $e->getMessage();
     }

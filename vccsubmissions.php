@@ -53,10 +53,14 @@ $table = new flexible_table('local-equipment-vccsubmissions');
 
 $columns = [
     'timecreated',
-    'u_firstname',
-    'u_lastname',
-    'u_email',
-    'u_phone2',
+    // 'u_firstname',
+    // 'u_lastname',
+    // 'u_email',
+    // 'u_phone2',
+    'firstname',
+    'lastname',
+    'email',
+    'phone',
     'partnership_name',
     'sub_students',
     'parent_mailing_address',
@@ -99,7 +103,7 @@ $columns_nosort = [
     'parent_mailing_address',
     'parent_mailing_extrainstructions',
     'pickup',
-    'students',
+    'sub_students',
     'actions'
 ];
 
@@ -356,7 +360,7 @@ foreach ($submissions as $submission) {
 
     $actions = $OUTPUT->action_icon($editurl, new pix_icon('t/edit', get_string('edit')));
 
-    $submission->firstname = null;
+    // $submission->firstname = null;
     $row = [];
     $row[] = userdate($submission->timecreated, get_string('strftime24date_mdy', 'local_equipment'));
     $row[] = $submission->firstname != 0 ? $submission->firstname : '[empty]';

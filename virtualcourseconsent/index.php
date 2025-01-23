@@ -61,28 +61,6 @@ if ($mform->is_cancelled()) {
 
     $transaction = $DB->start_delegated_transaction();
 
-    // $agreementsdata = json_decode($data->agreements_data, true);
-    // $selectedAgreements = [];
-
-    // foreach ($agreementsdata as $agreement) {
-    //     if ($agreement['type'] == 'optinout') {
-    //         $choice = isset($data->{"agreement_{$agreement['id']}"}) ? $data->{"agreement_{$agreement['id']}"} : null;
-    //         $selectedAgreements[] = [
-    //             'agreement_id' => $agreement['id'],
-    //             'choice' => $choice
-    //         ];
-    //     }
-    // }
-    // $i = 20;
-    // echo '<br />';
-    // echo '<br />';
-    // echo '<br />';
-    // echo '<pre>';
-    // var_dump($data);
-    // echo '</pre>';
-    // die();
-
-
     try {
 
         // Insert the consent form submission into the database.
@@ -109,29 +87,6 @@ if ($mform->is_cancelled()) {
                 $pickupmethod = '';
                 break;
         }
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<pre>';
-        // var_dump($partnership);
-        // echo '</pre>';
-        // // die();
-
-        // Make record updates for Moodle Core user.
-        // $userrecord = new stdClass();
-        // $userrecord->id = $USER->id;
-        // $userrecord->firstname = $data->firstname;
-        // $userrecord->lastname = $data->lastname;
-        // $userrecord->phone2 = $data->phone;
-
-        // Actually don't.
-
-
-        // Update core user record.
-        // $DB->update_record('user', $userrecord);
-        // echo '<pre>';
-        // var_dump($parentrecord);
-        // echo '</pre>';
 
         // Insert extended user (parent) record.
         $parentrecord = new stdClass();
@@ -167,39 +122,18 @@ if ($mform->is_cancelled()) {
         $parentrecord->timecreated = $parentrecord->timemodified = time();
         // Insert parent user record.
         $recordscount = $DB->count_records('local_equipment_user', ['userid' => $USER->id]);
-        // echo '<pre>';
-        // var_dump($recordscount);
-        // echo '</pre>';
 
-        if ($recordscount) {
-            var_dump('$recordscount > 0');
+        if ($recordscount > 0) {
             $combinedrecords = local_equipment_combine_user_records_by_userid($USER->id);
-
-            echo '<pre>';
-            var_dump($combinedrecords->studentids);
-            echo '</pre>';
 
             $parentrecord->id = $combinedrecords->id;
             $parentrecord->studentids = $combinedrecords->studentids;
             $parentrecord->vccsubmissionids = $combinedrecords->vccsubmissionids;
-            // echo '<pre>';
-            // var_dump($parentrecord);
-            // echo '</pre>';
-            $DB->update_record('local_equipment_user', $parentrecord);
-            // echo '<pre>';
-            // var_dump($parentrecord);
-            // echo '</pre>';
 
-            // echo '<pre>';
-            // var_dump($combinedrecords);
-            // echo '</pre>';
+            $DB->update_record('local_equipment_user', $parentrecord);
         } else {
-            var_dump('$recordscount == 0');
             $parentrecord->id = $DB->insert_record('local_equipment_user', $parentrecord);
         }
-
-        die();
-
 
         // Insert the virtual course consent (vcc) submission.
         $vccsubmission = new stdClass();
@@ -299,10 +233,7 @@ if ($mform->is_cancelled()) {
         $parentrecord->studentids = json_encode($studentids);
         $DB->update_record('local_equipment_user', $parentrecord);
 
-
         // Get the number of agreements
-
-
 
         // Insert the virtual course consent (vcc) submission agreement.
         $agreementcount = $data->agreements;
@@ -341,30 +272,8 @@ if ($mform->is_cancelled()) {
 
         $DB->update_record('local_equipment_vccsubmission', $vccsubmission);
 
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<pre>';
-        // echo '$vccsubmission: ';
-        // var_dump($vccsubmission);
-        // // var_dump($vccsubmissionids_string);
-        // echo '</pre>';
-        // die();
-        // echo '<pre>';
-        // echo '$parentrecord->studentids: ';
-        // var_dump($parentrecord->studentids);
-        // echo '</pre>';
-        // echo '<pre>';
-        // echo '$vccsubmission->studentids: ';
-        // var_dump($vccsubmission->studentids);
-        // echo '</pre>';
-        // echo '<pre>';
-        // echo '$vccsubmission->agreementids: ';
-        // var_dump($vccsubmission->agreementids);
-        // echo '</pre>';
 
-
-        // WE ALSO NEED TO DO THE PHONE VERIFICATION ANDN UPDATE THAT RECORD.
+        // WE ALSO NEED TO DO THE PHONE VERIFICATION AND UPDATE THAT RECORD.
 
 
         // update all the records.
@@ -374,13 +283,6 @@ if ($mform->is_cancelled()) {
         // Commit transaction
         $transaction->allow_commit();
 
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<pre>';
-        // var_dump($data);
-        // echo '</pre>';
-        // die();
     } catch (Exception $e) {
         $transaction->rollback($e);
         $success = false;
@@ -392,23 +294,53 @@ if ($mform->is_cancelled()) {
         //     $DB->delete_records('local_equipment_user', ['userid' => $userid]);
         // }
 
-        // Send a text message to the parent with the OTP.
-        if (true) {
-            echo '<pre>';
-            var_dump($vccsubmission);
-            echo '</pre>';
-            die();
-        } else {
-            // Phone already verified.
+        // $phoneisverified = $DB->get_record('local_equipment_phonecommunication_otp', ['userid' => $vccsubmission->userid, 'tophonenumber' => $vccsubmission->phone, 'phoneisverified' => 1]);
+        // // Send a text message to the parent with the OTP.
+        // if (!$phoneisverified) {
+        //     $response = local_equipment_send_secure_otp('infobip', $vccsubmission->phone, 600, true);
+
+        //     if ($response->success) {
+        //         redirect(
+        //             $response->verifyurl,
+        //             get_string('formsubmitted', 'local_equipment',  get_string('virtualcourseconsent', 'local_equipment')) . "<br /><br />" . get_string('acodehasbeensent', 'local_equipment'),
+        //             null,
+        //             \core\output\notification::NOTIFY_SUCCESS
+        //         );
+        //     }
+        //     if ($response->errorcode === 0) {
+        //         // Phone is already verified.
+        //         redirect(
+        //             new moodle_url('/'),
+        //             get_string('formsubmitted', 'local_equipment',  get_string('virtualcourseconsent', 'local_equipment')),
+        //             null,
+        //             \core\output\notification::NOTIFY_SUCCESS
+        //         );
+        //     }
+        //     if ($response->errorcode === 1) {
+        //         // OTP already exist and must be verified.
+        //         redirect(
+        //             $response->verifyurl,
+        //             get_string('formsubmitted', 'local_equipment',  get_string('virtualcourseconsent', 'local_equipment')) . "<br /><br />" . $response->errormessage,
+        //             null,
+        //             \core\output\notification::NOTIFY_SUCCESS
+        //         );
+        //     }
+
+        // } else {
+        //     // Phone already verified.
+        //     redirect(
+        //         new moodle_url('/'),
+        //         get_string('formsubmitted', 'local_equipment',  get_string('virtualcourseconsent', 'local_equipment')),
+        //         null,
+        //         \core\output\notification::NOTIFY_SUCCESS
+        //     );
+        // }
             redirect(
                 new moodle_url('/'),
                 get_string('formsubmitted', 'local_equipment',  get_string('virtualcourseconsent', 'local_equipment')),
                 null,
                 \core\output\notification::NOTIFY_SUCCESS
-            );
-        }
-
-
+        );
     } else {
         redirect(
             new moodle_url('/local/equipment/virtualcourseconsent/index.php'),

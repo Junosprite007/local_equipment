@@ -301,6 +301,7 @@
                 <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
             </KEYS>
         </TABLE>
+        <!--  -->
         <TABLE NAME="local_equipment_phonecommunication_otp" COMMENT="Table for storing OTPs">
             <FIELDS>
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
