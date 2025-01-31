@@ -1714,8 +1714,8 @@ function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $m
 
         // Validate originator number
         $originator = ($messagetype === 'OTP')
-        ? get_config('local_equipment', 'awsotporiginatorphone')
-        : get_config('local_equipment', 'awsinfooriginatorphone');
+            ? get_config('local_equipment', 'awsotporiginatorphone')
+            : get_config('local_equipment', 'awsinfooriginatorphone');
 
         if (empty($originator)) {
             throw new moodle_exception('awsoriginatornotconfigured', 'local_equipment');
@@ -1979,7 +1979,22 @@ function local_equipment_send_secure_otp($gatewayid, $tophonenumber, $ttl = 600,
         }
 
         if ($isatest) {
-            return local_equipment_send_sms($gatewayid, $tophonenumber, "The is a test message. It worked if you're reading this from your phone.", 'OTP');
+
+            // Create new record.
+            $record->userid = $USER->id;
+            $record->otp = password_hash($otp, PASSWORD_DEFAULT);  // Hash the OTP.
+            $record->tophonenumber = $tophonenumber;
+            $record->phoneisverified = 0;
+            $record->timecreated = time();
+            $record->timeverified = null;
+            $record->expires = $record->timecreated + $ttl;  // OTP expires after 10 minutes.
+
+            $SESSION->otps->{$record->tophonename} = $record;
+            $SESSION->otps->{$record->tophonename}->id = $DB->insert_record('local_equipment_phonecommunication_otp', $record);
+
+            $msgparams = ['otp' => $otp, 'site' => $SITE->shortname];
+            $message = get_string('phoneverificationcodefor', 'local_equipment', $msgparams);
+            return local_equipment_send_sms($gatewayid, $tophonenumber, $message, 'OPT');
         }
 
         // At this point, we are guaranteed that there are as many records in the DB as there are in $SESSION->otps, and they hold
@@ -2821,9 +2836,9 @@ function local_equipment_send_enrollment_message($user, $coursenames, $roletype 
 
     // Determine the from user based on settings
     switch ($messagesender) {
-        // case ENROL_SEND_EMAIL_FROM_COURSE_CONTACT:
-        //     $contactuser = local_equipment_get_course_contact($course);
-        //     break;
+            // case ENROL_SEND_EMAIL_FROM_COURSE_CONTACT:
+            //     $contactuser = local_equipment_get_course_contact($course);
+            //     break;
         case ENROL_SEND_EMAIL_FROM_KEY_HOLDER:
             $contactuser = get_admin();
             break;
