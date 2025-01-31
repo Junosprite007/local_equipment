@@ -39,7 +39,7 @@ class testoutgoingtextconf_form extends \moodleform {
         $userid = $USER->id;
         $editprofileurl = new \moodle_url('/user/edit.php', array('id' => $userid));
         $editprofilelink = \html_writer::link($editprofileurl, get_string('editmyprofile'));
-        $providerconfigurl = new \moodle_url('/admin/settings.php?section=managetoolphoneverification');
+        $providerconfigurl = new \moodle_url('/sms/sms_gateways.php');
         $providerconfiglink = \html_writer::link($providerconfigurl, get_string('phoneproviderconfiguration', 'local_equipment'));
 
         // Phone number objects.
@@ -81,7 +81,7 @@ class testoutgoingtextconf_form extends \moodleform {
         }
 
         // Provider dropdown.
-        $providerstoshow = local_equipment_get_phone_providers();
+        $providerstoshow = local_equipment_get_sms_gateways();
 
 
         // echo '<br />';
@@ -141,6 +141,10 @@ class testoutgoingtextconf_form extends \moodleform {
             $mform->setType('tonumber', PARAM_TEXT);
             $mform->setDefault('tonumber', $phoneselected);
             $mform->addRule('tonumber', get_string('required'), 'required');
+            // Test setting.
+            $mform->addElement('advcheckbox', 'isatest', get_string('testmessage', 'local_equipment'));
+            $mform->setType('isatest', PARAM_INT);
+            $mform->setDefault('isatest', 1);
         }
 
         $buttonarray = array();

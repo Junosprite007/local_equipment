@@ -29,62 +29,62 @@ require_once(__DIR__ . '/../../lib.php');
 defined('MOODLE_INTERNAL') || die();
 
 // UNCOMMENT ALL OF THE BELOW AFTER TEXTING IS IMPLEMENTED.
-// class callbacks {
-//     /**
-//      * Check if phone verification is needed after user login.
-//      * Only redirects parent users who need verification.
-//      *
-//      * @param \core_user\hook\after_login_completed $hook The login hook
-//      */
-//     public static function check_phone_verification(\core_user\hook\after_login_completed $hook): void {
-//         global $DB, $SESSION, $USER;
+class callbacks {
+    /**
+     * Check if phone verification is needed after user login.
+     * Only redirects parent users who need verification.
+     *
+     * @param \core_user\hook\after_login_completed $hook The login hook
+     */
+    public static function check_phone_verification(\core_user\hook\after_login_completed $hook): void {
+        global $DB, $SESSION, $USER;
 
 
-//         // Skip during initial install
-//         if (during_initial_install()) {
-//             return;
-//         }
+        // Skip during initial install
+        if (during_initial_install()) {
+            return;
+        }
 
-//         // Check if user is a parent by looking for parent role assignments
-//         $context = \context_system::instance();
-//         $parentrole = $DB->get_record('role', ['shortname' => 'parent']);
+        // Check if user is a parent by looking for parent role assignments
+        $context = \context_system::instance();
+        $parentrole = $DB->get_record('role', ['shortname' => 'parent']);
 
-//         if (!$parentrole) {
-//             return;
-//         }
+        if (!$parentrole) {
+            return;
+        }
 
-//         $isparent = sizeof(local_equipment_get_students_of_parent($USER->id)) > 0;
+        $isparent = sizeof(local_equipment_get_students_of_parent($USER->id)) > 0;
 
-//         if (!$isparent) {
-//             return;
-//         }
+        if (!$isparent) {
+            return;
+        }
 
-//         // Check phone verification status
-//         $phone_verified = $DB->get_field(
-//             'local_equipment_user',
-//             'phone_verified',
-//             ['userid' => $USER->id],
-//             IGNORE_MULTIPLE
-//         );
+        // Check phone verification status
+        $phone_verified = $DB->get_field(
+            'local_equipment_user',
+            'phone_verified',
+            ['userid' => $USER->id],
+            IGNORE_MULTIPLE
+        );
 
-//         if ($phone_verified === null) {
-//             // echo '<br />';
-//             // echo '<br />';
-//             // echo '<br />';
-//             // echo '<pre>';
-//             // var_dump($phone_verified);
-//             // echo '</pre>';
-//             // // User needs verification - set session flag and redirect
-//             // $SESSION->local_equipment_phone_verified = false;
-//             redirect(new \moodle_url('/local/equipment/phonecommunication/verifyphone.php'), get_string('phoneverificationrequire', 'local_equipment'), null, \core\output\notification::NOTIFY_ERROR);
-//         } else {
-//             // echo '<br />';
-//             // echo '<br />';
-//             // echo '<br />';
-//             // echo '<pre>';
-//             // var_dump($phone_verified);
-//             // echo '</pre>';
-//             // $SESSION->local_equipment_phone_verified = true;
-//         }
-//     }
-// }
+        if ($phone_verified === null) {
+            // echo '<br />';
+            // echo '<br />';
+            // echo '<br />';
+            // echo '<pre>';
+            // var_dump($phone_verified);
+            // echo '</pre>';
+            // // User needs verification - set session flag and redirect
+            // $SESSION->local_equipment_phone_verified = false;
+            redirect(new \moodle_url('/local/equipment/phonecommunication/verifyphone.php'), get_string('phoneverificationrequire', 'local_equipment'), null, \core\output\notification::NOTIFY_ERROR);
+        } else {
+            // echo '<br />';
+            // echo '<br />';
+            // echo '<br />';
+            // echo '<pre>';
+            // var_dump($phone_verified);
+            // echo '</pre>';
+            // $SESSION->local_equipment_phone_verified = true;
+        }
+    }
+}

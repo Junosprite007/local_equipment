@@ -332,68 +332,102 @@ if ($hassiteconfig) {
             PARAM_URL
         ));
 
-        // // Twilio
-        $link = html_writer::link('https://www.twilio.com/', get_string('here', 'local_equipment'));
-        $settingspage->add(new admin_setting_heading(
-            'local_equipment_twilio',
-            new lang_string('twilio', 'local_equipment'),
-            new lang_string('twilio_desc', 'local_equipment', $link)
-        ));
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/twilioaccountsid',
-            new lang_string('twilioaccountsid', 'local_equipment'),
-            new lang_string('twilioaccountsid_desc', 'local_equipment'),
-            '',
-            PARAM_TEXT
-            // '/^[a-f0-9]{32}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/',
-            // 69
-        ));
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/twilioauthtoken',
-            new lang_string('twilioauthtoken', 'local_equipment'),
-            new lang_string('twilioauthtoken_desc', 'local_equipment'),
-            '',
-            PARAM_URL
-        ));
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/twilionumber',
-            new lang_string('twilionumber', 'local_equipment'),
-            new lang_string('twilionumber_desc', 'local_equipment'),
-            '',
-            PARAM_TEXT
-        ));
+        // Twilio
+        // NOT YET COMPATIBLE
+
+        // $link = html_writer::link('https://www.twilio.com/', get_string('here', 'local_equipment'));
+        // $settingspage->add(new admin_setting_heading(
+        //     'local_equipment_twilio',
+        //     new lang_string('twilio', 'local_equipment'),
+        //     new lang_string('twilio_desc', 'local_equipment', $link)
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/twilioaccountsid',
+        //     new lang_string('twilioaccountsid', 'local_equipment'),
+        //     new lang_string('twilioaccountsid_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_TEXT
+        //     // '/^[a-f0-9]{32}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/',
+        //     // 69
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/twilioauthtoken',
+        //     new lang_string('twilioauthtoken', 'local_equipment'),
+        //     new lang_string('twilioauthtoken_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_URL
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/twilionumber',
+        //     new lang_string('twilionumber', 'local_equipment'),
+        //     new lang_string('twilionumber_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_TEXT
+        // ));
 
         // // AWS End User Messaging
-        // $link = html_writer::link('https://console.aws.amazon.com/sms-voice/', get_string('here', 'local_equipment'));
-        // $settingspage->add(new admin_setting_heading(
-        //     'local_equipment_awssmsvoice',
-        //     new lang_string('awssmsvoice', 'local_equipment'),
-        //     new lang_string('awssmsvoice_desc', 'local_equipment', $link)
-        // ));
-        // $settingspage->add(new admin_setting_configtext(
-        //     'local_equipment/awssmsvoiceaccesskey',
-        //     new lang_string('awssmsvoiceaccesskey', 'local_equipment'),
-        //     new lang_string('awssmsvoiceaccesskey_desc', 'local_equipment'),
-        //     '',
-        //     PARAM_TEXT,
-        //     69
-        // ));
-        // $settingspage->add(new admin_setting_configtext(
-        //     'local_equipment/awssmsvoicesecretkey',
-        //     new lang_string('awssmsvoicesecretkey', 'local_equipment'),
-        //     new lang_string('awssmsvoicesecretkey_desc', 'local_equipment'),
-        //     '',
-        //     PARAM_TEXT,
-        //     69
-        // ));
-        // $settingspage->add(new admin_setting_configtext(
-        //     'local_equipment/awssmsvoiceregion',
-        //     new lang_string('awssmsvoiceregion', 'local_equipment'),
-        //     new lang_string('awssmsvoiceregion_desc', 'local_equipment'),
-        //     '',
-        //     PARAM_TEXT,
-        //     69
-        // ));
+        $link = html_writer::link('https://console.aws.amazon.com/sms-voice/', get_string('here', 'local_equipment'));
+        $settingspage->add(new admin_setting_heading(
+            'local_equipment_awssmsvoice',
+            new lang_string('awssmsvoice', 'local_equipment'),
+            new lang_string('awssmsvoice_desc', 'local_equipment', $link)
+        ));
+        $settingspage->add(new admin_setting_configtext(
+            'local_equipment/awsaccesskey',
+            new lang_string('awsaccesskey', 'local_equipment'),
+            new lang_string('awsaccesskey_desc', 'local_equipment'),
+            '',
+            PARAM_TEXT,
+            69
+        ));
+        $settingspage->add(new admin_setting_configpasswordunmask(
+            'local_equipment/awssecretkey',
+            new lang_string('awssecretkey', 'local_equipment'),
+            new lang_string('awssecretkey_desc', 'local_equipment'),
+            '',
+            PARAM_TEXT,
+            69
+        ));
+        $settingspage->add(new admin_setting_configtext(
+            'local_equipment/awsregion',
+            new lang_string('awsregion', 'local_equipment'),
+            new lang_string('awsregion_desc', 'local_equipment'),
+            '',
+            PARAM_TEXT,
+            69
+        ));
+        $settingspage->add(new admin_setting_configtext(
+            'local_equipment/awsinfopoolid',
+            new lang_string('awsinfopoolid', 'local_equipment'),
+            new lang_string('awsinfopoolid_desc', 'local_equipment'),
+            '',
+            PARAM_TEXT,
+            69
+        ));
+        $settingspage->add(new admin_setting_configtext(
+            'local_equipment/awsotppoolid',
+            new lang_string('awsotppoolid', 'local_equipment'),
+            new lang_string('awsotppoolid_desc', 'local_equipment'),
+            '',
+            PARAM_TEXT,
+            69
+        ));
+        $settingspage->add(new admin_setting_configtext(
+            'local_equipment/awsinfooriginatorphone',
+            new lang_string('awsinfooriginatorphone', 'local_equipment'),
+            new lang_string('awsinfooriginatorphone_desc', 'local_equipment'),
+            '',
+            PARAM_TEXT,
+            69
+        ));
+        $settingspage->add(new admin_setting_configtext(
+            'local_equipment/awsotporiginatorphone',
+            new lang_string('awsotporiginatorphone', 'local_equipment'),
+            new lang_string('awsotporiginatorphone_desc', 'local_equipment'),
+            '',
+            PARAM_TEXT,
+            69
+        ));
 
         // // AWS SNS
         // $link = html_writer::link('https://aws.amazon.com/sns/', get_string('here', 'local_equipment'));

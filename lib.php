@@ -27,6 +27,9 @@ use block_xp\di;
 use core\plugininfo\local;
 use media_videojs\external\get_language;
 use core\exception\moodle_exception;
+use core_payment\external\get_available_gateways;
+use core_sms\gateway;
+
 // use core\user;
 // use core_user;
 // use html_writer;
@@ -1667,106 +1670,157 @@ function local_equipment_get_pickup_methods() {
 }
 
 /**
- * Validates a cell phone number to make sure it makes sense.
- *
- * @param object $allphoneconfigs An object containing all the phone configuration settings for every provider.
- * @return array
- */
-function local_equipment_providers_to_show($allphoneconfigs) {
-    $providers = [];
-
-    if ($allphoneconfigs->infobipapikey && $allphoneconfigs->infobipapibaseurl) {
-        $providers['infobip'] = get_string('infobip', 'local_equipment');
-    }
-
-    return $providers;
-}
-
-/**
  * Gets all the phone providers that are available based on whether or not the API setting exist.
- *
+ * @param string $enabledonly Whether or not to get disabled SMS gateway providers in addition to the enabled providers.
  * @return array Array of phone providers.
  */
-function local_equipment_get_phone_providers() {
-    $providers = [];
+function local_equipment_get_sms_gateways($enabledonly = true) {
+    global $DB;
+    $gatewayoptions = [];
 
-    $provider = get_config('local_equipment');
-
-    if (($provider->infobipapikey) && $provider->infobipapibaseurl) {
-        $providers['infobip'] = get_string('infobip', 'local_equipment');
+    if ($enabledonly) {
+        $gateways = $DB->get_records('sms_gateways', ['enabled' => 1]);
+    } else {
+        $gateways = $DB->get_records('sms_gateways');
+    }
+    foreach ($gateways as $gateway) {
+        $gatewayoptions[$gateway->id] = $gateway->name;
     }
 
-    $provider = get_config('factor_sms');
+    return $gatewayoptions;
+}
 
-    if (
-        isset($provider->api_key) &&
-        isset($provider->api_region) &&
-        isset($provider->api_secret)
-    ) {
-        $providers['aws'] = get_string('aws', 'local_equipment');
+// Move this to a separate function for better organization
+function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $messagetype) {
+    global $SITE, $CFG;
+
+    $responseobject = new stdClass();
+    $responseobject->errormessage = '';
+    $responseobject->errorobject = new stdClass();
+    $responseobject->success = false;
+
+    try {
+        require_once($CFG->dirroot . '/vendor/autoload.php');
+
+        $awsconfig = json_decode($gatewayobj->config);
+        $client = new Aws\Sns\SnsClient([
+            'version' => 'latest',
+            'region' => $awsconfig->api_region,
+            'credentials' => [
+                'key' => $awsconfig->api_key,
+                'secret' => $awsconfig->api_secret,
+            ]
+        ]);
+
+        // Validate originator number
+        $originator = ($messagetype === 'OTP')
+        ? get_config('local_equipment', 'awsotporiginatorphone')
+        : get_config('local_equipment', 'awsinfooriginatorphone');
+
+        if (empty($originator)) {
+            throw new moodle_exception('awsoriginatornotconfigured', 'local_equipment');
+        }
+
+        $result = $client->publish([
+            'Message' => $message,
+            'PhoneNumber' => $tonumber,
+            'MessageAttributes' => [
+                'AWS.SNS.SMS.SenderID' => [
+                    'DataType' => 'String',
+                    'StringValue' => $SITE->shortname
+                ],
+                'AWS.SNS.SMS.SMSType' => [
+                    'DataType' => 'String',
+                    'StringValue' => $messagetype === 'OTP' ? 'Transactional' : 'Promotional'
+                ]
+            ]
+        ]);
+
+        if ($result['MessageId']) {
+            $responseobject->success = true;
+            $responseobject->messageid = $result['MessageId'];
+        } else {
+            throw new moodle_exception('awssmssendfailed', 'local_equipment');
+        }
+    } catch (Aws\Exception\AwsException $e) {
+        $responseobject->errorobject->awserror = $e->getMessage();
+        $responseobject->errormessage = get_string(
+            'awssmsfailedwithcode',
+            'local_equipment',
+            $responseobject->errorobject
+        );
     }
 
-    return $providers;
+    return $responseobject;
 }
 
 /**
  * Sends an SMS message to a phone number.
  *
- * @param string $provider The provider to use for sending the SMS message.
+ * @param string $gatewayid The ID of the SMS gateway to use for sending text messages.
  * @param string $tonumber The phone number to send the SMS message to.
  * @param string $message The message to send in the SMS message.
+ * @param string $messagetype The type of message to send. This may change depending on the chosen provider.
  * @return object
  */
-function local_equipment_send_sms($provider, $tonumber, $message) {
-    global $SITE;
-    var_dump('Sending SMS');
+function local_equipment_send_sms($gatewayid, $tonumber, $message, $messagetype) {
+    global  $DB;
+    // Get all SMS gateways
 
     $responseobject = new stdClass();
+    $responseobject->errormessage = '';
+    $responseobject->errorobject = new stdClass();
+    $responseobject->success = false;
+
     try {
-        switch ($provider) {
-            case 'infobip':
-                // Just for testing:
-                // $responseobject->success = true;
-                // break;
+        $gatewayobj = $DB->get_record('sms_gateways', ['id' => $gatewayid]);
+        if (!$gatewayobj) {
+            throw new moodle_exception('invalidgatewayid', 'local_equipment', '', null, "\$gatewayid = $gatewayid");
+        }
+        switch ($gatewayobj->gateway) {
+            case 'smsgateway_aws\gateway':
+                return local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $messagetype);
 
-                $infobipapikey = get_config('local_equipment', 'infobipapikey');
-                $infobipapibaseurl = get_config('local_equipment', 'infobipapibaseurl');
-                $curl = new curl();
+                // case 'infobip':
+                //     // Just for testing:
+                //     // $responseobject->success = true;
+                //     // break;
 
-                // Set headers
-                $headers = [
-                    'Authorization: App ' . $infobipapikey,
-                    'Content-Type: application/json',
-                    'Accept: application/json'
-                ];
+                //     $infobipapikey = get_config('local_equipment', 'infobipapikey');
+                //     $infobipapibaseurl = get_config('local_equipment', 'infobipapibaseurl');
+                //     $curl = new curl();
 
-                $curl->setHeader($headers);
-                $postdata = '{"messages":[{"destinations":[{"to":"' . $tonumber . '"}],"from":"' . $SITE->shortname . '","text":"' . $message . '"}]}';
+                //     // Set headers
+                //     $headers = [
+                //         'Authorization: App ' . $infobipapikey,
+                //         'Content-Type: application/json',
+                //         'Accept: application/json'
+                //     ];
 
-                // Make the request
-                $responseobject->response = $curl->post('https://' . $infobipapibaseurl . '/sms/2/text/advanced', $postdata);
+                //     $curl->setHeader($headers);
+                //     $postdata = '{"messages":[{"destinations":[{"to":"' . $tonumber . '"}],"from":"' . $SITE->shortname . '","text":"' . $message . '"}]}';
 
-                // Get the HTTP response code
-                $info = $curl->get_info();
-                $responseobject->errormessage = '';
-                $responseobject->errorobject = new stdClass();
-                echo '<pre>';
-                var_dump($responseobject);
-                echo '</pre>';
+                //     // Make the request
+                //     $responseobject->response = $curl->post('https://' . $infobipapibaseurl . '/sms/2/text/advanced', $postdata);
 
-                if ($info['http_code'] >= 200 && $info['http_code'] < 300) {
-                    // The request was successful
-                    $responseobject->success = true;
-                } else {
-                    // The request failed
-                    $responseobject->errorobject->httpcode = $info['http_code'];
-                    $responseobject->errorobject->curlcode = $curl->get_errno();
-                    $responseobject->errormessage = get_string('httprequestfailedwithcode', 'local_equipment', $responseobject->errorobject);
-                    $responseobject->success = false;
-                    throw new moodle_exception('httprequestfailed', 'local_equipment', '', null, $responseobject->errormessage);
-                }
-                break;
-            case 'twilio':
+                //     // Get the HTTP response code
+                //     $info = $curl->get_info();
+                //     echo '<pre>';
+                //     var_dump($responseobject);
+                //     echo '</pre>';
+
+                //     if ($info['http_code'] >= 200 && $info['http_code'] < 300) {
+                //         // The request was successful
+                //         $responseobject->success = true;
+                //     } else {
+                //         // The request failed
+                //         $responseobject->errorobject->httpcode = $info['http_code'];
+                //         $responseobject->errorobject->curlcode = $curl->get_errno();
+                //         $responseobject->errormessage = get_string('httprequestfailedwithcode', 'local_equipment', $responseobject->errorobject);
+                //         throw new moodle_exception('httprequestfailed', 'local_equipment', '', null, $responseobject->errormessage);
+                //     }
+                //     break;
+                // case 'twilio':
                 // Just for testing:
                 // $responseobject->success = true;
                 // break;
@@ -1815,13 +1869,8 @@ function local_equipment_send_sms($provider, $tonumber, $message) {
                 //     $responseobject->success = false;
                 //     throw new moodle_exception('httprequestfailed', 'local_equipment', '', null, $responseobject->errormessage);
                 // }
-                break;
-            case 'awssns':
-                // $awssnsaccesskey = get_config('local_equipment', 'awssnsaccesskey');
-                // $awssnssecretkey = get_config('local_equipment', 'awssnssecretkey');
-                // $awssnsregion = get_config('local_equipment', 'awssnsregion');
+                // break;
 
-                break;
             default:
                 break;
         }
@@ -1829,19 +1878,26 @@ function local_equipment_send_sms($provider, $tonumber, $message) {
         // Handle the exception
         $responseobject->errormessage = $e->getMessage();
     }
+    // echo '<br />';
+    // echo '<br />';
+    // echo '<br />';
+    // echo '<pre>';
+    // var_dump($responseobject);
+    // echo '</pre>';
+    //             die();
     return $responseobject;
 }
 
 /**
  * Sends an SMS message to a phone number via POST and HTTPS.
  *
- * @param string $provider The provider to use for sending the SMS message.
+ * @param string $gatewayid The ID of the gateway to use for sending the SMS message, found in the 'sms_gateways' table.
  * @param string $tophonenumber The phone number to send the SMS message to.
  * @param int $ttl Time to live (TTL) in seconds until the OTP expires.
  * @param bool $isatest Whether or not this is a test OTP or a real one.
  * @return object
  */
-function local_equipment_send_secure_otp($provider, $tophonenumber, $ttl = 600, $isatest = false) {
+function local_equipment_send_secure_otp($gatewayid, $tophonenumber, $ttl = 600, $isatest = 0) {
     global $USER, $DB, $SESSION, $SITE;
 
     $responseobject = new stdClass();
@@ -1922,6 +1978,10 @@ function local_equipment_send_secure_otp($provider, $tophonenumber, $ttl = 600, 
             $isverified = $SESSION->otps->{$record->tophonename}->phoneisverified;
         }
 
+        if ($isatest) {
+            return local_equipment_send_sms($gatewayid, $tophonenumber, "The is a test message. It worked if you're reading this from your phone.", 'OTP');
+        }
+
         // At this point, we are guaranteed that there are as many records in the DB as there are in $SESSION->otps, and they hold
         // the same info, though formatted differently.
         if (!$recordexists && $dbotpcount < 2) {
@@ -1940,7 +2000,7 @@ function local_equipment_send_secure_otp($provider, $tophonenumber, $ttl = 600, 
 
             $msgparams = ['otp' => $otp, 'site' => $SITE->shortname];
             $message = get_string('phoneverificationcodefor', 'local_equipment', $msgparams);
-            $responseobject = local_equipment_send_sms($provider, $tophonenumber, $message);
+            $responseobject = local_equipment_send_sms($gatewayid, $tophonenumber, $message, 'OPT');
         } elseif ($recordexists && $isverified) {
             $responseobject->errorcode = 0;
             throw new moodle_exception('phonealreadyverified', 'local_equipment');

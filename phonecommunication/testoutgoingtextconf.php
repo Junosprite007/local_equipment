@@ -53,7 +53,15 @@ if ($data) {
         'provider' => $data->provider
     ];
 
-    $responseobject = local_equipment_send_secure_otp($textuser->notes['provider'], $textuser->tonumber);
+
+    $responseobject = local_equipment_send_secure_otp($textuser->notes['provider'], $textuser->tonumber, 600, $data->isatest);
+    // echo '<br />';
+    // echo '<br />';
+    // echo '<br />';
+    // echo '<pre>';
+    // var_dump($responseobject);
+    // echo '</pre>';
+    // die();
 
     // We're eventually going to need to handle Moodle debugging options. Check out 'testoutgoingmailconf.php' for an example.
 

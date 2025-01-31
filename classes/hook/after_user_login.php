@@ -26,14 +26,12 @@ namespace local_equipment\hook;
 
 use core\attribute;
 
-// UNCOMMENT ALL OF THE BELOW AFTER TEXTING IS IMPLEMENTED.
-
-// #[attribute\label('Hook dispatched after user login to verify phone number for parents')]
-// #[attribute\tags('login', 'phone', 'verification')]
-// final class after_user_login {
-//     public function __construct(
-//         public readonly int $userid,
-//         public readonly string $username,
-//     ) {
-//     }
-// }
+#[attribute\label('Hook dispatched after user login to verify phone number for parents')]
+#[attribute\tags('login', 'phone', 'verification')]
+final class after_user_login {
+    public function __construct(
+        public readonly int $userid,
+        public readonly string $username,
+    ) {
+    }
+}
