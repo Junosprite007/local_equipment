@@ -462,6 +462,7 @@ $string['acodehasbeensent'] = 'A verification code has been sent to your phone n
 $string['nophonefound'] = 'No phone found! Go to {$a} > Optional to add your phone number.';
 $string['nophonestoverify'] = 'It looks like you don\'t have any phones that need verification.';
 $string['noproviderfound'] = 'Provider not configured! Configure a provider here: {$a}';
+$string['noproviderfound_user'] = 'Provider not configured! Please contact a system administrator.';
 $string['notasupportedcountry'] = '{$a} is not a supported country.';
 $string['novalidotpsfound'] = 'No valid OTPs found for you. You\'ll need to send a verification code first. You can do that here: {$a}';
 $string['novalidphonefound'] = 'No valid phone found! Go to {$a} > Optional to add your phone number.';

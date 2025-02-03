@@ -273,6 +273,7 @@ if ($mform->is_cancelled()) {
         $DB->update_record('local_equipment_vccsubmission', $vccsubmission);
 
 
+
         // WE ALSO NEED TO DO THE PHONE VERIFICATION AND UPDATE THAT RECORD.
 
 
@@ -289,57 +290,51 @@ if ($mform->is_cancelled()) {
     }
 
     if ($success) {
+        $successmsg = get_string('formsubmitted', 'local_equipment',  get_string('virtualcourseconsent', 'local_equipment'));
+        $textuser = new stdClass();
+        $textuser->tonumber = $vccsubmission->phone;
 
-        // if ($recordscount > 0) {
-        //     $DB->delete_records('local_equipment_user', ['userid' => $userid]);
-        // }
+        $provider = get_config('local_equipment', 'otpgateway');
+        $phoneisverified = $DB->get_record('local_equipment_phonecommunication_otp', ['tophonenumber' => $textuser->tonumber, 'phoneisverified' => 1]);
 
-        // $phoneisverified = $DB->get_record('local_equipment_phonecommunication_otp', ['userid' => $vccsubmission->userid, 'tophonenumber' => $vccsubmission->phone, 'phoneisverified' => 1]);
-        // // Send a text message to the parent with the OTP.
-        // if (!$phoneisverified) {
-        //     $response = local_equipment_send_secure_otp('infobip', $vccsubmission->phone, 600, true);
+        if ($provider && !$phoneisverified) {
+            $textuser->notes = [
+                'shortname' => $SITE->shortname
+            ];
 
-        //     if ($response->success) {
-        //         redirect(
-        //             $response->verifyurl,
-        //             get_string('formsubmitted', 'local_equipment',  get_string('virtualcourseconsent', 'local_equipment')) . "<br /><br />" . get_string('acodehasbeensent', 'local_equipment'),
-        //             null,
-        //             \core\output\notification::NOTIFY_SUCCESS
-        //         );
-        //     }
-        //     if ($response->errorcode === 0) {
-        //         // Phone is already verified.
-        //         redirect(
-        //             new moodle_url('/'),
-        //             get_string('formsubmitted', 'local_equipment',  get_string('virtualcourseconsent', 'local_equipment')),
-        //             null,
-        //             \core\output\notification::NOTIFY_SUCCESS
-        //         );
-        //     }
-        //     if ($response->errorcode === 1) {
-        //         // OTP already exist and must be verified.
-        //         redirect(
-        //             $response->verifyurl,
-        //             get_string('formsubmitted', 'local_equipment',  get_string('virtualcourseconsent', 'local_equipment')) . "<br /><br />" . $response->errormessage,
-        //             null,
-        //             \core\output\notification::NOTIFY_SUCCESS
-        //         );
-        //     }
+            if (
+                $USER->phone2 == '' && $USER->phone2 != $vccsubmission->phone
+            ) {
+                $USER->phone2 = $vccsubmission->phone;
+                $DB->update_record('user', $USER);
+            }
+            $responseobject = local_equipment_send_secure_otp($provider, $textuser->tonumber);
 
-        // } else {
-        //     // Phone already verified.
-        //     redirect(
-        //         new moodle_url('/'),
-        //         get_string('formsubmitted', 'local_equipment',  get_string('virtualcourseconsent', 'local_equipment')),
-        //         null,
-        //         \core\output\notification::NOTIFY_SUCCESS
-        //     );
-        // }
-            redirect(
-                new moodle_url('/'),
-                get_string('formsubmitted', 'local_equipment',  get_string('virtualcourseconsent', 'local_equipment')),
-                null,
-                \core\output\notification::NOTIFY_SUCCESS
+            // We're eventually going to need to handle Moodle debugging options. Check out 'testoutgoingmailconf.php' for an example.
+
+            if ($responseobject->success) {
+                $redirecturl = new moodle_url('/local/equipment/phonecommunication/verifyotp.php');
+                $msgparams = new stdClass();
+                $msgparams->tonumber = $textuser->tonumber;
+                $msgparams->link = $link;
+                $successmsg = $successmsg . "<br /><br />" . get_string('phoneverificationrequire', 'local_equipment', $msgparams);
+                $successmsg = $successmsg . " " . get_string('acodehasbeensent', 'local_equipment', $msgparams);
+                $notificationtype = \core\output\notification::NOTIFY_SUCCESS;
+                redirect($redirecturl, $successmsg, null, $notificationtype);
+            } else {
+                $notificationtype = 'notifyproblem';
+                $successmsg = get_string('senttextfailure', 'local_equipment', $responseobject->errormessage);
+            }
+        } else if (!$provider) {
+            $successmsg = $successmsg . "<br /><br />" . get_string('noproviderfound_user', 'local_equipment');
+        }
+
+
+        redirect(
+            new moodle_url('/'),
+            $successmsg,
+            null,
+            \core\output\notification::NOTIFY_SUCCESS
         );
     } else {
         redirect(

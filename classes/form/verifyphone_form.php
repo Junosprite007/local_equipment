@@ -146,26 +146,34 @@ class verifyphone_form extends \moodleform {
         //     $mform->setDefault('isatest', 1);
         // }
 
-
-
-
-
-
-
-        if ($phonedefault) {
-            $mform->addElement('text', 'tonumber', get_string('entermobilephone', 'local_equipment'), $phoneoptions);
-            $mform->setType('tonumber', PARAM_TEXT);
-            $mform->setDefault('tonumber', $phonedefault);
-            $mform->addRule('tonumber', get_string('required'), 'required');
-        } else {
+        $providerstoshow = local_equipment_get_sms_gateways();
+        if (!$providerstoshow) {
+            // No providers configured.
             $mform->addElement(
-                'html',
-                '<div class="alert alert-warning">'
+                'static',
+                'noproviderfound_user',
+                get_string('selectphonetoverify', 'local_equipment'),
+                new \lang_string('noproviderfound_user', 'local_equipment')
+            );
+            $mform->addRule('noproviderfound_user', get_string('required'), 'required');
+        } else {
+            if ($phonedefault) {
+                $mform->addElement('text', 'tonumber', get_string('entermobilephone', 'local_equipment'), $phoneoptions);
+                $mform->setType('tonumber', PARAM_TEXT);
+                $mform->setDefault('tonumber', $phonedefault);
+                $mform->addRule('tonumber', get_string('required'), 'required');
+            } else {
+                $mform->addElement(
+                    'html',
+                    '<div class="alert alert-warning">'
                     . get_string('haventfilledoutform', 'local_equipment', $vccformlink)
                     . '</div>'
-            );
-            // $mform->addRule('nophonefound', get_string('required'), 'required');
+                );
+                // $mform->addRule('nophonefound', get_string('required'), 'required');
+            }
         }
+
+
         // if (!empty($phone2obj->errors)) {
         //     $msg = get_string('somethingwrong_phone2', 'local_equipment') . ' ' . get_string('seeerrorsbelow', 'local_equipment');
         //     $notification = \html_writer::div(join("<br>", $phone2obj->errors), 'alert alert-warning');

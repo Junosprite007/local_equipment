@@ -65,24 +65,10 @@ class callbacks {
             ['userid' => $USER->id, 'phoneisverified' => 1]
         );
 
-        if (sizeof($phoneisverified) === 0) {
-            // echo '<br />';
-            // echo '<br />';
-            // echo '<br />';
-            // echo '<pre>';
-            // var_dump($phoneisverified);
-            // echo '</pre>';
-            // // User needs verification - set session flag and redirect
-            // $SESSION->local_equipment_phoneisverified = false;
+        $providerstoshow = local_equipment_get_sms_gateways();
+
+        if (sizeof($phoneisverified) === 0 && $providerstoshow) {
             redirect(new \moodle_url('/local/equipment/phonecommunication/verifyphone.php'), get_string('phoneverificationrequire', 'local_equipment'), null, \core\output\notification::NOTIFY_ERROR);
-        } else {
-            // echo '<br />';
-            // echo '<br />';
-            // echo '<br />';
-            // echo '<pre>';
-            // var_dump($phoneisverified);
-            // echo '</pre>';
-            // $SESSION->local_equipment_phoneisverified = true;
         }
     }
 }

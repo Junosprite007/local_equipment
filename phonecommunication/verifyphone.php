@@ -72,6 +72,10 @@ if ($data) {
         'shortname' => $SITE->shortname
     ];
 
+    if ($USER->phone2 == '') {
+        $USER->phone2 = $textuser->tonumber;
+        $DB->update_record('user', $USER);
+    }
     $responseobject = local_equipment_send_secure_otp($provider, $textuser->tonumber);
 
     // We're eventually going to need to handle Moodle debugging options. Check out 'testoutgoingmailconf.php' for an example.

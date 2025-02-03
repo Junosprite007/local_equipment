@@ -2052,6 +2052,12 @@ function local_equipment_send_secure_otp($gatewayid, $tophonenumber, $ttl = 600,
         $responseobject->verifyurl = $verifyurl;
         $responseobject->success = false;
         $responseobject->errormessage = $e->getMessage();
+        if ($responseobject->errorcode == 1) {
+            redirect($verifyurl, $responseobject->errormessage,
+                null,
+                \core\output\notification::NOTIFY_WARNING
+            );
+        }
     }
     return $responseobject;
 }
