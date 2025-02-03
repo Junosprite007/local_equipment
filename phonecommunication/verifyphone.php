@@ -26,12 +26,9 @@
 require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/formslib.php');
 
-global $SITE, $USER;
-
-// This is an admin page.
-// admin_externalpage_setup('local_equipment_testoutgoingtextconf');
-
 require_login();
+
+global $SITE, $USER;
 // Check if the user is a guest and redirect or display an error message
 if (isguestuser()) {
     $msgparams = ['form' => get_string('phoneverification', 'local_equipment'), 'site' => $SITE->shortname];
@@ -39,7 +36,7 @@ if (isguestuser()) {
 }
 
 $context = context_system::instance();
-$url = new moodle_url('/local/equipment/agreements.php');
+$url = new moodle_url('/local/equipment/phonecommunication/verifyphone.php');
 
 $PAGE->set_context($context);
 $PAGE->set_url($url);
@@ -47,8 +44,8 @@ $PAGE->set_title(get_string('phoneverification', 'local_equipment'));
 $PAGE->set_heading(get_string('phoneverification', 'local_equipment'));
 
 $homeurl = new moodle_url('/');
-$returnurl = new moodle_url('/admin/testoutgoingtextconf.php');
-$redirecturl = new moodle_url('/local/equipment/phonecommunication/verifytestotp.php');
+$returnurl = new moodle_url('/local/equipment/phonecommunication/verifyphone.php');
+$redirecturl = new moodle_url('/local/equipment/phonecommunication/verifyotp.php');
 $link = html_writer::link($redirecturl, get_string('verifyotp', 'local_equipment'));
 $msg = '';
 
@@ -61,13 +58,21 @@ if ($form->is_cancelled()) {
 $data = $form->get_data();
 if ($data) {
     $textuser = new stdClass();
-    $textuser->tonumber = $data->tonumber;
+    $phoneobj = local_equipment_parse_phone_number($data->tonumber);
+    $textuser->tonumber = $phoneobj->phone;
+
+    $provider = get_config('local_equipment', 'otpgateway');
+    if (!$provider) {
+        $msg = get_string('enduser_nosmsgatewayselected', 'local_equipment');
+        $notificationtype = \core\output\notification::NOTIFY_ERROR;
+        redirect($returnurl, $msg, null, $notificationtype);
+    }
+
     $textuser->notes = [
-        'shortname' => $SITE->shortname,
-        'provider' => $data->provider
+        'shortname' => $SITE->shortname
     ];
 
-    $responseobject = local_equipment_send_secure_otp($textuser->notes['provider'], $textuser->tonumber);
+    $responseobject = local_equipment_send_secure_otp($provider, $textuser->tonumber);
 
     // We're eventually going to need to handle Moodle debugging options. Check out 'testoutgoingmailconf.php' for an example.
 
@@ -77,7 +82,7 @@ if ($data) {
         $msgparams->link = $link;
         $msg = get_string('senttextsuccess', 'local_equipment', $msgparams);
         $notificationtype = 'notifysuccess';
-        // redirect($redirecturl);
+        redirect($redirecturl);
     } else {
         $notificationtype = 'notifyproblem';
         $msg = get_string('senttextfailure', 'local_equipment', $responseobject->errormessage);

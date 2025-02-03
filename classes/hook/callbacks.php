@@ -60,31 +60,29 @@ class callbacks {
         }
 
         // Check phone verification status
-        $phone_verified = $DB->get_field(
-            'local_equipment_user',
-            'phone_verified',
-            ['userid' => $USER->id],
-            IGNORE_MULTIPLE
+        $phoneisverified = $DB->get_records(
+            'local_equipment_phonecommunication_otp',
+            ['userid' => $USER->id, 'phoneisverified' => 1]
         );
 
-        if ($phone_verified === null) {
+        if (sizeof($phoneisverified) === 0) {
             // echo '<br />';
             // echo '<br />';
             // echo '<br />';
             // echo '<pre>';
-            // var_dump($phone_verified);
+            // var_dump($phoneisverified);
             // echo '</pre>';
             // // User needs verification - set session flag and redirect
-            // $SESSION->local_equipment_phone_verified = false;
+            // $SESSION->local_equipment_phoneisverified = false;
             redirect(new \moodle_url('/local/equipment/phonecommunication/verifyphone.php'), get_string('phoneverificationrequire', 'local_equipment'), null, \core\output\notification::NOTIFY_ERROR);
         } else {
             // echo '<br />';
             // echo '<br />';
             // echo '<br />';
             // echo '<pre>';
-            // var_dump($phone_verified);
+            // var_dump($phoneisverified);
             // echo '</pre>';
-            // $SESSION->local_equipment_phone_verified = true;
+            // $SESSION->local_equipment_phoneisverified = true;
         }
     }
 }

@@ -1486,10 +1486,10 @@ function local_equipment_save_vcc_form($data) {
 
         // Update vccsubmission with studentids.
         $DB->set_field('local_equipment_vccsubmission', 'studentids', json_encode($studentids), ['id' => $vccsubmission->id]);
-        echo '<pre>';
-        var_dump($selectedcourses);
-        echo '</pre>';
-        die();
+        // echo '<pre>';
+        // var_dump($selectedcourses);
+        // echo '</pre>';
+        // die();
 
         // Save agreement records.
         $agreementids = [];
@@ -1694,6 +1694,11 @@ function local_equipment_get_sms_gateways($enabledonly = true) {
 function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $messagetype) {
     global $SITE, $CFG;
 
+    // echo '<pre>';
+    // var_dump($gatewayobj);
+    // echo '</pre>';
+    // die();
+
     $responseobject = new stdClass();
     $responseobject->errormessage = '';
     $responseobject->errorobject = new stdClass();
@@ -1712,14 +1717,14 @@ function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $m
             ]
         ]);
 
-        // Validate originator number
-        $originator = ($messagetype === 'OTP')
-            ? get_config('local_equipment', 'awsotporiginatorphone')
-            : get_config('local_equipment', 'awsinfooriginatorphone');
+        // // Validate originator number
+        // $originator = ($messagetype === 'OTP')
+        //     ? get_config('local_equipment', 'awsotporiginatorphone')
+        //     : get_config('local_equipment', 'awsinfooriginatorphone');
 
-        if (empty($originator)) {
-            throw new moodle_exception('awsoriginatornotconfigured', 'local_equipment');
-        }
+        // if (empty($originator)) {
+        //     throw new moodle_exception('awsoriginatornotconfigured', 'local_equipment');
+        // }
 
         $result = $client->publish([
             'Message' => $message,
@@ -1892,7 +1897,7 @@ function local_equipment_send_sms($gatewayid, $tonumber, $message, $messagetype)
  * Sends an SMS message to a phone number via POST and HTTPS.
  *
  * @param string $gatewayid The ID of the gateway to use for sending the SMS message, found in the 'sms_gateways' table.
- * @param string $tophonenumber The phone number to send the SMS message to.
+ * @param string $tophonenumber The FORMATTED phone number to send the SMS message to.
  * @param int $ttl Time to live (TTL) in seconds until the OTP expires.
  * @param bool $isatest Whether or not this is a test OTP or a real one.
  * @return object
@@ -1918,6 +1923,7 @@ function local_equipment_send_secure_otp($gatewayid, $tophonenumber, $ttl = 600,
 
         $otp = mt_rand(100000, 999999);
 
+
         // Test OTP
         // $testotp = 345844;
         $msgparams = ['otp' => $otp, 'site' => $SITE->shortname];
@@ -1928,9 +1934,22 @@ function local_equipment_send_secure_otp($gatewayid, $tophonenumber, $ttl = 600,
         $phone1 = $phone1obj->phone;
         $phone2 = $phone2obj->phone;
 
-        if ($tophonenumber == $phone1) {
+        // echo '<pre>';
+        // var_dump($phone1);
+        // echo '</pre>';
+        // echo '<pre>';
+        // var_dump($phone2);
+        // echo '</pre>';
+        // echo '<pre>';
+        // var_dump($tophonenumber);
+        // echo '</pre>';
+        // echo '<pre>';
+        // var_dump($tophonenumber === $phone2);
+        // echo '</pre>';
+        // die();
+        if ($tophonenumber === $phone1) {
             $record->tophonename = 'phone1';
-        } elseif ($tophonenumber == $phone2) {
+        } elseif ($tophonenumber === $phone2) {
             $record->tophonename = 'phone2';
         } else {
             throw new moodle_exception('phonefieldsdonotexist', 'local_equipment');
@@ -2051,6 +2070,7 @@ function local_equipment_verify_otp($otp) {
     if (!isset($SESSION->otps)) {
         $SESSION->otps = new stdClass();
     }
+
     $dbcount = 0;
     $sessioncount = 0;
     $verified = 0;
@@ -2061,6 +2081,7 @@ function local_equipment_verify_otp($otp) {
         ];
         $sessionrecords = $SESSION->otps;
         $sessionasarray = get_object_vars($sessionrecords);
+
 
         if (!empty($sessionasarray)) {
             $sessioncount = 0;
@@ -2108,7 +2129,14 @@ function local_equipment_verify_otp($otp) {
                 }
             }
         }
-        if (($sessioncount == 1 || $dbcount == 1) && $verified == 1) {
+        if ($sessioncount == 1 && $expired) {
+
+            $url = new moodle_url('/local/equipment/phonecommunication/verifyphone.php');
+            $link = html_writer::link($url, get_string('here', 'local_equipment'));
+
+            throw new moodle_exception('otphasexpired', 'local_equipment', '', $link);
+            // redirect(new moodle_url('/local/equipment/phonecommunication/verifyphone.php'), get_string('otphasexpired', 'local_equipment'), null, \core\output\notification::NOTIFY_WARNING);
+        } else if (($sessioncount == 1 || $dbcount == 1) && $verified == 1) {
             throw new moodle_exception('nophonestoverify', 'local_equipment');
         } elseif ($sessioncount == 1 || $dbcount == 1) {
             throw new moodle_exception('otpdoesnotmatch', 'local_equipment');

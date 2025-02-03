@@ -24,32 +24,36 @@
  */
 
 require_once(__DIR__ . '/../../../config.php');
-require_once($CFG->libdir . '/adminlib.php');
+require_once($CFG->libdir . '/formslib.php');
+
+require_login();
 
 global $SITE, $USER;
+// Check if the user is a guest and redirect or display an error message
+if (isguestuser()) {
+    $msgparams = ['form' => get_string('verifyotp', 'local_equipment'), 'site' => $SITE->shortname];
+    redirect(new moodle_url('/login/index.php'), get_string('mustlogintoyourownaccount', 'local_equipment', $msgparams), null, \core\output\notification::NOTIFY_ERROR);
+}
+$context = context_system::instance();
+$url = new moodle_url('/local/equipment/phonecommunication/verifyotp.php');
 
-// This is an admin page.
-admin_externalpage_setup('verifyotp');
+$PAGE->set_context($context);
+$PAGE->set_url($url);
+$PAGE->set_title(get_string('verifyotp', 'local_equipment'));
+$PAGE->set_heading(get_string('verifyotp', 'local_equipment'));
 
 $headingtitle = get_string('verifyotp', 'local_equipment');
-$homeurl = new moodle_url('/admin/category.php', array('category' => 'phone'));
-$returnurl = new moodle_url('/admin/verifyotp.php');
+$homeurl = new moodle_url('/');
 
 // This form is located at local/equipment/classes/form/verifyotp_form.php.
-$form = new local_equipment\form\verifyotp_form(null, ['returnurl' => $returnurl]);
+$form = new local_equipment\form\verifyotp_form(null, ['returnurl' => $url]);
 if ($form->is_cancelled()) {
     redirect($homeurl);
 }
 
-// Display the page.
-echo $OUTPUT->header();
-echo $OUTPUT->heading($headingtitle);
+// echo $OUTPUT->heading($headingtitle);
 
-// Displaying notextever warning.
-if (!empty($CFG->notextever)) {
-    $msg = get_string('notexteverwarning', 'local_equipment');
-    echo $OUTPUT->notification($msg, \core\output\notification::NOTIFY_ERROR);
-}
+
 
 $data = $form->get_data();
 if ($data) {
@@ -68,6 +72,7 @@ if ($data) {
             $msg = $responseobject->successmessage;
         } else {
             $msg = get_string('codeconfirmed', 'local_equipment', $msgparams);
+            redirect($homeurl, $msg, null, \core\output\notification::NOTIFY_SUCCESS);
         }
         $notificationtype = 'notifysuccess';
     } else {
@@ -75,9 +80,15 @@ if ($data) {
         $msg = get_string('otperror', 'local_equipment', $responseobject->errormessage);
     }
 
+    // Displaying notextever warning.
+    if (!empty($CFG->notextever)) {
+        $msg = get_string('notexteverwarning', 'local_equipment');
+        echo $OUTPUT->notification($msg, \core\output\notification::NOTIFY_ERROR);
+    }
+
     // // Show result.
     echo $OUTPUT->notification($msg, $notificationtype);
 }
-
+echo $OUTPUT->header();
 $form->display();
 echo $OUTPUT->footer();

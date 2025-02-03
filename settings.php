@@ -311,26 +311,51 @@ if ($hassiteconfig) {
 
     if ($ADMIN->fulltree) {
 
-        // Infobip
-        $link = html_writer::link('https://portal.infobip.com/', get_string('here', 'local_equipment'));
+        // Gateway to use for sending SMS.
+        $link = html_writer::link($CFG->wwwroot . '/sms/sms_gateways.php', get_string('here', 'local_equipment'));
+        $gateways = local_equipment_get_sms_gateways();
+        $options = [0 => get_string('selectagateway', 'local_equipment')] + $gateways;
         $settingspage->add(new admin_setting_heading(
-            'local_equipment_infobip',
-            new lang_string('infobip', 'local_equipment'),
-            new lang_string('infobip_desc', 'local_equipment', $link)
+            'local_equipment/gateway',
+            new lang_string('smsgatewaystouse', 'local_equipment'),
+            new lang_string('smsgatewaystouse_desc', 'local_equipment', $link)
         ));
-        $settingspage->add(new admin_setting_configpasswordunmask(
-            'local_equipment/infobipapikey',
-            new lang_string('infobipapikey', 'local_equipment'),
-            new lang_string('infobipapikey_desc', 'local_equipment'),
+        $settingspage->add(new admin_setting_configselect(
+            'local_equipment/otpgateway',
+            new lang_string('otpgateway', 'local_equipment'),
+            new lang_string('otpgateway_desc', 'local_equipment'),
             '',
+            $options
         ));
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/infobipapibaseurl',
-            new lang_string('infobipapibaseurl', 'local_equipment'),
-            new lang_string('infobipapibaseurl_desc', 'local_equipment'),
+
+        $settingspage->add(new admin_setting_configselect(
+            'local_equipment/infogateway',
+            new lang_string('infogateway', 'local_equipment'),
+            new lang_string('infogateway_desc', 'local_equipment'),
             '',
-            PARAM_URL
+            $options
         ));
+
+        // // Infobip
+        // $link = html_writer::link('https://portal.infobip.com/', get_string('here', 'local_equipment'));
+        // $settingspage->add(new admin_setting_heading(
+        //     'local_equipment_infobip',
+        //     new lang_string('infobip', 'local_equipment'),
+        //     new lang_string('infobip_desc', 'local_equipment', $link)
+        // ));
+        // $settingspage->add(new admin_setting_configpasswordunmask(
+        //     'local_equipment/infobipapikey',
+        //     new lang_string('infobipapikey', 'local_equipment'),
+        //     new lang_string('infobipapikey_desc', 'local_equipment'),
+        //     '',
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/infobipapibaseurl',
+        //     new lang_string('infobipapibaseurl', 'local_equipment'),
+        //     new lang_string('infobipapibaseurl_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_URL
+        // ));
 
         // Twilio
         // NOT YET COMPATIBLE
@@ -366,68 +391,68 @@ if ($hassiteconfig) {
         // ));
 
         // // AWS End User Messaging
-        $link = html_writer::link('https://console.aws.amazon.com/sms-voice/', get_string('here', 'local_equipment'));
-        $settingspage->add(new admin_setting_heading(
-            'local_equipment_awssmsvoice',
-            new lang_string('awssmsvoice', 'local_equipment'),
-            new lang_string('awssmsvoice_desc', 'local_equipment', $link)
-        ));
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/awsaccesskey',
-            new lang_string('awsaccesskey', 'local_equipment'),
-            new lang_string('awsaccesskey_desc', 'local_equipment'),
-            '',
-            PARAM_TEXT,
-            69
-        ));
-        $settingspage->add(new admin_setting_configpasswordunmask(
-            'local_equipment/awssecretkey',
-            new lang_string('awssecretkey', 'local_equipment'),
-            new lang_string('awssecretkey_desc', 'local_equipment'),
-            '',
-            PARAM_TEXT,
-            69
-        ));
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/awsregion',
-            new lang_string('awsregion', 'local_equipment'),
-            new lang_string('awsregion_desc', 'local_equipment'),
-            '',
-            PARAM_TEXT,
-            69
-        ));
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/awsinfopoolid',
-            new lang_string('awsinfopoolid', 'local_equipment'),
-            new lang_string('awsinfopoolid_desc', 'local_equipment'),
-            '',
-            PARAM_TEXT,
-            69
-        ));
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/awsotppoolid',
-            new lang_string('awsotppoolid', 'local_equipment'),
-            new lang_string('awsotppoolid_desc', 'local_equipment'),
-            '',
-            PARAM_TEXT,
-            69
-        ));
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/awsinfooriginatorphone',
-            new lang_string('awsinfooriginatorphone', 'local_equipment'),
-            new lang_string('awsinfooriginatorphone_desc', 'local_equipment'),
-            '',
-            PARAM_TEXT,
-            69
-        ));
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/awsotporiginatorphone',
-            new lang_string('awsotporiginatorphone', 'local_equipment'),
-            new lang_string('awsotporiginatorphone_desc', 'local_equipment'),
-            '',
-            PARAM_TEXT,
-            69
-        ));
+        // $link = html_writer::link('https://console.aws.amazon.com/sms-voice/', get_string('here', 'local_equipment'));
+        // $settingspage->add(new admin_setting_heading(
+        //     'local_equipment_awssmsvoice',
+        //     new lang_string('awssmsvoice', 'local_equipment'),
+        //     new lang_string('awssmsvoice_desc', 'local_equipment', $link)
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/awsaccesskey',
+        //     new lang_string('awsaccesskey', 'local_equipment'),
+        //     new lang_string('awsaccesskey_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_TEXT,
+        //     69
+        // ));
+        // $settingspage->add(new admin_setting_configpasswordunmask(
+        //     'local_equipment/awssecretkey',
+        //     new lang_string('awssecretkey', 'local_equipment'),
+        //     new lang_string('awssecretkey_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_TEXT,
+        //     69
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/awsregion',
+        //     new lang_string('awsregion', 'local_equipment'),
+        //     new lang_string('awsregion_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_TEXT,
+        //     69
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/awsinfopoolid',
+        //     new lang_string('awsinfopoolid', 'local_equipment'),
+        //     new lang_string('awsinfopoolid_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_TEXT,
+        //     69
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/awsotppoolid',
+        //     new lang_string('awsotppoolid', 'local_equipment'),
+        //     new lang_string('awsotppoolid_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_TEXT,
+        //     69
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/awsinfooriginatorphone',
+        //     new lang_string('awsinfooriginatorphone', 'local_equipment'),
+        //     new lang_string('awsinfooriginatorphone_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_TEXT,
+        //     69
+        // ));
+        // $settingspage->add(new admin_setting_configtext(
+        //     'local_equipment/awsotporiginatorphone',
+        //     new lang_string('awsotporiginatorphone', 'local_equipment'),
+        //     new lang_string('awsotporiginatorphone_desc', 'local_equipment'),
+        //     '',
+        //     PARAM_TEXT,
+        //     69
+        // ));
 
         // // AWS SNS
         // $link = html_writer::link('https://aws.amazon.com/sns/', get_string('here', 'local_equipment'));

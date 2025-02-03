@@ -83,15 +83,6 @@ class testoutgoingtextconf_form extends \moodleform {
         // Provider dropdown.
         $providerstoshow = local_equipment_get_sms_gateways();
 
-
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<pre>';
-        // var_dump($providerstoshow);
-        // echo '</pre>';
-        // die();
-
         if (!$providerstoshow) {
             // No providers configured.
             $mform->addElement(

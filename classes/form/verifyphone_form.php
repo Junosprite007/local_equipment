@@ -27,7 +27,8 @@ namespace local_equipment\form;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once(__DIR__ . '/../../lib.php');
+require_once($CFG->dirroot . '/local/equipment/lib.php');
+
 
 class verifyphone_form extends \moodleform {
     public function definition() {
@@ -41,8 +42,8 @@ class verifyphone_form extends \moodleform {
         $editprofilelink = \html_writer::link($editprofileurl, get_string('editmyprofile'));
         $vccformurl = new \moodle_url('/local/equipment/virtualcourseconsent/index.php');
         $vccformlink = \html_writer::link($vccformurl, get_string('fillouttheform', 'local_equipment', get_string('virtualcourseconsent', 'local_equipment')));
-        $providerconfigurl = new \moodle_url('/admin/settings.php?section=managetoolphoneverification');
-        $providerconfiglink = \html_writer::link($providerconfigurl, get_string('phoneproviderconfiguration', 'local_equipment'));
+        // $providerconfigurl = new \moodle_url('/admin/settings.php?section=managetoolphoneverification');
+        // $providerconfiglink = \html_writer::link($providerconfigurl, get_string('phoneproviderconfiguration', 'local_equipment'));
 
         // Phone number objects.
         $phone1obj = local_equipment_parse_phone_number($USER->phone1);
@@ -62,13 +63,17 @@ class verifyphone_form extends \moodleform {
         }
 
         $phoneoptions = [];
+        // $phone_user = local_equipment_user_phone_exists($USER->id);
         $phone_user = local_equipment_user_phone_exists($USER->id);
         $phone_vcc = local_equipment_vccsubmission_phone_exists($USER->id);
         // echo '<br />';
         // echo '<br />';
         // echo '<br />';
-        // var_dump($phone_user);
-        // var_dump($phone_vcc);
+        // echo '<pre>';
+        // var_dump("phone_user: $phone_user");
+        // var_dump("phone_vcc: $phone_vcc");
+        // echo '</pre>';
+        // die();
         // $phone = false;
 
         // Could be a phone number, could be NULL, or could be false.
@@ -96,6 +101,57 @@ class verifyphone_form extends \moodleform {
             $phonedefault = $phone_vcc;
         }
 
+
+
+
+
+
+        // if (!$phonedefault) {
+        //     // No phone numbers available.
+        //     if ($phone2obj->phone === '' && $phone1obj->phone === '') {
+        //         $text = new \lang_string('nophonefound', 'local_equipment', $editprofilelink);
+        //     } else if (!empty($phone2obj->errors) || !empty($phone1obj->errors)) {
+        //         $text = new \lang_string('novalidphonefound', 'local_equipment', $editprofilelink);
+        //     } else {
+        //         $text = new \lang_string('somethingwrong_phone', 'local_equipment', $editprofilelink);
+        //     }
+
+        //     $mform->addElement(
+        //         'static',
+        //         'nophonefound',
+        //         get_string('selectphonetoverify', 'local_equipment'),
+        //         $text
+        //     );
+        //     $mform->addRule('nophonefound', get_string('required'), 'required');
+
+        //     if (!empty($phone2obj->errors)) {
+        //         $msg = get_string('somethingwrong_phone2', 'local_equipment') . ' ' . get_string('seeerrorsbelow', 'local_equipment');
+        //         $notification = \html_writer::div(join("<br>", $phone2obj->errors), 'alert alert-warning');
+        //         $mform->addElement('static', 'activeenddatewillalsoneedtobeupdated', '', $notification);
+        //     } else if (!empty($phone1obj->errors)) {
+        //         $msg = get_string('somethingwrong_phone1', 'local_equipment') . ' ' . get_string('seeerrorsbelow', 'local_equipment');
+        //         echo $OUTPUT->notification($msg, \core\output\notification::NOTIFY_ERROR);
+        //         foreach ($phone1obj->errors as $error) {
+        //             echo $OUTPUT->notification($error, \core\output\notification::NOTIFY_ERROR);
+        //         }
+        //     }
+        // } else {
+        //     $mform->addElement('select', 'tonumber', get_string('selectphonetoverify', 'local_equipment'), $phoneoptions);
+        //     $mform->setType('tonumber', PARAM_TEXT);
+        //     $mform->setDefault('tonumber', $phonedefault);
+        //     $mform->addRule('tonumber', get_string('required'), 'required');
+        //     // Test setting.
+        //     $mform->addElement('advcheckbox', 'isatest', get_string('testmessage', 'local_equipment'));
+        //     $mform->setType('isatest', PARAM_INT);
+        //     $mform->setDefault('isatest', 1);
+        // }
+
+
+
+
+
+
+
         if ($phonedefault) {
             $mform->addElement('text', 'tonumber', get_string('entermobilephone', 'local_equipment'), $phoneoptions);
             $mform->setType('tonumber', PARAM_TEXT);
@@ -117,7 +173,7 @@ class verifyphone_form extends \moodleform {
         // }
         if ($phonedefault) {
             $buttonarray = array();
-            $buttonarray[] = $mform->createElement('submit', 'send', get_string('sendtest', 'local_equipment'));
+            $buttonarray[] = $mform->createElement('submit', 'send', get_string('verifyphonenumber', 'local_equipment'));
             $buttonarray[] = $mform->createElement('cancel');
 
             $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
@@ -137,6 +193,10 @@ class verifyphone_form extends \moodleform {
         $errors = parent::validation($data, $files);
 
         if (isset($data['tonumber']) && $data['tonumber']) {
+            $phoneobj = local_equipment_parse_phone_number($data['tonumber']);
+            if (!empty($phoneobj->errors)) {
+                $errors['tonumber'] = join("<br>", $phoneobj->errors);
+            }
         }
 
         return $errors;
