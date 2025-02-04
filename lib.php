@@ -1904,6 +1904,7 @@ function local_equipment_send_secure_otp($gatewayid, $tophonenumber, $ttl = 600,
     global $USER, $DB, $SESSION, $SITE;
 
     $responseobject = new stdClass();
+    $responseobject->errorcode = -1;
 
     if ($isatest) {
         $verifyurl = new moodle_url('/local/equipment/phonecommunication/verifytestotp.php');
@@ -1949,6 +1950,10 @@ function local_equipment_send_secure_otp($gatewayid, $tophonenumber, $ttl = 600,
             $record->tophonename = 'phone1';
         } elseif ($tophonenumber === $phone2) {
             $record->tophonename = 'phone2';
+        } else if ($phone2 != '') {
+            $USER->phone2 = $tophonenumber;
+            $record->tophonename = 'phone2';
+            $DB->update_record('user', $USER);
         } else {
             throw new moodle_exception('phonefieldsdonotexist', 'local_equipment');
         }

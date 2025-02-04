@@ -295,7 +295,7 @@ if ($mform->is_cancelled()) {
         $textuser->tonumber = $vccsubmission->phone;
 
         $provider = get_config('local_equipment', 'otpgateway');
-        $phoneisverified = $DB->get_record('local_equipment_phonecommunication_otp', ['tophonenumber' => $textuser->tonumber, 'phoneisverified' => 1]);
+        $phoneisverified = $DB->get_record('local_equipment_phonecommunication_otp', ['tophonenumber' => $textuser->tonumber, 'phoneisverified' => 1], '*', IGNORE_MULTIPLE);
 
         if ($provider && !$phoneisverified) {
             $textuser->notes = [
