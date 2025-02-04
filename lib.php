@@ -1705,8 +1705,6 @@ function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $m
     $responseobject->success = false;
 
     try {
-        require_once($CFG->dirroot . '/vendor/autoload.php');
-
         $awsconfig = json_decode($gatewayobj->config);
         $client = new Aws\Sns\SnsClient([
             'version' => 'latest',
