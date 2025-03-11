@@ -113,4 +113,12 @@ $capabilities = [
         ],
         'clonepermissionsfrom' => 'moodle/course:view'  // Inherit permissions from this capability
     ],
+    'local/equipment:manageequipment' => [
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => [
+            'manager' => CAP_ALLOW,
+            'admin' => CAP_ALLOW
+        ],
+    ],
 ];

@@ -2786,6 +2786,34 @@ function local_equipment_enrol_user_in_course(
 }
 
 /**
+ * Extends the navigation by adding an "Equipment" item to the primary navigation.
+ *
+ * @param global_navigation $navigation
+ */
+function local_equipment_extend_navigation(global_navigation $navigation) {
+    global $PAGE, $CFG;
+
+    // Only add this for users who can see it
+    if (!has_capability('local/equipment:manageequipment', context_system::instance())) {
+        return;
+    }
+
+    $node = navigation_node::create(
+        get_string('equipmentmanagement', 'local_equipment'),
+        new moodle_url('/local/equipment/management.php'),
+        navigation_node::TYPE_CUSTOM,
+        null,
+        'equipmentmanagement',
+        new pix_icon('i/settings', '')
+    );
+
+    $node->showinflatnavigation = true;
+
+    // Add to the primary navigation
+    $navigation->add_node($node);
+}
+
+/**
  * Bulk enroll a student in multiple courses.
  *
  * @param stdClass $user The user object to enroll

@@ -122,6 +122,96 @@ if ($hassiteconfig) {
 
     $ADMIN->add($component, $settings);
 
+    // settings.php
+    // $ADMIN->add($component, new admin_settingpage("{$component}_notifications", get_string('notificationsettings', 'local_equipment')));
+
+    $settings = new admin_settingpage("{$component}_notifications", get_string('notificationsettings', 'local_equipment'));
+
+    // Parent notification settings
+    $settings->add(new admin_setting_configcheckbox(
+        'local_equipment/notify_parents',
+        get_string('notifyparents', 'local_equipment'),
+        get_string('notifyparents_desc', 'local_equipment'),
+        1
+    ));
+
+    // Student notification settings
+    $settings->add(new admin_setting_configcheckbox(
+        'local_equipment/notify_students',
+        get_string('notifystudents', 'local_equipment'),
+        get_string('notifystudents_desc', 'local_equipment'),
+        1
+    ));
+
+    // Message sender setting
+    $options = [
+        // ENROL_SEND_EMAIL_FROM_COURSE_CONTACT => get_string(
+        //     'fromcoursecontact',
+        //     'local_equipment'
+        // ),
+        ENROL_SEND_EMAIL_FROM_KEY_HOLDER => get_string('fromkeyholder', 'local_equipment'),
+        ENROL_SEND_EMAIL_FROM_NOREPLY => get_string(
+            'fromnoreply',
+            'local_equipment'
+        )
+    ];
+
+    $settings->add(new admin_setting_configselect(
+        'local_equipment/messagesender',
+        get_string('messagesender', 'local_equipment'),
+        get_string('messagesender_desc', 'local_equipment'),
+        ENROL_SEND_EMAIL_FROM_NOREPLY,  // default value
+        $options
+    ));
+    // Add Reminders sub-settings
+    $settings->add(new admin_setting_heading(
+        "{$component}/reminderheading",
+        get_string(
+            'reminderheading',
+            'local_equipment'
+        ),
+        get_string('reminderheading_desc', 'local_equipment')
+    ));
+
+    // Number of days in advance to send the first reminder message for upcoming equipment exchange.
+    $settings->add(new admin_setting_configtext(
+        "{$component}/inadvance_days",
+        get_string('reminder_inadvance_days', 'local_equipment'),
+        get_string('reminder_inadvance_days_desc', 'local_equipment'),
+        '7', // Default value
+        PARAM_INT
+    ));
+    // Number of minutes in advance to send the second reminder message for upcoming equipment exchange.
+    $settings->add(new admin_setting_configtext(
+        "{$component}/inadvance_hours",
+        get_string('reminder_inadvance_hours', 'local_equipment'),
+        get_string('reminder_inadvance_hours_desc', 'local_equipment'),
+        '1', // Default value
+        PARAM_INT
+    ));
+
+    // Days before exchange to send reminders
+    $settings->add(new admin_setting_configtext(
+        'local_equipment/reminder_timeout',
+        get_string('reminder_timeout', 'local_equipment'),
+        get_string('reminder_timeout_desc', 'local_equipment'),
+        '24', // Default value - one week, 3 days, and 1 day before
+        PARAM_TEXT
+    ));
+
+    $ADMIN->add(
+        $component,
+        $settings
+    );
+
+
+
+    // $settings = new admin_settingpage("{$component}_reminders", get_string('remindersettings', 'local_equipment'));
+
+
+
+
+
 
     // Add 'Partnerships' subcategory.
     $ADMIN->add(
@@ -131,6 +221,8 @@ if ($hassiteconfig) {
             new lang_string('partnerships', 'local_equipment')
         )
     );
+
+
     // Add 'Pickups' subcategory.
     $ADMIN->add(
         $component,
@@ -234,52 +326,9 @@ if ($hassiteconfig) {
         new moodle_url('/local/equipment/addbulkfamilies.php')
     ));
 
-    // settings.php
-    // $ADMIN->add($component, new admin_settingpage("{$component}_notifications", get_string('notificationsettings', 'local_equipment')));
 
-    $settings = new admin_settingpage("{$component}_notifications", get_string('notificationsettings', 'local_equipment'));
 
-    // Parent notification settings
-    $settings->add(new admin_setting_configcheckbox(
-        'local_equipment/notify_parents',
-        get_string('notifyparents', 'local_equipment'),
-        get_string('notifyparents_desc', 'local_equipment'),
-        1
-    ));
 
-    // Student notification settings
-    $settings->add(new admin_setting_configcheckbox(
-        'local_equipment/notify_students',
-        get_string('notifystudents', 'local_equipment'),
-        get_string('notifystudents_desc', 'local_equipment'),
-        1
-    ));
-
-    // Message sender setting
-    $options = [
-        // ENROL_SEND_EMAIL_FROM_COURSE_CONTACT => get_string(
-        //     'fromcoursecontact',
-        //     'local_equipment'
-        // ),
-        ENROL_SEND_EMAIL_FROM_KEY_HOLDER => get_string('fromkeyholder', 'local_equipment'),
-        ENROL_SEND_EMAIL_FROM_NOREPLY => get_string(
-            'fromnoreply',
-            'local_equipment'
-        )
-    ];
-
-    $settings->add(new admin_setting_configselect(
-        'local_equipment/messagesender',
-        get_string('messagesender', 'local_equipment'),
-        get_string('messagesender_desc', 'local_equipment'),
-        ENROL_SEND_EMAIL_FROM_NOREPLY,  // default value
-        $options
-    ));
-
-    $ADMIN->add(
-        $component,
-        $settings
-    );
 
     // Virtual course consent (vcc) submissions should not be limited to managers. All users will have access to this page for now.
     // $ADMIN->add(

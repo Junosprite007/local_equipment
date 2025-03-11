@@ -255,19 +255,6 @@ foreach ($submissions as $submission) {
 
     $break = false;
     foreach ($local_equipment_user as $parentuser) {
-
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<pre>';
-        // var_dump($submission);
-        // echo '</pre>';
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<pre>';
-        // var_dump($parentuser);
-        // echo '</pre>';
-        // die();
         if ($parentuser->userid == $submission->userid) {
             if ($parentuser->mailing_apartment) {
                 $submission->parent_mailing_address = $parentuser->mailing_streetaddress . ', ' . get_string('apt', 'local_equipment') . ' ' . $parentuser->mailing_apartment . ', ' . $parentuser->mailing_city . ', ' . $parentuser->mailing_state . ' ' . $parentuser->mailing_zipcode;

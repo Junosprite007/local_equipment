@@ -80,6 +80,7 @@ $string['editpartnership'] = 'Edit partnership';
 $string['editpartnerships'] = 'Edit partnerships';
 $string['endtime'] = 'End time';
 $string['equipment'] = 'Equipment';
+$string['equipmentmanagement'] = 'Equipment management';
 $string['equipmentsettings'] = 'Equipment settings';
 $string['equipment:managepartnerships'] = 'Allows user to manage partnerships';
 $string['equipment:seedetails'] = 'See equipment plugin menus and details';
@@ -751,6 +752,16 @@ $string['fromnoreply'] = 'From the no-reply address';
 $string['notificationsdisabledforusertype'] = 'Yo, {$a->user}. Just so you know, notification emails are currently disabled for {$a->role}s, so no {$a->role} will receive an email notification during this enrolment process. If you\'d like to enable email notifications specifically for {$a->role}s, you can do that here: {$a->link}.';
 $string['notificationsdisabledforusertypes'] = 'Yo, {$a->user}. Just so you know, notification emails are currently disabled for {$a->role1}s and {$a->role2}s, so none of these users will receive an email notification during this enrolment process. If you\'d like to enable email notifications, you can do that here: {$a->link}.';
 
+// Reminder settings
+$string['reminderheading'] = 'Reminder settings';
+$string['reminderheading_desc'] = 'Settings for sending reminders to users about upcoming equipment exchange dates.';
+$string['reminder_inadvance_days'] = 'Reminder in advance (days)';
+$string['reminder_inadvance_days_desc'] = 'Number of days in advance to send the first reminder message to users for upcoming equipment exchanges, specific to the user.';
+$string['reminder_inadvance_hours'] = 'Reminder in advance (hours)';
+$string['reminder_inadvance_hours_desc'] = 'Number of hours in advance to send the second reminder message to users for upcoming equipment exchanges, specific to the user.';
+$string['reminder_timeout'] = 'Reminder timeout';
+$string['reminder_timeout_desc'] = 'The end of the timeframe in which a reminder can be sent to the user. If for some reason the reminder is not sent within the timeframe of between reminder_inadvance and (reminder_inadvance + reminder_timeout), the reminder will not be sent.';
+
 
 // Welcome messages
 $string['studentwelcomemessage'] = 'Hi {$a->firstname},
@@ -781,3 +792,5 @@ $string['newuseremailsenttouser'] = 'New user email sent to {$a->personname} at 
 $string['emailfailedtosendtouser'] = 'Email failed to send to {$a->personname} at the address: {$a->email}.';
 $string['contactusforyourpassword'] = 'Contact us for your password.';
 
+// Equipment task strings
+$string['taskname_sendequipmentreminders'] = 'Send equipment reminders';
