@@ -753,6 +753,7 @@ $string['notificationsdisabledforusertype'] = 'Yo, {$a->user}. Just so you know,
 $string['notificationsdisabledforusertypes'] = 'Yo, {$a->user}. Just so you know, notification emails are currently disabled for {$a->role1}s and {$a->role2}s, so none of these users will receive an email notification during this enrolment process. If you\'d like to enable email notifications, you can do that here: {$a->link}.';
 
 // Reminder settings
+$string['equipmentexchangereminder'] = 'Equipment exchange reminder';
 $string['reminderheading'] = 'Reminder settings';
 $string['reminderheading_desc'] = 'Settings for sending reminders to users about upcoming equipment exchange dates.';
 $string['reminder_inadvance_days'] = 'Reminder in advance (days)';
@@ -761,6 +762,15 @@ $string['reminder_inadvance_hours'] = 'Reminder in advance (hours)';
 $string['reminder_inadvance_hours_desc'] = 'Number of hours in advance to send the second reminder message to users for upcoming equipment exchanges, specific to the user.';
 $string['reminder_timeout'] = 'Reminder timeout';
 $string['reminder_timeout_desc'] = 'The end of the timeframe in which a reminder can be sent to the user. If for some reason the reminder is not sent within the timeframe of between reminder_inadvance and (reminder_inadvance + reminder_timeout), the reminder will not be sent.';
+$string['reminder_template_default'] = 'REMINDER: Equipment exchange in {DAYS} days on {DATE} at {TIME}. Location: {LOCATION}. Items: {EQUIPMENT}. Course: {COURSE}.';
+$string['reminder_template_days'] = 'Your equipment exchange is scheduled for {DAYS} day(s) from now, on {DATE} at {TIME}. Location: {LOCATION}.';
+$string['reminder_template_hours'] = 'URGENT REMINDER: Your equipment exchange is TOMORROW ({DATE}) at {TIME}. Location: {LOCATION}. Don\'t forget!';
+$string['reminderheader'] = 'Reminder settings';
+$string['remindersettings_desc'] = 'Settings for sending reminders to users about upcoming equipment exchange dates.';
+$string['reminder_template_days_desc'] = 'Template for the reminder message sent days before an exchange.';
+$string['reminder_template_hours_desc'] = 'Template for the reminder message sent hours before an exchange.';
+$string['reminder_template_days_default'] = 'REMINDER: Your equipment exchange is in {DAYS} days on {DATE} at {TIME}. Location: {LOCATION}. Items: {EQUIPMENT}. Course: {COURSE}.';
+$string['reminder_template_hours_default'] = 'URGENT REMINDER: Your equipment exchange is in {HOURS} hours today at {TIME}. Location: {LOCATION}. Don\'t forget!';
 
 
 // Welcome messages

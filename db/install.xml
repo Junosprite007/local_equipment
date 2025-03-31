@@ -105,16 +105,16 @@
                 <FIELD NAME="endtime" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
                 <FIELD NAME="status" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
                 <!-- Pickup address infomation -->
-                <FIELD NAME="address_extrainput" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="address_sameasmailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="address_sameasphysical" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="address_apartment" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="address_streetaddress" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="address_city" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="address_state" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="address_country" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="address_zipcode" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="address_extrainstructions" TYPE="text" NOTNULL="false"/>
+                <FIELD NAME="pickup_extrainput" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickup_sameasmailing" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickup_sameasphysical" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickup_apartment" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickup_streetaddress" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickup_city" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickup_state" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickup_country" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickup_zipcode" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="pickup_extrainstructions" TYPE="text" NOTNULL="false"/>
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -320,15 +320,15 @@
     </KEYS>
 </TABLE>
         <!-- Reminders to send to users -->
-<TABLE NAME="local_equipment_remindersent" COMMENT="Table for storing the reminder code for whether or not the user has been
+<TABLE NAME="local_equipment_user_exchange" COMMENT="Table for storing the reminder code for whether or not the user has been
         sent a reminder text or email about equipment for a given course: no record = user has not been sent a reminder and should
         NOT be sent one, 0 = user marked for sending a reminder but has not been sent one yet, 1 = only first remainder has been
-        sent to user (days before exchange), 2 = only second reminder has been sent to user (minutes before exchange), 3 = user has
-        been sent both reminders. 3 should be the most common entry in the table.">
+        sent to user (days before exchange), 2 = only second reminder has been sent to user (minutes before exchange), 9 = user has
+        been sent all reminders. 9 should be the most common entry in the table.">
             <FIELDS>
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
                 <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
-                <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="exchangeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
                 <FIELD NAME="reminder_code" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
                 <FIELD NAME="reminder_method" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
                 <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -337,7 +337,7 @@
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
                 <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
-                <KEY NAME="courseid" TYPE="foreign" FIELDS="userid" REFTABLE="course" REFFIELDS="id"/>
+                <KEY NAME="exchangeid" TYPE="foreign" FIELDS="exchangeid" REFTABLE="local_equipment_pickup" REFFIELDS="id"/>
             </KEYS>
         </TABLE>
     </TABLES>

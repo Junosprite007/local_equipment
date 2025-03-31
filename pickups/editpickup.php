@@ -60,14 +60,57 @@ if ($mform->is_cancelled()) {
     // $pickup->timemodified = time();
 
     // $pickup = new stdClass();
-    $pickup->pickupdate = $data->pickupdate;
+    $pickupdate = $data->pickupdate;
+    // Convert start time to timestamp
+    $starttimestamp = make_timestamp(
+        date('Y', $pickupdate),  // Year from pickup date
+        date('m', $pickupdate),  // Month from pickup date
+        date('d', $pickupdate),  // Day from pickup date
+        $data->starttimehour,        // Hour from form input
+        $data->starttimeminute       // Minute from form input
+    );
+
+    // Convert end time to timestamp
+    $endtimestamp = make_timestamp(
+        date('Y', $pickupdate),
+        date('m', $pickupdate),
+        date('d', $pickupdate),
+        $data->endtimehour,
+        $data->endtimeminute
+    );
+
+    $pickup->pickupdate = $starttimestamp;
     // Combine hours and minutes into a single timestamp
-    $pickup->starttime = $data->pickupdate + ($data->starttimehour * 3600) + ($data->starttimeminute * 60);
-    $pickup->endtime = $data->pickupdate + ($data->endtimehour * 3600) + ($data->endtimeminute * 60);
+    $pickup->starttime = $starttimestamp;
+    $pickup->endtime = $endtimestamp;
+    // $pickup->starttime = $data->pickupdate + ($data->starttimehour * 3600) + ($data->starttimeminute * 60);
+    // $pickup->endtime = $data->pickupdate + ($data->endtimehour * 3600) + ($data->endtimeminute * 60);
+
+
+
+
+    // echo '<pre>';
+    // var_dump($pickup->starttime);
+    // $userdate = userdate($pickup->starttime);
+    // var_dump(userdate($pickup->starttime));
+    // var_dump(make_timestamp($userdate));
+    // echo '</pre>';
+    // die();
     $pickup->partnershipid = $data->partnershipid;
     $pickup->flccoordinatorid = $data->flccoordinatorid;
     $pickup->partnershipcoordinatorid = $data->partnershipcoordinatorid;
     $pickup->status = $data->status;
+
+
+
+    // Pickup address specific fields.
+    $pickup->pickup_streetaddress = $data->pickup_streetaddress;
+    $pickup->pickup_apartment = $data->pickup_apartment;
+    $pickup->pickup_city = $data->pickup_city;
+    $pickup->pickup_state = $data->pickup_state;
+    $pickup->pickup_country = $data->pickup_country;
+    $pickup->pickup_zipcode = $data->pickup_zipcode;
+    $pickup->pickup_extrainstructions = $data->pickup_extrainstructions;
 
 
     if ($DB->update_record('local_equipment_pickup', $pickup)) {

@@ -737,13 +737,13 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024112100, 'local', 'equipment');
     }
 
-    if ($oldversion < 2025031000) {
+    if ($oldversion < 2025031200) {
 
-        // Define table local_equipment_remindersent.
-        $table = new xmldb_table('local_equipment_remindersent');
+        // Define table local_equipment_user_exchange.
+        $table = new xmldb_table('local_equipment_user_exchange');
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
-        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('exchangeid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
         $table->add_field('reminder_code', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
         $table->add_field('reminder_method', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, '0');
         $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
@@ -751,14 +751,64 @@ function xmldb_local_equipment_upgrade($oldversion) {
 
         $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
         $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
-        $table->add_key('courseid', XMLDB_KEY_FOREIGN, ['userid'], 'course', ['id']);
+        $table->add_key('exchangeid', XMLDB_KEY_FOREIGN, ['exchangeid'], 'local_equipment_pickup', ['id']);
 
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }
 
         // Equipment savepoint reached.
-        upgrade_plugin_savepoint(true, 2025031000, 'local', 'equipment');
+        upgrade_plugin_savepoint(true, 2025031200, 'local', 'equipment');
+    }
+
+    if ($oldversion < 2025032500) {
+
+        // Add pickup fields to the local_equipment_pickup table.
+        $table = new xmldb_table('local_equipment_pickup');
+
+        $oldfield = new xmldb_field('address_extrainput', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'status');
+        if ($dbman->field_exists($table, $oldfield)) {
+            $dbman->rename_field($table, $oldfield, 'pickup_extrainput');
+        }
+        $oldfield = new xmldb_field('address_sameasmailing', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'address_extrainput');
+        if ($dbman->field_exists($table, $oldfield)) {
+            $dbman->rename_field($table, $oldfield, 'pickup_sameasmailing');
+        }
+        $oldfield = new xmldb_field('address_sameasphysical', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'address_sameasmailing');
+        if ($dbman->field_exists($table, $oldfield)) {
+            $dbman->rename_field($table, $oldfield, 'pickup_sameasphysical');
+        }
+        $oldfield = new xmldb_field('address_streetaddress', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'address_sameasphysical');
+        if ($dbman->field_exists($table, $oldfield)) {
+            $dbman->rename_field($table, $oldfield, 'pickup_streetaddress');
+        }
+        $oldfield = new xmldb_field('address_apartment', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'address_streetaddress');
+        if ($dbman->field_exists($table, $oldfield)) {
+            $dbman->rename_field($table, $oldfield, 'pickup_apartment');
+        }
+        $oldfield = new xmldb_field('address_city', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'address_apartment');
+        if ($dbman->field_exists($table, $oldfield)) {
+            $dbman->rename_field($table, $oldfield, 'pickup_city');
+        }
+        $oldfield = new xmldb_field('address_state', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'address_city');
+        if ($dbman->field_exists($table, $oldfield)) {
+            $dbman->rename_field($table, $oldfield, 'pickup_state');
+        }
+        $oldfield = new xmldb_field('address_country', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'address_state');
+        if ($dbman->field_exists($table, $oldfield)) {
+            $dbman->rename_field($table, $oldfield, 'pickup_country');
+        }
+        $oldfield = new xmldb_field('address_zipcode', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'address_country');
+        if ($dbman->field_exists($table, $oldfield)) {
+            $dbman->rename_field($table, $oldfield, 'pickup_zipcode');
+        }
+        $oldfield = new xmldb_field('address_extrainstructions', XMLDB_TYPE_TEXT, null, null, null, null, null, 'address_zipcode');
+        if ($dbman->field_exists($table, $oldfield)) {
+            $dbman->rename_field($table, $oldfield, 'pickup_extrainstructions');
+        }
+
+        // Equipment savepoint reached.
+        upgrade_plugin_savepoint(true, 2025032500, 'local', 'equipment');
     }
 
     return true;

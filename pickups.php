@@ -47,6 +47,7 @@ require_capability('local/equipment:managepickups', $context);
 // The 'actions' column is not a database column, but is used for edit/delete buttons.
 // Define columns and their corresponding database fields
 $columns = [
+    'id',
     'pickupdate',
     'starttime',
     'endtime',
@@ -57,6 +58,7 @@ $columns = [
     'actions',
 ];
 $headers = [
+    'id',
     'pickupdate',
     'starttime',
     'endtime',
@@ -121,17 +123,24 @@ $from =
          LEFT JOIN {user} pu ON ep.partnershipcoordinatorid = pu.id";
 
 $endedpickupstoshow = get_config('local_equipment', 'endedpickupstoshow');
-if (!isset($endedpickupstoshow)) {
-    $endedpickupstoshow = 7; // Fallback to 7 days if the setting is not found
-}
+// if (!isset($endedpickupstoshow)) {
+//     $endedpickupstoshow = 7; // Fallback to 7 days if the setting is not found
+// }
 
-$pastseconds = time() - ($endedpickupstoshow * 86400); // Convert days to seconds
+$now = \core\di::get(\core\clock::class)->now()->getTimestamp();
+// // $me_now = \core\di::get(\core\clock::class)->now()->getTimezone();
+// $unix_now = \core\di::get(\core\clock::class)->time();
+// $me_now = userdate($unix_now);
+
+
+$pastseconds = $now - ($endedpickupstoshow * DAYSECS); // Convert days to seconds
 $where = '';
 $params = [];
 
 if (!($endedpickupstoshow < 0)) {
     $where = "endtime >= $pastseconds";
 }
+
 
 // Get sorting parameters
 $sort = $table->get_sql_sort();
@@ -165,15 +174,24 @@ foreach ($pickups as $pickup) {
     );
 
     $partnership = $DB->get_record('local_equipment_partnership', ['id' => $pickup->partnershipid]);
-    $partnershipinfo = $partnership->name;
+
+    // echo '<pre>';
+    // // var_dump($now->now()->getTimestamp());
+    // var_dump($partnership);
+    // echo '</pre>';
+    // die();
+
+    // $partnershipinfo = $partnership->name;
+
     // . ', ' . $partnership->city_physical . ', ' . $partnership->state_physical;
 
+    $row[] = $pickup->id;
     $row[] = userdate($pickup->pickupdate, get_string('strftimedate', 'local_equipment'));
     $row[] = userdate($pickup->starttime, get_string('strftimetime'));
     $row[] = userdate($pickup->endtime, get_string('strftimetime'));
     // $row[] = $pickup->status;
     $row[] = get_string('status_' . $pickup->status, 'local_equipment');
-    $row[] = $partnership ? $partnershipinfo : '';
+    $row[] = $partnership ? $partnership->name : get_string('nopartnershipselected', 'local_equipment');
     $row[] = local_equipment_get_coordinator_info($pickup->flccoordinatorid);
     $row[] = local_equipment_get_coordinator_info($pickup->partnershipcoordinatorid);
 

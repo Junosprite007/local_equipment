@@ -48,15 +48,62 @@ if ($mform->is_cancelled()) {
     $success = true;
 
     for ($i = 0; $i < $numberofpickups; $i++) {
+
         $pickup = new stdClass();
-        $pickup->pickupdate = $data->pickupdate[$i];
+        // $pickupdate = $data->pickupdate[$i];
+        // $pickup->pickupdate = $pickupdate[$i];
+        // // $pickup->pickupdate = $data->pickupdate[$i];
+        // // Combine hours and minutes into a single timestamp
+        // $pickup->starttime = $data->pickupdate[$i] + ($data->starttimehour[$i] * 3600) + ($data->starttimeminute[$i] * 60);
+        // $pickup->endtime = $data->pickupdate[$i] + ($data->endtimehour[$i] * 3600) + ($data->endtimeminute[$i] * 60);
+
+
+
+        // $pickup = new stdClass();
+        $pickupdate = $data->pickupdate[$i];
+        // Convert start time to timestamp
+        $starttimestamp = make_timestamp(
+            date('Y', $pickupdate),  // Year from pickup date
+            date('m', $pickupdate),  // Month from pickup date
+            date('d', $pickupdate),  // Day from pickup date
+            $data->starttimehour[$i],        // Hour from form input
+            $data->starttimeminute[$i]       // Minute from form input
+        );
+
+        // Convert end time to timestamp
+        $endtimestamp = make_timestamp(
+            date('Y', $pickupdate),
+            date('m', $pickupdate),
+            date('d', $pickupdate),
+            $data->endtimehour[$i],
+            $data->endtimeminute[$i]
+        );
+
+        // TODO: We should eventually remove the 'pickupdate' field in the DB table altogether. We still need it above, but we
+        // should eventually stop entering it into the DB, since we already have 'starttime' which doubles as the start date, so as
+        // to work well with different users' timezones.
+        $pickup->pickupdate = $starttimestamp;
+
         // Combine hours and minutes into a single timestamp
-        $pickup->starttime = $data->pickupdate[$i] + ($data->starttimehour[$i] * 3600) + ($data->starttimeminute[$i] * 60);
-        $pickup->endtime = $data->pickupdate[$i] + ($data->endtimehour[$i] * 3600) + ($data->endtimeminute[$i] * 60);
+        $pickup->starttime = $starttimestamp;
+        $pickup->endtime = $endtimestamp;
+
+
+
+
         $pickup->partnershipid = $data->partnershipid[$i];
         $pickup->flccoordinatorid = $data->flccoordinatorid[$i];
         $pickup->partnershipcoordinatorid = $data->partnershipcoordinatorid[$i];
         $pickup->status = $data->status[$i];
+
+        // Pickup address specific fields.
+        $pickup->pickup_streetaddress = $data->pickup_streetaddress[$i];
+        $pickup->pickup_apartment = $data->pickup_apartment[$i];
+        $pickup->pickup_city = $data->pickup_city[$i];
+        $pickup->pickup_state = $data->pickup_state[$i];
+        $pickup->pickup_country = $data->pickup_country[$i];
+        $pickup->pickup_zipcode = $data->pickup_zipcode[$i];
+        $pickup->pickup_extrainstructions = $data->pickup_extrainstructions[$i];
 
         $pickup->id = $DB->insert_record('local_equipment_pickup', $pickup);
 

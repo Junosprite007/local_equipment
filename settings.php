@@ -199,6 +199,24 @@ if ($hassiteconfig) {
         PARAM_TEXT
     ));
 
+
+    // Template settings
+    $settings->add(new admin_setting_configtextarea(
+        'local_equipment/reminder_template_days',
+        get_string('reminder_template_days', 'local_equipment'),
+        get_string('reminder_template_days_desc', 'local_equipment'),
+        get_string('reminder_template_days_default', 'local_equipment'),
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_configtextarea(
+        'local_equipment/reminder_template_hours',
+        get_string('reminder_template_hours', 'local_equipment'),
+        get_string('reminder_template_hours_desc', 'local_equipment'),
+        get_string('reminder_template_hours_default', 'local_equipment'),
+        PARAM_TEXT
+    ));
+
     $ADMIN->add(
         $component,
         $settings

@@ -49,7 +49,8 @@ class addpickups_form extends \moodleform {
         $addpartnershipslink = \html_writer::link($addpartnershipsurl, get_string('addpartnershipshere', 'local_equipment'));
         $repeatno = optional_param('repeatno', 1, PARAM_INT);
 
-        $partnerships = $DB->get_records_menu('local_equipment_partnership', null, 'name ASC', 'id,name');
+        $partnerships = ['0' => get_string('selectpartnership', 'local_equipment')];
+        $partnerships = $partnerships + $DB->get_records_menu('local_equipment_partnership', null, 'name ASC', 'id,name');
 
         $hours = array_combine(range(0, 23), range(0, 23));
         $minutes = array_combine(range(0, 59, 5), range(0, 59, 5)); // 5-minute intervals
@@ -68,8 +69,8 @@ class addpickups_form extends \moodleform {
             'pickupheader' => $mform->createElement('header', 'pickupheader', get_string('pickup', 'local_equipment'), ['class' => 'local-equipment-pickups-addpickups-time-selectors']),
             'delete' => $mform->createElement('html', '<button type="button" class="local-equipment-remove-pickup btn btn-danger"><i class="fa fa-trash"></i></button>'),
             'pickupdate' => $mform->createElement('date_selector', 'pickupdate', get_string('pickupdate', 'local_equipment')),
-            'starttime' => create_time_selector($mform, 'starttime', get_string('starttime', 'local_equipment')),
-            'endtime' => create_time_selector($mform, 'endtime', get_string('endtime', 'local_equipment')),
+            'starttime' => local_equipment_create_time_selector($mform, 'starttime', get_string('starttime', 'local_equipment')),
+            'endtime' => local_equipment_create_time_selector($mform, 'endtime', get_string('endtime', 'local_equipment')),
             'partnershipid' => $mform->createElement('select', 'partnershipid', get_string('partnership', 'local_equipment'), $partnerships),
             'flccoordinatorid' => $mform->createElement('autocomplete', 'flccoordinatorid', get_string('selectflccoordinator', 'local_equipment'), [], $users),
             'partnershipcoordinatorid' => $mform->createElement('autocomplete', 'partnershipcoordinatorid', get_string('selectpartnershipcoordinator', 'local_equipment'), [], $users),
@@ -92,8 +93,63 @@ class addpickups_form extends \moodleform {
         $repeatoptions['pickupdate']['rule'] = 'required';
         $repeatoptions['starttime']['rule'] = 'required';
         $repeatoptions['endtime']['rule'] = 'required';
-        $repeatoptions['partnershipid']['rule'] = 'required';
+        // $repeatoptions['partnershipid']['rule'] = 'required';
         $repeatoptions['flccoordinatorid']['rule'] = 'required';
+
+        // Pickup address section.
+        $address = local_equipment_add_address_block($mform, 'pickup', '', false, false, true, true, false, true);
+        $repeatarray = array_merge($repeatarray, $address->elements);
+        $repeatoptions = array_merge($repeatoptions, $address->options);
+
+        // foreach ($address->options as $key => $value) {
+        //     foreach ($value as $k => $v) {
+        //         // echo '<pre>';
+        //         // var_dump($k);
+        //         // echo '</pre>';
+        //         // die();
+        //         if ($k == 'rules') {
+        //             // Removing the 's' in 'rules' to match the rule name.
+        //             $repeatoptions[$key]['rule'] = $v;
+        //         }
+        //         // $repeatoptions[$key] = $v;
+        //     }
+
+        //     // $repeatoptions[$key] = $value;
+        // }
+        // echo '<pre>';
+        // var_dump($repeatoptions);
+        // // var_dump($address->options);
+        // echo '</pre>';
+        // die();
+
+        // echo '<pre>';
+        // var_dump($repeatoptions);
+        // echo '</pre>';
+        // Display all address related fields.
+        // foreach ($address->elements as $elementname => $element) {
+        //     $mform->addElement($element);
+        // }
+        // Set types for each address input, using the types defined in the address group function.
+        // foreach ($address->options as $elementname => $options) {
+        //     $mform->setType($elementname, $options['type']);
+
+        //     if (isset($options['rules'])) {
+        //         $rules = $options['rules'];
+
+        //         foreach ($rules as $rule => $value) {
+        //             $mform->addRule($elementname, $value['message'], $rule, $value['format'], 'client');
+        //         }
+        //     }
+        // }
+        // // Add rules for each address input, using the rules defined in the address group function.
+        // foreach ($address->options as $elementname => $element) {
+        //     if (!empty($element['rule'])) {
+        //         $rules = $element['rule'];
+        //         foreach ($rules as $rule) {
+        //             $mform->addRule($elementname, get_string($rule), $rule, null, 'client');
+        //         }
+        //     }
+        // }
 
         $this->repeat_elements(
             $repeatarray,

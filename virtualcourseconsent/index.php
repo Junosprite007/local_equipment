@@ -280,6 +280,17 @@ if ($mform->is_cancelled()) {
         // update all the records.
         // $DB->update_record('local_equipment_user', $parentrecord);
 
+        // This is getting the local_equipment_user_exchange table ready for record insertion.
+        $userexchange = new stdClass();
+        $now = time();
+        $userexchange->userid = $USER->id;
+        $userexchange->exchangeid = $data->pickup;
+        $userexchange->reminder_code = '0';
+        $userexchange->timecreated = $now;
+        $userexchange->timemodified = $now;
+
+        // Insert the reminder records.
+        $DB->insert_record('local_equipment_user_exchange', $userexchange);
 
         // Commit transaction
         $transaction->allow_commit();

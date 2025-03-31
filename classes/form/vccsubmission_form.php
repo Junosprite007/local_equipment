@@ -169,10 +169,14 @@ class vccsubmission_form extends \moodleform {
         }
         // Add rules for each address input, using the rules defined in the address group function.
         foreach ($address->options as $elementname => $element) {
-            if (!empty($element['rule'])) {
-                $rules = $element['rule'];
-                foreach ($rules as $rule) {
-                    $mform->addRule($elementname, get_string($rule), $rule, null, 'client');
+            if (!empty($element['rules'])) {
+                $rules = $element['rules'];
+                // echo '<pre>';
+                // var_dump($rules);
+                // echo '</pre>';
+                // die();
+                foreach ($rules as $key => $rule) {
+                    $mform->addRule($elementname, $rule['message'], $key, $rule['format'], 'client');
                 }
             }
         }
@@ -252,38 +256,55 @@ class vccsubmission_form extends \moodleform {
         $pickuptimedata = local_equipment_get_partnerships_with_pickuptimes();
         $pickuptimes = $DB->get_records('local_equipment_pickup', ['status' => 'confirmed']);
 
+
         $i = 0;
         // Creates the list of formatted pickup locations and times for the user to select from.
         foreach ($pickuptimes as $id => $pickup) {
+            $showpickuptime = $pickup->starttime >= time();
+            if (!$showpickuptime) {
+                continue;
+            }
 
             $partnership = $DB->get_record('local_equipment_partnership', ['id' => $pickup->partnershipid]);
-            $datetime = userdate($pickup->pickupdate, get_string('strftimedate', 'langconfig')) . ' ' .
+
+            $partnership ? $name = $partnership->name : $name = $pickup->pickup_city;
+
+            $datetime = userdate($pickup->starttime, get_string('strftimedate', 'langconfig')) . ' ' .
             userdate($pickup->starttime, get_string('strftimetime', 'langconfig')) . ' - ' .
             userdate($pickup->endtime, get_string('strftimetime', 'langconfig'));
 
             $pattern = '/#(.*?)#/';
-            $name = $partnership->pickup_city;
 
-            if (
-                preg_match($pattern, $partnership->pickup_extrainstructions, $matches)
-                && $partnership->pickup_streetaddress
-                && $partnership->pickup_city
-                && $partnership->pickup_state
-                && $partnership->pickup_zipcode
-            ) {
-                $name = $partnership->locationname = $matches[1];
-                $partnership->pickup_extrainstructions = trim(preg_replace($pattern, '', $partnership->pickup_extrainstructions, 1));
-            }
+            // if (
+            //     preg_match($pattern, $partnership->pickup_extrainstructions, $matches)
+            //     && $partnership->pickup_streetaddress
+            //     && $partnership->pickup_city
+            //     && $partnership->pickup_state
+            //     && $partnership->pickup_zipcode
+            // ) {
+            //     $name = $partnership->locationname = $matches[1];
+            //     $partnership->pickup_extrainstructions = trim(preg_replace($pattern, '', $partnership->pickup_extrainstructions, 1));
+            // }
+            // Pickup locations are required to have a pickup_streetaddress as of March 31, 2025
 
-            // If the partnership has a pickup address, add it to the list of formatted pickup locations.
-            if ($partnership->pickup_streetaddress) {
-                $formattedpickuplocations[$id] = "$name — $datetime — $partnership->pickup_streetaddress, $partnership->pickup_city, $partnership->pickup_state $partnership->pickup_zipcode";
+            if ($pickup->pickup_streetaddress) {
+                $formattedpickuplocations[$id] = "$name — $datetime — $pickup->pickup_streetaddress, $pickup->pickup_city, $pickup->pickup_state $pickup->pickup_zipcode";
                 if (isset($pickuptimedata[$id]) && isset($pickuptimedata[$id][$i])) {
                     $formattedpickuptimes[$id] = $pickuptimedata[$id][$i];
                     $i++;
 
                 }
             }
+            // if ($pickup->id == '30') {
+            //     // pickup date: 1754024400
+            //     // start time: 1754024400
+            //     echo '<pre>';
+            //     var_dump($formattedpickuplocations[$id]);
+            //     var_dump(userdate(1754024400));
+            //     var_dump(userdate(1754024400));
+            //     echo '</pre>';
+            //     die();
+            // }
         }
 
         $mform->addElement(

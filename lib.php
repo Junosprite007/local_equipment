@@ -685,7 +685,10 @@ function local_equipment_add_address_block(
         // $addresstype = 'mailing', 'physical', 'pickup', or 'billing'.
         // $field = 'attention' (and others),  'streetaddress', 'apartment', 'city', 'state', 'country', or 'zipcode'.
         $fieldname = "{$addresstype}_{$field}";
-        ($field !== 'apartment') && $required ? $block->options[$fieldname]['rules']['required'] = ['message' => get_string('required'), 'format' => null] : null;
+        if ($field !== 'apartment' && $required) {
+            $block->options[$fieldname]['rule'] = 'required';
+            $block->options[$fieldname]['rules']['required'] = ['message' => get_string('required'), 'format' => null];
+        }
         if ($field === 'extrainstructions') {
             $maxlength = 500;
         } else if ($field === 'zipcode') {
@@ -712,7 +715,6 @@ function local_equipment_add_address_block(
                 break;
         }
 
-        $required ? $options[$fieldname]['rule'] = 'required' : null;
         if ($groupview) {
             if (
                 $field === 'streetaddress' ||
@@ -754,9 +756,10 @@ function local_equipment_add_address_block(
  * @param MoodleQuickForm $mform a standard moodle form, probably will be '$this->_form'.
  * @param string $addresstype the type of address block to add: 'mailing', 'physical', 'pickup', or 'billing'.
  * @param stdClass $data the existing data to populate the form with.
+ * @param bool $showsameasphysical whether or not to show the 'sameasphysical' checkbox and string.
  * @return object $block a block of elements to be added to the form.
  */
-function local_equipment_add_edit_address_block($mform, $addresstype, $data) {
+function local_equipment_add_edit_address_block($mform, $addresstype, $data, $showsameasphysical = true, $requireaddress = false) {
     // $block = new stdClass();
 
     $mform->addElement('static', $addresstype . 'address', \html_writer::tag('label', get_string($addresstype . 'address', 'local_equipment'), ['class' => 'form-input-group-labels']));
@@ -766,14 +769,13 @@ function local_equipment_add_edit_address_block($mform, $addresstype, $data) {
         $mform->addElement('text', "{$addresstype}_extrainput", get_string('attention', 'local_equipment'));
         $mform->setType("{$addresstype}_extrainput", PARAM_TEXT);
         $mform->setDefault("{$addresstype}_extrainput", $data->{"{$addresstype}_extrainput"});
-    } else if ($addresstype == 'pickup') {
-        // Instructions element
-        $mform->addElement('textarea', "{$addresstype}_extrainstructions", get_string('pickupinstructions', 'local_equipment'));
-        $mform->setType("{$addresstype}_extrainstructions", PARAM_TEXT);
-        $mform->setDefault("{$addresstype}_extrainstructions", $data->{"{$addresstype}_extrainstructions"});
     }
 
-    if ($addresstype !== 'physical') {
+    // KEEP BOTH OF THE LOGICAL STATMENTS: $addresstype !== 'physical' && $showsameasphysical
+    // The $addresstype !== 'physical' is what I originally used, but even though I changed to using the $showsameasphysical
+    // variable, I still need to keep the original logical statement for the 'sameasphysical' checkbox to show up in the partnership
+    // forms (and maybe other forms).
+    if ($addresstype !== 'physical' && $showsameasphysical) {
         // Same as physical checkbox
         $mform->addElement('advcheckbox', "{$addresstype}_sameasphysical", get_string('sameasphysical', 'local_equipment'));
         $mform->setType("{$addresstype}_sameasphysical", PARAM_BOOL);
@@ -787,6 +789,14 @@ function local_equipment_add_edit_address_block($mform, $addresstype, $data) {
     );
     $mform->setType("{$addresstype}_streetaddress", PARAM_TEXT);
     $mform->setDefault("{$addresstype}_streetaddress", $data->{"{$addresstype}_streetaddress"});
+
+    $mform->addElement(
+        'text',
+        "{$addresstype}_apartment",
+        get_string('apartment', 'local_equipment')
+    );
+    $mform->setType("{$addresstype}_apartment", PARAM_TEXT);
+    $mform->setDefault("{$addresstype}_apartment", $data->{"{$addresstype}_apartment"});
 
     $mform->addElement('text', "{$addresstype}_city", get_string('city', 'local_equipment'));
     $mform->setType("{$addresstype}_city", PARAM_TEXT);
@@ -803,6 +813,21 @@ function local_equipment_add_edit_address_block($mform, $addresstype, $data) {
     $mform->addElement('text', "{$addresstype}_zipcode", get_string('zipcode', 'local_equipment'));
     $mform->setType("{$addresstype}_zipcode", PARAM_TEXT);
     $mform->setDefault("{$addresstype}_zipcode", $data->{"{$addresstype}_zipcode"});
+
+    if ($requireaddress) {
+        $mform->addRule("{$addresstype}_streetaddress", get_string('required'), 'required', null, 'client');
+        $mform->addRule("{$addresstype}_city", get_string('required'), 'required', null, 'client');
+        $mform->addRule("{$addresstype}_state", get_string('required'), 'required', null, 'client');
+        $mform->addRule("{$addresstype}_country", get_string('required'), 'required', null, 'client');
+        $mform->addRule("{$addresstype}_zipcode", get_string('required'), 'required', null, 'client');
+    }
+
+    if ($addresstype == 'pickup') {
+        // Instructions element
+        $mform->addElement('textarea', "{$addresstype}_extrainstructions", get_string('pickupinstructions', 'local_equipment'));
+        $mform->setType("{$addresstype}_extrainstructions", PARAM_TEXT);
+        $mform->setDefault("{$addresstype}_extrainstructions", $data->{"{$addresstype}_extrainstructions"});
+    }
 
     // if ($addresstype === 'physical') {
     //     // Physical address is the only address that's required.
@@ -824,7 +849,7 @@ function local_equipment_add_edit_address_block($mform, $addresstype, $data) {
  * @param string $defaultendtime The existing minutes to populate the minute dropdown menu with.
  * @return object $block a block of elements to be added to the form.
  */
-function create_time_selector($mform, $name, $label, $defaulttime = null) {
+function local_equipment_create_time_selector($mform, $name, $label, $defaulttime = null) {
     $hours = array_combine(range(0, 23), range(0, 23));
     $minutes = array_combine(range(0, 59, 5), range(0, 59, 5)); // 5-minute intervals
 
@@ -832,9 +857,10 @@ function create_time_selector($mform, $name, $label, $defaulttime = null) {
     $minuteelement = $mform->createElement('select', $name . 'minute', get_string('minute'), $minutes);
     // Set the default starting hour and minute if it exists.
     if ($defaulttime) {
-        $mform->setDefault($name . 'hour', date('H', $defaulttime));
-        $mform->setDefault($name . 'minute', date('i', $defaulttime));
+        $mform->setDefault($name . 'hour', userdate($defaulttime, '%H'));
+        $mform->setDefault($name . 'minute', userdate($defaulttime, '%M'));
     }
+
     // Set the default ending hour and minute if it exists.
 
     $elements = array(
@@ -1763,7 +1789,8 @@ function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $m
  * @param string $gatewayid The ID of the SMS gateway to use for sending text messages.
  * @param string $tonumber The phone number to send the SMS message to.
  * @param string $message The message to send in the SMS message.
- * @param string $messagetype The type of message to send. This may change depending on the chosen provider.
+ * @param string $messagetype The type of message to send. This may change depending on the chosen provider. AWS uses
+ * 'Transactional' for OTP and informational messages and 'Promotional' for marketing messages.
  * @return object
  */
 function local_equipment_send_sms($gatewayid, $tonumber, $message, $messagetype) {

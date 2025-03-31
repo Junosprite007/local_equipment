@@ -40,7 +40,9 @@ class editpickup_form extends \moodleform {
         $mform = $this->_form;
         $data = $this->_customdata['data'];
 
-        $partnerships = $DB->get_records_menu('local_equipment_partnership', null, 'name ASC', 'id,name');
+        $partnerships = ['0' => get_string('selectpartnership', 'local_equipment')];
+        $partnerships = $partnerships + $DB->get_records_menu('local_equipment_partnership', null, 'name ASC', 'id,name');
+
         $statuses = [
             'pending' => get_string('status_pending', 'local_equipment'),
             'confirmed' => get_string('status_confirmed', 'local_equipment'),
@@ -68,12 +70,12 @@ class editpickup_form extends \moodleform {
         $mform->setDefault('pickupdate', $data->pickupdate);
         $mform->addRule('pickupdate', get_string('required'), 'required', null, 'client');
 
-        $mform->addElement(create_time_selector($mform, 'starttime', get_string('starttime', 'local_equipment'), $data->starttime));
+        $mform->addElement(local_equipment_create_time_selector($mform, 'starttime', get_string('starttime', 'local_equipment'), $data->starttime));
         $mform->setType('starttime', PARAM_INT);
         $mform->addRule('starttime', get_string('required'), 'required', null, 'client');
         // $mform->setDefault('starttime', $data->starttime);
 
-        $mform->addElement(create_time_selector($mform, 'endtime', get_string('endtime', 'local_equipment'), $data->endtime));
+        $mform->addElement(local_equipment_create_time_selector($mform, 'endtime', get_string('endtime', 'local_equipment'), $data->endtime));
         $mform->setType('endtime', PARAM_INT);
         $mform->addRule('endtime', get_string('required'), 'required', null, 'client');
         // $mform->setDefault('endtime', $data->starttime);
@@ -95,6 +97,48 @@ class editpickup_form extends \moodleform {
         $mform->addElement('select', 'status', get_string('status', 'local_equipment'), $statuses);
         $mform->setType('status', PARAM_TEXT);
         $mform->setDefault('status', $data->status);
+
+        // $address = local_equipment_add_address_block($mform, 'pickup', '', false, false, true, true, false, false);
+        // foreach ($address->elements as $element) {
+        //     $mform->addElement($element);
+        // }
+
+        // foreach ($address->options as $key => $value) {
+        //     // $key = 'elementname'
+        //     // $value = array('rule', 'type', etc.)
+        //     foreach ($value as $k => $v) {
+        //         if ($k == 'type') {
+        //             // $k = 'type'
+        //             // $v = 'PARAM_TEXT'
+        //             $mform->setType($key, $v);
+        //             continue;
+        //         }
+        //         if ($k == 'rule') {
+        //             // $k = 'rule'
+        //             // $v = array(1) {
+        //             //     ["maxlength"]=>
+        //             //     array(2) {
+        //             //     ["message"]=>
+        //             //     string(29) "Max length is 255 characters."
+        //             //     ["format"]=>
+        //             //     int(255)
+        //             //     }
+        //             // }
+        //             $mform->addRules($key, get_string($v), $v, null, 'client');
+        //             continue;
+        //         }
+
+        //         echo '<pre>';
+        //         var_dump($key);
+        //         var_dump($value);
+        //         echo '</pre>';
+        //         die();
+        //         if ($value == 'type') {
+        //             $mform->setType($key, $value);
+        //         }
+        //     }
+
+        local_equipment_add_edit_address_block($mform, 'pickup', $data, false, true);
 
         $this->add_action_buttons();
     }
