@@ -105,6 +105,10 @@ class exchange_manager {
             return false;
         }
 
+        // Start a transaction for this update
+        $transaction = $this->db->start_delegated_transaction();
+
+        try {
         // Update reminder code based on which reminder was sent and current status
         if ($remindercode == 1) {
             // First reminder (days)
@@ -124,7 +128,19 @@ class exchange_manager {
 
         $record->timemodified = time();
 
-        return $this->db->update_record('local_equipment_user_exchange', $record);
+            $success = $this->db->update_record('local_equipment_user_exchange', $record);
+
+            if ($success) {
+                $transaction->allow_commit();
+                return true;
+            } else {
+                $transaction->rollback(new \Exception("Failed to update reminder status"));
+                return false;
+            }
+        } catch (Exception $e) {
+            $transaction->rollback($e);
+            return false;
+        }
     }
 
     /**

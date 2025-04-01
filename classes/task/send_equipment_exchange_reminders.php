@@ -65,8 +65,14 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
      * Execute the task.
      */
     public function execute() {
+        global $DB;
+
         mtrace('Starting equipment exchange reminder task...');
 
+        // Start a transaction
+        $transaction = $DB->start_delegated_transaction();
+
+        try {
         // Check for days reminder
         $daysadvance = get_config('local_equipment', 'inadvance_days');
         if (!empty($daysadvance) && is_numeric($daysadvance)) {
@@ -79,7 +85,14 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
             $this->process_reminders_for_hours((float)$hoursadvance);
         }
 
+            // Commit the transaction if everything went well
+            $transaction->allow_commit();
         mtrace('Equipment exchange reminder task completed.');
+        } catch (Exception $e) {
+            // Rollback the transaction on failure
+            $transaction->rollback($e);
+            mtrace('Error in equipment exchange reminder task: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -164,12 +177,19 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
      * @return bool Success status
      */
     private function send_reminder_to_user($userdata, $daysbeforeexchange) {
+        global $DB;
+
         mtrace("Sending reminder to user {$userdata->userid} for exchange ID {$userdata->exchangeid}");
 
+        // Create a transaction for this specific user reminder
+        $transaction = $DB->start_delegated_transaction();
+
+        try {
         // Get user details
         $user = $this->user_service->get_user($userdata->userid);
         if (!$user) {
             mtrace("Could not find user with ID {$userdata->userid}");
+                $transaction->rollback(new \Exception("User not found: {$userdata->userid}"));
             return false;
         }
 
@@ -177,6 +197,7 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
         $exchange = $this->exchange_manager->get_exchange($userdata->exchangeid);
         if (!$exchange) {
             mtrace("Could not find exchange with ID {$userdata->exchangeid}");
+                $transaction->rollback(new \Exception("Exchange not found: {$userdata->exchangeid}"));
             return false;
         }
 
@@ -227,10 +248,18 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
             $newremindercode = ($remindertype == 'days') ? 1 : 2;
             $this->exchange_manager->update_reminder_status($userdata->userid, $userdata->exchangeid, $newremindercode);
             mtrace("Successfully sent {$method} reminder to user {$user->id}");
+                $transaction->allow_commit();
         } else {
             mtrace("Failed to send {$method} reminder to user {$user->id}");
+                $transaction->rollback(new \Exception("Failed to send reminder"));
+                return false;
         }
 
         return $success;
+        } catch (Exception $e) {
+            $transaction->rollback($e);
+            mtrace("Exception caught while sending reminder: " . $e->getMessage());
+            return false;
+        }
     }
 }

@@ -15,18 +15,24 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other meta-data are defined here.
+ * Task registration.
  *
  * @package     local_equipment
- * @copyright   2024 onward Joshua Kirby <josh@funlearningcompany.com>
- * @author      Joshua Kirby - CTO @ Fun Learning Company - funlearningcompany.com
+ * @copyright   2025 onwards Joshua Kirby <josh@funlearningcompany.com>
+ * @author      Joshua Kirby
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_equipment';
-$plugin->release = '0.1.0';
-$plugin->version = 2025040100;
-$plugin->requires = 2024042201;
-$plugin->maturity = MATURITY_STABLE;
+$tasks = [
+    [
+        'classname' => 'local_equipment\task\send_equipment_exchange_reminders',
+        'blocking' => 0,
+        'minute' => '*/15',  // Run every 15 minutes
+        'hour' => '*',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
+    ]
+];

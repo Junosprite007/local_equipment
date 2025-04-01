@@ -295,13 +295,14 @@ class vccsubmission_form extends \moodleform {
 
                 }
             }
-            // if ($pickup->id == '30') {
+            // if ($USER->id == '2') {
             //     // pickup date: 1754024400
             //     // start time: 1754024400
             //     echo '<pre>';
-            //     var_dump($formattedpickuplocations[$id]);
-            //     var_dump(userdate(1754024400));
-            //     var_dump(userdate(1754024400));
+            //     // var_dump($formattedpickuplocations[$id]);
+            //     // var_dump();
+            //     var_dump(get_users_needing_reminders());
+            //     // var_dump(userdate(1741824403));
             //     echo '</pre>';
             //     die();
             // }

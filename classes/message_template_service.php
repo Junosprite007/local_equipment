@@ -41,21 +41,27 @@ class message_template_service {
      * @return string Template string
      */
     public function get_template(string $remindertype): string {
-        // Get template for this specific type
+        // First try to get the specific template from config
         $template = get_config('local_equipment', 'reminder_template_' . $remindertype);
 
-        // If no specific template exists, use default
+        // If no specific template, try the default template from config
         if (empty($template)) {
             $template = get_config('local_equipment', 'reminder_template_default');
         }
 
-        // If still empty, use default from language pack
+        // If still empty, try to get from language strings with a fallback
         if (empty($template)) {
-            $template = get_string(
-                'reminder_template_' . $remindertype,
-                'local_equipment',
-                get_string('reminder_template_default', 'local_equipment')
-            );
+            $specifickey = 'reminder_template_' . $remindertype;
+            $defaultkey = 'reminder_template_default';
+
+            // Check if specific key exists in language pack
+            if (get_string_manager()->string_exists($specifickey, 'local_equipment')) {
+                $template = get_string($specifickey, 'local_equipment');
+            } else {
+                // Fallback to default string with a hardcoded ultimate fallback
+                $ultimatefallback = 'REMINDER: Equipment exchange on {DATE} at {TIME}. Location: {LOCATION}.';
+                $template = get_string($defaultkey, 'local_equipment', $ultimatefallback);
+            }
         }
 
         return $template;

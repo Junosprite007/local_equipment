@@ -15,18 +15,32 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other meta-data are defined here.
+ * Messaging service interface for equipment exchange reminders.
  *
  * @package     local_equipment
- * @copyright   2024 onward Joshua Kirby <josh@funlearningcompany.com>
- * @author      Joshua Kirby - CTO @ Fun Learning Company - funlearningcompany.com
+ * @copyright   2025 onwards Joshua Kirby <josh@funlearningcompany.com>
+ * @author      Joshua Kirby
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace local_equipment\messaging;
+
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_equipment';
-$plugin->release = '0.1.0';
-$plugin->version = 2025040100;
-$plugin->requires = 2024042201;
-$plugin->maturity = MATURITY_STABLE;
+/**
+ * Interface for message services.
+ *
+ * @package     local_equipment
+ * @copyright   2025 onwards Joshua Kirby <josh@funlearningcompany.com>
+ */
+interface message_service_interface {
+    /**
+     * Send a message to a recipient.
+     *
+     * @param string $recipient Recipient contact information (phone or email)
+     * @param string $message Message content
+     * @param array $options Additional options for sending
+     * @return bool Success status
+     */
+    public function send_message(string $recipient, string $message, array $options = []): bool;
+}
