@@ -27,6 +27,8 @@ namespace local_equipment\messaging;
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot . '/local/equipment/lib.php');
+
 /**
  * SMS message service implementation.
  *

@@ -401,6 +401,7 @@ $string['awssmsvoice'] = 'AWS End User Messaging';
 $string['awssmsvoice_desc'] = 'Enter AWS End User Messaging configuration here. The AWS End User Messaging service can be found {$a}.';
 $string['awsaccesskey'] = 'AWS Access Key';
 $string['awsaccesskey_desc'] = 'Enter your AWS Access Key here.';
+$string['awssmsfailedwithcode'] = 'AWS SMS failed with code: {$a}';
 $string['awsregion'] = 'AWS Region';
 $string['awsregion_desc'] = 'Enter your AWS Region here.';
 $string['awssecretkey'] = 'AWS Secret Key';
@@ -532,6 +533,7 @@ $string['strftime24date_mdy'] = '%H:%M, %b %d %Y';
 $string['strftimedatemonthabbr'] = '%d %b %Y';
 $string['strftimedatemonthtimeshort'] = '%d %b %Y, %I:%M';
 $string['strftimedatefullshort'] = '%m/%d/%y';
+$string['strftimedaymonth'] = '%A, %B %d';
 $string['strftimedateshort'] = '%d %B';
 $string['strftimedateshortmonthabbr'] = '%d %b';
 $string['strftimedatetime'] = '%d %B %Y, %I:%M %p';
@@ -762,15 +764,15 @@ $string['reminder_inadvance_hours'] = 'Reminder in advance (hours)';
 $string['reminder_inadvance_hours_desc'] = 'Number of hours in advance to send the second reminder message to users for upcoming equipment exchanges, specific to the user.';
 $string['reminder_timeout'] = 'Reminder timeout';
 $string['reminder_timeout_desc'] = 'The end of the timeframe in which a reminder can be sent to the user. If for some reason the reminder is not sent within the timeframe of between reminder_inadvance and (reminder_inadvance + reminder_timeout), the reminder will not be sent.';
-$string['reminder_template_default'] = 'REMINDER: Equipment exchange in {DAYS} days on {DATE} at {TIME}. Location: {LOCATION}. Items: {EQUIPMENT}. Course: {COURSE}.';
+$string['reminder_template_default'] = 'REMINDER: Equipment exchange in {DAYS} days on {DATE} at {TIME}. Location: {LOCATION}.';
 $string['reminder_template_days'] = 'Your equipment exchange is scheduled for {DAYS} day(s) from now, on {DATE} at {TIME}. Location: {LOCATION}.';
-$string['reminder_template_hours'] = 'URGENT REMINDER: Your equipment exchange is TOMORROW ({DATE}) at {TIME}. Location: {LOCATION}. Don\'t forget!';
+$string['reminder_template_hours'] = 'REMINDER: Your equipment exchange is TOMORROW ({DATE}) at {TIME}. Location: {LOCATION}. Don\'t forget!';
 $string['reminderheader'] = 'Reminder settings';
 $string['remindersettings_desc'] = 'Settings for sending reminders to users about upcoming equipment exchange dates.';
 $string['reminder_template_days_desc'] = 'Template for the reminder message sent days before an exchange.';
 $string['reminder_template_hours_desc'] = 'Template for the reminder message sent hours before an exchange.';
-$string['reminder_template_days_default'] = 'REMINDER: Your equipment exchange is in {DAYS} days on {DATE} at {TIME}. Location: {LOCATION}. Items: {EQUIPMENT}. Course: {COURSE}.';
-$string['reminder_template_hours_default'] = 'URGENT REMINDER: Your equipment exchange is in {HOURS} hours today at {TIME}. Location: {LOCATION}. Don\'t forget!';
+$string['reminder_template_days_default'] = 'REMINDER: Your equipment exchange is in {DAYS} days on {DATE} at {TIME}. Location: {LOCATION}.';
+$string['reminder_template_hours_default'] = 'REMINDER: Your equipment exchange is in {HOURS} hour(s) today at {TIME}. Location: {LOCATION}. Don\'t forget!';
 
 
 // Welcome messages
@@ -803,4 +805,4 @@ $string['emailfailedtosendtouser'] = 'Email failed to send to {$a->personname} a
 $string['contactusforyourpassword'] = 'Contact us for your password.';
 
 // Equipment task strings
-$string['taskname_sendequipmentreminders'] = 'Send equipment reminders';
+$string['taskname_sendexchangereminders'] = 'Send exchange reminders';

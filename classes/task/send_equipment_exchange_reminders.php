@@ -27,6 +27,8 @@ namespace local_equipment\task;
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot . '/local/equipment/lib.php');
+
 /**
  * Scheduled task to send equipment exchange reminders to users.
  *
@@ -58,7 +60,7 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
      * @return string
      */
     public function get_name() {
-        return get_string('taskname_send_equipment_reminders', 'local_equipment');
+        return get_string('taskname_sendexchangereminders', 'local_equipment');
     }
 
     /**
@@ -103,16 +105,26 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
     private function process_reminders_for_days($daysbeforeexchange) {
         mtrace("Processing reminders for $daysbeforeexchange days before exchange...");
 
-        // Calculate the target date (equipment exchanges that are exactly $daysbeforeexchange from now)
-        $targetdate = time() + ($daysbeforeexchange * DAYSECS);
-        $targetdatestart = strtotime(date('Y-m-d', $targetdate)); // Start of the target day
-        $targetdateend = $targetdatestart + DAYSECS - 1; // End of the target day
+        // Calculate the target time (equipment exchanges that are approximately $hoursbeforeexchange from now)
+        // $targettime = time() + ($daysbeforeexchange * DAYSECS);
+
+        // Get reminder timeout from settings
+        $timeout = get_config('local_equipment', 'reminder_timeout');
+        if (empty($timeout) || !is_numeric($timeout)) {
+            $timeout = 1; // Default 1 hours
+        }
+
+        // Calculate the window
+        $clock = \core\di::get(\core\clock::class);
+        $targetstart = $clock->now()->getTimestamp();
+        // $targetstart = ;
+        $targetend = $targetstart + ($daysbeforeexchange * DAYSECS);
 
         // Get users who need reminders
         $userstonotify = $this->exchange_manager->get_users_needing_reminders(
-            $targetdatestart,
-            $targetdateend,
-            $daysbeforeexchange
+            $targetstart,
+            $targetend,
+            'days'
         );
 
         if (empty($userstonotify)) {
@@ -120,7 +132,7 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
             return;
         }
 
-        mtrace("Found " . count($userstonotify) . " users to notify about exchanges on " . date('Y-m-d', $targetdatestart));
+        mtrace("Found " . count($userstonotify) . " users to notify about exchanges in the next $daysbeforeexchange day(s).");
 
         // Send reminders to each user
         foreach ($userstonotify as $userdata) {
@@ -142,7 +154,7 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
         // Get reminder timeout from settings
         $timeout = get_config('local_equipment', 'reminder_timeout');
         if (empty($timeout) || !is_numeric($timeout)) {
-            $timeout = 24; // Default 24 hours
+            $timeout = 1; // Default 1 hours
         }
 
         // Calculate the window
@@ -153,7 +165,7 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
         $userstonotify = $this->exchange_manager->get_users_needing_reminders(
             $targetstart,
             $targetend,
-            0  // 0 indicates hours-based reminder
+            'hours'
         );
 
         if (empty($userstonotify)) {
@@ -173,7 +185,8 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
      * Send a reminder to a specific user.
      *
      * @param object $userdata User and exchange data
-     * @param int $daysbeforeexchange Days before the exchange (0 for hours-based reminder)
+     * @param int $daysbeforeexchange Days before the exchange to send out reminders (0 for hours-based reminder). This is different
+     * from $daysfromnow seen below, which designates how many days before the exchange it currently is.
      * @return bool Success status
      */
     private function send_reminder_to_user($userdata, $daysbeforeexchange) {
@@ -185,77 +198,110 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
         $transaction = $DB->start_delegated_transaction();
 
         try {
-        // Get user details
-        $user = $this->user_service->get_user($userdata->userid);
-        if (!$user) {
-            mtrace("Could not find user with ID {$userdata->userid}");
+            // Get user details
+            $user = $this->user_service->get_user($userdata->userid);
+            if (!$user) {
+                mtrace("Could not find user with ID {$userdata->userid}");
                 $transaction->rollback(new \Exception("User not found: {$userdata->userid}"));
-            return false;
-        }
+                return false;
+            }
 
-        // Get exchange details
-        $exchange = $this->exchange_manager->get_exchange($userdata->exchangeid);
-        if (!$exchange) {
-            mtrace("Could not find exchange with ID {$userdata->exchangeid}");
-                $transaction->rollback(new \Exception("Exchange not found: {$userdata->exchangeid}"));
-            return false;
-        }
+            // Get user details
+            $user = $this->user_service->get_user($userdata->userid);
+            if (!$user) {
+                mtrace("Could not find user with ID {$userdata->userid}");
+                return false;
+            }
 
-        // Get equipment list
-        $equipmentlist = $this->exchange_manager->get_equipment_list($userdata->exchangeid);
+            // Get exchange details
+            $exchange = $this->exchange_manager->get_exchange($userdata->exchangeid);
+            if (!$exchange) {
+                mtrace("Could not find exchange with ID {$userdata->exchangeid}");
+                return false;
+            }
 
-        // Format date and time
-        $formatteddate = date('l, F j, Y', $exchange->exchangedate);
-        $formattedtime = date('g:i A', $exchange->exchangedate);
+            // Get equipment list - simplified for now
+            $equipmentlist = "your equipment"; // Simplified until future implementation
 
-        // Determine if this is a days or hours reminder
-        $remindertype = ($daysbeforeexchange > 0) ? 'days' : 'hours';
-        $remindervalue = ($daysbeforeexchange > 0) ? $daysbeforeexchange : get_config('local_equipment', 'inadvance_hours');
+            // Format date and time - use starttime instead of exchangedate
+            $formatteddate = userdate($exchange->starttime, get_string('strftimedaymonth', 'local_equipment'));
+            $formattedtime = userdate($exchange->starttime, get_string('strftimetime12', 'local_equipment'));
 
-        // Prepare message
-        $message = $this->template_service->prepare_message(
-            $user,
-            $exchange,
-            $formatteddate,
-            $formattedtime,
-            $equipmentlist,
-            $remindertype,
-            $remindervalue
-        );
+            // Use pickup location fields to create location string if no combined location exists
+            $location = $userdata->location ??
+                "{$exchange->pickup_streetaddress}, {$exchange->pickup_city}, {$exchange->pickup_state} {$exchange->pickup_zipcode}";
 
-        // Determine preferred contact method
-        $method = $userdata->reminder_method ?: 'text'; // Default to text if not specified
+            // Get the current time using Moodle's recommended approach
+            $clock = \core\di::get(\core\clock::class);
+            $now = $clock->now()->getTimestamp();
 
-        // Send message
-        $success = false;
-        switch ($method) {
-            case 'text':
-                $providerid = get_config('local_equipment', 'infogateway');
-                $success = local_equipment_send_sms($providerid, $user->phone, $message, 'Transactional');
-                break;
-            case 'email':
-                $supportuser = \core_user::get_support_user();
-                $flccoordinatorid = $exchange->flccoordinatorid;
-                $flccoordinator = $this->user_service->get_user($flccoordinatorid);
-                $success = email_to_user($user, $supportuser, get_string('equipmentexchangereminder', 'local_equipment'), $message, '', '', '', true, $flccoordinator->email, "$flccoordinator->firstname $flccoordinator->lastname");
-                break;
-            default:
-                break;
-        }
 
-        // Update reminder status
-        if ($success) {
-            $newremindercode = ($remindertype == 'days') ? 1 : 2;
-            $this->exchange_manager->update_reminder_status($userdata->userid, $userdata->exchangeid, $newremindercode);
-            mtrace("Successfully sent {$method} reminder to user {$user->id}");
+            $diff_secs = $exchange->starttime - $now;
+
+            // Convert seconds to full days, so 0 would mean there are only hours from now.
+            $daysfromnow = floor($diff_secs / 86400);
+            $hoursfromnow = floor($diff_secs / 3600);
+
+            // Determine if this is a days or hours reminder
+            $remindertype = ($daysbeforeexchange > 0) ? 'days' : 'hours';
+            $remindervalue = ($daysbeforeexchange > 0) ? $daysfromnow : $hoursfromnow;
+
+            // Prepare message
+            $message = $this->template_service->prepare_message(
+                $user,
+                $exchange,
+                $formatteddate,
+                $formattedtime,
+                $equipmentlist,
+                $remindertype,
+                $remindervalue,
+                $location // Added location parameter
+            );
+
+            // Determine preferred contact method
+            $method = $userdata->reminder_method ?: 'text'; // Default to text if not specified
+
+            // Send message
+            $success = false;
+            switch ($method) {
+                case 'text':
+                    $providerid = get_config('local_equipment', 'infogateway');
+                    // Only use phone2 (mobile phone) for SMS
+                    if (!empty($user->phone2)) {
+                        $success = \local_equipment_send_sms($providerid, $user->phone2, $message, 'Transactional');
+                        if ($success) {
+                            mtrace("Successfully sent text reminder to user {$user->id}");
+                        } else {
+                            mtrace("Failed to send text reminder to user {$user->id}");
+                        }
+                    } else {
+                        mtrace("No mobile phone number (phone2) found for user {$user->id}");
+                        $success = false;
+                    }
+                    break;
+                case 'email':
+                    $supportuser = \core_user::get_support_user();
+                    $flccoordinatorid = $exchange->flccoordinatorid;
+                    $flccoordinator = $this->user_service->get_user($flccoordinatorid);
+                    $success = email_to_user($user, $supportuser, get_string('equipmentexchangereminder', 'local_equipment'), $message, '', '', '', true, $flccoordinator->email, "$flccoordinator->firstname $flccoordinator->lastname");
+                    break;
+                default:
+                    break;
+            }
+
+            // Update reminder status
+            if ($success) {
+                $newremindercode = ($remindertype == 'days') ? 1 : 2;
+                $this->exchange_manager->update_reminder_status($userdata->userid, $userdata->exchangeid, $newremindercode);
+                mtrace("Successfully sent {$method} reminder to user {$user->id}");
                 $transaction->allow_commit();
-        } else {
-            mtrace("Failed to send {$method} reminder to user {$user->id}");
+            } else {
+                mtrace("Failed to send {$method} reminder to user {$user->id}");
                 $transaction->rollback(new \Exception("Failed to send reminder"));
                 return false;
-        }
+            }
 
-        return $success;
+            return $success;
         } catch (Exception $e) {
             $transaction->rollback($e);
             mtrace("Exception caught while sending reminder: " . $e->getMessage());

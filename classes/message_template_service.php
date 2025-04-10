@@ -86,19 +86,17 @@ class message_template_service {
         string $formattedtime,
         string $equipmentlist,
         string $remindertype,
-        float $remindervalue
+        float $remindervalue,
+        string $location = ''
     ): string {
         // Get template
         $template = $this->get_template($remindertype);
 
-        // Get course information
-        $coursename = '';
-        if (!empty($exchange->courseid)) {
-            global $DB;
-            $course = $DB->get_record('course', ['id' => $exchange->courseid]);
-            if ($course) {
-                $coursename = $course->fullname;
-            }
+        // Use provided location or build from exchange fields
+        if (empty($location)) {
+            $location = !empty($exchange->pickup_streetaddress) ?
+                "{$exchange->pickup_streetaddress}, {$exchange->pickup_city}, {$exchange->pickup_state} {$exchange->pickup_zipcode}" :
+                'your school';
         }
 
         // Get coordinator information if available
@@ -111,8 +109,8 @@ class message_template_service {
             }
         }
 
-        // Format location
-        $location = !empty($exchange->location) ? $exchange->location : 'your school';
+        // Get course information - set to empty for now as it's course-agnostic
+        $coursename = '';
 
         // Replace placeholders
         $replacements = [

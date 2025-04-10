@@ -280,17 +280,35 @@ if ($mform->is_cancelled()) {
         // update all the records.
         // $DB->update_record('local_equipment_user', $parentrecord);
 
+        // Get the current time using Moodle's recommended approach
+        $clock = \core\di::get(\core\clock::class);
+        $now = $clock->now()->getTimestamp();
+
         // This is getting the local_equipment_user_exchange table ready for record insertion.
         $userexchange = new stdClass();
-        $now = time();
         $userexchange->userid = $USER->id;
         $userexchange->exchangeid = $data->pickup;
         $userexchange->reminder_code = '0';
-        $userexchange->timecreated = $now;
         $userexchange->timemodified = $now;
+        $userexchange->timecreated = $now;
 
-        // Insert the reminder records.
-        $DB->insert_record('local_equipment_user_exchange', $userexchange);
+        $existingrecord = $DB->get_record('local_equipment_user_exchange', ["userid" => $userexchange->userid, "exchangeid" => $userexchange->exchangeid]);
+        // echo '<pre>';
+        // var_dump($existingrecord);
+        // echo '</pre>';
+        // die();
+
+        if ($existingrecord) {
+            // I'm deciding to update the existing record if it does exist because exchange IDs should change from semester to semester —
+            // an exchange date that has already past should not be selectable by users filling out the VCC form.
+            $existingrecord->reminder_code = '0';
+            $existingrecord->timemodified = $now;
+            $DB->update_record('local_equipment_user_exchange', $existingrecord);
+        } else {
+            // Insert the reminder records.
+            $DB->insert_record('local_equipment_user_exchange', $userexchange);
+        }
+
 
         // Commit transaction
         $transaction->allow_commit();

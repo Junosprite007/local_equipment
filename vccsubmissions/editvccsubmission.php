@@ -78,13 +78,13 @@ if ($mform->is_cancelled()) {
     redirect($redirecturl);
 } else if ($data = $mform->get_data()) {
     // Update the vccsubmission in the database.
-    echo '<br />';
-    echo '<br />';
-    echo '<br />';
-    echo '<pre>';
-    var_dump($data);
-    echo '</pre>';
-    die();
+    // echo '<br />';
+    // echo '<br />';
+    // echo '<br />';
+    // echo '<pre>';
+    // var_dump($data);
+    // echo '</pre>';
+    // die();
     $vccsubmission = $data;
     $vccsubmission->id = $data->vccsubmissionid;
     // $vccsubmission->name = $data->name;
