@@ -59,7 +59,7 @@ class message_template_service {
                 $template = get_string($specifickey, 'local_equipment');
             } else {
                 // Fallback to default string with a hardcoded ultimate fallback
-                $ultimatefallback = 'REMINDER: Equipment exchange on {DATE} at {TIME}. Location: {LOCATION}.';
+                $ultimatefallback = 'REMINDER: Equipment exchange on {DATE} from {START} to {END}. Location: {LOCATION}.';
                 $template = get_string($defaultkey, 'local_equipment', $ultimatefallback);
             }
         }
@@ -73,7 +73,8 @@ class message_template_service {
      * @param object $user User to send reminder to
      * @param object $exchange Exchange details
      * @param string $formatteddate Formatted date
-     * @param string $formattedtime Formatted time
+     * @param string $formattedstarttime Formatted time
+     * @param string $formattedendtime Formatted time
      * @param string $equipmentlist List of equipment
      * @param string $remindertype Type of reminder ('days' or 'hours')
      * @param float $remindervalue Value for the reminder (number of days or hours)
@@ -83,7 +84,8 @@ class message_template_service {
         \stdClass $user,
         \stdClass $exchange,
         string $formatteddate,
-        string $formattedtime,
+        string $formattedstarttime,
+        string $formattedendtime,
         string $equipmentlist,
         string $remindertype,
         float $remindervalue,
@@ -120,7 +122,8 @@ class message_template_service {
             '{DAYS}' => ($remindertype == 'days') ? intval($remindervalue) : '',
             '{HOURS}' => ($remindertype == 'hours') ? intval($remindervalue) : '',
             '{DATE}' => $formatteddate,
-            '{TIME}' => $formattedtime,
+            '{START}' => $formattedstarttime,
+            '{END}' => $formattedendtime,
             '{LOCATION}' => $location,
             '{EQUIPMENT}' => $equipmentlist,
             '{COURSE}' => $coursename,

@@ -225,7 +225,8 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
 
             // Format date and time - use starttime instead of exchangedate
             $formatteddate = userdate($exchange->starttime, get_string('strftimedaymonth', 'local_equipment'));
-            $formattedtime = userdate($exchange->starttime, get_string('strftimetime12', 'local_equipment'));
+            $formattedstarttime = userdate($exchange->starttime, get_string('strftimetime12', 'local_equipment'));
+            $formattedendtime = userdate($exchange->endtime, get_string('strftimetime12', 'local_equipment'));
 
             // Use pickup location fields to create location string if no combined location exists
             $location = $userdata->location ??
@@ -251,7 +252,8 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
                 $user,
                 $exchange,
                 $formatteddate,
-                $formattedtime,
+                $formattedstarttime,
+                $formattedendtime,
                 $equipmentlist,
                 $remindertype,
                 $remindervalue,
