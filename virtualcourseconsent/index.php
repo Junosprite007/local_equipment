@@ -93,7 +93,7 @@ if ($mform->is_cancelled()) {
         // Foriegn keys first.
         $parentrecord->userid = $USER->id;
         $parentrecord->partnershipid = $data->partnership;
-        $parentrecord->pickupid = $data->pickup;
+        // $parentrecord->pickupid = $data->pickup; // I think I don't need this. It's not even a field in the DB.
         $parentrecord->studentids = '[]';
         $parentrecord->vccsubmissionids = '[]';
         $parentrecord->phoneverificationids = '[]';
@@ -139,7 +139,6 @@ if ($mform->is_cancelled()) {
         $vccsubmission = new stdClass();
         $vccsubmission->userid = $USER->id;
         $vccsubmission->partnershipid = $data->partnership;
-        $vccsubmission->pickupid = $data->pickup;
         $vccsubmission->studentids = '[]';
         $vccsubmission->agreementids = '[]';
         $vccsubmission->confirmationid = md5(uniqid(rand(), true)); // Generate a unique confirmation ID
@@ -172,15 +171,28 @@ if ($mform->is_cancelled()) {
         $vccsubmission->billing_zipcode = $data->billing_zipcode ?? '';
         $vccsubmission->billing_extrainsructions = $data->billing_extrainsructions ?? '';
         $vccsubmission->electronicsignature = $data->signature;
-        $vccsubmission->pickupmethod = $pickupmethod;
-        $vccsubmission->pickuppersonname = $data->pickuppersonname ?? '';
-        $vccsubmission->pickuppersonphone = $data->pickuppersonphone ?? '';
-        $vccsubmission->pickuppersondetails = $data->pickuppersondetails ?? '';
-        $vccsubmission->usernotes = $data->usernotes ?? '';
         $vccsubmission->timecreated = $vccsubmission->timemodified = time();
+
         // Insert vccsubmission record.
         $vccsubmission->id = $DB->insert_record('local_equipment_vccsubmission', $vccsubmission);
         $vccsubmissionids = [$vccsubmission->id];
+
+
+        // Insert the equipment exchange submission.
+        $exchangesubmission = new stdClass();
+        $exchangesubmission->userid = $USER->id;
+
+        // Equipment exchange information
+        $exchangesubmission->pickupid = $data->pickup;
+        $exchangesubmission->pickupmethod = $pickupmethod;
+        $exchangesubmission->pickuppersonname = $data->pickuppersonname ?? '';
+        $exchangesubmission->pickuppersonphone = $data->pickuppersonphone ?? '';
+        $exchangesubmission->pickuppersondetails = $data->pickuppersondetails ?? '';
+        $exchangesubmission->usernotes = $data->usernotes ?? '';
+
+        // Insert exchangesubmission record.
+        $exchangesubmission->id = $DB->insert_record('local_equipment_exchange_submission', $exchangesubmission);
+        $exchangesubmissionids = [$exchangesubmission->id];
 
         $previous_record = $DB->get_record('local_equipment_user', ['id' => $parentrecord->id], 'vccsubmissionids');
         $previous_vccsubmissionids = json_decode($previous_record->vccsubmissionids);

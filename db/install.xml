@@ -225,6 +225,7 @@
                 <FIELD NAME="billing_country" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
                 <FIELD NAME="billing_zipcode" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
                 <FIELD NAME="billing_extrainstructions" TYPE="text" NOTNULL="false"/>
+                <!-- Equipment exchange -->
                 <FIELD NAME="pickup_locationtime" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="The partnership's pickup location and time that the user selected when filling out this form."/>
                 <FIELD NAME="electronicsignature" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="The full name that the user typed when filling out this form. First and last name should match the 'firstname' and 'lastname' field entries in the same row, if everything went correctly."/>
                 <FIELD NAME="pickupmethod" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Method of equipment pickup"/>

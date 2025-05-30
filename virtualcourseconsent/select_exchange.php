@@ -34,7 +34,7 @@ require_capability('local/equipment:submitexchange', context_system::instance())
 $PAGE->set_url('/local/equipment/virtualcourseconsent/select_exchange.php');
 $PAGE->set_context(context_system::instance());
 $PAGE->set_title(get_string('selectexchange', 'local_equipment'));
-$PAGE->set_heading(get_string('enterequipmentexchangeinformation', 'local_equipment'));
+$PAGE->set_heading(get_string('equipmentexchangeselection', 'local_equipment'));
 $PAGE->set_pagelayout('standard');
 
 // Initialize the form

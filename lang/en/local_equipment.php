@@ -428,7 +428,7 @@ $string['awssnssecretkey_desc'] = 'Enter your AWS SNS Secret Key here.';
 $string['caughtexception'] = 'Caught exception: {$a}';
 $string['codeconfirmed'] = 'Code confirmed! Your phone number {$a->tophonenumber} is now verified.';
 $string['dbrecordidnotset'] = 'The database record ID was not set properly.';
-$string['enterequipmentexchangeinformation'] = 'Enter equipment exchange information';
+$string['equipmentexchangeselection'] = 'Equipment exchange selection';
 $string['enterexactly6digits'] = '- Must be exactly 6 digits.';
 $string['entermobilephone'] = 'Enter your mobile phone number';
 $string['enternumbersonly'] = '- Enter numbers only.';
@@ -811,7 +811,7 @@ $string['taskname_sendexchangereminders'] = 'Send exchange reminders';
 // Exchange form strings
 $string['selectexchange'] = 'Select Equipment Exchange';
 $string['selectexchangedescription'] = 'Please select an available equipment exchange time and provide pickup information.';
-$string['exchange_locationandtime'] = 'Exchange time';
+$string['exchange_locationandtime'] = 'Exchange location and time';
 $string['pickupinformation'] = 'Pickup information';
 $string['pickupmethod'] = 'Equipment pickup method';
 $string['pickuppersonname'] = 'Name of person picking up equipment';
