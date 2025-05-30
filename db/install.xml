@@ -340,5 +340,29 @@
                 <KEY NAME="exchangeid" TYPE="foreign" FIELDS="exchangeid" REFTABLE="local_equipment_pickup" REFFIELDS="id"/>
             </KEYS>
         </TABLE>
+        <!-- Exchange submissions -->
+        <TABLE NAME="local_equipment_exchange_submission" COMMENT="Stores equipment exchange form submissions">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the user submitting the exchange form"/>
+                <FIELD NAME="exchangeid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the selected exchange time"/>
+                <FIELD NAME="pickup_method" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Method of equipment pickup"/>
+                <FIELD NAME="pickup_person_name" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Name of the person picking up the equipment (if different from user)"/>
+                <FIELD NAME="pickup_person_phone" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Phone number of the person picking up"/>
+                <FIELD NAME="pickup_person_details" TYPE="text" NOTNULL="false" COMMENT="Details about the person picking up the equipment"/>
+                <FIELD NAME="user_notes" TYPE="text" NOTNULL="false" COMMENT="Additional notes from the user"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Timestamp of when the record was created"/>
+                <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Timestamp of when the record was last modified"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+                <KEY NAME="exchangeid" TYPE="foreign" FIELDS="exchangeid" REFTABLE="local_equipment_pickup" REFFIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="timecreated" UNIQUE="false" FIELDS="timecreated"/>
+                <INDEX NAME="userid_exchangeid" UNIQUE="false" FIELDS="userid,exchangeid"/>
+            </INDEXES>
+        </TABLE>
     </TABLES>
 </XMLDB>

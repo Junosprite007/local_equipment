@@ -121,4 +121,12 @@ $capabilities = [
             'admin' => CAP_ALLOW
         ],
     ],
+    'local/equipment:submitexchange' => [
+        'riskbitmask' => RISK_PERSONAL,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => [
+            'user' => CAP_ALLOW,
+        ],
+    ],
 ];

@@ -811,5 +811,34 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025032500, 'local', 'equipment');
     }
 
+    if ($oldversion < 2025052200) {
+        // Define table local_equipment_exchange_submission.
+        $table = new xmldb_table('local_equipment_exchange_submission');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('exchangeid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('pickup_method', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('pickup_person_name', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('pickup_person_phone', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('pickup_person_details', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('user_notes', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+        $table->add_key('exchangeid', XMLDB_KEY_FOREIGN, ['exchangeid'], 'local_equipment_pickup', ['id']);
+
+        $table->add_index('timecreated', XMLDB_INDEX_NOTUNIQUE, ['timecreated']);
+        $table->add_index('userid_exchangeid', XMLDB_INDEX_NOTUNIQUE, ['userid', 'exchangeid']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Equipment savepoint reached.
+        upgrade_plugin_savepoint(true, 2025052200, 'local', 'equipment');
+    }
+
     return true;
 }

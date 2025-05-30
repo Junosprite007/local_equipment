@@ -138,31 +138,139 @@ function local_equipment_get_countries() {
 }
 
 /**
- * Convert all string values in an array to integers.
- * These values are assumed to be numeric IDs, so they can be cast to integers properly.
- * @param array $ids An associative array or or multitude of arrays containing numeric IDs of type string.
- * @return array An array of countries.
+ * Sends an SMS message using the configured gateway.
+ *
+ * @param string $to The phone number to send to
+ * @param string $message The message to send
+ * @return bool True if successful, false otherwise
  */
-function local_equipment_convert_array_values_to_int($ids) {
-    if (is_array($ids)) {
-        foreach ($ids as $key => $value) {
-            if (is_array($value)) {
-                $ids[$key] = local_equipment_convert_array_values_to_int($value);
-            } else if (is_string($value) && is_numeric($value)) {
-                $ids[$key] = (int)$value;
-            }
-        }
-    } else if (is_object($ids)) {
-        foreach ($ids as $key => $value) {
-            if (is_array($value)) {
-                $ids->$key = local_equipment_convert_array_values_to_int($value);
-            } else if (is_string($value) && is_numeric($value)) {
-                $ids->$key = (int)$value;
-            }
-        }
-    }
+function local_equipment_send_sms($to, $message) {
+    global $CFG;
 
-    return $ids;
+    $gateway = get_config('local_equipment', 'sms_gateway');
+
+    switch ($gateway) {
+        case 'aws':
+            return local_equipment_send_sms_aws($to, $message);
+        case 'twilio':
+            return local_equipment_send_sms_twilio($to, $message);
+        case 'infobip':
+            return local_equipment_send_sms_infobip($to, $message);
+        default:
+            debugging('No SMS gateway configured', DEBUG_DEVELOPER);
+            return false;
+    }
+}
+
+/**
+ * Get available exchange times for the current user.
+ *
+ * @param int $userid The user ID to check for
+ * @return array Array of available exchange pickup objects
+ */
+function local_equipment_get_available_exchanges($userid) {
+    global $DB;
+
+    // Get the current time using Moodle 5.0 approach
+    $clock = \core\di::get(\core\clock::class);
+    $now = $clock->now()->getTimestamp();
+    $ten_minutes = 600;
+    $thirty_days = 2592000;
+
+    // Get confirmed pickups that are available for exchange
+    $sql = "SELECT p.*
+            FROM {local_equipment_pickup} p
+            WHERE p.status = 'confirmed'
+            AND p.endtime > ?
+            AND p.starttime < ?
+            ORDER BY p.starttime ASC";
+
+    $params = [$now + $ten_minutes, $now + $thirty_days];
+
+    return $DB->get_records_sql($sql, $params);
+}
+
+/**
+ * Check if user has already submitted an exchange form for a specific pickup.
+ *
+ * @param int $userid The user ID
+ * @param int $exchangeid The exchange/pickup ID
+ * @return object|false The existing submission record or false if none exists
+ */
+function local_equipment_get_existing_exchange_submission($userid, $exchangeid) {
+    global $DB;
+
+    return $DB->get_record('local_equipment_exchange_submission', [
+        'userid' => $userid,
+        'exchangeid' => $exchangeid
+    ]);
+}
+
+/**
+ * Save or update an exchange submission.
+ *
+ * @param object $data The form data
+ * @param int $userid The user ID
+ * @return int The submission ID
+ */
+function local_equipment_save_exchange_submission($data, $userid) {
+    global $DB;
+
+    // Get the current time using Moodle 5.0 approach
+    $clock = \core\di::get(\core\clock::class);
+    $timestamp = $clock->now()->getTimestamp();
+
+    $transaction = $DB->start_delegated_transaction();
+
+    try {
+        // Check if submission already exists
+        $existing = local_equipment_get_existing_exchange_submission($userid, $data->pickup);
+
+        if ($existing) {
+            // Update existing submission
+            $existing->pickup_method = $data->pickup_method;
+            $existing->pickup_person_name = isset($data->pickup_person_name) ? $data->pickup_person_name : null;
+            $existing->pickup_person_phone = isset($data->pickup_person_phone) ? $data->pickup_person_phone : null;
+            $existing->pickup_person_details = isset($data->pickup_person_details) ? $data->pickup_person_details : null;
+            $existing->user_notes = isset($data->user_notes) ? $data->user_notes : null;
+            $existing->timemodified = $timestamp;
+
+            $DB->update_record('local_equipment_exchange_submission', $existing);
+            $submissionid = $existing->id;
+        } else {
+            // Create new submission
+            $exchangesubmission = new stdClass();
+            $exchangesubmission->userid = $userid;
+            $exchangesubmission->exchangeid = $data->pickup;
+            $exchangesubmission->pickup_method = $data->pickup_method;
+            $exchangesubmission->pickup_person_name = isset($data->pickup_person_name) ? $data->pickup_person_name : null;
+            $exchangesubmission->pickup_person_phone = isset($data->pickup_person_phone) ? $data->pickup_person_phone : null;
+            $exchangesubmission->pickup_person_details = isset($data->pickup_person_details) ? $data->pickup_person_details : null;
+            $exchangesubmission->user_notes = isset($data->user_notes) ? $data->user_notes : null;
+            $exchangesubmission->timecreated = $timestamp;
+            $exchangesubmission->timemodified = $timestamp;
+
+            $submissionid = $DB->insert_record('local_equipment_exchange_submission', $exchangesubmission);
+
+            // Create user exchange record for reminder system
+            $userexchange = new stdClass();
+            $userexchange->userid = $userid;
+            $userexchange->exchangeid = $data->pickup;
+            $userexchange->reminder_code = '0';
+            $userexchange->reminder_method = '0';
+            $userexchange->timemodified = $timestamp;
+            $userexchange->timecreated = $timestamp;
+
+            $DB->insert_record('local_equipment_user_exchange', $userexchange);
+        }
+
+        $transaction->allow_commit();
+        return $submissionid;
+    } catch (Exception $e) {
+        debugging('Exchange submission failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
+        $transaction->rollback($e);
+        throw $e;
+    }
 }
 
 /**
@@ -992,6 +1100,19 @@ function local_equipment_get_active_partnerships() {
     return $DB->get_records_menu('local_equipment_partnership', ['active' => 1], 'name', 'id, name');
 }
 
+
+/**
+ * Get row of partnership data fromo the DB by partnership ID.
+ *
+ * @param int $id The partnership's ID.
+ * @return object An associative array of the partnership, with with all it's information.
+ */
+function local_equipment_get_partnership_by_id($id) {
+    global $DB;
+    return $DB->get_record('local_equipment_partnership', ['id' => $id]);
+}
+
+
 /**
  * Retrieves partnership courses.
  *
@@ -1783,140 +1904,6 @@ function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $m
     return $responseobject;
 }
 
-/**
- * Sends an SMS message to a phone number.
- *
- * @param string $gatewayid The ID of the SMS gateway to use for sending text messages.
- * @param string $tonumber The phone number to send the SMS message to.
- * @param string $message The message to send in the SMS message.
- * @param string $messagetype The type of message to send. This may change depending on the chosen provider. AWS uses
- * 'Transactional' for OTP and informational messages and 'Promotional' for marketing messages.
- * @return object
- */
-function local_equipment_send_sms($gatewayid, $tonumber, $message, $messagetype) {
-    global  $DB;
-    // Get all SMS gateways
-
-    $responseobject = new stdClass();
-    $responseobject->errormessage = '';
-    $responseobject->errorobject = new stdClass();
-    $responseobject->success = false;
-
-    try {
-        $gatewayobj = $DB->get_record('sms_gateways', ['id' => $gatewayid]);
-        if (!$gatewayobj) {
-            throw new moodle_exception('invalidgatewayid', 'local_equipment', '', null, "\$gatewayid = $gatewayid");
-        }
-        switch ($gatewayobj->gateway) {
-            case 'smsgateway_aws\gateway':
-                return local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $messagetype);
-
-                // case 'infobip':
-                //     // Just for testing:
-                //     // $responseobject->success = true;
-                //     // break;
-
-                //     $infobipapikey = get_config('local_equipment', 'infobipapikey');
-                //     $infobipapibaseurl = get_config('local_equipment', 'infobipapibaseurl');
-                //     $curl = new curl();
-
-                //     // Set headers
-                //     $headers = [
-                //         'Authorization: App ' . $infobipapikey,
-                //         'Content-Type: application/json',
-                //         'Accept: application/json'
-                //     ];
-
-                //     $curl->setHeader($headers);
-                //     $postdata = '{"messages":[{"destinations":[{"to":"' . $tonumber . '"}],"from":"' . $SITE->shortname . '","text":"' . $message . '"}]}';
-
-                //     // Make the request
-                //     $responseobject->response = $curl->post('https://' . $infobipapibaseurl . '/sms/2/text/advanced', $postdata);
-
-                //     // Get the HTTP response code
-                //     $info = $curl->get_info();
-                //     echo '<pre>';
-                //     var_dump($responseobject);
-                //     echo '</pre>';
-
-                //     if ($info['http_code'] >= 200 && $info['http_code'] < 300) {
-                //         // The request was successful
-                //         $responseobject->success = true;
-                //     } else {
-                //         // The request failed
-                //         $responseobject->errorobject->httpcode = $info['http_code'];
-                //         $responseobject->errorobject->curlcode = $curl->get_errno();
-                //         $responseobject->errormessage = get_string('httprequestfailedwithcode', 'local_equipment', $responseobject->errorobject);
-                //         throw new moodle_exception('httprequestfailed', 'local_equipment', '', null, $responseobject->errormessage);
-                //     }
-                //     break;
-                // case 'twilio':
-                // Just for testing:
-                // $responseobject->success = true;
-                // break;
-                // $twilioaccountsid = get_config('local_equipment', 'twilioaccountsid');
-                // $twilioauthtoken = get_config('local_equipment', 'twilioauthtoken');
-                // $twilionumber = get_config('local_equipment', 'twilionumber');
-
-                // $curl = new curl();
-
-                // // Set headers
-                // $headers = [
-                //         'Content-Type: application/x-www-form-urlencoded'
-                //     ];
-
-                // $curl->setHeader($headers);
-
-                // // Set post data
-                // $postdata = http_build_query([
-                //     'To' => $tonumber,
-                //     'From' => $twilionumber,
-                //     'Body' => $message
-                // ]);
-
-                // // Set Twilio API URL
-                // $twilioapiurl = 'https://api.twilio.com/2010-04-01/Accounts/' . $twilioaccountsid . '/Messages.json';
-
-                // // Set authentication
-                // $curl->setopt(CURLOPT_USERPWD, $twilioaccountsid . ':' . $twilioauthtoken);
-
-                // // Make the request
-                // $responseobject->response = $curl->post($twilioapiurl, $postdata);
-
-                // // Get the HTTP response code
-                // $info = $curl->get_info();
-                // $responseobject->errormessage = '';
-                // $responseobject->errorobject = new stdClass();
-
-                // if ($info['http_code'] >= 200 && $info['http_code'] < 300) {
-                //     // The request was successful
-                //     $responseobject->success = true;
-                // } else {
-                //     // The request failed
-                //     $responseobject->errorobject->httpcode = $info['http_code'];
-                //     $responseobject->errorobject->curlcode = $curl->get_errno();
-                //     $responseobject->errormessage = get_string('httprequestfailedwithcode', 'local_equipment', $responseobject->errorobject);
-                //     $responseobject->success = false;
-                //     throw new moodle_exception('httprequestfailed', 'local_equipment', '', null, $responseobject->errormessage);
-                // }
-                // break;
-
-            default:
-                break;
-        }
-    } catch (Exception $e) {
-        // Handle the exception
-        $responseobject->errormessage = $e->getMessage();
-    }
-    // echo '<br />';
-    // echo '<br />';
-    // echo '<br />';
-    // echo '<pre>';
-    // var_dump($responseobject);
-    // echo '</pre>';
-    //             die();
-    return $responseobject;
-}
 
 /**
  * Sends an SMS message to a phone number via POST and HTTPS.
@@ -2083,7 +2070,9 @@ function local_equipment_send_secure_otp($gatewayid, $tophonenumber, $ttl = 600,
         $responseobject->success = false;
         $responseobject->errormessage = $e->getMessage();
         if ($responseobject->errorcode == 1) {
-            redirect($verifyurl, $responseobject->errormessage,
+            redirect(
+                $verifyurl,
+                $responseobject->errormessage,
                 null,
                 \core\output\notification::NOTIFY_WARNING
             );
@@ -2928,9 +2917,9 @@ function local_equipment_send_enrollment_message($user, $coursenames, $roletype 
 
     // Determine the from user based on settings
     switch ($messagesender) {
-            // case ENROL_SEND_EMAIL_FROM_COURSE_CONTACT:
-            //     $contactuser = local_equipment_get_course_contact($course);
-            //     break;
+        // case ENROL_SEND_EMAIL_FROM_COURSE_CONTACT:
+        //     $contactuser = local_equipment_get_course_contact($course);
+        //     break;
         case ENROL_SEND_EMAIL_FROM_KEY_HOLDER:
             $contactuser = get_admin();
             break;
