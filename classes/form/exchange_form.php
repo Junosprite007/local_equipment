@@ -76,6 +76,9 @@ class exchange_form extends \moodleform {
             }
         }
 
+
+        $mform->addElement('static', 'exchangeselectiondescription', '', get_string('selectexchangedescription', 'local_equipment'));
+
         // Exchange selection
         // $mform->addElement('header', 'exchangeheader', get_string('selectexchange', 'local_equipment'));
         $mform->addElement(

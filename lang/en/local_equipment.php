@@ -429,6 +429,7 @@ $string['caughtexception'] = 'Caught exception: {$a}';
 $string['codeconfirmed'] = 'Code confirmed! Your phone number {$a->tophonenumber} is now verified.';
 $string['dbrecordidnotset'] = 'The database record ID was not set properly.';
 $string['equipmentexchangeselection'] = 'Equipment exchange selection';
+$string['updatedyourexchangetime'] = 'You already had an exchange time, so we updated it to the one you just submitted.';
 $string['enterexactly6digits'] = '- Must be exactly 6 digits.';
 $string['entermobilephone'] = 'Enter your mobile phone number';
 $string['enternumbersonly'] = '- Enter numbers only.';

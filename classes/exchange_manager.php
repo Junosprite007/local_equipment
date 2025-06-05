@@ -57,22 +57,40 @@ class exchange_manager {
         // Determine reminder code to look for
         $remindercode = ($remindertype == 'days') ? 0 : (($remindertype == 'hours') ? 1 : 0);
 
-        // Query to find users who need reminders but haven't received this type yet
-        $sql = "SELECT ue.id, ue.userid, ue.exchangeid, ue.reminder_code, ue.reminder_method,
-               p.starttime,
-               CONCAT(p.pickup_streetaddress, ', ', p.pickup_city, ', ', p.pickup_state) AS location,
-               p.flccoordinatorid
-        FROM {local_equipment_user_exchange} ue
-        JOIN {local_equipment_pickup} p ON p.id = ue.exchangeid
-        WHERE p.starttime >= :targetstart
-          AND p.starttime <= :targetend
-          AND (ue.reminder_code = :remindercode OR ue.reminder_code = 0)
-        ORDER BY p.starttime ASC";
+        // Query to find users who need reminders from BOTH tables
+        $sql = "SELECT
+                ue.id, ue.userid, ue.exchangeid, ue.reminder_code, ue.reminder_method,
+                p.starttime,
+                CONCAT(p.pickup_streetaddress, ', ', p.pickup_city, ', ', p.pickup_state) AS location,
+                p.flccoordinatorid,
+                'user_exchange' AS source_table
+            FROM {local_equipment_user_exchange} ue
+            JOIN {local_equipment_pickup} p ON p.id = ue.exchangeid
+            WHERE p.starttime >= :targetstart1
+                AND p.starttime <= :targetend1
+                AND (ue.reminder_code = :remindercode1 OR ue.reminder_code = 0)
+
+            UNION
+
+            SELECT
+                es.id, es.userid, es.exchangeid, 0 AS reminder_code, '' AS reminder_method,
+                p.starttime,
+                CONCAT(p.pickup_streetaddress, ', ', p.pickup_city, ', ', p.pickup_state) AS location,
+                p.flccoordinatorid,
+                'exchange_submission' AS source_table
+            FROM {local_equipment_exchange_submission} es
+            JOIN {local_equipment_pickup} p ON p.id = es.exchangeid
+            WHERE p.starttime >= :targetstart2
+                AND p.starttime <= :targetend2
+
+            ORDER BY starttime ASC";
 
         $params = [
-            'targetstart' => $targetstart,
-            'targetend' => $targetend,
-            'remindercode' => $remindercode
+            'targetstart1' => $targetstart,
+            'targetend1' => $targetend,
+            'remindercode1' => $remindercode,
+            'targetstart2' => $targetstart,
+            'targetend2' => $targetend
         ];
 
         // echo '<pre>';

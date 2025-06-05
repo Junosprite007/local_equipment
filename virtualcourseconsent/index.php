@@ -171,6 +171,17 @@ if ($mform->is_cancelled()) {
         $vccsubmission->billing_zipcode = $data->billing_zipcode ?? '';
         $vccsubmission->billing_extrainsructions = $data->billing_extrainsructions ?? '';
         $vccsubmission->electronicsignature = $data->signature;
+
+        // Pickup information: we're using a new table now, but we have to enter dummy information because of that.
+        $vccsubmission->pickupid = -1;
+        $vccsubmission->pickupmethod = '0';
+
+        // I don't think I need these:
+        // $vccsubmission->pickuppersonname = NULL;
+        // $vccsubmission->pickuppersonphone = NULL;
+        // $vccsubmission->pickuppersondetails = NULL;
+        // $vccsubmission->usernotes = NULL;
+
         $vccsubmission->timecreated = $vccsubmission->timemodified = time();
 
         // Insert vccsubmission record.
@@ -178,17 +189,17 @@ if ($mform->is_cancelled()) {
         $vccsubmissionids = [$vccsubmission->id];
 
 
-        // Insert the equipment exchange submission.
+        // Create the equipment exchange submission object.
         $exchangesubmission = new stdClass();
-        $exchangesubmission->userid = $USER->id;
 
         // Equipment exchange information
-        $exchangesubmission->pickupid = $data->pickup;
-        $exchangesubmission->pickupmethod = $pickupmethod;
-        $exchangesubmission->pickuppersonname = $data->pickuppersonname ?? '';
-        $exchangesubmission->pickuppersonphone = $data->pickuppersonphone ?? '';
-        $exchangesubmission->pickuppersondetails = $data->pickuppersondetails ?? '';
-        $exchangesubmission->usernotes = $data->usernotes ?? '';
+        $exchangesubmission->userid = $USER->id;
+        $exchangesubmission->exchangeid = $data->pickup;
+        $exchangesubmission->pickup_method = $pickupmethod;
+        $exchangesubmission->pickup_person_name = $data->pickuppersonname ?? '';
+        $exchangesubmission->pickup_person_phone = $data->pickuppersonphone ?? '';
+        $exchangesubmission->pickup_person_details = $data->pickuppersondetails ?? '';
+        $exchangesubmission->user_notes = $data->usernotes ?? '';
 
         // Insert exchangesubmission record.
         $exchangesubmission->id = $DB->insert_record('local_equipment_exchange_submission', $exchangesubmission);

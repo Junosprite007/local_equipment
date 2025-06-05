@@ -71,13 +71,6 @@ if ($form->is_cancelled()) {
 // Output the page
 echo $OUTPUT->header();
 
-// Display page heading and description
-// echo $OUTPUT->heading(get_string('selectexchange', 'local_equipment'));
-echo html_writer::div(
-    get_string('selectexchangedescription', 'local_equipment'),
-    'alert alert-info'
-);
-
 // Display the form
 $form->display();
 

@@ -200,10 +200,24 @@ function local_equipment_get_available_exchanges($userid) {
 function local_equipment_get_existing_exchange_submission($userid, $exchangeid) {
     global $DB;
 
-    return $DB->get_record('local_equipment_exchange_submission', [
-        'userid' => $userid,
-        'exchangeid' => $exchangeid
-    ]);
+    $clock = \core\di::get(\core\clock::class);
+    $timestamp = $clock->now()->getTimestamp();
+
+    $sql = "id = :id AND endtime > :timestamp";
+    $params = [
+        'id' => $exchangeid,
+        'timestamp' => $timestamp
+    ];
+    $validexchange = $DB->get_record_select('local_equipment_pickup', $sql, $params, '*', IGNORE_MULTIPLE);
+
+    if ($validexchange) {
+        // Exchange has already past, so the user needs a new entry in the local_equipment_user_exchange table.
+        return $DB->get_record('local_equipment_exchange_submission', [
+            'userid' => $userid,
+            'exchangeid' => $exchangeid
+        ]);
+    }
+    return false;
 }
 
 /**
@@ -223,12 +237,36 @@ function local_equipment_save_exchange_submission($data, $userid) {
     $transaction = $DB->start_delegated_transaction();
 
     try {
+        $pickupmethod = '';
+        $pickupmethods = local_equipment_get_pickup_methods();
+
+        switch ($data->pickup_method) {
+            case 'self':
+                $pickupmethod = $pickupmethods['self'];
+                break;
+            case 'other':
+                $pickupmethod = $pickupmethods['other'];
+                break;
+            case 'ship':
+                $pickupmethod = $pickupmethods['ship'];
+                break;
+            case 'purchased':
+                $pickupmethod = $pickupmethods['purchased'];
+                break;
+            default:
+                $pickupmethod = '';
+                break;
+        }
         // Check if submission already exists
         $existing = local_equipment_get_existing_exchange_submission($userid, $data->pickup);
+        // echo '<pre>';
+        // var_dump($existing);
+        // echo '</pre>';
+        // die();
 
         if ($existing) {
             // Update existing submission
-            $existing->pickup_method = $data->pickup_method;
+            $existing->pickup_method = $pickupmethod;
             $existing->pickup_person_name = isset($data->pickup_person_name) ? $data->pickup_person_name : null;
             $existing->pickup_person_phone = isset($data->pickup_person_phone) ? $data->pickup_person_phone : null;
             $existing->pickup_person_details = isset($data->pickup_person_details) ? $data->pickup_person_details : null;
@@ -236,13 +274,14 @@ function local_equipment_save_exchange_submission($data, $userid) {
             $existing->timemodified = $timestamp;
 
             $DB->update_record('local_equipment_exchange_submission', $existing);
+            \core\notification::info(get_string('updatedyourexchangetime', 'local_equipment'));
             $submissionid = $existing->id;
         } else {
             // Create new submission
             $exchangesubmission = new stdClass();
             $exchangesubmission->userid = $userid;
             $exchangesubmission->exchangeid = $data->pickup;
-            $exchangesubmission->pickup_method = $data->pickup_method;
+            $exchangesubmission->pickup_method = $pickupmethod;
             $exchangesubmission->pickup_person_name = isset($data->pickup_person_name) ? $data->pickup_person_name : null;
             $exchangesubmission->pickup_person_phone = isset($data->pickup_person_phone) ? $data->pickup_person_phone : null;
             $exchangesubmission->pickup_person_details = isset($data->pickup_person_details) ? $data->pickup_person_details : null;
@@ -770,7 +809,7 @@ function local_equipment_add_address_block(
     $addressfields[] = 'zipcode';
     // $showinstructions ? $addressfields[] = 'extrainstructions' : null;
 
-    $block->elements["{$addresstype}_address"] = $mform->createElement('static', "{$addresstype}_address", \html_writer::tag('label', get_string("{$addresstype}_address", 'local_equipment'), ['class' => 'form-input-group-labels font-weight-bold']));
+    $block->elements["{$addresstype}_address"] = $mform->createElement('static', "{$addresstype}_address", \html_writer::tag('label', get_string("{$addresstype}_address", 'local_equipment'), ['class' => 'form-input-group-labels fw-bold']));
     if ($extrainput !== '') {
         $fieldname = "{$addresstype}_extrainput";
         $block->elements[$fieldname] = $mform->createElement('text', $fieldname, get_string($extrainput, 'local_equipment'));

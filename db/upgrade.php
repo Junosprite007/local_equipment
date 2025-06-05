@@ -840,5 +840,21 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025052200, 'local', 'equipment');
     }
 
+    // Maybe we don't need this:
+    // if ($oldversion < 2025053000) {
+    //     // Add vccsubmissionid field to the local_equipment_exchange_submission table.
+    //     $table = new xmldb_table('local_equipment_exchange_submission');
+    //     $field = new xmldb_field('vccsubmissionid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, 0, 'exchangeid');
+    //     $key = new xmldb_key('vccsubmissionid', XMLDB_KEY_FOREIGN, ['vccsubmissionid'], 'local_equipment_partnership', ['id']);
+
+    //     if (!$dbman->field_exists($table, 'vccsubmissionid')) {
+    //         $dbman->add_field($table, $field);
+    //         $dbman->add_key($table, $key);
+    //     }
+
+    //     // Equipment savepoint reached.
+    //     upgrade_plugin_savepoint(true, 2025053000, 'local', 'equipment');
+    // }
+
     return true;
 }
