@@ -325,7 +325,7 @@
         sent a reminder text or email about equipment for a given course: no record = user has not been sent a reminder and should
         NOT be sent one, 0 = user marked for sending a reminder but has not been sent one yet, 1 = only first remainder has been
         sent to user (days before exchange), 2 = only second reminder has been sent to user (minutes before exchange), 9 = user has
-        been sent all reminders. 9 should be the most common entry in the table.">
+        been sent all reminders and should no longer be sent any reminders for that particular exchange time. 9 should be the most common entry in the table.">
             <FIELDS>
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
                 <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>

@@ -138,12 +138,12 @@ class exchange_manager {
      */
     public function update_reminder_status(int $userid, int $exchangeid, int $remindercode): bool {
         // Get the current record
-        $record = $this->db->get_record('local_equipment_user_exchange', [
+        $records = $this->db->get_records('local_equipment_user_exchange', [
             'userid' => $userid,
             'exchangeid' => $exchangeid
         ]);
 
-        if (!$record) {
+        if (!$records) {
             return false;
         }
 
@@ -151,34 +151,35 @@ class exchange_manager {
         $transaction = $this->db->start_delegated_transaction();
 
         try {
-            // Update reminder code based on which reminder was sent and current status
-            if ($remindercode == 1) {
-                // First reminder (days)
-                if ($record->reminder_code == 2) {
-                    $record->reminder_code = 9; // Both reminders now sent
-                } else {
-                    $record->reminder_code = 1; // Only first reminder sent
+            foreach ($records as $record) {
+                // Update reminder code based on which reminder was sent and current status
+                if ($remindercode == 1) {
+                    // First reminder (days)
+                    if ($record->reminder_code == 2) {
+                        $record->reminder_code = 9; // Both reminders now sent
+                    } else {
+                        $record->reminder_code = 1; // Only first reminder sent
+                    }
+                } else if ($remindercode == 2) {
+                    // Second reminder (hours)
+                    if ($record->reminder_code == 1) {
+                        $record->reminder_code = 9; // Both reminders now sent
+                    } else {
+                        $record->reminder_code = 2; // Only second reminder sent
+                    }
                 }
-            } else if ($remindercode == 2) {
-                // Second reminder (hours)
-                if ($record->reminder_code == 1) {
-                    $record->reminder_code = 9; // Both reminders now sent
-                } else {
-                    $record->reminder_code = 2; // Only second reminder sent
+
+                $record->timemodified = time();
+
+                $success = $this->db->update_record('local_equipment_user_exchange', $record);
+                if (!$success) {
+                    $transaction->rollback(new \Exception("Failed to update reminder status"));
+                    return false;
                 }
             }
 
-            $record->timemodified = time();
-
-            $success = $this->db->update_record('local_equipment_user_exchange', $record);
-
-            if ($success) {
-                $transaction->allow_commit();
-                return true;
-            } else {
-                $transaction->rollback(new \Exception("Failed to update reminder status"));
-                return false;
-            }
+            $transaction->allow_commit();
+            return true;
         } catch (Exception $e) {
             $transaction->rollback($e);
             return false;

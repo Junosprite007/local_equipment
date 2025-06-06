@@ -137,30 +137,142 @@ function local_equipment_get_countries() {
     return $countries;
 }
 
+
 /**
- * Sends an SMS message using the configured gateway.
+ * Sends an SMS message to a phone number.
  *
- * @param string $to The phone number to send to
- * @param string $message The message to send
- * @return bool True if successful, false otherwise
+ * @param string $gatewayid The ID of the SMS gateway to use for sending text messages.
+ * @param string $tonumber The phone number to send the SMS message to.
+ * @param string $message The message to send in the SMS message.
+ * @param string $messagetype The type of message to send. This may change depending on the chosen provider. AWS uses
+ * 'Transactional' for OTP and informational messages and 'Promotional' for marketing messages.
+ * @return object
  */
-function local_equipment_send_sms($to, $message) {
-    global $CFG;
+function local_equipment_send_sms($gatewayid, $tonumber, $message, $messagetype) {
+    global  $DB;
+    // Get all SMS gateways
 
-    $gateway = get_config('local_equipment', 'sms_gateway');
+    $responseobject = new stdClass();
+    $responseobject->errormessage = '';
+    $responseobject->errorobject = new stdClass();
+    $responseobject->success = false;
 
-    switch ($gateway) {
-        case 'aws':
-            return local_equipment_send_sms_aws($to, $message);
-        case 'twilio':
-            return local_equipment_send_sms_twilio($to, $message);
-        case 'infobip':
-            return local_equipment_send_sms_infobip($to, $message);
-        default:
-            debugging('No SMS gateway configured', DEBUG_DEVELOPER);
-            return false;
+    try {
+        $gatewayobj = $DB->get_record('sms_gateways', ['id' => $gatewayid]);
+        if (!$gatewayobj) {
+            throw new moodle_exception('invalidgatewayid', 'local_equipment', '', null, "\$gatewayid = $gatewayid");
+        }
+        switch ($gatewayobj->gateway) {
+            case 'smsgateway_aws\gateway':
+                return local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $messagetype);
+
+                // case 'infobip':
+                //     // Just for testing:
+                //     // $responseobject->success = true;
+                //     // break;
+
+                //     $infobipapikey = get_config('local_equipment', 'infobipapikey');
+                //     $infobipapibaseurl = get_config('local_equipment', 'infobipapibaseurl');
+                //     $curl = new curl();
+
+                //     // Set headers
+                //     $headers = [
+                //         'Authorization: App ' . $infobipapikey,
+                //         'Content-Type: application/json',
+                //         'Accept: application/json'
+                //     ];
+
+                //     $curl->setHeader($headers);
+                //     $postdata = '{"messages":[{"destinations":[{"to":"' . $tonumber . '"}],"from":"' . $SITE->shortname . '","text":"' . $message . '"}]}';
+
+                //     // Make the request
+                //     $responseobject->response = $curl->post('https://' . $infobipapibaseurl . '/sms/2/text/advanced', $postdata);
+
+                //     // Get the HTTP response code
+                //     $info = $curl->get_info();
+                //     echo '<pre>';
+                //     var_dump($responseobject);
+                //     echo '</pre>';
+
+                //     if ($info['http_code'] >= 200 && $info['http_code'] < 300) {
+                //         // The request was successful
+                //         $responseobject->success = true;
+                //     } else {
+                //         // The request failed
+                //         $responseobject->errorobject->httpcode = $info['http_code'];
+                //         $responseobject->errorobject->curlcode = $curl->get_errno();
+                //         $responseobject->errormessage = get_string('httprequestfailedwithcode', 'local_equipment', $responseobject->errorobject);
+                //         throw new moodle_exception('httprequestfailed', 'local_equipment', '', null, $responseobject->errormessage);
+                //     }
+                //     break;
+                // case 'twilio':
+                // Just for testing:
+                // $responseobject->success = true;
+                // break;
+                // $twilioaccountsid = get_config('local_equipment', 'twilioaccountsid');
+                // $twilioauthtoken = get_config('local_equipment', 'twilioauthtoken');
+                // $twilionumber = get_config('local_equipment', 'twilionumber');
+
+                // $curl = new curl();
+
+                // // Set headers
+                // $headers = [
+                //         'Content-Type: application/x-www-form-urlencoded'
+                //     ];
+
+                // $curl->setHeader($headers);
+
+                // // Set post data
+                // $postdata = http_build_query([
+                //     'To' => $tonumber,
+                //     'From' => $twilionumber,
+                //     'Body' => $message
+                // ]);
+
+                // // Set Twilio API URL
+                // $twilioapiurl = 'https://api.twilio.com/2010-04-01/Accounts/' . $twilioaccountsid . '/Messages.json';
+
+                // // Set authentication
+                // $curl->setopt(CURLOPT_USERPWD, $twilioaccountsid . ':' . $twilioauthtoken);
+
+                // // Make the request
+                // $responseobject->response = $curl->post($twilioapiurl, $postdata);
+
+                // // Get the HTTP response code
+                // $info = $curl->get_info();
+                // $responseobject->errormessage = '';
+                // $responseobject->errorobject = new stdClass();
+
+                // if ($info['http_code'] >= 200 && $info['http_code'] < 300) {
+                //     // The request was successful
+                //     $responseobject->success = true;
+                // } else {
+                //     // The request failed
+                //     $responseobject->errorobject->httpcode = $info['http_code'];
+                //     $responseobject->errorobject->curlcode = $curl->get_errno();
+                //     $responseobject->errormessage = get_string('httprequestfailedwithcode', 'local_equipment', $responseobject->errorobject);
+                //     $responseobject->success = false;
+                //     throw new moodle_exception('httprequestfailed', 'local_equipment', '', null, $responseobject->errormessage);
+                // }
+                // break;
+
+            default:
+                break;
+        }
+    } catch (Exception $e) {
+        // Handle the exception
+        $responseobject->errormessage = $e->getMessage();
     }
+    // echo '<br />';
+    // echo '<br />';
+    // echo '<br />';
+    // echo '<pre>';
+    // var_dump($responseobject);
+    // echo '</pre>';
+    //             die();
+    return $responseobject;
 }
+
 
 /**
  * Get available exchange times for the current user.

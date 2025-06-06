@@ -243,6 +243,13 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
             $daysfromnow = floor($diff_secs / 86400);
             $hoursfromnow = floor($diff_secs / 3600);
 
+
+            // echo '<pre>';
+            // var_dump('$daysfromnow: ' . $daysfromnow);
+            // var_dump('$hoursfromnow: ' . $hoursfromnow);
+            // echo '</pre>';
+
+
             // Determine if this is a days or hours reminder
             $remindertype = ($daysbeforeexchange > 0) ? 'days' : 'hours';
             $remindervalue = ($daysbeforeexchange > 0) ? $daysfromnow : $hoursfromnow;
