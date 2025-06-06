@@ -48,64 +48,37 @@ class exchange_manager {
     /**
      * Get users who need reminders for exchanges within a specified date range.
      *
-     * @param int $targetstart The target start day timestamp
-     * @param int $targetend End timestamp
+     * @param int $targetwindow_start The target window start day timestamp
+     * @param int $targetwindow_end End timestamp
      * @param string $remindertype Type of reminder ('days', 'hours')
      * @return array Array of user and exchange records
      */
-    public function get_users_needing_reminders(int $targetstart, int $targetend, string $remindertype): array {
+    public function get_users_needing_reminders(int $targetwindow_start, int $targetwindow_end, string $remindertype): array {
         // Determine reminder code to look for
         $remindercode = ($remindertype == 'days') ? 0 : (($remindertype == 'hours') ? 1 : 0);
 
-        // Query to find users who need reminders from BOTH tables
-        $sql = "SELECT
-                ue.id, ue.userid, ue.exchangeid, ue.reminder_code, ue.reminder_method,
-                p.starttime,
-                CONCAT(p.pickup_streetaddress, ', ', p.pickup_city, ', ', p.pickup_state) AS location,
-                p.flccoordinatorid,
-                'user_exchange' AS source_table
-            FROM {local_equipment_user_exchange} ue
-            JOIN {local_equipment_pickup} p ON p.id = ue.exchangeid
-            WHERE p.starttime >= :targetstart1
-                AND p.starttime <= :targetend1
-                AND (ue.reminder_code = :remindercode1 OR ue.reminder_code = 0)
+        // var_dump($targetwindow_start);
+        // var_dump($targetwindow_end);
+        // var_dump($remindertype);
+        // var_dump($remindercode);
 
-            UNION
-
-            SELECT
-                es.id, es.userid, es.exchangeid, 0 AS reminder_code, '' AS reminder_method,
-                p.starttime,
-                CONCAT(p.pickup_streetaddress, ', ', p.pickup_city, ', ', p.pickup_state) AS location,
-                p.flccoordinatorid,
-                'exchange_submission' AS source_table
-            FROM {local_equipment_exchange_submission} es
-            JOIN {local_equipment_pickup} p ON p.id = es.exchangeid
-            WHERE p.starttime >= :targetstart2
-                AND p.starttime <= :targetend2
-
-            ORDER BY starttime ASC";
+        // Query to find users who need reminders but haven't received this type yet
+        $sql = "SELECT ue.id, ue.userid, ue.exchangeid, ue.reminder_code, ue.reminder_method,
+               p.starttime,
+               CONCAT(p.pickup_streetaddress, ', ', p.pickup_city, ', ', p.pickup_state) AS location,
+               p.flccoordinatorid
+        FROM {local_equipment_user_exchange} ue
+        JOIN {local_equipment_pickup} p ON p.id = ue.exchangeid
+        WHERE p.starttime >= :targetwindow_start
+          AND p.starttime <= :targetwindow_end
+          AND (ue.reminder_code = :remindercode OR ue.reminder_code = 0)
+        ORDER BY p.starttime ASC";
 
         $params = [
-            'targetstart1' => $targetstart,
-            'targetend1' => $targetend,
-            'remindercode1' => $remindercode,
-            'targetstart2' => $targetstart,
-            'targetend2' => $targetend
+            'targetwindow_start' => $targetwindow_start,
+            'targetwindow_end' => $targetwindow_end,
+            'remindercode' => $remindercode
         ];
-
-        // echo '<pre>';
-        // echo '<br />';
-        // echo '<br />';
-        // echo '<br />';
-        // var_dump($targetdate);
-        // var_dump(userdate($targetdate));
-        // var_dump($targetdatestart);
-        // var_dump(userdate($targetdatestart));
-        // var_dump($targetdateend);
-        // var_dump(userdate($targetdateend));
-        // var_dump($daysbeforeexchange);
-        // var_dump($this->db->get_records_sql($sql, $params));
-        // echo '</pre>';
 
         return $this->db->get_records_sql($sql, $params);
     }
@@ -138,12 +111,12 @@ class exchange_manager {
      */
     public function update_reminder_status(int $userid, int $exchangeid, int $remindercode): bool {
         // Get the current record
-        $records = $this->db->get_records('local_equipment_user_exchange', [
+        $record = $this->db->get_record('local_equipment_user_exchange', [
             'userid' => $userid,
             'exchangeid' => $exchangeid
         ]);
 
-        if (!$records) {
+        if (!$record) {
             return false;
         }
 
@@ -151,35 +124,34 @@ class exchange_manager {
         $transaction = $this->db->start_delegated_transaction();
 
         try {
-            foreach ($records as $record) {
-                // Update reminder code based on which reminder was sent and current status
-                if ($remindercode == 1) {
-                    // First reminder (days)
-                    if ($record->reminder_code == 2) {
-                        $record->reminder_code = 9; // Both reminders now sent
-                    } else {
-                        $record->reminder_code = 1; // Only first reminder sent
-                    }
-                } else if ($remindercode == 2) {
-                    // Second reminder (hours)
-                    if ($record->reminder_code == 1) {
-                        $record->reminder_code = 9; // Both reminders now sent
-                    } else {
-                        $record->reminder_code = 2; // Only second reminder sent
-                    }
+            // Update reminder code based on which reminder was sent and current status
+            if ($remindercode == 1) {
+                // First reminder (days)
+                if ($record->reminder_code == 2) {
+                    $record->reminder_code = 9; // Both reminders now sent
+                } else {
+                    $record->reminder_code = 1; // Only first reminder sent
                 }
-
-                $record->timemodified = time();
-
-                $success = $this->db->update_record('local_equipment_user_exchange', $record);
-                if (!$success) {
-                    $transaction->rollback(new \Exception("Failed to update reminder status"));
-                    return false;
+            } else if ($remindercode == 2) {
+                // Second reminder (hours)
+                if ($record->reminder_code == 1) {
+                    $record->reminder_code = 9; // Both reminders now sent
+                } else {
+                    $record->reminder_code = 2; // Only second reminder sent
                 }
             }
 
-            $transaction->allow_commit();
-            return true;
+            $record->timemodified = time();
+
+            $success = $this->db->update_record('local_equipment_user_exchange', $record);
+
+            if ($success) {
+                $transaction->allow_commit();
+                return true;
+            } else {
+                $transaction->rollback(new \Exception("Failed to update reminder status"));
+                return false;
+            }
         } catch (Exception $e) {
             $transaction->rollback($e);
             return false;

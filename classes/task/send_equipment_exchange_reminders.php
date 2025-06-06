@@ -75,17 +75,17 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
         $transaction = $DB->start_delegated_transaction();
 
         try {
-        // Check for days reminder
-        $daysadvance = get_config('local_equipment', 'inadvance_days');
-        if (!empty($daysadvance) && is_numeric($daysadvance)) {
-            $this->process_reminders_for_days((int)$daysadvance);
-        }
+            // Check for days reminder
+            $adminsetting_inadvance_days = get_config('local_equipment', 'inadvance_days');
+            if (!empty($adminsetting_inadvance_days) && is_numeric($adminsetting_inadvance_days)) {
+                $this->process_reminders_for_days((int)$adminsetting_inadvance_days);
+            }
 
-        // Check for hours reminder
-        $hoursadvance = get_config('local_equipment', 'inadvance_hours');
-        if (!empty($hoursadvance) && is_numeric($hoursadvance)) {
-            $this->process_reminders_for_hours((float)$hoursadvance);
-        }
+            // Check for hours reminder
+            $adminsetting_inadvance_hours = get_config('local_equipment', 'inadvance_hours');
+            if (!empty($adminsetting_inadvance_hours) && is_numeric($adminsetting_inadvance_hours)) {
+                $this->process_reminders_for_hours((int)$adminsetting_inadvance_hours);
+            }
 
             // Commit the transaction if everything went well
             $transaction->allow_commit();
@@ -100,13 +100,13 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
     /**
      * Process reminders for a specific number of days before exchange.
      *
-     * @param int $daysbeforeexchange Number of days before exchange to send reminders
+     * @param int $adminsetting_inadvance_hours The inadvance_hours admin setting for the number of days before exchange to send reminders
      */
-    private function process_reminders_for_days($daysbeforeexchange) {
-        mtrace("Processing reminders for $daysbeforeexchange days before exchange...");
+    private function process_reminders_for_days($adminsetting_inadvance_hours) {
+        mtrace("Processing reminders for $adminsetting_inadvance_hours days before exchange...");
 
-        // Calculate the target time (equipment exchanges that are approximately $hoursbeforeexchange from now)
-        // $targettime = time() + ($daysbeforeexchange * DAYSECS);
+        // Calculate the target time (equipment exchanges that are approximately $inadvance_hours from now)
+        // $targettime = time() + ($adminsetting_inadvance_hours * DAYSECS);
 
         // Get reminder timeout from settings
         $timeout = get_config('local_equipment', 'reminder_timeout');
@@ -116,40 +116,48 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
 
         // Calculate the window
         $clock = \core\di::get(\core\clock::class);
-        $targetstart = $clock->now()->getTimestamp();
-        // $targetstart = ;
-        $targetend = $targetstart + ($daysbeforeexchange * DAYSECS);
+        $targetwindow_start = $clock->now()->getTimestamp();
+        // $targetwindow_start = ;
+        $targetwindow_end = $targetwindow_start + ($adminsetting_inadvance_hours * DAYSECS);
 
         // Get users who need reminders
         $userstonotify = $this->exchange_manager->get_users_needing_reminders(
-            $targetstart,
-            $targetend,
+            $targetwindow_start,
+            $targetwindow_end,
             'days'
         );
 
+        // var_dump('$userstonotify');
+        // var_dump($userstonotify);
+        // die();
+
         if (empty($userstonotify)) {
-            mtrace("No users found needing reminders for $daysbeforeexchange days ahead.");
+            mtrace("No users found needing reminders for $adminsetting_inadvance_hours days ahead.");
             return;
         }
 
-        mtrace("Found " . count($userstonotify) . " users to notify about exchanges in the next $daysbeforeexchange day(s).");
+        mtrace("Found " . count($userstonotify) . " users to notify about exchanges in the next ~$adminsetting_inadvance_hours day(s).");
 
         // Send reminders to each user
         foreach ($userstonotify as $userdata) {
-            $this->send_reminder_to_user($userdata, $daysbeforeexchange);
+            $this->send_reminder_to_user($userdata, $adminsetting_inadvance_hours);
         }
     }
 
     /**
      * Process reminders for a specific number of hours before exchange.
      *
-     * @param float $hoursbeforeexchange Number of hours before exchange to send reminders
+     * @param float $inadvance_hours Number of hours before exchange to send reminders as determined by a system administrator in
+     * admin
      */
-    private function process_reminders_for_hours($hoursbeforeexchange) {
-        mtrace("Processing reminders for $hoursbeforeexchange hours before exchange...");
+    private function process_reminders_for_hours($inadvance_hours) {
+        mtrace("Processing reminders for $inadvance_hours hours before exchange...");
 
-        // Calculate the target time (equipment exchanges that are approximately $hoursbeforeexchange from now)
-        $targettime = time() + ($hoursbeforeexchange * HOURSECS);
+        // Calculate the target time (equipment exchanges that are approximately $inadvance_hours from now)
+        $clock = \core\di::get(\core\clock::class);
+        $targetwindow_start = $clock->now()->getTimestamp();
+        $targetwindow_end = $targetwindow_start + ($inadvance_hours * HOURSECS);
+
 
         // Get reminder timeout from settings
         $timeout = get_config('local_equipment', 'reminder_timeout');
@@ -158,22 +166,22 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
         }
 
         // Calculate the window
-        $targetstart = $targettime - ($timeout * HOURSECS / 2);
-        $targetend = $targettime + ($timeout * HOURSECS / 2);
+        // $targetwindow_start = $targetwindow_time - ($timeout * HOURSECS / 2);
+        // $targetwindow_end = $targetwindow_time + ($timeout * HOURSECS / 2);
 
         // Get users who need reminders
         $userstonotify = $this->exchange_manager->get_users_needing_reminders(
-            $targetstart,
-            $targetend,
+            $targetwindow_start,
+            $targetwindow_end,
             'hours'
         );
 
         if (empty($userstonotify)) {
-            mtrace("No users found needing reminders for $hoursbeforeexchange hours ahead.");
+            mtrace("No users found needing reminders for $inadvance_hours hours ahead.");
             return;
         }
 
-        mtrace("Found " . count($userstonotify) . " users to notify about exchanges in ~$hoursbeforeexchange hours");
+        mtrace("Found " . count($userstonotify) . " users to notify about exchanges in ~$inadvance_hours hours");
 
         // Send reminders to each user
         foreach ($userstonotify as $userdata) {
@@ -185,13 +193,17 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
      * Send a reminder to a specific user.
      *
      * @param object $userdata User and exchange data
-     * @param int $daysbeforeexchange Days before the exchange to send out reminders (0 for hours-based reminder). This is different
+     * @param int $inadvance_time Days before the exchange to send out reminders as determined by an admin setting (0 for hours-based reminder). This is different
      * from $daysfromnow seen below, which designates how many days before the exchange it currently is.
      * @return bool Success status
      */
-    private function send_reminder_to_user($userdata, $daysbeforeexchange) {
+    private function send_reminder_to_user($userdata, $inadvance_time) {
         global $DB;
 
+        // echo "\n\nuserdata:\n";
+        // var_dump($userdata->userid);
+
+        // echo "inadvance_time:  $inadvance_time\n\n";
         mtrace("Sending reminder to user {$userdata->userid} for exchange ID {$userdata->exchangeid}");
 
         // Create a transaction for this specific user reminder
@@ -251,8 +263,8 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
 
 
             // Determine if this is a days or hours reminder
-            $remindertype = ($daysbeforeexchange > 0) ? 'days' : 'hours';
-            $remindervalue = ($daysbeforeexchange > 0) ? $daysfromnow : $hoursfromnow;
+            $remindertype = ($inadvance_time > 0) ? 'days' : 'hours';
+            $remindervalue = ($inadvance_time > 0) ? $daysfromnow : $hoursfromnow;
 
             // Prepare message
             $message = $this->template_service->prepare_message(
