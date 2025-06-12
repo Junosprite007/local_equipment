@@ -67,7 +67,7 @@ if ($hassiteconfig) {
         "{$component}/schoolyearrangetoautoselect_start",
         get_string('schoolyearrangetoautoselect_start', 'local_equipment'),
         get_string('schoolyearrangetoautoselect_start_desc', 'local_equipment') . ' ' .
-        get_string('schoolyearrangetoautoselect_appendingdesc', 'local_equipment'),
+            get_string('schoolyearrangetoautoselect_appendingdesc', 'local_equipment'),
         explode('-', local_equipment_get_school_year())[0],
         PARAM_TEXT
     ));
@@ -78,7 +78,7 @@ if ($hassiteconfig) {
         "{$component}/schoolyearrangetoautoselect_end",
         get_string('schoolyearrangetoautoselect_end', 'local_equipment'),
         get_string('schoolyearrangetoautoselect_end_desc', 'local_equipment') . ' ' .
-        get_string('schoolyearrangetoautoselect_appendingdesc', 'local_equipment'),
+            get_string('schoolyearrangetoautoselect_appendingdesc', 'local_equipment'),
         explode('-', local_equipment_get_school_year())[1],
         PARAM_TEXT
     ));
@@ -253,9 +253,9 @@ if ($hassiteconfig) {
     $ADMIN->add(
         $component,
         new admin_category(
-                "{$component}_agreements_cat",
-                new lang_string('agreements', 'local_equipment')
-            )
+            "{$component}_agreements_cat",
+            new lang_string('agreements', 'local_equipment')
+        )
     );
     // Add 'Virtual course consent (vcc) form' subcategory.
     $ADMIN->add(
@@ -342,6 +342,14 @@ if ($hassiteconfig) {
         'local_equipment_addbulkfamilies',
         new lang_string('addbulkfamilies', 'local_equipment'),
         new moodle_url('/local/equipment/addbulkfamilies.php')
+    ));
+
+    // Add the mass text messaging page.
+    $ADMIN->add($component, new admin_externalpage(
+        'local_equipment_mass_text',
+        new lang_string('masstextmessaging', 'local_equipment'),
+        new moodle_url('/local/equipment/mass_text_message.php'),
+        'local/equipment:sendmasstextmessages'
     ));
 
 

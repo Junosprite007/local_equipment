@@ -15,18 +15,32 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other meta-data are defined here.
+ * Services for the Equipment plugin.
  *
  * @package     local_equipment
- * @copyright   2024 onward Joshua Kirby <josh@funlearningcompany.com>
- * @author      Joshua Kirby - CTO @ Fun Learning Company - funlearningcompany.com
+ * @copyright   2025 onwards Joshua Kirby <josh@funlearningcompany.com>
+ * @author      Joshua Kirby
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_equipment';
-$plugin->release = '0.1.0';
-$plugin->version = 2025061000;
-$plugin->requires = 2024042201;
-$plugin->maturity = MATURITY_STABLE;
+$functions = [
+    'local_equipment_get_recipient_count' => [
+        'classname'   => 'local_equipment\external\get_recipient_count',
+        'description' => 'Get count of recipients for equipment mass messaging',
+        'type'        => 'read',
+        'ajax'        => true,
+        'capabilities' => 'local/equipment:viewrecipients',
+        'services'    => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ],
+];
+
+$services = [
+    'Equipment Management Service' => [
+        'functions' => ['local_equipment_get_recipient_count'],
+        'restrictedusers' => 0,
+        'enabled' => 1,
+        'shortname' => 'equipment_service',
+    ],
+];

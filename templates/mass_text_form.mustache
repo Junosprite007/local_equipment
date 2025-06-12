@@ -1,0 +1,88 @@
+{{!
+    This file is part of FLIP Plugins for Moodle
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_equipment/mass_text_form
+
+    Template for the mass text messaging form.
+
+    Context variables:
+    * form_action - The form action URL
+    * max_length - Maximum character length for messages
+}}
+
+<div class="local_equipment_mass_text">
+    <div class="row">
+        <div class="col-md-8">
+            <h2>{{#str}}mass_text_title, local_equipment{{/str}}</h2>
+            <p class="text-muted">{{#str}}mass_text_description, local_equipment{{/str}}</p>
+
+            <form id="mass-text-form" method="post" action="{{form_action}}" class="mt-4">
+                {{#sesskey}}<input type="hidden" name="sesskey" value="{{sesskey}}">{{/sesskey}}
+
+                <div class="form-group mb-3">
+                    <label for="id_message" class="form-label required">
+                        {{#str}}message, local_equipment{{/str}}
+                        <span class="text-danger">*</span>
+                    </label>
+                    <textarea
+                        id="id_message"
+                        name="message"
+                        class="form-control"
+                        rows="4"
+                        data-max-length="{{max_length}}"
+                        placeholder="{{#str}}message_placeholder, local_equipment{{/str}}"
+                        required></textarea>
+                    <div class="form-text">
+                        <span id="char-counter" class="text-muted">{{max_length}} characters remaining</span>
+                    </div>
+                </div>
+
+                <div class="form-group mb-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-paper-plane" aria-hidden="true"></i>
+                        {{#str}}send_message, local_equipment{{/str}}
+                    </button>
+                    <a href="{{back_url}}" class="btn btn-secondary ms-2">
+                        {{#str}}cancel{{/str}}
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fa fa-info-circle" aria-hidden="true"></i>
+                        {{#str}}preview, local_equipment{{/str}}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>{{#str}}estimated_recipients, local_equipment{{/str}}</strong><br>
+                        <span id="recipient-count" class="text-muted">Loading...</span>
+                    </div>
+
+                    <div class="alert alert-info small">
+                        <i class="fa fa-lightbulb-o" aria-hidden="true"></i>
+                        {{#str}}mass_text_tips, local_equipment{{/str}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

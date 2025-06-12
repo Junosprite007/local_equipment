@@ -100,13 +100,13 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
     /**
      * Process reminders for a specific number of days before exchange.
      *
-     * @param int $adminsetting_inadvance_hours The inadvance_hours admin setting for the number of days before exchange to send reminders
+     * @param int $adminsetting_inadvance_days The inadvance_days admin setting for the number of days before exchange to send reminders
      */
-    private function process_reminders_for_days($adminsetting_inadvance_hours) {
-        mtrace("Processing reminders for $adminsetting_inadvance_hours days before exchange...");
+    private function process_reminders_for_days($adminsetting_inadvance_days) {
+        mtrace("Processing reminders for $adminsetting_inadvance_days days before exchange...");
 
-        // Calculate the target time (equipment exchanges that are approximately $inadvance_hours from now)
-        // $targettime = time() + ($adminsetting_inadvance_hours * DAYSECS);
+        // Calculate the target time (equipment exchanges that are approximately $inadvance_days from now)
+        // $targettime = time() + ($adminsetting_inadvance_days * DAYSECS);
 
         // Get reminder timeout from settings
         $timeout = get_config('local_equipment', 'reminder_timeout');
@@ -118,7 +118,7 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
         $clock = \core\di::get(\core\clock::class);
         $targetwindow_start = $clock->now()->getTimestamp();
         // $targetwindow_start = ;
-        $targetwindow_end = $targetwindow_start + ($adminsetting_inadvance_hours * DAYSECS);
+        $targetwindow_end = $targetwindow_start + ($adminsetting_inadvance_days * DAYSECS);
 
         // Get users who need reminders
         $userstonotify = $this->exchange_manager->get_users_needing_reminders(
@@ -132,15 +132,15 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
         // die();
 
         if (empty($userstonotify)) {
-            mtrace("No users found needing reminders for $adminsetting_inadvance_hours days ahead.");
+            mtrace("No users found needing reminders for $adminsetting_inadvance_days days ahead.");
             return;
         }
 
-        mtrace("Found " . count($userstonotify) . " users to notify about exchanges in the next ~$adminsetting_inadvance_hours day(s).");
+        mtrace("Found " . count($userstonotify) . " users to notify about exchanges in the next ~$adminsetting_inadvance_days day(s).");
 
         // Send reminders to each user
         foreach ($userstonotify as $userdata) {
-            $this->send_reminder_to_user($userdata, $adminsetting_inadvance_hours);
+            $this->send_reminder_to_user($userdata, $adminsetting_inadvance_days);
         }
     }
 
@@ -286,10 +286,15 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
             $success = false;
             switch ($method) {
                 case 'text':
+                    // The 'infogateway'property in the config call below, refers to the type of gateway that you'll be using to
+                    // send a text to users. In the case of the equipment plug-in and AWS, 'info'is another way of saying
+                    // 'Transactional'. In other words, 'infogateway' refers to whatever message type you have associated with
+                    // 'Transactional' in AWS SNS/ End User Messaging.
                     $providerid = get_config('local_equipment', 'infogateway');
+
                     // Only use phone2 (mobile phone) for SMS
                     if (!empty($user->phone2)) {
-                        $success = \local_equipment_send_sms($providerid, $user->phone2, $message, 'Transactional');
+                        $success = local_equipment_send_sms($providerid, $user->phone2, $message, 'Transactional');
                         if ($success) {
                             mtrace("Successfully sent text reminder to user {$user->id}");
                         } else {

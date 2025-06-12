@@ -162,6 +162,7 @@ function local_equipment_send_sms($gatewayid, $tonumber, $message, $messagetype)
         if (!$gatewayobj) {
             throw new moodle_exception('invalidgatewayid', 'local_equipment', '', null, "\$gatewayid = $gatewayid");
         }
+
         switch ($gatewayobj->gateway) {
             case 'smsgateway_aws\gateway':
                 return local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $messagetype);
@@ -1988,19 +1989,26 @@ function local_equipment_get_sms_gateways($enabledonly = true) {
     return $gatewayoptions;
 }
 
+/**
+ * Gets all the phone providers that are available based on whether or not the API setting exist.
+ * @param object $gatewayobj Object storing all necessary information for AWS to send a text message.
+ * @param string $tonumber A valid phone number to send text messages to.
+ * @param string $message The text message string that will be sent.]
+ * @param string $messagetype The message typed that will be read by AWS SNS To determine which number to use for sending the message. Defaults to 'Transactional'.
+ * @return object The complete response from AWS.
+ */
 // Move this to a separate function for better organization
-function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $messagetype) {
+function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $messagetype = 'Transactional') {
     global $SITE, $CFG;
-
-    // echo '<pre>';
-    // var_dump($gatewayobj);
-    // echo '</pre>';
-    // die();
 
     $responseobject = new stdClass();
     $responseobject->errormessage = '';
     $responseobject->errorobject = new stdClass();
     $responseobject->success = false;
+    $responseobject->errortype = '';
+    $responseobject->messageid = '';
+
+    
 
     try {
         $awsconfig = json_decode($gatewayobj->config);
@@ -2013,15 +2021,6 @@ function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $m
             ]
         ]);
 
-        // // Validate originator number
-        // $originator = ($messagetype === 'OTP')
-        //     ? get_config('local_equipment', 'awsotporiginatorphone')
-        //     : get_config('local_equipment', 'awsinfooriginatorphone');
-
-        // if (empty($originator)) {
-        //     throw new moodle_exception('awsoriginatornotconfigured', 'local_equipment');
-        // }
-
         $result = $client->publish([
             'Message' => $message,
             'PhoneNumber' => $tonumber,
@@ -2032,7 +2031,7 @@ function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $m
                 ],
                 'AWS.SNS.SMS.SMSType' => [
                     'DataType' => 'String',
-                    'StringValue' => $messagetype === 'OTP' ? 'Transactional' : 'Promotional'
+                    'StringValue' => $messagetype
                 ]
             ]
         ]);
@@ -2041,15 +2040,62 @@ function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $m
             $responseobject->success = true;
             $responseobject->messageid = $result['MessageId'];
         } else {
-            throw new moodle_exception('awssmssendfailed', 'local_equipment');
+            $responseobject->errortype = 'aws_api_error';
+            $responseobject->errormessage = get_string('awssmssendfailed', 'local_equipment');
         }
     } catch (Aws\Exception\AwsException $e) {
-        $responseobject->errorobject->awserror = $e->getMessage();
-        $responseobject->errormessage = get_string(
-            'awssmsfailedwithcode',
-            'local_equipment',
-            $responseobject->errorobject
-        );
+        $responseobject->success = false;
+        $awserrormessage = $e->getMessage();
+        $awserrorcode = $e->getAwsErrorCode();
+
+        // Categorize AWS errors for better user feedback
+        if (
+            strpos($awserrormessage, 'No quota left') !== false ||
+            strpos($awserrormessage, 'quota') !== false ||
+            strpos($awserrormessage, 'Quota') !== false ||
+            $awserrorcode === 'Throttling'
+        ) {
+            $responseobject->errortype = 'quota_exceeded';
+            $responseobject->errormessage = get_string('awsquotaexceeded', 'local_equipment');
+        } else if (
+            strpos($awserrormessage, 'Invalid parameter') !== false ||
+            strpos($awserrormessage, 'invalid phone number') !== false ||
+            $awserrorcode === 'InvalidParameter'
+        ) {
+            $responseobject->errortype = 'invalid_phone';
+            $responseobject->errormessage = get_string('awsinvalidphone', 'local_equipment', $tonumber);
+        } else if (
+            strpos($awserrormessage, 'Unreachable') !== false ||
+            $awserrorcode === 'EndpointDisabled'
+        ) {
+            $responseobject->errortype = 'unreachable_phone';
+            $responseobject->errormessage = get_string('awsunreachablephone', 'local_equipment', $tonumber);
+        } else if (
+            strpos($awserrormessage, 'Access') !== false ||
+            strpos($awserrormessage, 'Forbidden') !== false ||
+            $awserrorcode === 'AuthorizationError'
+        ) {
+            $responseobject->errortype = 'access_denied';
+            $responseobject->errormessage = get_string('awsaccessdenied', 'local_equipment');
+        } else if (
+            strpos($awserrormessage, 'Service') !== false ||
+            strpos($awserrormessage, 'Internal') !== false ||
+            $awserrorcode === 'InternalError'
+        ) {
+            $responseobject->errortype = 'service_error';
+            $responseobject->errormessage = get_string('awsserviceerror', 'local_equipment');
+        } else {
+            $responseobject->errortype = 'aws_error';
+            $responseobject->errormessage = get_string('awsgeneralerror', 'local_equipment', $awserrormessage);
+        }
+
+        $responseobject->errorobject->awserror = $awserrormessage;
+        $responseobject->errorobject->awserrorcode = $awserrorcode;
+    } catch (Exception $e) {
+        $responseobject->success = false;
+        $responseobject->errortype = 'general_error';
+        $responseobject->errormessage = get_string('smsgeneralerror', 'local_equipment', $e->getMessage());
+        $responseobject->errorobject->generalerror = $e->getMessage();
     }
 
     return $responseobject;
@@ -3260,6 +3306,71 @@ function local_equipment_generate_family_notification(string $familyname, stdCla
     $html .= html_writer::end_div(); // local-equipment-family-notification
 
     return $html;
+}
+
+/**
+ * Get students enrolled in courses with future end dates.
+ *
+ * @return array Array of unique student user IDs
+ */
+function local_equipment_get_students_in_courses_with_end_dates() {
+    $manager = new \local_equipment\mass_text_manager();
+    return $manager->get_students_in_courses_with_end_dates();
+}
+
+/**
+ * Check if a user's phone number is verified.
+ *
+ * @param int $userid User ID
+ * @return bool True if phone is verified
+ */
+function local_equipment_is_phone_verified($userid) {
+    $manager = new \local_equipment\mass_text_manager();
+    return $manager->is_phone_verified($userid);
+}
+
+/**
+ * Send mass text messages to parents and admin.
+ *
+ * @param string $message Message to send
+ * @param int $adminuserid Admin user ID for confirmation
+ * @return object Results object with success/failure counts and messages
+ */
+function local_equipment_send_mass_text_to_parents($message, $adminuserid) {
+    $manager = new \local_equipment\mass_text_manager();
+
+    // Get students in active courses
+    $studentids = $manager->get_students_in_courses_with_end_dates();
+
+    if (empty($studentids)) {
+        $results = (object)[
+            'success_count' => 0,
+            'failure_count' => 0,
+            'total_recipients' => 0,
+            'successes' => [],
+            'failures' => [get_string('nostudentsinactivecourses', 'local_equipment')],
+            'admin_confirmation_sent' => false
+        ];
+        return $results;
+    }
+
+    // Get verified parents for these students
+    $parents = $manager->get_verified_parents_for_students($studentids);
+
+    if (empty($parents)) {
+        $results = (object)[
+            'success_count' => 0,
+            'failure_count' => 0,
+            'total_recipients' => 0,
+            'successes' => [],
+            'failures' => [get_string('noparentsverifiedphones', 'local_equipment')],
+            'admin_confirmation_sent' => false
+        ];
+        return $results;
+    }
+
+    // Send the messages
+    return $manager->send_mass_messages($message, $parents, $adminuserid);
 }
 
 // /**
