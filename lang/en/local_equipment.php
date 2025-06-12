@@ -875,3 +875,37 @@ $string['awsaccessdenied'] = 'AWS access denied. Please check your AWS credentia
 $string['awsserviceerror'] = 'AWS service error. Please try again later or contact support.';
 $string['awsgeneralerror'] = 'AWS error: {$a}';
 $string['smsgeneralerror'] = 'SMS sending error: {$a}';
+
+
+// Task and reminder strings
+$string['taskname_sendexchangereminders'] = 'Send equipment exchange reminders';
+$string['equipmentexchangereminder'] = 'Equipment exchange reminder';
+
+// Enhanced error messages for SMS sending
+$string['smsvalidationerror'] = 'SMS validation error: {$a}';
+$string['gatewaynotfound'] = 'SMS gateway not found or disabled';
+$string['configurationerror'] = 'SMS gateway configuration error';
+$string['clientinitializationerror'] = 'Failed to initialize SMS client';
+$string['unsupportedgateway'] = 'Unsupported SMS gateway type: {$a}';
+$string['phonevalidationerror'] = 'Phone number validation failed: {$a}';
+$string['messageidmissing'] = 'SMS service did not return a message ID';
+
+// AWS specific error messages (if not already present)
+$string['awsquotaexceeded'] = 'AWS SMS quota exceeded. Please check your AWS account limits and usage.';
+$string['awsinvalidphone'] = 'Invalid phone number: {$a}. Please verify the phone number format.';
+$string['awsunreachablephone'] = 'Phone number {$a} is unreachable or blocked.';
+$string['awsaccessdenied'] = 'AWS access denied. Please check your AWS credentials and permissions.';
+$string['awsserviceerror'] = 'AWS service error. Please try again later or contact support.';
+$string['awsgeneralerror'] = 'AWS error: {$a}';
+$string['smsgeneralerror'] = 'SMS sending error: {$a}';
+
+// Debugging and admin strings
+$string['smsgatewayvalidated'] = 'SMS gateway validated: {$a}';
+$string['reminderprocessingstarted'] = 'Processing {$a->type} reminders for {$a->count} users';
+$string['reminderprocessingcomplete'] = 'Reminder processing complete. Processed: {$a->processed}, Errors: {$a->errors}';
+$string['userphonemissing'] = 'User {$a} has no mobile phone number configured';
+$string['invalidremindermethod'] = 'Invalid reminder method "{$a->method}" for user {$a->userid}';
+
+// Time format strings for templates
+$string['strftimedaymonth'] = '%A, %B %d';
+$string['strftimetime12'] = '%I:%M %p';

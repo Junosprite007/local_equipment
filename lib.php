@@ -139,138 +139,72 @@ function local_equipment_get_countries() {
 
 
 /**
- * Sends an SMS message to a phone number.
+ * Sends an SMS message to a phone number with enhanced error handling.
  *
  * @param string $gatewayid The ID of the SMS gateway to use for sending text messages.
  * @param string $tonumber The phone number to send the SMS message to.
  * @param string $message The message to send in the SMS message.
- * @param string $messagetype The type of message to send. This may change depending on the chosen provider. AWS uses
- * 'Transactional' for OTP and informational messages and 'Promotional' for marketing messages.
- * @return object
+ * @param string $messagetype The type of message to send (e.g., 'Transactional', 'Promotional').
+ * @return object Enhanced response object with detailed error information
  */
 function local_equipment_send_sms($gatewayid, $tonumber, $message, $messagetype) {
-    global  $DB;
-    // Get all SMS gateways
+    global $DB;
 
+    // Initialize comprehensive response object
     $responseobject = new stdClass();
-    $responseobject->errormessage = '';
-    $responseobject->errorobject = new stdClass();
     $responseobject->success = false;
+    $responseobject->errormessage = '';
+    $responseobject->errortype = '';
+    $responseobject->errorobject = new stdClass();
+    $responseobject->messageid = '';
+    $responseobject->tonumber = $tonumber;
+    $responseobject->gatewayid = $gatewayid;
 
     try {
-        $gatewayobj = $DB->get_record('sms_gateways', ['id' => $gatewayid]);
-        if (!$gatewayobj) {
-            throw new moodle_exception('invalidgatewayid', 'local_equipment', '', null, "\$gatewayid = $gatewayid");
+        // Validate inputs
+        if (empty($gatewayid) || empty($tonumber) || empty($message)) {
+            $responseobject->errortype = 'validation_error';
+            $responseobject->errormessage = 'Missing required parameters: gatewayid, tonumber, or message';
+            return $responseobject;
         }
 
+        // Get and validate gateway
+        $gatewayobj = $DB->get_record('sms_gateways', ['id' => $gatewayid, 'enabled' => 1]);
+        if (!$gatewayobj) {
+            $responseobject->errortype = 'gateway_error';
+            $responseobject->errormessage = "Invalid or disabled gateway ID: {$gatewayid}";
+            return $responseobject;
+        }
+
+        // Validate phone number format
+        $phoneobj = local_equipment_parse_phone_number($tonumber);
+        if (!empty($phoneobj->errors)) {
+            $responseobject->errortype = 'phone_validation_error';
+            $responseobject->errormessage = 'Invalid phone number: ' . implode(', ', $phoneobj->errors);
+            return $responseobject;
+        }
+
+        // Use validated phone number
+        $tonumber = $phoneobj->phone;
+        $responseobject->tonumber = $tonumber;
+
+        // Route to appropriate gateway handler
         switch ($gatewayobj->gateway) {
-            case 'smsgateway_aws\gateway':
+            case 'smsgateway_aws\\gateway':
                 return local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $messagetype);
 
-                // case 'infobip':
-                //     // Just for testing:
-                //     // $responseobject->success = true;
-                //     // break;
-
-                //     $infobipapikey = get_config('local_equipment', 'infobipapikey');
-                //     $infobipapibaseurl = get_config('local_equipment', 'infobipapibaseurl');
-                //     $curl = new curl();
-
-                //     // Set headers
-                //     $headers = [
-                //         'Authorization: App ' . $infobipapikey,
-                //         'Content-Type: application/json',
-                //         'Accept: application/json'
-                //     ];
-
-                //     $curl->setHeader($headers);
-                //     $postdata = '{"messages":[{"destinations":[{"to":"' . $tonumber . '"}],"from":"' . $SITE->shortname . '","text":"' . $message . '"}]}';
-
-                //     // Make the request
-                //     $responseobject->response = $curl->post('https://' . $infobipapibaseurl . '/sms/2/text/advanced', $postdata);
-
-                //     // Get the HTTP response code
-                //     $info = $curl->get_info();
-                //     echo '<pre>';
-                //     var_dump($responseobject);
-                //     echo '</pre>';
-
-                //     if ($info['http_code'] >= 200 && $info['http_code'] < 300) {
-                //         // The request was successful
-                //         $responseobject->success = true;
-                //     } else {
-                //         // The request failed
-                //         $responseobject->errorobject->httpcode = $info['http_code'];
-                //         $responseobject->errorobject->curlcode = $curl->get_errno();
-                //         $responseobject->errormessage = get_string('httprequestfailedwithcode', 'local_equipment', $responseobject->errorobject);
-                //         throw new moodle_exception('httprequestfailed', 'local_equipment', '', null, $responseobject->errormessage);
-                //     }
-                //     break;
-                // case 'twilio':
-                // Just for testing:
-                // $responseobject->success = true;
-                // break;
-                // $twilioaccountsid = get_config('local_equipment', 'twilioaccountsid');
-                // $twilioauthtoken = get_config('local_equipment', 'twilioauthtoken');
-                // $twilionumber = get_config('local_equipment', 'twilionumber');
-
-                // $curl = new curl();
-
-                // // Set headers
-                // $headers = [
-                //         'Content-Type: application/x-www-form-urlencoded'
-                //     ];
-
-                // $curl->setHeader($headers);
-
-                // // Set post data
-                // $postdata = http_build_query([
-                //     'To' => $tonumber,
-                //     'From' => $twilionumber,
-                //     'Body' => $message
-                // ]);
-
-                // // Set Twilio API URL
-                // $twilioapiurl = 'https://api.twilio.com/2010-04-01/Accounts/' . $twilioaccountsid . '/Messages.json';
-
-                // // Set authentication
-                // $curl->setopt(CURLOPT_USERPWD, $twilioaccountsid . ':' . $twilioauthtoken);
-
-                // // Make the request
-                // $responseobject->response = $curl->post($twilioapiurl, $postdata);
-
-                // // Get the HTTP response code
-                // $info = $curl->get_info();
-                // $responseobject->errormessage = '';
-                // $responseobject->errorobject = new stdClass();
-
-                // if ($info['http_code'] >= 200 && $info['http_code'] < 300) {
-                //     // The request was successful
-                //     $responseobject->success = true;
-                // } else {
-                //     // The request failed
-                //     $responseobject->errorobject->httpcode = $info['http_code'];
-                //     $responseobject->errorobject->curlcode = $curl->get_errno();
-                //     $responseobject->errormessage = get_string('httprequestfailedwithcode', 'local_equipment', $responseobject->errorobject);
-                //     $responseobject->success = false;
-                //     throw new moodle_exception('httprequestfailed', 'local_equipment', '', null, $responseobject->errormessage);
-                // }
-                // break;
-
             default:
+                $responseobject->errortype = 'unsupported_gateway';
+                $responseobject->errormessage = "Unsupported gateway type: {$gatewayobj->gateway}";
                 break;
         }
     } catch (Exception $e) {
-        // Handle the exception
-        $responseobject->errormessage = $e->getMessage();
+        $responseobject->errortype = 'exception';
+        $responseobject->errormessage = 'Exception occurred: ' . $e->getMessage();
+        $responseobject->errorobject->exception = $e->getMessage();
+        $responseobject->errorobject->trace = $e->getTraceAsString();
     }
-    // echo '<br />';
-    // echo '<br />';
-    // echo '<br />';
-    // echo '<pre>';
-    // var_dump($responseobject);
-    // echo '</pre>';
-    //             die();
+
     return $responseobject;
 }
 
@@ -1990,37 +1924,52 @@ function local_equipment_get_sms_gateways($enabledonly = true) {
 }
 
 /**
- * Gets all the phone providers that are available based on whether or not the API setting exist.
- * @param object $gatewayobj Object storing all necessary information for AWS to send a text message.
- * @param string $tonumber A valid phone number to send text messages to.
- * @param string $message The text message string that will be sent.]
- * @param string $messagetype The message typed that will be read by AWS SNS To determine which number to use for sending the message. Defaults to 'Transactional'.
- * @return object The complete response from AWS.
+ * Enhanced AWS gateway handler with improved error categorization.
+ *
+ * @param object $gatewayobj Gateway configuration object
+ * @param string $tonumber Validated phone number
+ * @param string $message Message content
+ * @param string $messagetype Message type
+ * @return object Enhanced response object
  */
-// Move this to a separate function for better organization
 function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $messagetype = 'Transactional') {
-    global $SITE, $CFG;
+    global $SITE;
 
     $responseobject = new stdClass();
-    $responseobject->errormessage = '';
-    $responseobject->errorobject = new stdClass();
     $responseobject->success = false;
+    $responseobject->errormessage = '';
     $responseobject->errortype = '';
+    $responseobject->errorobject = new stdClass();
     $responseobject->messageid = '';
-
-    
+    $responseobject->tonumber = $tonumber;
+    $responseobject->gatewayid = $gatewayobj->id;
 
     try {
+        // Validate AWS configuration
         $awsconfig = json_decode($gatewayobj->config);
-        $client = new Aws\Sns\SnsClient([
-            'version' => 'latest',
-            'region' => $awsconfig->api_region,
-            'credentials' => [
-                'key' => $awsconfig->api_key,
-                'secret' => $awsconfig->api_secret,
-            ]
-        ]);
+        if (!$awsconfig || empty($awsconfig->api_key) || empty($awsconfig->api_secret) || empty($awsconfig->api_region)) {
+            $responseobject->errortype = 'configuration_error';
+            $responseobject->errormessage = 'Incomplete AWS gateway configuration';
+            return $responseobject;
+        }
 
+        // Initialize AWS SNS client with error handling
+        try {
+            $client = new Aws\Sns\SnsClient([
+                'version' => 'latest',
+                'region' => $awsconfig->api_region,
+                'credentials' => [
+                    'key' => $awsconfig->api_key,
+                    'secret' => $awsconfig->api_secret,
+                ]
+            ]);
+        } catch (Exception $e) {
+            $responseobject->errortype = 'aws_client_error';
+            $responseobject->errormessage = 'Failed to initialize AWS SNS client: ' . $e->getMessage();
+            return $responseobject;
+        }
+
+        // Send message with comprehensive error handling
         $result = $client->publish([
             'Message' => $message,
             'PhoneNumber' => $tonumber,
@@ -2036,17 +1985,23 @@ function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $m
             ]
         ]);
 
-        if ($result['MessageId']) {
+        if (isset($result['MessageId']) && !empty($result['MessageId'])) {
             $responseobject->success = true;
             $responseobject->messageid = $result['MessageId'];
         } else {
             $responseobject->errortype = 'aws_api_error';
-            $responseobject->errormessage = get_string('awssmssendfailed', 'local_equipment');
+            $responseobject->errormessage = 'AWS SNS did not return a message ID';
+            $responseobject->errorobject->awsresponse = $result;
         }
     } catch (Aws\Exception\AwsException $e) {
         $responseobject->success = false;
         $awserrormessage = $e->getMessage();
         $awserrorcode = $e->getAwsErrorCode();
+
+        // Store AWS error details
+        $responseobject->errorobject->awserror = $awserrormessage;
+        $responseobject->errorobject->awserrorcode = $awserrorcode;
+        $responseobject->errorobject->awsrequestid = $e->getAwsRequestId();
 
         // Categorize AWS errors for better user feedback
         if (
@@ -2088,14 +2043,11 @@ function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $m
             $responseobject->errortype = 'aws_error';
             $responseobject->errormessage = get_string('awsgeneralerror', 'local_equipment', $awserrormessage);
         }
-
-        $responseobject->errorobject->awserror = $awserrormessage;
-        $responseobject->errorobject->awserrorcode = $awserrorcode;
     } catch (Exception $e) {
-        $responseobject->success = false;
         $responseobject->errortype = 'general_error';
         $responseobject->errormessage = get_string('smsgeneralerror', 'local_equipment', $e->getMessage());
         $responseobject->errorobject->generalerror = $e->getMessage();
+        $responseobject->errorobject->trace = $e->getTraceAsString();
     }
 
     return $responseobject;
