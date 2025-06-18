@@ -410,6 +410,88 @@ if ($hassiteconfig) {
             '',
             $options
         ));
+        $settingspage->add(new admin_setting_configtext(
+            'local_equipment/awsinfooriginatorphone',
+            new lang_string('awsinfooriginatorphone', 'local_equipment'),
+            new lang_string('awsinfooriginatorphone_desc', 'local_equipment'),
+            '',
+            PARAM_TEXT,
+            69
+        ));
+        $settingspage->add(new admin_setting_configtext(
+            'local_equipment/awsotporiginatorphone',
+            new lang_string('awsotporiginatorphone', 'local_equipment'),
+            new lang_string('awsotporiginatorphone_desc', 'local_equipment'),
+            '',
+            PARAM_TEXT,
+            69
+        ));
+        $settingspage->add(new admin_setting_configtext(
+            'local_equipment/awsinfopoolid',
+            new lang_string('awsinfopoolid', 'local_equipment'),
+            new lang_string('awsinfopoolid_desc', 'local_equipment'),
+            '',
+            PARAM_TEXT,
+            69
+        ));
+        $settingspage->add(new admin_setting_configtext(
+            'local_equipment/awsotppoolid',
+            new lang_string('awsotppoolid', 'local_equipment'),
+            new lang_string('awsotppoolid_desc', 'local_equipment'),
+            '',
+            PARAM_TEXT,
+            69
+        ));
+
+        // AWS Configuration Set (optional)
+        $settingspage->add(new admin_setting_configtext(
+            'local_equipment/awsconfigurationset',
+            new lang_string('awsconfigurationset', 'local_equipment'),
+            new lang_string('awsconfigurationset_desc', 'local_equipment'),
+            '',
+            PARAM_ALPHANUMEXT,
+            30
+        ));
+
+        // AWS info pool ID
+        $settingspage->add(new admin_setting_configtext(
+            'local_equipment/awsinfopoolid',
+            new lang_string('awsinfopoolid', 'local_equipment'),
+            new lang_string('awsinfopoolid_desc', 'local_equipment'),
+            '',
+            PARAM_ALPHANUMEXT,
+            50
+        ));
+
+        // AWS OTP pool ID
+        $settingspage->add(new admin_setting_configtext(
+            'local_equipment/awsotppoolid',
+            new lang_string('awsotppoolid', 'local_equipment'),
+            new lang_string('awsotppoolid_desc', 'local_equipment'),
+            '',
+            PARAM_ALPHANUMEXT,
+            50
+        ));
+
+        // AWS info originator phone number
+        $settingspage->add(new admin_setting_configtext(
+            'local_equipment/awsinfooriginatorphone',
+            new lang_string('awsinfooriginatorphone', 'local_equipment'),
+            new lang_string('awsinfooriginatorphone_desc', 'local_equipment'),
+            '',
+            PARAM_TEXT,
+            20
+        ));
+
+        // AWS OTP originator phone number
+        $settingspage->add(new admin_setting_configtext(
+            'local_equipment/awsotporiginatorphone',
+            new lang_string('awsotporiginatorphone', 'local_equipment'),
+            new lang_string('awsotporiginatorphone_desc', 'local_equipment'),
+            '',
+            PARAM_TEXT,
+            20
+        ));
 
         // // Infobip
         // $link = html_writer::link('https://portal.infobip.com/', get_string('here', 'local_equipment'));
@@ -492,38 +574,6 @@ if ($hassiteconfig) {
         //     'local_equipment/awsregion',
         //     new lang_string('awsregion', 'local_equipment'),
         //     new lang_string('awsregion_desc', 'local_equipment'),
-        //     '',
-        //     PARAM_TEXT,
-        //     69
-        // ));
-        // $settingspage->add(new admin_setting_configtext(
-        //     'local_equipment/awsinfopoolid',
-        //     new lang_string('awsinfopoolid', 'local_equipment'),
-        //     new lang_string('awsinfopoolid_desc', 'local_equipment'),
-        //     '',
-        //     PARAM_TEXT,
-        //     69
-        // ));
-        // $settingspage->add(new admin_setting_configtext(
-        //     'local_equipment/awsotppoolid',
-        //     new lang_string('awsotppoolid', 'local_equipment'),
-        //     new lang_string('awsotppoolid_desc', 'local_equipment'),
-        //     '',
-        //     PARAM_TEXT,
-        //     69
-        // ));
-        // $settingspage->add(new admin_setting_configtext(
-        //     'local_equipment/awsinfooriginatorphone',
-        //     new lang_string('awsinfooriginatorphone', 'local_equipment'),
-        //     new lang_string('awsinfooriginatorphone_desc', 'local_equipment'),
-        //     '',
-        //     PARAM_TEXT,
-        //     69
-        // ));
-        // $settingspage->add(new admin_setting_configtext(
-        //     'local_equipment/awsotporiginatorphone',
-        //     new lang_string('awsotporiginatorphone', 'local_equipment'),
-        //     new lang_string('awsotporiginatorphone_desc', 'local_equipment'),
         //     '',
         //     PARAM_TEXT,
         //     69

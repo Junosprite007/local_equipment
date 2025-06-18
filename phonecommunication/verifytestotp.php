@@ -53,7 +53,7 @@ if (!empty($CFG->notextever)) {
 
 $data = $form->get_data();
 if ($data) {
-    $responseobject = local_equipment_verify_otp($data->otp);
+    $responseobject = local_equipment_verify_otp($data->otp, true);
     // We're eventually going to need to handle Moodle debugging options. Check out 'testoutgoingmailconf.php' for an example.
 
     if ($responseobject->success) {

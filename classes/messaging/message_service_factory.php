@@ -27,10 +27,6 @@ namespace local_equipment\messaging;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once(__DIR__ . '/message_service_interface.php');
-require_once(__DIR__ . '/sms_message_service.php');
-require_once(__DIR__ . '/email_message_service.php');
-
 /**
  * Factory class for creating message service instances.
  *
@@ -41,7 +37,7 @@ class message_service_factory {
     /**
      * Create the appropriate messaging service based on the method.
      *
-     * @param string $method Messaging method ('email', 'sms', or 'auto')
+     * @param string $method Messaging method ('email', 'sms', 'api', 'email_gateway', 'debug', or 'auto')
      * @return message_service_interface Messaging service instance
      */
     public static function create(string $method = 'auto'): message_service_interface {
@@ -62,8 +58,19 @@ class message_service_factory {
             case 'text':
                 return new sms_message_service();
 
+            case 'api':
+                return new api_message_service();
+
+            case 'email_gateway':
+            case 'carrier_email':
+                return new email_gateway_message_service();
+
+            case 'debug':
+            case 'test':
+                return new debug_message_service();
+
             default:
-                debugging("Unknown messaging method: $method, falling back to SMS", DEBUG_DEVELOPER);
+                local_equipment_debug_log("Unknown messaging method: $method, falling back to SMS");
                 return new sms_message_service();
         }
     }
@@ -71,7 +78,7 @@ class message_service_factory {
     /**
      * Send a message using the appropriate service based on the method.
      *
-     * @param string $method Messaging method ('email', 'sms', or 'auto')
+     * @param string $method Messaging method ('email', 'sms', 'api', 'email_gateway', 'debug', or 'auto')
      * @param string $recipient Recipient contact info (email or phone)
      * @param string $message Message content
      * @param array $options Additional options for sending
@@ -80,5 +87,70 @@ class message_service_factory {
     public static function send_message(string $method, string $recipient, string $message, array $options = []): bool {
         $service = self::create($method);
         return $service->send_message($recipient, $message, $options);
+    }
+
+    /**
+     * Get all available messaging methods.
+     *
+     * @return array Array of method => description
+     */
+    public static function get_available_methods(): array {
+        return [
+            'sms' => 'SMS via AWS End User Messaging',
+            'email' => 'Email messages',
+            'api' => 'Custom API integration',
+            'email_gateway' => 'SMS via carrier email gateways',
+            'debug' => 'Debug mode (logs only)'
+        ];
+    }
+
+    /**
+     * Validate configuration for a specific messaging method.
+     *
+     * @param string $method Messaging method to validate
+     * @return array Validation results
+     */
+    public static function validate_method_configuration(string $method): array {
+        try {
+            $service = self::create($method);
+
+            // Check if the service has a validate_configuration method
+            if (method_exists($service, 'validate_configuration')) {
+                return $service->validate_configuration();
+            } else {
+                return [
+                    'method' => $method,
+                    'configured' => true,
+                    'errors' => [],
+                    'warnings' => ['Validation not available for this method']
+                ];
+            }
+        } catch (Exception $e) {
+            return [
+                'method' => $method,
+                'configured' => false,
+                'errors' => ['Failed to create service: ' . $e->getMessage()],
+                'warnings' => []
+            ];
+        }
+    }
+
+    /**
+     * Get the best available messaging method based on configuration.
+     *
+     * @return string Best available method
+     */
+    public static function get_best_available_method(): string {
+        $methods = ['sms', 'email', 'api', 'email_gateway'];
+
+        foreach ($methods as $method) {
+            $validation = self::validate_method_configuration($method);
+            if (empty($validation['errors'])) {
+                return $method;
+            }
+        }
+
+        // If no methods are properly configured, return debug
+        return 'debug';
     }
 }

@@ -145,9 +145,10 @@ function local_equipment_get_countries() {
  * @param string $tonumber The phone number to send the SMS message to.
  * @param string $message The message to send in the SMS message.
  * @param string $messagetype The type of message to send (e.g., 'Transactional', 'Promotional').
+ * @param string $messagetype_eq The type of message you want to send. Options are currently: 'info', 'otp'.
  * @return object Enhanced response object with detailed error information
  */
-function local_equipment_send_sms($gatewayid, $tonumber, $message, $messagetype) {
+function local_equipment_send_sms($gatewayid, $tonumber, $message, $messagetype, $messagetype_eq) {
     global $DB;
 
     // Initialize comprehensive response object
@@ -159,6 +160,8 @@ function local_equipment_send_sms($gatewayid, $tonumber, $message, $messagetype)
     $responseobject->messageid = '';
     $responseobject->tonumber = $tonumber;
     $responseobject->gatewayid = $gatewayid;
+
+    $poolid = local_equipment_get_pool_id_for_message_type($messagetype_eq);
 
     try {
         // Validate inputs
@@ -191,7 +194,7 @@ function local_equipment_send_sms($gatewayid, $tonumber, $message, $messagetype)
         // Route to appropriate gateway handler
         switch ($gatewayobj->gateway) {
             case 'smsgateway_aws\\gateway':
-                return local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $messagetype);
+                return local_equipment_handle_aws_gateway_with_pool($gatewayobj, $tonumber, $message, $messagetype, $poolid);
 
             default:
                 $responseobject->errortype = 'unsupported_gateway';
@@ -1924,15 +1927,18 @@ function local_equipment_get_sms_gateways($enabledonly = true) {
 }
 
 /**
- * Enhanced AWS gateway handler with improved error categorization.
+ * FINAL FIX: Enhanced AWS gateway handler with optional configuration set.
+ * This function should replace the local_equipment_handle_aws_gateway_with_pool function in lib.php
  *
  * @param object $gatewayobj Gateway configuration object
  * @param string $tonumber Validated phone number
  * @param string $message Message content
- * @param string $messagetype Message type
+ * @param string $messagetype Message type (will be converted to AWS format)
+ * @param string $poolid AWS End User Messaging pool ID
+ * @param string $originationnumber Fallback origination number
  * @return object Enhanced response object
  */
-function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $messagetype = 'Transactional') {
+function local_equipment_handle_aws_gateway_with_pool($gatewayobj, $tonumber, $message, $messagetype = 'Transactional', $poolid = '', $originationnumber = '') {
     global $SITE;
 
     $responseobject = new stdClass();
@@ -1942,7 +1948,9 @@ function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $m
     $responseobject->errorobject = new stdClass();
     $responseobject->messageid = '';
     $responseobject->tonumber = $tonumber;
+    $responseobject->originationnumber = $originationnumber;
     $responseobject->gatewayid = $gatewayobj->id;
+    $responseobject->poolid = $poolid;
 
     try {
         // Validate AWS configuration
@@ -1953,9 +1961,18 @@ function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $m
             return $responseobject;
         }
 
-        // Initialize AWS SNS client with error handling
+        // Convert message type to AWS format (ALL CAPS)
+        $awsmessagetype = strtoupper($messagetype);
+        $validmessagetypes = ['TRANSACTIONAL', 'PROMOTIONAL'];
+        if (!in_array($awsmessagetype, $validmessagetypes)) {
+            $responseobject->errortype = 'validation_error';
+            $responseobject->errormessage = "Invalid message type: {$messagetype}. Must be one of: Transactional, Promotional";
+            return $responseobject;
+        }
+
+        // Initialize AWS End User Messaging (PinpointSmsVoiceV2) client
         try {
-            $client = new Aws\Sns\SnsClient([
+            $client = new Aws\PinpointSmsVoiceV2\PinpointSmsVoiceV2Client([
                 'version' => 'latest',
                 'region' => $awsconfig->api_region,
                 'credentials' => [
@@ -1965,92 +1982,499 @@ function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $m
             ]);
         } catch (Exception $e) {
             $responseobject->errortype = 'aws_client_error';
-            $responseobject->errormessage = 'Failed to initialize AWS SNS client: ' . $e->getMessage();
+            $responseobject->errormessage = 'Failed to initialize AWS End User Messaging client: ' . $e->getMessage();
             return $responseobject;
         }
 
-        // Send message with comprehensive error handling
-        $result = $client->publish([
-            'Message' => $message,
-            'PhoneNumber' => $tonumber,
-            'MessageAttributes' => [
-                'AWS.SNS.SMS.SenderID' => [
-                    'DataType' => 'String',
-                    'StringValue' => $SITE->shortname
-                ],
-                'AWS.SNS.SMS.SMSType' => [
-                    'DataType' => 'String',
-                    'StringValue' => $messagetype
-                ]
-            ]
-        ]);
+        // Prepare message parameters for SendTextMessage
+        $params = [
+            'DestinationPhoneNumber' => $tonumber,
+            'MessageBody' => $message,
+            'MessageType' => $awsmessagetype,
+        ];
 
-        if (isset($result['MessageId']) && !empty($result['MessageId'])) {
-            $responseobject->success = true;
-            $responseobject->messageid = $result['MessageId'];
+        // Only add configuration set if it's configured in admin settings
+        $configsetname = get_config('local_equipment', 'awsconfigurationset');
+        if (!empty($configsetname)) {
+            $params['ConfigurationSetName'] = preg_replace('/[^a-zA-Z0-9_-]/', '', $configsetname);
+            local_equipment_debug_log("Using AWS configuration set: {$configsetname}");
         } else {
-            $responseobject->errortype = 'aws_api_error';
-            $responseobject->errormessage = 'AWS SNS did not return a message ID';
-            $responseobject->errorobject->awsresponse = $result;
+            debugging("No AWS configuration set configured - skipping", DEBUG_DEVELOPER);
         }
-    } catch (Aws\Exception\AwsException $e) {
-        $responseobject->success = false;
-        $awserrormessage = $e->getMessage();
-        $awserrorcode = $e->getAwsErrorCode();
 
-        // Store AWS error details
-        $responseobject->errorobject->awserror = $awserrormessage;
-        $responseobject->errorobject->awserrorcode = $awserrorcode;
-        $responseobject->errorobject->awsrequestid = $e->getAwsRequestId();
-
-        // Categorize AWS errors for better user feedback
-        if (
-            strpos($awserrormessage, 'No quota left') !== false ||
-            strpos($awserrormessage, 'quota') !== false ||
-            strpos($awserrormessage, 'Quota') !== false ||
-            $awserrorcode === 'Throttling'
-        ) {
-            $responseobject->errortype = 'quota_exceeded';
-            $responseobject->errormessage = get_string('awsquotaexceeded', 'local_equipment');
-        } else if (
-            strpos($awserrormessage, 'Invalid parameter') !== false ||
-            strpos($awserrormessage, 'invalid phone number') !== false ||
-            $awserrorcode === 'InvalidParameter'
-        ) {
-            $responseobject->errortype = 'invalid_phone';
-            $responseobject->errormessage = get_string('awsinvalidphone', 'local_equipment', $tonumber);
-        } else if (
-            strpos($awserrormessage, 'Unreachable') !== false ||
-            $awserrorcode === 'EndpointDisabled'
-        ) {
-            $responseobject->errortype = 'unreachable_phone';
-            $responseobject->errormessage = get_string('awsunreachablephone', 'local_equipment', $tonumber);
-        } else if (
-            strpos($awserrormessage, 'Access') !== false ||
-            strpos($awserrormessage, 'Forbidden') !== false ||
-            $awserrorcode === 'AuthorizationError'
-        ) {
-            $responseobject->errortype = 'access_denied';
-            $responseobject->errormessage = get_string('awsaccessdenied', 'local_equipment');
-        } else if (
-            strpos($awserrormessage, 'Service') !== false ||
-            strpos($awserrormessage, 'Internal') !== false ||
-            $awserrorcode === 'InternalError'
-        ) {
-            $responseobject->errortype = 'service_error';
-            $responseobject->errormessage = get_string('awsserviceerror', 'local_equipment');
+        // Use pool ID if provided, otherwise fall back to origination number
+        if (!empty($poolid)) {
+            $params['OriginationIdentity'] = $poolid;
+            local_equipment_debug_log("Using AWS End User Messaging pool: {$poolid}");
+        } elseif (!empty($originationnumber)) {
+            $params['OriginationIdentity'] = $originationnumber;
+            debugging("You should set up a phone pool, but using AWS End User Messaging origination phone for now: {$originationnumber}", DEBUG_DEVELOPER);
         } else {
-            $responseobject->errortype = 'aws_error';
-            $responseobject->errormessage = get_string('awsgeneralerror', 'local_equipment', $awserrormessage);
+            $responseobject->errortype = 'configuration_error';
+            $responseobject->errormessage = 'Either pool ID or origination phone number must be provided';
+            return $responseobject;
+        }
+
+        // Send SMS via AWS End User Messaging
+        try {
+            local_equipment_debug_log('Sending SMS via AWS End User Messaging with params: ' . print_r($params, true));
+
+            $result = $client->SendTextMessage($params);
+
+            if ($result && $result->get('MessageId')) {
+                $responseobject->success = true;
+                $responseobject->messageid = $result->get('MessageId');
+                $responseobject->errormessage = '';
+
+                local_equipment_debug_log("SMS sent successfully via AWS End User Messaging. Message ID: {$responseobject->messageid}");
+
+                return $responseobject;
+            } else {
+                $responseobject->errortype = 'aws_response_error';
+                $responseobject->errormessage = 'AWS End User Messaging did not return a valid response';
+                debugging('Invalid AWS End User Messaging response: ' . print_r($result, true), DEBUG_DEVELOPER);
+            }
+        } catch (Aws\Exception\AwsException $e) {
+            $responseobject->errortype = 'aws_service_error';
+            $errorcode = $e->getAwsErrorCode();
+            $errormessage = $e->getAwsErrorMessage();
+
+            // Categorize common AWS errors for better user experience
+            switch ($errorcode) {
+                case 'InvalidParameterValue':
+                case 'ValidationException':
+                    if (str_contains($errormessage, 'phone number') || str_contains($errormessage, 'DestinationPhoneNumber')) {
+                        $responseobject->errortype = 'aws_invalid_phone';
+                        $responseobject->errormessage = get_string('awsinvalidphone', 'local_equipment', $tonumber);
+                    } elseif (str_contains($errormessage, 'pool') || str_contains($errormessage, 'OriginationIdentity')) {
+                        $responseobject->errortype = 'aws_invalid_pool';
+                        $responseobject->errormessage = "Invalid pool ID or origination identity: {$poolid}{$originationnumber}";
+                    } elseif (str_contains($errormessage, 'messageType') || str_contains($errormessage, 'MessageType')) {
+                        $responseobject->errortype = 'aws_invalid_message_type';
+                        $responseobject->errormessage = "Invalid message type. Expected TRANSACTIONAL or PROMOTIONAL, got: {$awsmessagetype}";
+                    } else {
+                        $responseobject->errormessage = "Invalid parameter: {$errormessage}";
+                    }
+                    break;
+
+                case 'ResourceNotFoundException':
+                    if (str_contains($errormessage, 'configuration-set')) {
+                        $responseobject->errortype = 'aws_configuration_set_not_found';
+                        $responseobject->errormessage = "AWS configuration set not found. Either create the configuration set in AWS or remove it from plugin settings.";
+                    } elseif (str_contains($errormessage, 'pool')) {
+                        $responseobject->errortype = 'aws_pool_not_found';
+                        $responseobject->errormessage = "Pool not found: {$poolid}";
+                    } else {
+                        $responseobject->errormessage = "Resource not found: {$errormessage}";
+                    }
+                    break;
+
+                case 'ThrottlingException':
+                case 'TooManyRequestsException':
+                case 'ServiceQuotaExceededException':
+                    $responseobject->errortype = 'aws_quota_exceeded';
+                    $responseobject->errormessage = get_string('awsquotaexceeded', 'local_equipment');
+                    break;
+
+                case 'UnauthorizedOperation':
+                case 'AccessDenied':
+                case 'AccessDeniedException':
+                    $responseobject->errortype = 'aws_access_denied';
+                    $responseobject->errormessage = get_string('awsaccessdenied', 'local_equipment');
+                    break;
+
+                case 'ConflictException':
+                    $responseobject->errortype = 'aws_conflict';
+                    $responseobject->errormessage = "Conflict with AWS resource: {$errormessage}";
+                    break;
+
+                case 'InternalServerError':
+                case 'ServiceFailureException':
+                    $responseobject->errortype = 'aws_service_error';
+                    $responseobject->errormessage = get_string('awsserviceerror', 'local_equipment');
+                    break;
+
+                default:
+                    $responseobject->errormessage = get_string(
+                        'awsgeneralerror',
+                        'local_equipment',
+                        "{$errorcode}: {$errormessage}"
+                    );
+                    break;
+            }
+
+            $responseobject->errorobject->awserrorcode = $errorcode;
+            $responseobject->errorobject->awserrormessage = $errormessage;
+
+            debugging("AWS End User Messaging error: {$errorcode} - {$errormessage}", DEBUG_DEVELOPER);
         }
     } catch (Exception $e) {
-        $responseobject->errortype = 'general_error';
-        $responseobject->errormessage = get_string('smsgeneralerror', 'local_equipment', $e->getMessage());
-        $responseobject->errorobject->generalerror = $e->getMessage();
-        $responseobject->errorobject->trace = $e->getTraceAsString();
+        $responseobject->errortype = 'general_exception';
+        $responseobject->errormessage = 'Unexpected error: ' . $e->getMessage();
+        debugging('General exception in AWS SMS handler: ' . $e->getMessage(), DEBUG_DEVELOPER);
     }
 
     return $responseobject;
+}
+
+
+/**
+ * Convenience function to send SMS using automatic pool selection with corrected message types.
+ *
+ * @param string $gatewayid The ID of the SMS gateway to use
+ * @param string $tonumber The phone number to send the SMS to
+ * @param string $message The message content
+ * @param string $messagetype Message type ('info', 'otp', 'transactional', 'promotional')
+ * @param string $smsmessagetype AWS message type ('Transactional' or 'Promotional') - will be converted to ALL CAPS
+ * @return object Response object with success status and details
+ */
+function local_equipment_send_sms_auto_pool($gatewayid, $tonumber, $message, $messagetype = 'info', $smsmessagetype = 'Transactional') {
+    $poolid = local_equipment_get_pool_id_for_message_type($messagetype);
+    $originationnumber = local_equipment_get_origination_phone_for_message_type($messagetype);
+
+    return local_equipment_send_sms_with_pool(
+        $gatewayid,
+        $tonumber,
+        $message,
+        $smsmessagetype, // This will be converted to ALL CAPS inside the handler
+        $poolid,
+        $originationnumber
+    );
+}
+
+/**
+ * Legacy AWS gateway handler that maintains backward compatibility.
+ * This should replace your existing local_equipment_handle_aws_gateway function.
+ *
+ * @param object $gatewayobj Gateway configuration object
+ * @param string $tonumber Validated phone number
+ * @param string $message Message content
+ * @param string $messagetype Message type
+ * @param string $originationnumber Origination phone number
+ * @return object Enhanced response object
+ */
+function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $messagetype = 'Transactional', $originationnumber = '') {
+    // For backward compatibility, call the new pool-enabled function without a pool ID
+    return local_equipment_handle_aws_gateway_with_pool(
+        $gatewayobj,
+        $tonumber,
+        $message,
+        $messagetype,
+        '', // No pool ID for legacy calls
+        $originationnumber
+    );
+}
+
+// /**
+//  * Enhanced AWS gateway handler with improved error categorization.
+//  *
+//  * @param object $gatewayobj Gateway configuration object
+//  * @param string $tonumber Validated phone number
+//  * @param string $message Message content
+//  * @param string $messagetype Message type
+//  * @param string $originationnumber Number to user for sending the message
+//  * @return object Enhanced response object
+//  */
+// function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $messagetype = 'Transactional', $originationnumber = '') {
+//     global $SITE;
+
+//     $responseobject = new stdClass();
+//     $responseobject->success = false;
+//     $responseobject->errormessage = '';
+//     $responseobject->errortype = '';
+//     $responseobject->errorobject = new stdClass();
+//     $responseobject->messageid = '';
+//     $responseobject->tonumber = $tonumber;
+//     $responseobject->originationnumber = $originationnumber;
+//     $responseobject->gatewayid = $gatewayobj->id;
+
+//     try {
+//         // Validate AWS configuration
+//         $awsconfig = json_decode($gatewayobj->config);
+//         if (!$awsconfig || empty($awsconfig->api_key) || empty($awsconfig->api_secret) || empty($awsconfig->api_region)) {
+//             $responseobject->errortype = 'configuration_error';
+//             $responseobject->errormessage = 'Incomplete AWS gateway configuration';
+//             return $responseobject;
+//         }
+
+//         // Initialize AWS SNS client with error handling
+//         try {
+//             $client = new Aws\Sns\SnsClient([
+//                 'version' => 'latest',
+//                 'region' => $awsconfig->api_region,
+//                 'credentials' => [
+//                     'key' => $awsconfig->api_key,
+//                     'secret' => $awsconfig->api_secret,
+//                 ]
+//             ]);
+//         } catch (Exception $e) {
+//             $responseobject->errortype = 'aws_client_error';
+//             $responseobject->errormessage = 'Failed to initialize AWS SNS client: ' . $e->getMessage();
+//             return $responseobject;
+//         }
+
+//         $messageattributes = [
+//             'SenderId' => [
+//                     'DataType' => 'String',
+//                     'StringValue' => $SITE->shortname
+//                 ],
+//             'SMSType' => [
+//                     'DataType' => 'String',
+//                     'StringValue' => $messagetype
+//                 ]
+//         ];
+
+//         // ONLY add origination number if one is configured
+//         if (!empty($originationnumber)) {
+//             $messageattributes['OriginationIdentity'] = [
+//                 'DataType' => 'String',
+//                 'StringValue' => $originationnumber
+//             ];
+//         }
+
+//         // Send message with comprehensive error handling
+//         $result = $client->publish([
+//             'Message' => $message,
+//             'PhoneNumber' => $tonumber,
+//             'MessageAttributes' => $messageattributes
+//         ]);
+
+//         if (isset($result['MessageId']) && !empty($result['MessageId'])) {
+//             $responseobject->success = true;
+//             $responseobject->messageid = $result['MessageId'];
+//         } else {
+//             $responseobject->errortype = 'aws_api_error';
+//             $responseobject->errormessage = 'AWS SNS did not return a message ID';
+//             $responseobject->errorobject->awsresponse = $result;
+//         }
+//     } catch (Aws\Exception\AwsException $e) {
+//         $responseobject->success = false;
+//         $awserrormessage = $e->getMessage();
+//         $awserrorcode = $e->getAwsErrorCode();
+
+//         // Store AWS error details
+//         $responseobject->errorobject->awserror = $awserrormessage;
+//         $responseobject->errorobject->awserrorcode = $awserrorcode;
+//         $responseobject->errorobject->awsrequestid = $e->getAwsRequestId();
+
+//         // Categorize AWS errors for better user feedback
+//         if (
+//             strpos($awserrormessage, 'No quota left') !== false ||
+//             strpos($awserrormessage, 'quota') !== false ||
+//             strpos($awserrormessage, 'Quota') !== false ||
+//             $awserrorcode === 'Throttling'
+//         ) {
+//             $responseobject->errortype = 'quota_exceeded';
+//             $responseobject->errormessage = get_string('awsquotaexceeded', 'local_equipment');
+//         } else if (
+//             strpos($awserrormessage, 'Invalid parameter') !== false ||
+//             strpos($awserrormessage, 'invalid phone number') !== false ||
+//             $awserrorcode === 'InvalidParameter'
+//         ) {
+//             $responseobject->errortype = 'invalid_phone';
+//             $responseobject->errormessage = get_string('awsinvalidphone', 'local_equipment', $tonumber);
+//         } else if (
+//             strpos($awserrormessage, 'Unreachable') !== false ||
+//             $awserrorcode === 'EndpointDisabled'
+//         ) {
+//             $responseobject->errortype = 'unreachable_phone';
+//             $responseobject->errormessage = get_string('awsunreachablephone', 'local_equipment', $tonumber);
+//         } else if (
+//             strpos($awserrormessage, 'Access') !== false ||
+//             strpos($awserrormessage, 'Forbidden') !== false ||
+//             $awserrorcode === 'AuthorizationError'
+//         ) {
+//             $responseobject->errortype = 'access_denied';
+//             $responseobject->errormessage = get_string('awsaccessdenied', 'local_equipment');
+//         } else if (
+//             strpos($awserrormessage, 'Service') !== false ||
+//             strpos($awserrormessage, 'Internal') !== false ||
+//             $awserrorcode === 'InternalError'
+//         ) {
+//             $responseobject->errortype = 'service_error';
+//             $responseobject->errormessage = get_string('awsserviceerror', 'local_equipment');
+//         } else {
+//             $responseobject->errortype = 'aws_error';
+//             $responseobject->errormessage = get_string('awsgeneralerror', 'local_equipment', $awserrormessage);
+//         }
+//     } catch (Exception $e) {
+//         $responseobject->errortype = 'general_error';
+//         $responseobject->errormessage = get_string('smsgeneralerror', 'local_equipment', $e->getMessage());
+//         $responseobject->errorobject->generalerror = $e->getMessage();
+//         $responseobject->errorobject->trace = $e->getTraceAsString();
+//     }
+
+//     return $responseobject;
+// }
+
+/**
+ * Enhanced SMS sending function with AWS End User Messaging pool support.
+ *
+ * @param string $gatewayid The ID of the SMS gateway to use for sending text messages.
+ * @param string $tonumber The phone number to send the SMS message to.
+ * @param string $message The message to send in the SMS message.
+ * @param string $messagetype The type of message to send (e.g., 'Transactional', 'Promotional').
+ * @param string $poolid The AWS End User Messaging pool ID to use for sending.
+ * @param string $originationnumber Optional origination phone number (fallback if pool doesn't work).
+ * @return object Enhanced response object with detailed error information and pool usage.
+ */
+function local_equipment_send_sms_with_pool($gatewayid, $tonumber, $message, $messagetype, $poolid, $originationnumber = '') {
+    global $DB;
+
+    // Initialize comprehensive response object
+    $responseobject = new stdClass();
+    $responseobject->success = false;
+    $responseobject->errormessage = '';
+    $responseobject->errortype = '';
+    $responseobject->errorobject = new stdClass();
+    $responseobject->messageid = '';
+    $responseobject->tonumber = $tonumber;
+    $responseobject->gatewayid = $gatewayid;
+    $responseobject->poolid = $poolid;
+    $responseobject->originationnumber = $originationnumber;
+
+    try {
+        // Validate inputs
+        if (empty($gatewayid) || empty($tonumber) || empty($message)) {
+            $responseobject->errortype = 'validation_error';
+            $responseobject->errormessage = 'Missing required parameters: gatewayid, tonumber, or message';
+            return $responseobject;
+        }
+
+        // Get and validate gateway
+        $gatewayobj = $DB->get_record('sms_gateways', ['id' => $gatewayid, 'enabled' => 1]);
+        if (!$gatewayobj) {
+            $responseobject->errortype = 'gateway_error';
+            $responseobject->errormessage = "Invalid or disabled gateway ID: {$gatewayid}";
+            return $responseobject;
+        }
+
+        // Validate phone number format
+        $phoneobj = local_equipment_parse_phone_number($tonumber);
+        if (!empty($phoneobj->errors)) {
+            $responseobject->errortype = 'phone_validation_error';
+            $responseobject->errormessage = 'Invalid phone number: ' . implode(', ', $phoneobj->errors);
+            return $responseobject;
+        }
+
+        // Use validated phone number
+        $tonumber = $phoneobj->phone;
+        $responseobject->tonumber = $tonumber;
+
+        // Route to appropriate gateway handler
+        switch ($gatewayobj->gateway) {
+            case 'smsgateway_aws\\gateway':
+                return local_equipment_handle_aws_gateway_with_pool(
+                    $gatewayobj,
+                    $tonumber,
+                    $message,
+                    $messagetype,
+                    $poolid,
+                    $originationnumber
+                );
+
+            default:
+                $responseobject->errortype = 'unsupported_gateway';
+                $responseobject->errormessage = "Unsupported gateway type: {$gatewayobj->gateway}";
+                break;
+        }
+    } catch (Exception $e) {
+        $responseobject->errortype = 'exception';
+        $responseobject->errormessage = 'Exception occurred: ' . $e->getMessage();
+        debugging('SMS sending exception: ' . $e->getMessage(), DEBUG_DEVELOPER);
+    }
+
+    return $responseobject;
+}
+
+
+/**
+ * Get pool ID based on message type and configuration.
+ *
+ * @param string $messagetype Type of message ('info', 'otp', 'transactional', 'promotional')
+ * @return string Pool ID or empty string if not found
+ */
+function local_equipment_get_pool_id_for_message_type($messagetype) {
+    $messagetype = strtolower($messagetype);
+
+    switch ($messagetype) {
+        case 'info':
+        case 'informational':
+        case 'transactional':
+            return get_config('local_equipment', 'awsinfopoolid') ?: '';
+
+        case 'otp':
+        case 'verification':
+        case 'auth':
+            return get_config('local_equipment', 'awsotppoolid') ?: '';
+
+        default:
+            // Default to info pool for unknown types
+            return get_config('local_equipment', 'awsinfopoolid') ?: '';
+    }
+}
+
+/**
+ * Get origination phone number based on message type and configuration.
+ *
+ * @param string $messagetype Type of message ('info', 'otp', 'transactional', 'promotional')
+ * @return string Origination phone number or empty string if not found
+ */
+function local_equipment_get_origination_phone_for_message_type($messagetype) {
+    $messagetype = strtolower($messagetype);
+
+    switch ($messagetype) {
+        case 'info':
+        case 'informational':
+        case 'transactional':
+            return get_config('local_equipment', 'awsinfooriginatorphone') ?: '';
+
+        case 'otp':
+        case 'verification':
+        case 'auth':
+            return get_config('local_equipment', 'awsotporiginatorphone') ?: '';
+
+        default:
+            // Default to info phone for unknown types
+            return get_config('local_equipment', 'awsinfooriginatorphone') ?: '';
+    }
+}
+/**
+ * Updated SMS message service function that uses pool-based messaging.
+ * This updates the existing send_message function in sms_message_service.php
+ */
+function local_equipment_enhanced_sms_send_message($recipient, $message, $options = []) {
+    // Format phone number (remove non-numeric chars except +)
+    $phonenumber = preg_replace('/[^0-9+]/', '', $recipient);
+
+    // Skip if phone number is empty
+    if (empty($phonenumber)) {
+        debugging('Cannot send SMS: Empty phone number', DEBUG_DEVELOPER);
+        return false;
+    }
+
+    // Get provider ID from options or settings
+    $providerid = $options['provider_id'] ?? get_config('local_equipment', 'infogateway');
+    if (empty($providerid)) {
+        debugging('Cannot send SMS: No provider ID configured', DEBUG_DEVELOPER);
+        return false;
+    }
+
+    // Get message type from options - determines which pool to use
+    $messagetype = $options['message_type'] ?? 'info';
+    $smsmessagetype = $options['sms_message_type'] ?? 'Transactional';
+
+    // Use the enhanced auto-pool function
+    $result = local_equipment_send_sms_auto_pool(
+        $providerid,
+        $phonenumber,
+        $message,
+        $messagetype,
+        $smsmessagetype
+    );
+
+    // Return boolean for backward compatibility
+    return is_object($result) && isset($result->success) && $result->success;
 }
 
 
@@ -2086,6 +2510,7 @@ function local_equipment_send_secure_otp($gatewayid, $tophonenumber, $ttl = 600,
         $otp = mt_rand(100000, 999999);
 
 
+
         // Test OTP
         // $testotp = 345844;
         $msgparams = ['otp' => $otp, 'site' => $SITE->shortname];
@@ -2095,6 +2520,9 @@ function local_equipment_send_secure_otp($gatewayid, $tophonenumber, $ttl = 600,
 
         $phone1 = $phone1obj->phone;
         $phone2 = $phone2obj->phone;
+        $messagetype = 'TRANSACTIONAL';
+        $messagetype_eq = 'otp';
+        // $originationnumber = get_config('local_equipment', 'awsotporiginatorphone');
 
         // echo '<pre>';
         // var_dump($phone1);
@@ -2175,11 +2603,12 @@ function local_equipment_send_secure_otp($gatewayid, $tophonenumber, $ttl = 600,
             $record->expires = $record->timecreated + $ttl;  // OTP expires after 10 minutes.
 
             $SESSION->otps->{$record->tophonename} = $record;
-            $SESSION->otps->{$record->tophonename}->id = $DB->insert_record('local_equipment_phonecommunication_otp', $record);
+            // $SESSION->otps->{$record->tophonename}->id = $DB->insert_record('local_equipment_phonecommunication_otp', $record);
+
 
             $msgparams = ['otp' => $otp, 'site' => $SITE->shortname];
             $message = get_string('phoneverificationcodefor', 'local_equipment', $msgparams);
-            return local_equipment_send_sms($gatewayid, $tophonenumber, $message, 'OPT');
+            return local_equipment_send_sms($gatewayid, $tophonenumber, $message, $messagetype, $messagetype_eq);
         }
 
         // At this point, we are guaranteed that there are as many records in the DB as there are in $SESSION->otps, and they hold
@@ -2200,7 +2629,7 @@ function local_equipment_send_secure_otp($gatewayid, $tophonenumber, $ttl = 600,
 
             $msgparams = ['otp' => $otp, 'site' => $SITE->shortname];
             $message = get_string('phoneverificationcodefor', 'local_equipment', $msgparams);
-            $responseobject = local_equipment_send_sms($gatewayid, $tophonenumber, $message, 'OPT');
+            $responseobject = local_equipment_send_sms($gatewayid, $tophonenumber, $message, $messagetype, $messagetype_eq);
         } elseif ($recordexists && $isverified) {
             $responseobject->errorcode = 0;
             throw new moodle_exception('phonealreadyverified', 'local_equipment');
@@ -2234,9 +2663,10 @@ function local_equipment_send_secure_otp($gatewayid, $tophonenumber, $ttl = 600,
  * Verifies an One-Time Password (OTP).
  *
  * @param string $otp The OTP to verify.
+ * @param bool $isatest Is this a test OTP or a real one?.
  * @return object
  */
-function local_equipment_verify_otp($otp) {
+function local_equipment_verify_otp($otp, $isatest = false) {
     global $DB, $USER, $SESSION;
 
     $responseobject = new stdClass();
@@ -2268,7 +2698,7 @@ function local_equipment_verify_otp($otp) {
                 if (!$expired && !$verified && $matches) {
                     $record->timeverified = time();
                     $record->phoneisverified = 1;
-                    $DB->update_record('local_equipment_phonecommunication_otp', $record);
+                    !$isatest && $DB->update_record('local_equipment_phonecommunication_otp', $record);
                     $responseobject->success = true;
                     $responseobject->tophonenumber = $record->tophonenumber;
                     return $responseobject;
@@ -2297,7 +2727,7 @@ function local_equipment_verify_otp($otp) {
                 if (!$expired && !$verified && $matches) {
                     $record->timeverified = time();
                     $record->phoneisverified = 1;
-                    $DB->update_record('local_equipment_phonecommunication_otp', $record);
+                    !$isatest && $DB->update_record('local_equipment_phonecommunication_otp', $record);
                     $responseobject->success = true;
                     return $responseobject;
                 }
@@ -2329,6 +2759,24 @@ function local_equipment_verify_otp($otp) {
 
     // OTP is valid and has not expired.
     return $responseobject;
+}
+
+/**
+ * Clean debug logging for CLI and web contexts.
+ *
+ * @param string $message Message to log
+ * @param int $level Debug level (optional)
+ */
+
+function local_equipment_debug_log($message) {
+    if (defined('CLI_SCRIPT') && CLI_SCRIPT) {
+        global $options;
+        if (isset($options['verbose']) && $options['verbose']) {
+            cli_writeln("  → " . $message);
+        }
+    } else {
+        debugging($message, DEBUG_DEVELOPER);
+    }
 }
 
 /**

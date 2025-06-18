@@ -356,16 +356,29 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
      * @return bool Success status
      */
     protected function send_sms_reminder(object $user, string $message): bool {
-        // Validate phone number
+        // Validate phone number exists
         if (empty($user->phone2)) {
             mtrace("No mobile phone number (phone2) found for user {$user->id}");
             return false;
         }
 
-        // Parse and validate phone number
-        $phoneobj = local_equipment_parse_phone_number($user->phone2);
+        // SECURITY CHECK: Verify phone number is verified before sending
+        if (!$this->is_phone_verified($user->id)) {
+            mtrace("Phone number not verified for user {$user->id} - skipping SMS for security");
+            return false;
+        }
+
+        // Get the verified phone number (may be different from user->phone2)
+        $verified_phone = $this->get_verified_phone_number($user->id);
+        if (!$verified_phone) {
+            mtrace("Could not retrieve verified phone number for user {$user->id}");
+            return false;
+        }
+
+        // Parse and validate phone number format
+        $phoneobj = local_equipment_parse_phone_number($verified_phone);
         if (!empty($phoneobj->errors)) {
-            mtrace("Invalid phone number for user {$user->id}: " . implode(', ', $phoneobj->errors));
+            mtrace("Invalid verified phone number for user {$user->id}: " . implode(', ', $phoneobj->errors));
             return false;
         }
 
@@ -376,13 +389,14 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
             return false;
         }
 
-        // Send SMS
+        // Send SMS using the verified phone number
         try {
-            $response = local_equipment_send_sms($gatewayid, $phoneobj->phone, $message, 'Transactional');
+            $originationnumber = get_config('local_equipment', 'awsinfooriginatorphone');
+            $response = local_equipment_send_sms($gatewayid, $phoneobj->phone, $message, 'Transactional', $originationnumber);
 
             // Properly handle the response object
             if (is_object($response) && isset($response->success) && $response->success) {
-                mtrace("SMS sent successfully to user {$user->id} at {$phoneobj->phone}");
+                mtrace("SMS sent successfully to user {$user->id} at verified number {$phoneobj->phone}");
                 return true;
             } else {
                 // Log detailed error information
@@ -454,5 +468,35 @@ class send_equipment_exchange_reminders extends \core\task\scheduled_task {
             mtrace("Exception sending email to user {$user->id}: " . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Check if a user's phone number is verified.
+     *
+     * @param int $userid User ID
+     * @return bool True if phone is verified
+     */
+    protected function is_phone_verified(int $userid): bool {
+        global $DB;
+        return $DB->record_exists('local_equipment_phonecommunication_otp', [
+            'userid' => $userid,
+            'phoneisverified' => 1
+        ]);
+    }
+
+    /**
+     * Get the verified phone number for a user.
+     *
+     * @param int $userid User ID
+     * @return string|false Verified phone number or false if not found
+     */
+    protected function get_verified_phone_number(int $userid) {
+        global $DB;
+        $record = $DB->get_record('local_equipment_phonecommunication_otp', [
+            'userid' => $userid,
+            'phoneisverified' => 1
+        ], 'tophonenumber', IGNORE_MULTIPLE);
+
+        return $record ? $record->tophonenumber : false;
     }
 }

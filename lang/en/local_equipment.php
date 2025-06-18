@@ -899,6 +899,88 @@ $string['awsserviceerror'] = 'AWS service error. Please try again later or conta
 $string['awsgeneralerror'] = 'AWS error: {$a}';
 $string['smsgeneralerror'] = 'SMS sending error: {$a}';
 
+// Pool-related strings
+$string['poolid'] = 'Pool ID';
+$string['pooltype'] = 'Pool type';
+$string['pooltypeinfo'] = 'Info pool';
+$string['pooltypeotp'] = 'OTP pool';
+$string['poolnotfound'] = 'Pool {$a} not found or not configured';
+$string['poolvalidated'] = 'Pool {$a} validated successfully';
+$string['usingpool'] = 'Using pool: {$a}';
+$string['usingoriginationphone'] = 'Using origination phone: {$a}';
+$string['poolorconfigurationmissing'] = 'Either pool ID or origination phone number must be configured';
+
+// AWS End User Messaging specific strings
+$string['awsendusermessaging'] = 'AWS End User Messaging';
+$string['awsendusermessaging_desc'] = 'Configure AWS End User Messaging service for SMS delivery. This service replaces the deprecated AWS Pinpoint service.';
+$string['awsconfigurationerror'] = 'AWS configuration error: {$a}';
+$string['awsinvalidpoolid'] = 'Invalid AWS pool ID: {$a}';
+$string['awspoolnotfound'] = 'AWS pool not found: {$a}';
+$string['awsendusermessagingresponse'] = 'AWS End User Messaging response: {$a}';
+$string['awsendusermessagingsuccess'] = 'Message sent successfully via AWS End User Messaging';
+$string['awsendusermessagingfailed'] = 'Failed to send message via AWS End User Messaging';
+
+// CLI debug tool strings
+$string['clidebugsmstool'] = 'CLI SMS Debug Tool';
+$string['clitestphone'] = 'Test phone number';
+$string['clipoolid'] = 'Pool ID to use for testing';
+$string['clipooltype'] = 'Pool type (info or otp)';
+$string['clisendtest'] = 'Actually send test SMS';
+$string['cliverbose'] = 'Show detailed information';
+$string['clipoolconfiguration'] = 'Pool Configuration';
+$string['clismstesting'] = 'SMS Testing';
+$string['climissingphone'] = 'Test phone number required for SMS testing';
+$string['clinopoolconfigured'] = 'No pool configured for the specified type';
+$string['cliinvalidpooltype'] = 'Invalid pool type. Use \'info\' or \'otp\'';
+$string['cliusingdefaultpool'] = 'Using default info pool';
+$string['cliusingspecifiedpool'] = 'Using specified pool';
+$string['clismssent'] = 'SMS sent successfully';
+$string['clismsfailed'] = 'SMS sending failed';
+$string['clidebugtoolcomplete'] = 'Debug tool execution complete';
+
+// Enhanced error categorization
+$string['validationerror'] = 'Validation error';
+$string['gatewayerror'] = 'Gateway error';
+$string['phonevalidationerror'] = 'Phone validation error';
+$string['awsclienterror'] = 'AWS client initialization error';
+$string['awsresponseerror'] = 'AWS response error';
+$string['awsserviceerror'] = 'AWS service error';
+$string['generalexception'] = 'General exception occurred';
+
+// Pool selection messages
+$string['autopoolselection'] = 'Automatic pool selection based on message type';
+$string['manualPoolselection'] = 'Manual pool selection';
+$string['fallbacktoorigination'] = 'Falling back to origination phone number';
+$string['nopoolorconfigured'] = 'No pool or origination phone configured';
+
+// Success/status messages
+$string['smssentviapool'] = 'SMS sent via pool {$a->pool} to {$a->phone}';
+$string['smssentviaorigination'] = 'SMS sent via origination phone {$a->origination} to {$a->phone}';
+$string['smspoolvalidated'] = 'SMS pool {$a} validated successfully';
+$string['poolconfigurationvalid'] = 'Pool configuration is valid';
+$string['poolconfigurationinvalid'] = 'Pool configuration is invalid: {$a}';
+
+// AWS Configuration Set strings
+$string['awsconfigurationset'] = 'AWS Configuration Set';
+$string['awsconfigurationset_desc'] = 'Enter the AWS End User Messaging configuration set name (optional). Leave empty if you haven\'t created a configuration set in AWS. Configuration sets allow you to track delivery metrics and configure event destinations.';
+
+// Enhanced error messages for configuration set issues
+$string['awsconfigurationsetnotfound'] = 'AWS configuration set not found: {$a}';
+$string['awsconfigurationsetinvalid'] = 'Invalid AWS configuration set name: {$a}';
+$string['awsconfigurationsetmissing'] = 'AWS configuration set \'{$a}\' not found. Either create it in AWS End User Messaging console or leave the setting empty.';
+
+// Additional helpful strings
+$string['awsconfigurationsetoptional'] = 'AWS configuration set is optional and can be left empty';
+$string['awsconfigurationsethelp'] = 'Configuration sets help track SMS delivery and configure event destinations in AWS End User Messaging';
+$string['noconfigurationset'] = 'No configuration set configured - using default AWS settings';
+
+// Debugging and development strings
+$string['debuggingawssms'] = 'AWS SMS debugging information';
+$string['debugpoolselection'] = 'Pool selection: Using {$a->type} pool {$a->id}';
+$string['debugoriginationselection'] = 'Origination selection: Using {$a->type} phone {$a->number}';
+$string['debugawsparams'] = 'AWS parameters: {$a}';
+$string['debugsmsstatus'] = 'SMS status: {$a->status} - Message ID: {$a->messageid}';
+
 // Debugging and admin strings
 $string['smsgatewayvalidated'] = 'SMS gateway validated: {$a}';
 $string['reminderprocessingstarted'] = 'Processing {$a->type} reminders for {$a->count} users';

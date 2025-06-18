@@ -23,12 +23,14 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace local_equipment\form;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/local/equipment/lib.php');
 
-class addbulkfamilies_form extends moodleform {
+class addbulkfamilies_form extends \moodleform {
     public function definition() {
         $mform = $this->_form;
         global $DB;

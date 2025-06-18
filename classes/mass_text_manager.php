@@ -40,6 +40,9 @@ class mass_text_manager {
     /** @var \core\clock Clock instance */
     protected $clock;
 
+    /** @var mixed The origination phone number from AWS End User Messaging service */
+    protected $originationnumber;
+
     /**
      * Constructor
      */
@@ -47,6 +50,7 @@ class mass_text_manager {
         global $DB;
         $this->db = $DB;
         $this->clock = \core\di::get(\core\clock::class);
+        $this->originationnumber = get_config('local_equipment', 'awsinfooriginatorphone');
     }
 
     /**
@@ -181,7 +185,7 @@ class mass_text_manager {
         // Send messages to parents
         foreach ($recipients as $parent) {
             try {
-                $response = local_equipment_send_sms($gateway->id, $parent->phone, $message, 'Transactional');
+                $response = local_equipment_send_sms($gateway->id, $parent->phone, $message, 'Transactional', $this->originationnumber);
 
                 if ($response->success) {
                     $results->success_count++;
@@ -264,7 +268,7 @@ class mass_text_manager {
         ]);
 
         try {
-            $response = local_equipment_send_sms($gatewayid, $adminphone, $confirmationmessage, 'Transactional');
+            $response = local_equipment_send_sms($gatewayid, $adminphone, $confirmationmessage, 'Transactional', $this->originationnumber);
             $results->admin_confirmation_sent = $response->success;
         } catch (\Exception $e) {
             $results->admin_confirmation_sent = false;

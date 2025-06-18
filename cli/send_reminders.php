@@ -29,6 +29,36 @@ require(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/clilib.php');
 require_once($CFG->dirroot . '/local/equipment/lib.php');
 
+/**
+ * Check if a user's phone number is verified.
+ *
+ * @param int $userid User ID
+ * @return bool True if phone is verified
+ */
+function is_phone_verified($userid) {
+    global $DB;
+    return $DB->record_exists('local_equipment_phonecommunication_otp', [
+        'userid' => $userid,
+        'phoneisverified' => 1
+    ]);
+}
+
+/**
+ * Get the verified phone number for a user.
+ *
+ * @param int $userid User ID
+ * @return string|false Verified phone number or false if not found
+ */
+function get_verified_phone_number($userid) {
+    global $DB;
+    $record = $DB->get_record('local_equipment_phonecommunication_otp', [
+        'userid' => $userid,
+        'phoneisverified' => 1
+    ], 'tophonenumber', IGNORE_MULTIPLE);
+
+    return $record ? $record->tophonenumber : false;
+}
+
 // Get CLI options
 list($options, $unrecognized) = cli_get_params([
     'help' => false,
@@ -177,6 +207,49 @@ function send_user_reminder($userdata, $inadvance_time, $reminder_type, $manager
         }
     }
 
+    // Determine reminder method
+    $method = $userdata->reminder_method ?: 'text';
+
+    // SECURITY CHECK: For SMS reminders, verify phone number is verified
+    if ($method === 'text') {
+        if (empty($user->phone2)) {
+            cli_problem("  ❌ {$user->firstname} {$user->lastname} - No mobile phone number");
+            $total_errors++;
+            return false;
+        }
+
+        // Check if phone number is verified
+        if (!is_phone_verified($user->id)) {
+            cli_problem("  ❌ {$user->firstname} {$user->lastname} - Phone number not verified (security check)");
+            if ($verbose) {
+                cli_writeln("     Phone: {$user->phone2} (UNVERIFIED)");
+                cli_writeln("     For security, reminders are only sent to verified phone numbers");
+            }
+            $total_errors++;
+            return false;
+        }
+
+        // Validate phone number format
+        $phoneobj = local_equipment_parse_phone_number($user->phone2);
+        if (!empty($phoneobj->errors)) {
+            cli_problem("  ❌ {$user->firstname} {$user->lastname} - Invalid phone format: " . implode(', ', $phoneobj->errors));
+            $total_errors++;
+            return false;
+        }
+
+        // Get verified phone number (may be different from user->phone2)
+        $verified_phone = get_verified_phone_number($user->id);
+        if (!$verified_phone) {
+            cli_problem("  ❌ {$user->firstname} {$user->lastname} - Could not retrieve verified phone number");
+            $total_errors++;
+            return false;
+        }
+
+        if ($verbose) {
+            cli_writeln("     Phone: {$verified_phone} (VERIFIED ✅)");
+        }
+    }
+
     // Prepare message data
     $equipmentlist = "your equipment";
     $formatteddate = userdate($exchange->starttime, '%A, %B %d');
@@ -206,17 +279,21 @@ function send_user_reminder($userdata, $inadvance_time, $reminder_type, $manager
         $location
     );
 
-    $method = $userdata->reminder_method ?: 'text';
-
     if ($dry_run) {
         cli_writeln("  📋 Would send {$method} to: {$user->firstname} {$user->lastname}");
         if ($verbose) {
-            cli_writeln("     Phone: " . ($user->phone2 ?: 'NOT SET'));
+            if ($method === 'text') {
+                cli_writeln("     Phone: {$verified_phone} (VERIFIED ✅)");
+            } else {
+                cli_writeln("     Email: {$user->email}");
+            }
             cli_writeln("     Exchange: " . userdate($exchange->starttime, '%Y-%m-%d %H:%M'));
             cli_writeln("     Location: {$location}");
             cli_writeln("     Message: " . substr($message, 0, 100) . "...");
             cli_writeln("");
         }
+        // FIX: Increment counter in dry-run mode
+        $total_sent++;
         return true;
     }
 
@@ -224,24 +301,12 @@ function send_user_reminder($userdata, $inadvance_time, $reminder_type, $manager
     $success = false;
 
     if ($method === 'text') {
-        if (empty($user->phone2)) {
-            cli_problem("  ❌ {$user->firstname} {$user->lastname} - No mobile phone");
-            $total_errors++;
-            return false;
-        }
-
-        $phoneobj = local_equipment_parse_phone_number($user->phone2);
-        if (!empty($phoneobj->errors)) {
-            cli_problem("  ❌ {$user->firstname} {$user->lastname} - Invalid phone: " . implode(', ', $phoneobj->errors));
-            $total_errors++;
-            return false;
-        }
-
         $gatewayid = get_config('local_equipment', 'infogateway');
-        $response = local_equipment_send_sms($gatewayid, $phoneobj->phone, $message, 'Transactional');
+        $originationnumber = get_config('local_equipment', 'awsinfooriginatorphone');
+        $response = local_equipment_send_sms($gatewayid, $verified_phone, $message, 'Transactional', $originationnumber);
 
         if (is_object($response) && isset($response->success) && $response->success) {
-            cli_writeln("  ✅ SMS sent to: {$user->firstname} {$user->lastname} ({$phoneobj->phone})");
+            cli_writeln("  ✅ SMS sent to: {$user->firstname} {$user->lastname} ({$verified_phone})");
             if ($verbose && isset($response->messageid)) {
                 cli_writeln("     Message ID: {$response->messageid}");
             }
@@ -273,7 +338,7 @@ function send_user_reminder($userdata, $inadvance_time, $reminder_type, $manager
         }
     }
 
-    // Update reminder status
+    // Update reminder status and increment counter
     if ($success) {
         $newremindercode = ($reminder_type === 'days') ? 1 : 2;
         $exchange_manager->update_reminder_status($userdata->userid, $userdata->exchangeid, $newremindercode);

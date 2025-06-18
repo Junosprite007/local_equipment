@@ -33,11 +33,15 @@ require_once($CFG->dirroot . '/local/equipment/lib.php');
 list($options, $unrecognized) = cli_get_params([
     'help' => false,
     'test-phone' => '',
+    'pool-id' => '',
+    'pool-type' => '',
     'send-test' => false,
     'verbose' => false
 ], [
     'h' => 'help',
     'p' => 'test-phone',
+    'o' => 'pool-id',
+    't' => 'pool-type',
     's' => 'send-test',
     'v' => 'verbose'
 ]);
@@ -54,13 +58,17 @@ SMS Configuration Debug Tool for Equipment Plugin
 Options:
 -h, --help              Print out this help
 -p, --test-phone        Phone number to use for testing (e.g., +15551234567)
+-o, --pool-id           AWS pool ID to use (e.g., pool-abc123def456ghi789)
+-t, --pool-type         Pool type: 'info' for informational messages, 'otp' for OTP messages
+                        If not specified, will attempt to determine from pool-id config
 -s, --send-test         Actually send a test SMS (requires --test-phone)
 -v, --verbose           Show detailed configuration information
 
 Examples:
 \$ php local/equipment/cli/debug_sms.php
 \$ php local/equipment/cli/debug_sms.php --verbose
-\$ php local/equipment/cli/debug_sms.php --test-phone=+15551234567 --send-test
+\$ php local/equipment/cli/debug_sms.php --test-phone=+15551234567 --pool-type=info --send-test
+\$ php local/equipment/cli/debug_sms.php -p=+16164465848 -o=pool-abc123def456ghi789 -s
 ";
 
     echo $help;
@@ -120,6 +128,24 @@ if ($gateway->gateway === 'smsgateway_aws\\gateway') {
     }
 } else {
     cli_problem("⚠️  Unknown gateway type: {$gateway->gateway}");
+}
+
+// Check pool configuration
+cli_heading('AWS Pool Configuration', 2);
+
+$infopoolid = get_config('local_equipment', 'awsinfopoolid');
+$otppoolid = get_config('local_equipment', 'awsotppoolid');
+$infophone = get_config('local_equipment', 'awsinfooriginatorphone');
+$otpphone = get_config('local_equipment', 'awsotporiginatorphone');
+
+cli_writeln('Info Pool ID: ' . ($infopoolid ?: '❌ Not configured'));
+cli_writeln('OTP Pool ID: ' . ($otppoolid ?: '❌ Not configured'));
+cli_writeln('Info Originator Phone: ' . ($infophone ?: '❌ Not configured'));
+cli_writeln('OTP Originator Phone: ' . ($otpphone ?: '❌ Not configured'));
+
+if (empty($infopoolid) && empty($otppoolid)) {
+    cli_problem('❌ No AWS pools configured');
+    cli_writeln('Configure at: Site administration → Plugins → Local plugins → Equipment');
 }
 
 // Check scheduled task configuration
@@ -188,18 +214,99 @@ if (!empty($options['test-phone']) || $options['send-test']) {
     // Validate phone number
     $phoneobj = local_equipment_parse_phone_number($testphone);
     if (!empty($phoneobj->errors)) {
-        cli_problem('❌ Invalid phone number: ' . implode(', ', $phoneobj->errors));
+        cli_problem('❌ Invalid test phone number: ' . implode(', ', $phoneobj->errors));
         exit(1);
     }
 
-    cli_writeln("✅ Phone number validated: {$phoneobj->phone}");
+    cli_writeln("✅ Test phone number validated: {$phoneobj->phone}");
+
+    // Determine which pool to use
+    $poolid = '';
+    $pooltype = '';
+    $originationnumber = '';
+
+    if (!empty($options['pool-id'])) {
+        // Use specific pool ID provided
+        $poolid = $options['pool-id'];
+
+        // Try to determine pool type from configuration
+        if ($poolid === $infopoolid) {
+            $pooltype = 'info';
+            $originationnumber = $infophone;
+        } elseif ($poolid === $otppoolid) {
+            $pooltype = 'otp';
+            $originationnumber = $otpphone;
+        } else {
+            $pooltype = $options['pool-type'] ?: 'unknown';
+        }
+
+        cli_writeln("✅ Using specified pool ID: {$poolid}");
+    } elseif (!empty($options['pool-type'])) {
+        // Use pool type to determine pool ID
+        $pooltype = $options['pool-type'];
+
+        switch ($pooltype) {
+            case 'info':
+                $poolid = $infopoolid;
+                $originationnumber = $infophone;
+                break;
+            case 'otp':
+                $poolid = $otppoolid;
+                $originationnumber = $otpphone;
+                break;
+            default:
+                cli_problem("❌ Invalid pool type: {$pooltype}. Use 'info' or 'otp'");
+                exit(1);
+        }
+
+        if (empty($poolid)) {
+            cli_problem("❌ No pool ID configured for type: {$pooltype}");
+            exit(1);
+        }
+
+        cli_writeln("✅ Using {$pooltype} pool: {$poolid}");
+    } else {
+        // Default to info pool
+        $pooltype = 'info';
+        $poolid = $infopoolid;
+        $originationnumber = $infophone;
+
+        if (empty($poolid)) {
+            cli_problem('❌ No default info pool configured');
+            exit(1);
+        }
+
+        cli_writeln("✅ Using default info pool: {$poolid}");
+    }
+
+    cli_writeln("Pool type: {$pooltype}");
+    cli_writeln("Origination number: " . ($originationnumber ?: 'Not configured'));
+
+    // Validate origination phone number if provided
+    if (!empty($originationnumber)) {
+        $originationobj = local_equipment_parse_phone_number($originationnumber);
+        if (!empty($originationobj->errors)) {
+            cli_problem('❌ Invalid origination phone number: ' . implode(', ', $originationobj->errors));
+            exit(1);
+        }
+        cli_writeln("✅ Origination phone number validated: {$originationobj->phone}");
+    }
 
     if ($options['send-test']) {
         cli_writeln('📱 Sending test SMS...');
 
-        $testmessage = "Test message from {$SITE->shortname} Equipment Plugin Debug Tool at " . userdate(time());
+        $testmessage = "Test message from {$SITE->shortname} Equipment Plugin Debug Tool at " . userdate(time()) .
+            " using {$pooltype} pool {$poolid}";
 
-        $response = local_equipment_send_sms($gatewayid, $phoneobj->phone, $testmessage, 'Transactional');
+        // Use the enhanced SMS sending function with pool support
+        $response = local_equipment_send_sms_with_pool(
+            $gatewayid,
+            $phoneobj->phone,
+            $testmessage,
+            'Transactional',
+            $poolid,
+            $originationnumber ?? ''
+        );
 
         if ($options['verbose']) {
             cli_heading('SMS Response Details', 3);
@@ -210,6 +317,9 @@ if (!empty($options['test-phone']) || $options['send-test']) {
             cli_writeln('✅ SMS sent successfully!');
             if (isset($response->messageid)) {
                 cli_writeln("Message ID: {$response->messageid}");
+            }
+            if (isset($response->poolid)) {
+                cli_writeln("Pool used: {$response->poolid}");
             }
         } else {
             cli_problem('❌ SMS failed!');
