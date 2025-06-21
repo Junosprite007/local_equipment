@@ -840,21 +840,236 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025052200, 'local', 'equipment');
     }
 
-    // Maybe we don't need this:
-    // if ($oldversion < 2025053000) {
-    //     // Add vccsubmissionid field to the local_equipment_exchange_submission table.
-    //     $table = new xmldb_table('local_equipment_exchange_submission');
-    //     $field = new xmldb_field('vccsubmissionid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, 0, 'exchangeid');
-    //     $key = new xmldb_key('vccsubmissionid', XMLDB_KEY_FOREIGN, ['vccsubmissionid'], 'local_equipment_partnership', ['id']);
+    // Inventory Management System - Phase 1: Foundation
+    if ($oldversion < 2025061900) {
 
-    //     if (!$dbman->field_exists($table, 'vccsubmissionid')) {
-    //         $dbman->add_field($table, $field);
-    //         $dbman->add_key($table, $key);
-    //     }
+        // Define table local_equipment_products - Product catalog for equipment types
+        $table = new xmldb_table('local_equipment_products');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('name', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('description', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('manufacturer', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('model', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('category', XMLDB_TYPE_CHAR, '100', null, null, null, null);
+        $table->add_field('is_consumable', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('expected_shelf_life', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('purchase_value', XMLDB_TYPE_NUMBER, '10,2', null, null, null, null);
+        $table->add_field('active', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
 
-    //     // Equipment savepoint reached.
-    //     upgrade_plugin_savepoint(true, 2025053000, 'local', 'equipment');
-    // }
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_index('name', XMLDB_INDEX_NOTUNIQUE, ['name']);
+        $table->add_index('manufacturer', XMLDB_INDEX_NOTUNIQUE, ['manufacturer']);
+        $table->add_index('active', XMLDB_INDEX_NOTUNIQUE, ['active']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Define table local_equipment_locations - Storage locations for equipment
+        $table = new xmldb_table('local_equipment_locations');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('name', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('address', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('description', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('zone', XMLDB_TYPE_CHAR, '100', null, null, null, null);
+        $table->add_field('active', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_index('name', XMLDB_INDEX_NOTUNIQUE, ['name']);
+        $table->add_index('active', XMLDB_INDEX_NOTUNIQUE, ['active']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Define table local_equipment_items - Individual equipment items with UUID tracking
+        $table = new xmldb_table('local_equipment_items');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('uuid', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('productid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('serial_number', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('locationid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('status', XMLDB_TYPE_CHAR, '50', null, XMLDB_NOTNULL, null, 'available');
+        $table->add_field('condition_status', XMLDB_TYPE_CHAR, '50', null, XMLDB_NOTNULL, null, 'good');
+        $table->add_field('condition_notes', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('last_tested', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('current_userid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('student_label', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('transfer_destination', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('is_complete_set', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('expected_return_date', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('productid', XMLDB_KEY_FOREIGN, ['productid'], 'local_equipment_products', ['id']);
+        $table->add_key('locationid', XMLDB_KEY_FOREIGN, ['locationid'], 'local_equipment_locations', ['id']);
+        $table->add_key('current_userid', XMLDB_KEY_FOREIGN, ['current_userid'], 'user', ['id']);
+        $table->add_key('transfer_destination', XMLDB_KEY_FOREIGN, ['transfer_destination'], 'local_equipment_locations', ['id']);
+
+        $table->add_index('uuid', XMLDB_INDEX_UNIQUE, ['uuid']);
+        $table->add_index('status', XMLDB_INDEX_NOTUNIQUE, ['status']);
+        $table->add_index('condition_status', XMLDB_INDEX_NOTUNIQUE, ['condition_status']);
+        $table->add_index('serial_number', XMLDB_INDEX_NOTUNIQUE, ['serial_number']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Define table local_equipment_uuid_history - History of all UUIDs associated with equipment items
+        $table = new xmldb_table('local_equipment_uuid_history');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('itemid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('uuid', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('is_active', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('created_by', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('deactivated_by', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('deactivated_reason', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timedeactivated', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('itemid', XMLDB_KEY_FOREIGN, ['itemid'], 'local_equipment_items', ['id']);
+        $table->add_key('created_by', XMLDB_KEY_FOREIGN, ['created_by'], 'user', ['id']);
+        $table->add_key('deactivated_by', XMLDB_KEY_FOREIGN, ['deactivated_by'], 'user', ['id']);
+
+        $table->add_index('uuid', XMLDB_INDEX_NOTUNIQUE, ['uuid']);
+        $table->add_index('itemid_active', XMLDB_INDEX_NOTUNIQUE, ['itemid', 'is_active']);
+        $table->add_index('is_active', XMLDB_INDEX_NOTUNIQUE, ['is_active']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Define table local_equipment_configurations - Equipment configurations for different course arrangements
+        $table = new xmldb_table('local_equipment_configurations');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('name', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('code', XMLDB_TYPE_CHAR, '50', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('description', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('active', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('createdby', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('createdby', XMLDB_KEY_FOREIGN, ['createdby'], 'user', ['id']);
+
+        $table->add_index('code', XMLDB_INDEX_UNIQUE, ['code']);
+        $table->add_index('active', XMLDB_INDEX_NOTUNIQUE, ['active']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Define table local_equipment_config_products - Products assigned to equipment configurations
+        $table = new xmldb_table('local_equipment_config_products');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('configid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('productid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('quantity_per_student', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('is_required', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('sort_order', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('configid', XMLDB_KEY_FOREIGN, ['configid'], 'local_equipment_configurations', ['id']);
+        $table->add_key('productid', XMLDB_KEY_FOREIGN, ['productid'], 'local_equipment_products', ['id']);
+
+        $table->add_index('configid_productid', XMLDB_INDEX_UNIQUE, ['configid', 'productid']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Define table local_equipment_course_configs - Links courses to equipment configurations
+        $table = new xmldb_table('local_equipment_course_configs');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('configid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('createdby', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
+        $table->add_key('configid', XMLDB_KEY_FOREIGN, ['configid'], 'local_equipment_configurations', ['id']);
+        $table->add_key('createdby', XMLDB_KEY_FOREIGN, ['createdby'], 'user', ['id']);
+
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Define table local_equipment_transactions - Log of all equipment check-in/check-out transactions
+        $table = new xmldb_table('local_equipment_transactions');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('itemid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('transaction_type', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('from_userid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('to_userid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('from_locationid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('to_locationid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('processed_by', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('notes', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('condition_before', XMLDB_TYPE_CHAR, '50', null, null, null, null);
+        $table->add_field('condition_after', XMLDB_TYPE_CHAR, '50', null, null, null, null);
+        $table->add_field('pickup_exchangeid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('timestamp', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('itemid', XMLDB_KEY_FOREIGN, ['itemid'], 'local_equipment_items', ['id']);
+        $table->add_key('from_userid', XMLDB_KEY_FOREIGN, ['from_userid'], 'user', ['id']);
+        $table->add_key('to_userid', XMLDB_KEY_FOREIGN, ['to_userid'], 'user', ['id']);
+        $table->add_key('from_locationid', XMLDB_KEY_FOREIGN, ['from_locationid'], 'local_equipment_locations', ['id']);
+        $table->add_key('to_locationid', XMLDB_KEY_FOREIGN, ['to_locationid'], 'local_equipment_locations', ['id']);
+        $table->add_key('processed_by', XMLDB_KEY_FOREIGN, ['processed_by'], 'user', ['id']);
+        $table->add_key('pickup_exchangeid', XMLDB_KEY_FOREIGN, ['pickup_exchangeid'], 'local_equipment_pickup', ['id']);
+
+        $table->add_index('itemid_timestamp', XMLDB_INDEX_NOTUNIQUE, ['itemid', 'timestamp']);
+        $table->add_index('transaction_type', XMLDB_INDEX_NOTUNIQUE, ['transaction_type']);
+        $table->add_index('timestamp', XMLDB_INDEX_NOTUNIQUE, ['timestamp']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Define table local_equipment_allocations - Equipment allocated to students based on course enrollment
+        $table = new xmldb_table('local_equipment_allocations');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('productid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('itemid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('quantity', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('status', XMLDB_TYPE_CHAR, '50', null, XMLDB_NOTNULL, null, 'allocated');
+        $table->add_field('allocated_by', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('assigned_by', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('pickup_exchangeid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('expected_return_date', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+        $table->add_key('courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
+        $table->add_key('productid', XMLDB_KEY_FOREIGN, ['productid'], 'local_equipment_products', ['id']);
+        $table->add_key('itemid', XMLDB_KEY_FOREIGN, ['itemid'], 'local_equipment_items', ['id']);
+        $table->add_key('allocated_by', XMLDB_KEY_FOREIGN, ['allocated_by'], 'user', ['id']);
+        $table->add_key('assigned_by', XMLDB_KEY_FOREIGN, ['assigned_by'], 'user', ['id']);
+        $table->add_key('pickup_exchangeid', XMLDB_KEY_FOREIGN, ['pickup_exchangeid'], 'local_equipment_pickup', ['id']);
+
+        $table->add_index('userid_courseid', XMLDB_INDEX_NOTUNIQUE, ['userid', 'courseid']);
+        $table->add_index('status', XMLDB_INDEX_NOTUNIQUE, ['status']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Equipment inventory savepoint reached.
+        upgrade_plugin_savepoint(true, 2025061900, 'local', 'equipment');
+    }
 
     return true;
 }

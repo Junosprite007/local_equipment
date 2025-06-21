@@ -365,5 +365,238 @@
                 <INDEX NAME="userid_exchangeid" UNIQUE="false" FIELDS="userid,exchangeid"/>
             </INDEXES>
         </TABLE>
+<!-- INVENTORY MANAGEMENT TABLES -->
+
+<!-- Product catalog - defines types of equipment (LEGO Kit, KiwiCo Box, etc.) -->
+<TABLE NAME="local_equipment_products" COMMENT="Product catalog for equipment types">
+    <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Product name (e.g., 'LEGO Mindstorms Kit')"/>
+        <FIELD NAME="description" TYPE="text" NOTNULL="false" COMMENT="Product description"/>
+        <FIELD NAME="manufacturer" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Manufacturer (LEGO, KiwiCo, etc.)"/>
+        <FIELD NAME="model" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Model number"/>
+        <FIELD NAME="category" TYPE="char" LENGTH="100" NOTNULL="false" COMMENT="Category (kit, accessory, cable, etc.)"/>
+        <FIELD NAME="is_consumable" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="1 if consumable, 0 if returnable"/>
+        <FIELD NAME="active" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" COMMENT="1 if active, 0 if discontinued"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+    </FIELDS>
+    <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+    </KEYS>
+    <INDEXES>
+        <INDEX NAME="name" UNIQUE="false" FIELDS="name"/>
+        <INDEX NAME="manufacturer" UNIQUE="false" FIELDS="manufacturer"/>
+        <INDEX NAME="active" UNIQUE="false" FIELDS="active"/>
+    </INDEXES>
+</TABLE>
+
+<!-- Storage locations -->
+<TABLE NAME="local_equipment_locations" COMMENT="Storage locations for equipment">
+    <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Location name (e.g., 'Main Warehouse', 'Josh House')"/>
+        <FIELD NAME="address" TYPE="text" NOTNULL="false" COMMENT="Physical address"/>
+        <FIELD NAME="description" TYPE="text" NOTNULL="false" COMMENT="Location description"/>
+        <FIELD NAME="zone" TYPE="char" LENGTH="100" NOTNULL="false" COMMENT="Zone within location (e.g., 'Aisle A', 'Top Shelf')"/>
+        <FIELD NAME="active" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+    </FIELDS>
+    <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+    </KEYS>
+    <INDEXES>
+        <INDEX NAME="name" UNIQUE="false" FIELDS="name"/>
+        <INDEX NAME="active" UNIQUE="false" FIELDS="active"/>
+    </INDEXES>
+</TABLE>
+
+<!-- Individual equipment items with UUID tracking -->
+<TABLE NAME="local_equipment_items" COMMENT="Individual equipment items with UUID tracking">
+    <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="uuid" TYPE="char" LENGTH="36" NOTNULL="true" COMMENT="Current UUID for QR code tracking"/>
+        <FIELD NAME="productid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="FK to products table"/>
+        <FIELD NAME="serial_number" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Manufacturer serial number"/>
+        <FIELD NAME="locationid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Current storage location"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="50" NOTNULL="true" DEFAULT="available" COMMENT="available, checked_out, in_transit, maintenance, damaged, lost"/>
+        <FIELD NAME="condition_status" TYPE="char" LENGTH="50" NOTNULL="true" DEFAULT="good" COMMENT="excellent, good, fair, poor, needs_repair"/>
+        <FIELD NAME="condition_notes" TYPE="text" NOTNULL="false" COMMENT="Condition assessment notes"/>
+        <FIELD NAME="last_tested" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Timestamp of last functionality test"/>
+        <FIELD NAME="current_userid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Current user who has the item (if checked out)"/>
+        <FIELD NAME="student_label" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Student name label applied to item"/>
+        <FIELD NAME="transfer_destination" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Destination location for in_transit items"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+    </FIELDS>
+    <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="productid" TYPE="foreign" FIELDS="productid" REFTABLE="local_equipment_products" REFFIELDS="id"/>
+        <KEY NAME="locationid" TYPE="foreign" FIELDS="locationid" REFTABLE="local_equipment_locations" REFFIELDS="id"/>
+        <KEY NAME="current_userid" TYPE="foreign" FIELDS="current_userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="transfer_destination" TYPE="foreign" FIELDS="transfer_destination" REFTABLE="local_equipment_locations" REFFIELDS="id"/>
+    </KEYS>
+    <INDEXES>
+        <INDEX NAME="uuid" UNIQUE="true" FIELDS="uuid"/>
+        <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
+        <INDEX NAME="condition_status" UNIQUE="false" FIELDS="condition_status"/>
+        <INDEX NAME="serial_number" UNIQUE="false" FIELDS="serial_number"/>
+    </INDEXES>
+</TABLE>
+
+<!-- UUID history tracking for equipment items -->
+<TABLE NAME="local_equipment_uuid_history" COMMENT="History of all UUIDs associated with equipment items">
+    <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="itemid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="FK to equipment_items"/>
+        <FIELD NAME="uuid" TYPE="char" LENGTH="36" NOTNULL="true" COMMENT="Historical UUID"/>
+        <FIELD NAME="is_active" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" COMMENT="1 if current UUID, 0 if historical"/>
+        <FIELD NAME="created_by" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="User who created this UUID"/>
+        <FIELD NAME="deactivated_by" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="User who deactivated this UUID"/>
+        <FIELD NAME="deactivated_reason" TYPE="text" NOTNULL="false" COMMENT="Reason for UUID replacement"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timedeactivated" TYPE="int" LENGTH="10" NOTNULL="false"/>
+    </FIELDS>
+    <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="itemid" TYPE="foreign" FIELDS="itemid" REFTABLE="local_equipment_items" REFFIELDS="id"/>
+        <KEY NAME="created_by" TYPE="foreign" FIELDS="created_by" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="deactivated_by" TYPE="foreign" FIELDS="deactivated_by" REFTABLE="user" REFFIELDS="id"/>
+    </KEYS>
+    <INDEXES>
+        <INDEX NAME="uuid" UNIQUE="false" FIELDS="uuid"/>
+        <INDEX NAME="itemid_active" UNIQUE="false" FIELDS="itemid,is_active"/>
+        <INDEX NAME="is_active" UNIQUE="false" FIELDS="is_active"/>
+    </INDEXES>
+</TABLE>
+
+<!-- Equipment configurations for course sections (A, B, C arrangements) -->
+<TABLE NAME="local_equipment_configurations" COMMENT="Equipment configurations for different course arrangements">
+    <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Configuration name (e.g., 'Robotics II - Section A')"/>
+        <FIELD NAME="code" TYPE="char" LENGTH="50" NOTNULL="true" COMMENT="Configuration code (e.g., 'R2A', 'DBB')"/>
+        <FIELD NAME="description" TYPE="text" NOTNULL="false" COMMENT="Description of equipment in this configuration"/>
+        <FIELD NAME="active" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="createdby" TYPE="int" LENGTH="10" NOTNULL="true"/>
+    </FIELDS>
+    <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="createdby" TYPE="foreign" FIELDS="createdby" REFTABLE="user" REFFIELDS="id"/>
+    </KEYS>
+    <INDEXES>
+        <INDEX NAME="code" UNIQUE="true" FIELDS="code"/>
+        <INDEX NAME="active" UNIQUE="false" FIELDS="active"/>
+    </INDEXES>
+</TABLE>
+
+<!-- Products within each configuration -->
+<TABLE NAME="local_equipment_config_products" COMMENT="Products assigned to equipment configurations">
+    <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="configid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="productid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="quantity_per_student" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="is_required" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="sort_order" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+    </FIELDS>
+    <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="configid" TYPE="foreign" FIELDS="configid" REFTABLE="local_equipment_configurations" REFFIELDS="id"/>
+        <KEY NAME="productid" TYPE="foreign" FIELDS="productid" REFTABLE="local_equipment_products" REFFIELDS="id"/>
+    </KEYS>
+    <INDEXES>
+        <INDEX NAME="configid_productid" UNIQUE="true" FIELDS="configid,productid"/>
+    </INDEXES>
+</TABLE>
+
+<!-- Course equipment assignments using configurations -->
+<TABLE NAME="local_equipment_course_configs" COMMENT="Links courses to equipment configurations">
+    <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="configid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="createdby" TYPE="int" LENGTH="10" NOTNULL="true"/>
+    </FIELDS>
+    <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="configid" TYPE="foreign" FIELDS="configid" REFTABLE="local_equipment_configurations" REFFIELDS="id"/>
+        <KEY NAME="createdby" TYPE="foreign" FIELDS="createdby" REFTABLE="user" REFFIELDS="id"/>
+    </KEYS>
+    <INDEXES>
+        <INDEX NAME="courseid" UNIQUE="true" FIELDS="courseid"/>
+    </INDEXES>
+</TABLE>
+
+<!-- Equipment transactions log -->
+<TABLE NAME="local_equipment_transactions" COMMENT="Log of all equipment check-in/check-out transactions">
+    <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="itemid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="FK to equipment_items"/>
+        <FIELD NAME="transaction_type" TYPE="char" LENGTH="20" NOTNULL="true" COMMENT="checkin, checkout, transfer, maintenance, condition_update"/>
+        <FIELD NAME="from_userid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="User item came from (for checkin)"/>
+        <FIELD NAME="to_userid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="User item went to (for checkout)"/>
+        <FIELD NAME="from_locationid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Location item came from"/>
+        <FIELD NAME="to_locationid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Location item went to"/>
+        <FIELD NAME="processed_by" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Admin/staff who processed transaction"/>
+        <FIELD NAME="notes" TYPE="text" NOTNULL="false" COMMENT="Transaction notes"/>
+        <FIELD NAME="condition_before" TYPE="char" LENGTH="50" NOTNULL="false" COMMENT="Condition before transaction"/>
+        <FIELD NAME="condition_after" TYPE="char" LENGTH="50" NOTNULL="false" COMMENT="Condition after transaction"/>
+        <FIELD NAME="pickup_exchangeid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="FK to pickup/exchange if related"/>
+        <FIELD NAME="timestamp" TYPE="int" LENGTH="10" NOTNULL="true"/>
+    </FIELDS>
+    <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="itemid" TYPE="foreign" FIELDS="itemid" REFTABLE="local_equipment_items" REFFIELDS="id"/>
+        <KEY NAME="from_userid" TYPE="foreign" FIELDS="from_userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="to_userid" TYPE="foreign" FIELDS="to_userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="from_locationid" TYPE="foreign" FIELDS="from_locationid" REFTABLE="local_equipment_locations" REFFIELDS="id"/>
+        <KEY NAME="to_locationid" TYPE="foreign" FIELDS="to_locationid" REFTABLE="local_equipment_locations" REFFIELDS="id"/>
+        <KEY NAME="processed_by" TYPE="foreign" FIELDS="processed_by" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="pickup_exchangeid" TYPE="foreign" FIELDS="pickup_exchangeid" REFTABLE="local_equipment_pickup" REFFIELDS="id"/>
+    </KEYS>
+    <INDEXES>
+        <INDEX NAME="itemid_timestamp" UNIQUE="false" FIELDS="itemid,timestamp"/>
+        <INDEX NAME="transaction_type" UNIQUE="false" FIELDS="transaction_type"/>
+        <INDEX NAME="to_userid" UNIQUE="false" FIELDS="to_userid"/>
+        <INDEX NAME="timestamp" UNIQUE="false" FIELDS="timestamp"/>
+    </INDEXES>
+</TABLE>
+
+<!-- Student equipment allocations -->
+<TABLE NAME="local_equipment_allocations" COMMENT="Equipment allocated to students based on course enrollment">
+    <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Student user ID"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Course ID"/>
+        <FIELD NAME="productid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Product type allocated"/>
+        <FIELD NAME="itemid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Specific item assigned (when scanned)"/>
+        <FIELD NAME="quantity" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="50" NOTNULL="true" DEFAULT="allocated" COMMENT="allocated, assigned, checked_out, returned"/>
+        <FIELD NAME="allocated_by" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Admin who made allocation"/>
+        <FIELD NAME="assigned_by" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Admin who assigned specific item"/>
+        <FIELD NAME="pickup_exchangeid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Related pickup/exchange"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+    </FIELDS>
+    <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="productid" TYPE="foreign" FIELDS="productid" REFTABLE="local_equipment_products" REFFIELDS="id"/>
+        <KEY NAME="itemid" TYPE="foreign" FIELDS="itemid" REFTABLE="local_equipment_items" REFFIELDS="id"/>
+        <KEY NAME="allocated_by" TYPE="foreign" FIELDS="allocated_by" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="assigned_by" TYPE="foreign" FIELDS="assigned_by" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="pickup_exchangeid" TYPE="foreign" FIELDS="pickup_exchangeid" REFTABLE="local_equipment_pickup" REFFIELDS="id"/>
+    </KEYS>
+    <INDEXES>
+        <INDEX NAME="userid_courseid" UNIQUE="false" FIELDS="userid,courseid"/>
+        <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
+    </INDEXES>
+</TABLE>
     </TABLES>
 </XMLDB>

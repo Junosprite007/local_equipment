@@ -352,6 +352,92 @@ if ($hassiteconfig) {
         'local/equipment:sendmasstextmessages'
     ));
 
+    // Add 'Inventory Management' subcategory.
+    $ADMIN->add(
+        $component,
+        new admin_category(
+            "{$component}_inventory_cat",
+            new lang_string('inventory', 'local_equipment')
+        )
+    );
+
+    // Add the main inventory dashboard page.
+    $ADMIN->add(
+        "{$component}_inventory_cat",
+        new admin_externalpage(
+            "{$component}_inventory_manage",
+            new lang_string('manageinventory', 'local_equipment'),
+            new moodle_url('/local/equipment/inventory/manage.php'),
+            'local/equipment:manageinventory'
+        )
+    );
+
+    // Add the QR code generator page.
+    $ADMIN->add(
+        "{$component}_inventory_cat",
+        new admin_externalpage(
+            "{$component}_inventory_qr",
+            new lang_string('generateqr', 'local_equipment'),
+            new moodle_url('/local/equipment/inventory/generate_qr.php'),
+            'local/equipment:generateqr'
+        )
+    );
+
+    // Add the check-in/check-out page.
+    $ADMIN->add(
+        "{$component}_inventory_cat",
+        new admin_externalpage(
+            "{$component}_inventory_checkinout",
+            new lang_string('checkinout', 'local_equipment'),
+            new moodle_url('/local/equipment/inventory/checkin.php'),
+            'local/equipment:checkinout'
+        )
+    );
+
+    // Add the products management page.
+    $ADMIN->add(
+        "{$component}_inventory_cat",
+        new admin_externalpage(
+            "{$component}_inventory_products",
+            new lang_string('manageproducts', 'local_equipment'),
+            new moodle_url('/local/equipment/inventory/products.php'),
+            'local/equipment:manageinventory'
+        )
+    );
+
+    // Add the locations management page.
+    $ADMIN->add(
+        "{$component}_inventory_cat",
+        new admin_externalpage(
+            "{$component}_inventory_locations",
+            new lang_string('managelocations', 'local_equipment'),
+            new moodle_url('/local/equipment/inventory/locations.php'),
+            'local/equipment:manageinventory'
+        )
+    );
+
+    // Add the course assignments page.
+    $ADMIN->add(
+        "{$component}_inventory_cat",
+        new admin_externalpage(
+            "{$component}_inventory_courseassignments",
+            new lang_string('courseconfigurations', 'local_equipment'),
+            new moodle_url('/local/equipment/inventory/course_assignments.php'),
+            'local/equipment:manageconfigurations'
+        )
+    );
+
+    // Add the inventory reports page.
+    $ADMIN->add(
+        "{$component}_inventory_cat",
+        new admin_externalpage(
+            "{$component}_inventory_reports",
+            new lang_string('inventoryreports', 'local_equipment'),
+            new moodle_url('/local/equipment/inventory/reports.php'),
+            'local/equipment:viewreports'
+        )
+    );
+
 
 
 
