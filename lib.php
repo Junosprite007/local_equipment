@@ -50,6 +50,19 @@ function local_equipment_before_standard_head_html_generation(\core\hook\output\
 }
 
 /**
+ * Get all supported countries.
+ *
+ * @return array An array of countries.
+ */
+function local_equipment_get_countries() {
+    return [
+        '' => get_string('selectcountry', 'local_equipment'),
+        'USA' => get_string('USA', 'local_equipment'),
+        // Add more countries as needed
+    ];
+}
+
+/**
  * Get all the states or provinces from a specified country.
  * Will only work for USA at the moment, until I add javascript.
  *
@@ -123,93 +136,65 @@ function local_equipment_get_states($country = 'USA') {
 }
 
 /**
- * Get all countries. List the countries in the order
- * you want them to appear in the dropdown
+ * Serves the files from the local_equipment file areas.
  *
- * @return array An array of countries.
+ * @param stdClass $course the course object
+ * @param stdClass $cm the course module object
+ * @param stdClass $context the context
+ * @param string $filearea the name of the file area
+ * @param array $args extra arguments (itemid, path)
+ * @param bool $forcedownload whether or not force download
+ * @param array $options additional options affecting the file serving
+ * @return bool false if the file not found, just send the file otherwise and do not return anything
  */
-function local_equipment_get_countries() {
-    $countries = [
-        '' => get_string('selectcountry', 'local_equipment'),
-        'USA' => get_string('USA', 'local_equipment'),
-    ];
+function local_equipment_pluginfile($course, $cm, $context, $filearea, array $args, $forcedownload, array $options = []) {
+    global $DB, $USER;
 
-    return $countries;
-}
-
-
-/**
- * Sends an SMS message to a phone number with enhanced error handling.
- *
- * @param string $gatewayid The ID of the SMS gateway to use for sending text messages.
- * @param string $tonumber The phone number to send the SMS message to.
- * @param string $message The message to send in the SMS message.
- * @param string $messagetype The type of message to send (e.g., 'Transactional', 'Promotional').
- * @param string $messagetype_eq The type of message you want to send. Options are currently: 'info', 'otp'.
- * @return object Enhanced response object with detailed error information
- */
-function local_equipment_send_sms($gatewayid, $tonumber, $message, $messagetype, $messagetype_eq) {
-    global $DB;
-
-    // Initialize comprehensive response object
-    $responseobject = new stdClass();
-    $responseobject->success = false;
-    $responseobject->errormessage = '';
-    $responseobject->errortype = '';
-    $responseobject->errorobject = new stdClass();
-    $responseobject->messageid = '';
-    $responseobject->tonumber = $tonumber;
-    $responseobject->gatewayid = $gatewayid;
-
-    $poolid = local_equipment_get_pool_id_for_message_type($messagetype_eq);
-
-    try {
-        // Validate inputs
-        if (empty($gatewayid) || empty($tonumber) || empty($message)) {
-            $responseobject->errortype = 'validation_error';
-            $responseobject->errormessage = 'Missing required parameters: gatewayid, tonumber, or message';
-            return $responseobject;
-        }
-
-        // Get and validate gateway
-        $gatewayobj = $DB->get_record('sms_gateways', ['id' => $gatewayid, 'enabled' => 1]);
-        if (!$gatewayobj) {
-            $responseobject->errortype = 'gateway_error';
-            $responseobject->errormessage = "Invalid or disabled gateway ID: {$gatewayid}";
-            return $responseobject;
-        }
-
-        // Validate phone number format
-        $phoneobj = local_equipment_parse_phone_number($tonumber);
-        if (!empty($phoneobj->errors)) {
-            $responseobject->errortype = 'phone_validation_error';
-            $responseobject->errormessage = 'Invalid phone number: ' . implode(', ', $phoneobj->errors);
-            return $responseobject;
-        }
-
-        // Use validated phone number
-        $tonumber = $phoneobj->phone;
-        $responseobject->tonumber = $tonumber;
-
-        // Route to appropriate gateway handler
-        switch ($gatewayobj->gateway) {
-            case 'smsgateway_aws\\gateway':
-                return local_equipment_handle_aws_gateway_with_pool($gatewayobj, $tonumber, $message, $messagetype, $poolid);
-
-            default:
-                $responseobject->errortype = 'unsupported_gateway';
-                $responseobject->errormessage = "Unsupported gateway type: {$gatewayobj->gateway}";
-                break;
-        }
-    } catch (Exception $e) {
-        $responseobject->errortype = 'exception';
-        $responseobject->errormessage = 'Exception occurred: ' . $e->getMessage();
-        $responseobject->errorobject->exception = $e->getMessage();
-        $responseobject->errorobject->trace = $e->getTraceAsString();
+    // Check the contextlevel is as expected.
+    if ($context->contextlevel != CONTEXT_SYSTEM) {
+        return false;
     }
 
-    return $responseobject;
+    // Make sure the filearea is one of those used by the plugin.
+    if ($filearea !== 'productimage') {
+        return false;
+    }
+
+    // Make sure the user is logged in.
+    require_login();
+
+    // Check the relevant capabilities.
+    if (!has_capability('local/equipment:manageinventory', $context)) {
+        return false;
+    }
+
+    // Get the itemid (product ID).
+    $itemid = array_shift($args);
+
+    // Verify the product exists.
+    if (!$DB->record_exists('local_equipment_products', ['id' => $itemid])) {
+        return false;
+    }
+
+    // Extract the filename / filepath from the $args array.
+    $filename = array_pop($args);
+    if (!$args) {
+        $filepath = '/';
+    } else {
+        $filepath = '/' . implode('/', $args) . '/';
+    }
+
+    // Retrieve the file from the Files API.
+    $fs = get_file_storage();
+    $file = $fs->get_file($context->id, 'local_equipment', $filearea, $itemid, $filepath, $filename);
+    if (!$file) {
+        return false;
+    }
+
+    // Send the file back to the browser with a cache lifetime of 1 day.
+    send_stored_file($file, 86400, 0, $forcedownload, $options);
 }
+
 
 
 /**
@@ -787,7 +772,7 @@ function local_equipment_add_address_group($mform, $addresstype, $label) {
     $addresselements = array_merge(...array_map($formataddressblock, $addressfields));
 
     $group = array_merge(
-        [$mform->createElement('html', '<div class="form-group row">')],
+        [$mform->createElement('html', '<div class="mb-3 row">')],
         $addresselements,
         [$mform->createElement('html', '</div>')]
     );
@@ -875,7 +860,7 @@ function local_equipment_add_address_block(
         $block->elements[$fieldname] = $mform->createElement('checkbox', $fieldname, get_string('sameasphysical', 'local_equipment'));
     }
 
-    $groupview ? $block->elements['startgroup'] = $mform->createElement('html', '<div class="form-group row m-1 mb-4">') : null;
+    $groupview ? $block->elements['startgroup'] = $mform->createElement('html', '<div class="row m-1 mb-4">') : null;
 
     // For each address field, we must set the element name, type, rules, and any attributes.
     foreach ($addressfields as $field) {
@@ -1061,7 +1046,7 @@ function local_equipment_create_time_selector($mform, $name, $label, $defaulttim
     // Set the default ending hour and minute if it exists.
 
     $elements = array(
-        $mform->createElement('html', '<div class="form-group row">'),
+        $mform->createElement('html', '<div class="mb-3 row">'),
         $mform->createElement('html', '<div class="col-md-6">'),
         $mform->createElement(
             'static',
@@ -3730,6 +3715,30 @@ function local_equipment_is_phone_verified($userid) {
 }
 
 /**
+ * Convert array values to integers.
+ *
+ * @param array $array Array to convert
+ * @return array Array with integer values
+ */
+function local_equipment_convert_array_values_to_int($array) {
+    return array_map('intval', $array);
+}
+
+/**
+ * Send SMS message using the configured gateway.
+ *
+ * @param string $gatewayid Gateway ID
+ * @param string $tonumber Phone number
+ * @param string $message Message content
+ * @param string $messagetype Message type
+ * @param string $messagetype_eq Equipment message type
+ * @return object Response object
+ */
+function local_equipment_send_sms($gatewayid, $tonumber, $message, $messagetype = 'Transactional', $messagetype_eq = 'info') {
+    return local_equipment_send_sms_auto_pool($gatewayid, $tonumber, $message, $messagetype_eq, $messagetype);
+}
+
+/**
  * Send mass text messages to parents and admin.
  *
  * @param string $message Message to send
@@ -3772,6 +3781,7 @@ function local_equipment_send_mass_text_to_parents($message, $adminuserid) {
     // Send the messages
     return $manager->send_mass_messages($message, $parents, $adminuserid);
 }
+
 
 // /**
 //  * Callback function to handle welcome message sending.

@@ -41,7 +41,7 @@ const setupPickupMethodToggle = () => {
     const $pickupMethod = $('#id_pickupmethod');
     const $otherPickupFields = $(
         '#id_pickuppersonname, #id_pickuppersonphone, #id_pickuppersondetails'
-    ).closest('.form-group');
+    ).closest('.mb-3');
 
     const toggleOtherPickupFields = () => {
         if ($pickupMethod.val() === 'other') {
@@ -111,7 +111,7 @@ const setupStudentEmailGeneration = () => {
                 getString('studentemailgenerated', 'local_equipment')
                     .then((string) => {
                         $email
-                            .closest('.form-group')
+                            .closest('.mb-3')
                             .append(
                                 `<div class="form-text text-muted">${string}</div>`
                             );

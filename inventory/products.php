@@ -25,6 +25,7 @@
 
 require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
+require_once($CFG->libdir . '/filelib.php');
 
 // Require login and check capabilities
 require_login();
@@ -41,7 +42,9 @@ $description = optional_param('description', '', PARAM_TEXT);
 $manufacturer = optional_param('manufacturer', '', PARAM_TEXT);
 $model = optional_param('model', '', PARAM_TEXT);
 $category = optional_param('category', '', PARAM_TEXT);
+$upc = optional_param('upc', '', PARAM_TEXT);
 $is_consumable = optional_param('is_consumable', 0, PARAM_INT);
+$remove_image = optional_param('remove_image', 0, PARAM_INT);
 
 echo $OUTPUT->header();
 
@@ -59,12 +62,41 @@ if ($action) {
             $product->manufacturer = $manufacturer;
             $product->model = $model;
             $product->category = $category;
+            $product->upc = $upc;
             $product->is_consumable = $is_consumable;
             $product->active = 1;
+            $product->picture = 0; // Will be updated if image is uploaded
             $product->timecreated = time();
             $product->timemodified = time();
 
-            $DB->insert_record('local_equipment_products', $product);
+            $productid = $DB->insert_record('local_equipment_products', $product);
+
+            // Handle image upload
+            if (!empty($_FILES['productimage']['tmp_name'])) {
+                $context = context_system::instance();
+                $fs = get_file_storage();
+
+                // Prepare file record
+                $filerecord = [
+                    'contextid' => $context->id,
+                    'component' => 'local_equipment',
+                    'filearea' => 'productimage',
+                    'itemid' => $productid,
+                    'filepath' => '/',
+                    'filename' => $_FILES['productimage']['name']
+                ];
+
+                // Create file from upload
+                $file = $fs->create_file_from_pathname($filerecord, $_FILES['productimage']['tmp_name']);
+
+                if ($file) {
+                    // Update product record with file ID
+                    $product->id = $productid;
+                    $product->picture = $file->get_id();
+                    $DB->update_record('local_equipment_products', $product);
+                }
+            }
+
             echo $OUTPUT->notification('Product added successfully!', 'success');
         } elseif ($action === 'edit' && $id && $name) {
             $product = $DB->get_record('local_equipment_products', ['id' => $id]);
@@ -74,6 +106,7 @@ if ($action) {
                 $product->manufacturer = $manufacturer;
                 $product->model = $model;
                 $product->category = $category;
+                $product->upc = $upc;
                 $product->is_consumable = $is_consumable;
                 $product->timemodified = time();
 
@@ -113,7 +146,7 @@ if ($action === 'edit' && $id) {
 // Add/Edit Product Form
 echo html_writer::tag('h3', $edit_product ? 'Edit Product' : 'Add New Product');
 
-echo html_writer::start_tag('form', ['method' => 'post', 'action' => '', 'class' => 'row g-3']);
+echo html_writer::start_tag('form', ['method' => 'post', 'action' => '', 'class' => 'row g-3', 'enctype' => 'multipart/form-data']);
 
 echo html_writer::start_div('col-md-6');
 echo html_writer::tag('label', get_string('productname', 'local_equipment'), ['for' => 'name', 'class' => 'form-label']);
@@ -161,6 +194,18 @@ echo html_writer::empty_tag('input', [
 ]);
 echo html_writer::end_div();
 
+echo html_writer::start_div('col-md-6');
+echo html_writer::tag('label', get_string('upc', 'local_equipment'), ['for' => 'upc', 'class' => 'form-label']);
+echo html_writer::empty_tag('input', [
+    'type' => 'text',
+    'id' => 'upc',
+    'name' => 'upc',
+    'value' => $edit_product ? $edit_product->upc : '',
+    'class' => 'form-control',
+    'placeholder' => 'Universal Product Code'
+]);
+echo html_writer::end_div();
+
 echo html_writer::start_div('col-12');
 echo html_writer::tag('label', get_string('description', 'local_equipment'), ['for' => 'description', 'class' => 'form-label']);
 echo html_writer::tag('textarea', $edit_product ? $edit_product->description : '', [
@@ -171,8 +216,58 @@ echo html_writer::tag('textarea', $edit_product ? $edit_product->description : '
 ]);
 echo html_writer::end_div();
 
-echo html_writer::start_div('col-12');
-echo html_writer::start_div('form-check');
+echo html_writer::start_div('col-md-6');
+echo html_writer::tag('label', get_string('productimage', 'local_equipment'), ['for' => 'productimage', 'class' => 'form-label']);
+
+// Show current image if editing and image exists
+if ($edit_product && $edit_product->picture) {
+    $context = context_system::instance();
+    $fs = get_file_storage();
+    $files = $fs->get_area_files($context->id, 'local_equipment', 'productimage', $edit_product->id, 'filename', false);
+    if (!empty($files)) {
+        $file = reset($files);
+        $imageurl = moodle_url::make_pluginfile_url(
+            $context->id,
+            'local_equipment',
+            'productimage',
+            $edit_product->id,
+            '/',
+            $file->get_filename()
+        );
+        echo html_writer::start_div('mb-2');
+        echo html_writer::empty_tag('img', [
+            'src' => $imageurl,
+            'alt' => 'Product image',
+            'class' => 'img-thumbnail',
+            'style' => 'max-width: 200px; max-height: 200px;'
+        ]);
+        echo html_writer::empty_tag('br');
+        echo html_writer::start_div('form-check mt-2');
+        echo html_writer::empty_tag('input', [
+            'type' => 'checkbox',
+            'id' => 'remove_image',
+            'name' => 'remove_image',
+            'value' => 1,
+            'class' => 'form-check-input'
+        ]);
+        echo html_writer::tag('label', get_string('removeimage', 'local_equipment'), ['for' => 'remove_image', 'class' => 'form-check-label']);
+        echo html_writer::end_div();
+        echo html_writer::end_div();
+    }
+}
+
+echo html_writer::empty_tag('input', [
+    'type' => 'file',
+    'id' => 'productimage',
+    'name' => 'productimage',
+    'class' => 'form-control',
+    'accept' => 'image/*'
+]);
+echo html_writer::tag('small', get_string('productimage_help', 'local_equipment'), ['class' => 'form-text text-muted']);
+echo html_writer::end_div();
+
+echo html_writer::start_div('col-md-6');
+echo html_writer::start_div('form-check mt-4');
 echo html_writer::empty_tag('input', [
     'type' => 'checkbox',
     'id' => 'is_consumable',
@@ -231,9 +326,11 @@ try {
         echo html_writer::start_tag('table', ['class' => 'table table-striped']);
         echo html_writer::start_tag('thead');
         echo html_writer::start_tag('tr');
+        echo html_writer::tag('th', 'Image');
         echo html_writer::tag('th', 'Name');
         echo html_writer::tag('th', 'Manufacturer');
         echo html_writer::tag('th', 'Category');
+        echo html_writer::tag('th', 'UPC');
         echo html_writer::tag('th', 'Type');
         echo html_writer::tag('th', 'Items');
         echo html_writer::tag('th', 'Available');
@@ -247,16 +344,47 @@ try {
         foreach ($products as $product) {
             echo html_writer::start_tag('tr', ['class' => $product->active ? '' : 'table-secondary']);
 
+            // Image thumbnail column
+            echo html_writer::start_tag('td');
+            if ($product->picture) {
+                $context = context_system::instance();
+                $fs = get_file_storage();
+                $files = $fs->get_area_files($context->id, 'local_equipment', 'productimage', $product->id, 'filename', false);
+                if (!empty($files)) {
+                    $file = reset($files);
+                    $imageurl = moodle_url::make_pluginfile_url(
+                        $context->id,
+                        'local_equipment',
+                        'productimage',
+                        $product->id,
+                        '/',
+                        $file->get_filename()
+                    );
+                    echo html_writer::empty_tag('img', [
+                        'src' => $imageurl,
+                        'alt' => $product->name,
+                        'class' => 'img-thumbnail',
+                        'style' => 'width: 100px; height: 100px; object-fit: cover;'
+                    ]);
+                } else {
+                    echo html_writer::tag('div', '-', ['class' => 'text-muted', 'style' => 'width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; border: 1px solid #dee2e6; border-radius: 0.375rem;']);
+                }
+            } else {
+                echo html_writer::tag('div', '-', ['class' => 'text-muted', 'style' => 'width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; border: 1px solid #dee2e6; border-radius: 0.375rem;']);
+            }
+            echo html_writer::end_tag('td');
+
             echo html_writer::start_tag('td');
             echo html_writer::tag('strong', $product->name);
             if ($product->model) {
-                echo html_writer::tag('br');
+                echo html_writer::empty_tag('br');
                 echo html_writer::tag('small', 'Model: ' . $product->model, ['class' => 'text-muted']);
             }
             echo html_writer::end_tag('td');
 
             echo html_writer::tag('td', $product->manufacturer ?: '-');
             echo html_writer::tag('td', $product->category ?: '-');
+            echo html_writer::tag('td', $product->upc ?: '-');
             echo html_writer::tag('td', $product->is_consumable ? 'Consumable' : 'Returnable');
             echo html_writer::tag('td', $product->item_count);
             echo html_writer::tag('td', $product->available_count);

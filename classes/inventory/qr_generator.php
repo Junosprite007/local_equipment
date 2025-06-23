@@ -35,8 +35,8 @@ class qr_generator {
     /** @var int Default QR code size */
     const DEFAULT_SIZE = 200;
 
-    /** @var int QR codes per printable sheet (4x6 grid) */
-    const CODES_PER_SHEET = 24;
+    /** @var int QR codes per printable sheet (5x6 grid) */
+    const CODES_PER_SHEET = 28;
 
     /** @var int Columns per sheet */
     const SHEET_COLUMNS = 4;
@@ -111,25 +111,22 @@ class qr_generator {
     }
 
     /**
-     * Generate printable sheet of QR codes (4x6 grid with 0.5" margins).
+     * Generate printable sheet of QR codes (supports multiple sheets for counts > 28).
      *
-     * @param int $count Number of QR codes to generate (max 24)
+     * @param int $count Number of QR codes to generate
      * @return array Array containing HTML content and CSS for printing
      */
     public function generate_printable_sheet($count = self::CODES_PER_SHEET) {
         global $DB, $USER;
 
-        if ($count > self::CODES_PER_SHEET) {
-            $count = self::CODES_PER_SHEET;
-        }
-
+        // No artificial limit - generate as many as requested
         $qr_codes = [];
         $time = time();
 
         // Generate UUIDs and QR codes
         for ($i = 0; $i < $count; $i++) {
-            $uuid = $this->generate_uuid();
-            $qr_data = $this->generate_item_qr($uuid, 150); // Smaller size for printing
+            $uuid = self::generate_uuid();
+            $qr_data = $this->generate_item_qr($uuid, 120); // Optimized size for 4x6 grid printing
 
             $qr_codes[] = [
                 'uuid' => $uuid,
@@ -148,8 +145,8 @@ class qr_generator {
             $DB->insert_record('local_equipment_uuid_history', $history_record);
         }
 
-        // Generate HTML content
-        $html = $this->generate_sheet_html($qr_codes);
+        // Generate HTML content (supports multiple sheets)
+        $html = $this->generate_sheet_html($qr_codes, $count);
         $css = $this->get_printable_sheet_css();
 
         return [
@@ -177,7 +174,7 @@ class qr_generator {
             $transaction = $DB->start_delegated_transaction();
 
             for ($i = 0; $i < $count; $i++) {
-                $uuid = $this->generate_uuid();
+                $uuid = self::generate_uuid();
 
                 // Create equipment item
                 $item = new \stdClass();
@@ -265,7 +262,7 @@ class qr_generator {
             );
 
             // Generate new UUID
-            $new_uuid = $this->generate_uuid();
+            $new_uuid = self::generate_uuid();
 
             // Update item with new UUID
             $item->uuid = $new_uuid;
@@ -393,36 +390,55 @@ class qr_generator {
     }
 
     /**
-     * Generate HTML for printable QR code sheet.
+     * Generate HTML for printable QR code sheet(s).
      *
      * @param array $qr_codes Array of QR code data
+     * @param int $total_count Total number of QR codes requested
      * @return string HTML content
      */
-    private function generate_sheet_html($qr_codes) {
-        $html = '<div class="qr-sheet">';
+    private function generate_sheet_html($qr_codes, $total_count) {
+        $html = '';
+        $sheets_needed = ceil($total_count / self::CODES_PER_SHEET);
 
-        for ($i = 0; $i < self::CODES_PER_SHEET; $i++) {
-            $html .= '<div class="qr-cell';
+        for ($sheet = 0; $sheet < $sheets_needed; $sheet++) {
+            $html .= '<div class="qr-sheet">';
 
-            // Add perforation line classes
-            if ($i % self::SHEET_COLUMNS !== 0) {
-                $html .= ' perforation-line-v';
-            }
-            if ($i >= self::SHEET_COLUMNS) {
-                $html .= ' perforation-line-h';
-            }
+            // Calculate start and end indices for this sheet
+            $start_index = $sheet * self::CODES_PER_SHEET;
+            $end_index = min($start_index + self::CODES_PER_SHEET, $total_count);
 
-            $html .= '">';
+            // Generate cells for this sheet (always 28 cells per sheet for consistent layout)
+            for ($i = 0; $i < self::CODES_PER_SHEET; $i++) {
+                $qr_index = $start_index + $i;
 
-            if (isset($qr_codes[$i])) {
-                $html .= '<img src="data:image/png;base64,' . $qr_codes[$i]['qr_data'] . '"
-                         class="qr-code" alt="QR Code: ' . $qr_codes[$i]['uuid'] . '">';
+                $html .= '<div class="qr-cell';
+
+                // Add perforation line classes
+                if ($i % self::SHEET_COLUMNS !== 0) {
+                    $html .= ' perforation-line-v';
+                }
+                if ($i >= self::SHEET_COLUMNS) {
+                    $html .= ' perforation-line-h';
+                }
+
+                $html .= '">';
+
+                // Only add QR code if we have one for this position
+                if ($qr_index < $total_count && isset($qr_codes[$qr_index])) {
+                    $html .= '<img src="data:image/png;base64,' . $qr_codes[$qr_index]['qr_data'] . '"
+                             class="qr-code" alt="QR Code: ' . $qr_codes[$qr_index]['uuid'] . '">';
+                }
+
+                $html .= '</div>';
             }
 
             $html .= '</div>';
-        }
 
-        $html .= '</div>';
+            // Add page break between sheets (except for the last sheet)
+            if ($sheet < $sheets_needed - 1) {
+                $html .= '<div style="page-break-after: always;"></div>';
+            }
+        }
 
         return $html;
     }
@@ -432,7 +448,7 @@ class qr_generator {
      *
      * @return string UUID
      */
-    private function generate_uuid() {
+    public static function generate_uuid() {
         return sprintf(
             '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
             mt_rand(0, 0xffff),

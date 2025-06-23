@@ -33,7 +33,7 @@
             <form id="mass-text-form" method="post" action="{{form_action}}" class="mt-4">
                 {{#sesskey}}<input type="hidden" name="sesskey" value="{{sesskey}}">{{/sesskey}}
 
-                <div class="form-group mb-3">
+                <div class="mb-3">
                     <label for="id_message" class="form-label required">
                         {{#str}}message, local_equipment{{/str}}
                         <span class="text-danger">*</span>
@@ -51,7 +51,7 @@
                     </div>
                 </div>
 
-                <div class="form-group mb-4">
+                <div class="mb-4">
                     <button type="submit" class="btn btn-primary">
                         <i class="fa fa-paper-plane" aria-hidden="true"></i>
                         {{#str}}send_message, local_equipment{{/str}}

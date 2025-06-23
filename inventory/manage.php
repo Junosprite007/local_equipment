@@ -89,6 +89,56 @@ try {
 
     echo html_writer::end_div(); // row
 
+    // Second row for additional actions
+    echo html_writer::start_div('row');
+
+    // Add Items
+    echo html_writer::start_div('col-md-4 mb-3');
+    echo html_writer::start_div('card');
+    echo html_writer::start_div('card-body text-center');
+    echo html_writer::tag('h5', get_string('additems', 'local_equipment'), ['class' => 'card-title']);
+    echo html_writer::tag('p', 'Add new equipment items to inventory', ['class' => 'card-text']);
+    echo html_writer::link(
+        new moodle_url('/local/equipment/inventory/add_items.php'),
+        get_string('additems', 'local_equipment'),
+        ['class' => 'btn btn-success']
+    );
+    echo html_writer::end_div(); // card-body
+    echo html_writer::end_div(); // card
+    echo html_writer::end_div(); // col
+
+    // Remove Items
+    echo html_writer::start_div('col-md-4 mb-3');
+    echo html_writer::start_div('card');
+    echo html_writer::start_div('card-body text-center');
+    echo html_writer::tag('h5', get_string('removeitems', 'local_equipment'), ['class' => 'card-title']);
+    echo html_writer::tag('p', 'Remove equipment items from inventory', ['class' => 'card-text']);
+    echo html_writer::link(
+        new moodle_url('/local/equipment/inventory/remove_items.php'),
+        get_string('removeitems', 'local_equipment'),
+        ['class' => 'btn btn-danger']
+    );
+    echo html_writer::end_div(); // card-body
+    echo html_writer::end_div(); // card
+    echo html_writer::end_div(); // col
+
+    // Manage Locations
+    echo html_writer::start_div('col-md-4 mb-3');
+    echo html_writer::start_div('card');
+    echo html_writer::start_div('card-body text-center');
+    echo html_writer::tag('h5', get_string('managelocations', 'local_equipment'), ['class' => 'card-title']);
+    echo html_writer::tag('p', 'Add and manage storage locations', ['class' => 'card-text']);
+    echo html_writer::link(
+        new moodle_url('/local/equipment/inventory/locations.php'),
+        get_string('managelocations', 'local_equipment'),
+        ['class' => 'btn btn-info']
+    );
+    echo html_writer::end_div(); // card-body
+    echo html_writer::end_div(); // card
+    echo html_writer::end_div(); // col
+
+    echo html_writer::end_div(); // row
+
     // Quick actions section
     echo html_writer::tag('h3', get_string('actions', 'local_equipment'), ['class' => 'mt-4']);
 
@@ -118,7 +168,7 @@ try {
     echo html_writer::link(
         new moodle_url('/local/equipment/inventory/checkin.php'),
         get_string('checkinout', 'local_equipment'),
-        ['class' => 'btn btn-success']
+        ['class' => 'btn btn-primary']
     );
     echo html_writer::end_div(); // card-body
     echo html_writer::end_div(); // card
@@ -133,7 +183,7 @@ try {
     echo html_writer::link(
         new moodle_url('/local/equipment/inventory/products.php'),
         get_string('manageproducts', 'local_equipment'),
-        ['class' => 'btn btn-info']
+        ['class' => 'btn btn-primary']
     );
     echo html_writer::end_div(); // card-body
     echo html_writer::end_div(); // card

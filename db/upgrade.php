@@ -1071,5 +1071,35 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025061900, 'local', 'equipment');
     }
 
+    // Add picture field to products table for Phase 1 completion
+    if ($oldversion < 2025062301) {
+        $table = new xmldb_table('local_equipment_products');
+
+        // Add picture field to store file ID for product images
+        $field = new xmldb_field('picture', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'active');
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Equipment inventory picture field savepoint reached.
+        upgrade_plugin_savepoint(true, 2025062301, 'local', 'equipment');
+    }
+
+    // Add UPC field to products table for Phase 1 completion
+    if ($oldversion < 2025062302) {
+        $table = new xmldb_table('local_equipment_products');
+
+        // Add UPC field for barcode integration
+        $field = new xmldb_field('upc', XMLDB_TYPE_CHAR, '20', null, null, null, null, 'picture');
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Equipment inventory UPC field savepoint reached.
+        upgrade_plugin_savepoint(true, 2025062302, 'local', 'equipment');
+    }
+
     return true;
 }

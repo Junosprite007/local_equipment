@@ -416,6 +416,28 @@ if ($hassiteconfig) {
         )
     );
 
+    // Add the add items page.
+    $ADMIN->add(
+        "{$component}_inventory_cat",
+        new admin_externalpage(
+            "{$component}_inventory_additems",
+            new lang_string('additems', 'local_equipment'),
+            new moodle_url('/local/equipment/inventory/add_items.php'),
+            'local/equipment:manageinventory'
+        )
+    );
+
+    // Add the remove items page.
+    $ADMIN->add(
+        "{$component}_inventory_cat",
+        new admin_externalpage(
+            "{$component}_inventory_removeitems",
+            new lang_string('removeitems', 'local_equipment'),
+            new moodle_url('/local/equipment/inventory/remove_items.php'),
+            'local/equipment:manageinventory'
+        )
+    );
+
     // Add the course assignments page.
     $ADMIN->add(
         "{$component}_inventory_cat",

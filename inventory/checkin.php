@@ -31,7 +31,7 @@ require_login();
 require_capability('local/equipment:checkinout', context_system::instance());
 
 // Set up admin external page
-admin_externalpage_setup('local_equipment_inventory_checkin');
+admin_externalpage_setup('local_equipment_inventory_checkinout');
 
 // Handle form submission
 $action = optional_param('action', '', PARAM_ALPHA);
