@@ -1,0 +1,396 @@
+// Scanner interface styles for Equipment plugin
+// This file is part of FLIP Plugins for Moodle
+
+.scanner-container {
+    position: relative;
+    width: min(90vw, 400px);
+    aspect-ratio: 1/1;
+    margin: 0 auto;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+    video {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+        object-position: center;
+        transition: transform 0.3s ease;
+
+        &.mirrored {
+            transform: scaleX(-1);
+        }
+
+        &.normal {
+            transform: scaleX(1);
+        }
+    }
+
+    canvas {
+        display: none;
+    }
+}
+
+.scanner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 10;
+
+    .scan-target {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 200px;
+        height: 150px;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+
+        &.scan-success {
+            border-color: #28a745;
+            box-shadow: 0 0 20px rgba(40, 167, 69, 0.6);
+            animation: scanSuccess 0.5s ease;
+        }
+
+        .scan-corners {
+            position: relative;
+            width: 100%;
+            height: 100%;
+
+            .corner {
+                position: absolute;
+                width: 20px;
+                height: 20px;
+                border: 3px solid #fff;
+
+                &.top-left {
+                    top: -3px;
+                    left: -3px;
+                    border-right: none;
+                    border-bottom: none;
+                }
+
+                &.top-right {
+                    top: -3px;
+                    right: -3px;
+                    border-left: none;
+                    border-bottom: none;
+                }
+
+                &.bottom-left {
+                    bottom: -3px;
+                    left: -3px;
+                    border-right: none;
+                    border-top: none;
+                }
+
+                &.bottom-right {
+                    bottom: -3px;
+                    right: -3px;
+                    border-left: none;
+                    border-top: none;
+                }
+            }
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #fff, transparent);
+            animation: scanLine 2s linear infinite;
+        }
+    }
+
+    .scan-instructions {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        text-align: center;
+        color: #fff;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+
+        p {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .scan-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 4px;
+            display: inline-block;
+        }
+    }
+}
+
+.scanner-controls {
+    padding: 15px;
+    background: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    text-align: center;
+
+    .btn {
+        margin: 0 5px;
+    }
+
+    .scanner-toggle {
+        margin-bottom: 10px;
+
+        .btn-group {
+            .btn {
+                min-width: 100px;
+            }
+        }
+    }
+
+    .manual-input {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #dee2e6;
+
+        .input-group {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+    }
+}
+
+// Animations
+@keyframes scanLine {
+    0% {
+        top: 0;
+        opacity: 1;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        top: 100%;
+        opacity: 0;
+    }
+}
+
+@keyframes scanSuccess {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.05);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+// Mobile responsive adjustments
+@media (max-width: 576px) {
+    .scanner-container {
+        margin: 0;
+        border-radius: 0;
+    }
+
+    .scanner-overlay {
+        .scan-target {
+            width: 200px;
+            height: 200px;
+        }
+
+        .scan-instructions {
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+
+            p {
+                font-size: 13px;
+            }
+
+            .scan-status {
+                font-size: 11px;
+            }
+        }
+    }
+
+    .scanner-controls {
+        padding: 10px;
+
+        .btn {
+            min-height: 44px; // Better touch targets for mobile
+            font-size: 16px; // Prevent zoom on iOS
+        }
+
+        .scanner-toggle .btn-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+
+            .btn {
+                border-radius: 0.375rem !important;
+                margin-bottom: 8px;
+
+                &:last-child {
+                    margin-bottom: 0;
+                }
+            }
+        }
+
+        #scan-barcode-btn {
+            width: 100%;
+            margin-top: 10px;
+            font-size: 18px;
+            padding: 12px;
+        }
+
+        .file-upload-section {
+            .form-control {
+                min-height: 44px;
+                font-size: 16px;
+            }
+
+            .btn {
+                min-height: 44px;
+            }
+        }
+
+        .manual-input {
+            .input-group {
+                max-width: 100%;
+
+                .form-control {
+                    min-height: 44px;
+                    font-size: 16px; // Prevent zoom on iOS
+                }
+            }
+        }
+    }
+
+    // Mobile-specific alert styling
+    .alert {
+        font-size: 14px;
+
+        h5 {
+            font-size: 16px;
+        }
+
+        ol {
+            padding-left: 20px;
+        }
+
+        code {
+            font-size: 12px;
+            word-break: break-all;
+        }
+    }
+}
+
+// File upload specific styles
+.file-upload-section {
+    .form-control[type="file"] {
+        padding: 8px 12px;
+
+        &::file-selector-button {
+            background: var(--bs-primary);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+    }
+
+    .form-text {
+        margin-top: 4px;
+        font-size: 0.875rem;
+    }
+}
+
+// Mobile camera guidance styles
+.mobile-camera-guidance {
+    .alert {
+        text-align: left;
+
+        ol {
+            margin-bottom: 1rem;
+        }
+
+        code {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+    }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+    .scanner-controls {
+        background: #343a40;
+        border-top-color: #495057;
+        color: #fff;
+
+        .manual-input {
+            border-top-color: #495057;
+        }
+    }
+}
+
+// Loading state
+.scanner-loading {
+    .scanner-container {
+        &::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            z-index: 20;
+        }
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+// Error state
+.scanner-error {
+    .scanner-container {
+        border: 2px solid #dc3545;
+    }
+
+    .scan-target {
+        border-color: #dc3545 !important;
+    }
+}
+
+// Success state
+.scanner-success {
+    .scanner-container {
+        border: 2px solid #28a745;
+    }
+}

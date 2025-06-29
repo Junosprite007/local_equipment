@@ -1,0 +1,1453 @@
+// This file is part of FLIP Plugins for Moodle
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+/**
+ * Scanner integration for add items page.
+ *
+ * @module     local_equipment/add-items-scanner
+ * @copyright  2024 onwards Joshua Kirby <josh@funlearningcompany.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+import UniversalScanner from 'local_equipment/universal-scanner';
+import Notification from 'core/notification';
+import Log from 'core/log';
+import jsQR from 'local_equipment/jsqr';
+
+/**
+ * Initialize the scanner for add items page.
+ */
+export const init = () => {
+    Log.debug('local_equipment/add-items-scanner: init() called');
+    Log.debug(
+        'local_equipment/add-items-scanner: document.readyState =',
+        document.readyState
+    );
+
+    // Check if DOM is already ready
+    if (document.readyState === 'loading') {
+        // DOM is still loading, wait for DOMContentLoaded
+        Log.debug(
+            'local_equipment/add-items-scanner: DOM still loading, adding DOMContentLoaded listener'
+        );
+        document.addEventListener('DOMContentLoaded', function () {
+            Log.debug(
+                'local_equipment/add-items-scanner: DOMContentLoaded event fired'
+            );
+            initializeScanner();
+        });
+    } else {
+        // DOM is already ready, initialize immediately
+        Log.debug(
+            'local_equipment/add-items-scanner: DOM already ready, initializing immediately'
+        );
+        initializeScanner();
+    }
+};
+
+/**
+ * Initialize the scanner interface.
+ */
+function initializeScanner() {
+    Log.debug('local_equipment/add-items-scanner: initializeScanner() called');
+
+    // First, replace the "Initializing scanner..." message
+    const scannerInterface = document.getElementById('scanner_interface');
+    Log.debug(
+        'local_equipment/add-items-scanner: scannerInterface element found:',
+        !!scannerInterface
+    );
+
+    if (scannerInterface) {
+        Log.debug(
+            'local_equipment/add-items-scanner: Replacing scanner interface HTML'
+        );
+        scannerInterface.innerHTML = `
+            <div class="alert alert-info text-center">
+                <i class="fa fa-info-circle"></i>
+                <strong>Scanner Ready</strong><br>
+                Please select a storage location above to begin scanning.
+            </div>
+        `;
+        Log.debug(
+            'local_equipment/add-items-scanner: Scanner interface HTML updated successfully'
+        );
+    } else {
+        Log.error(
+            'local_equipment/add-items-scanner: scanner_interface element not found in DOM'
+        );
+    }
+    const locationSelect = document.getElementById('location_select');
+    const manualUpc = document.getElementById('manual_upc');
+    const addItemBtn = document.getElementById('add_item_btn');
+    const sessionCount = document.getElementById('session_count');
+    const sessionItems = document.getElementById('session_items');
+    const printQrBtn = document.getElementById('print_qr_btn');
+    const scannerCard = document.getElementById('scanner_card');
+    const sessionSummary = document.getElementById('session_summary');
+
+    let scanner = null;
+    let sessionItemCount = 0;
+    let sessionItemIds = [];
+
+    // Enable scanner when location is selected
+    locationSelect.addEventListener('change', function () {
+        if (this.value) {
+            scannerCard.style.display = 'block';
+            sessionSummary.style.display = 'block';
+            manualUpc.disabled = false;
+            addItemBtn.disabled = false;
+
+            // Initialize scanner
+            initScanner();
+
+            // Reset session when location changes
+            sessionItemCount = 0;
+            sessionItemIds = [];
+            updateSessionDisplay();
+        } else {
+            scannerCard.style.display = 'none';
+            sessionSummary.style.display = 'none';
+            manualUpc.disabled = true;
+            addItemBtn.disabled = true;
+
+            // Destroy scanner
+            if (scanner) {
+                scanner.destroy();
+                scanner = null;
+            }
+        }
+    });
+
+    /**
+     * Initialize the scanner interface.
+     */
+    function initScanner() {
+        // Clear existing scanner interface
+        scannerInterface.innerHTML = '';
+
+        // Create scanner container
+        const scannerContainer = document.createElement('div');
+        scannerContainer.id = 'scanner-container';
+        scannerContainer.className = 'scanner-container mb-3';
+        scannerInterface.appendChild(scannerContainer);
+
+        // Create scanner controls
+        const controlsDiv = document.createElement('div');
+        controlsDiv.className = 'scanner-controls';
+        controlsDiv.innerHTML = `
+            <div class="scanner-toggle mb-3">
+                <div class="btn-group" role="group">
+                    <button type="button" id="start-camera-btn" class="btn btn-primary">
+                        <i class="fa fa-camera"></i> Start Camera
+                    </button>
+                    <button type="button" id="stop-camera-btn" class="btn btn-secondary" disabled>
+                        <i class="fa fa-stop"></i> Stop Camera
+                    </button>
+                </div>
+                <div class="mt-2">
+                    <button type="button" id="scan-barcode-btn" class="btn btn-success" style="display: none;">
+                        <i class="fa fa-qrcode"></i> Scan
+                    </button>
+                    <button type="button" id="flip-camera-btn" class="btn btn-outline-secondary btn-sm ms-2" style="display: none;"
+                        title="Toggle camera mirror">
+                        <i class="fa fa-arrows-h"></i> Flip
+                    </button>
+                </div>
+            </div>
+            <div class="file-upload-section mb-3" style="display: none;" id="file-upload-section">
+                <label for="barcode-file-input" class="form-label">
+                    <i class="fa fa-camera"></i> Take Photo of Barcode:
+                </label>
+                <div class="input-group">
+                    <input type="file" id="barcode-file-input" class="form-control" accept="image/*" capture="environment">
+                    <button type="button" id="process-file-btn" class="btn btn-outline-success" disabled>
+                        <i class="fa fa-search"></i> Scan Photo
+                    </button>
+                </div>
+                <small class="form-text text-muted">
+                    Take a clear photo of the barcode with good lighting
+                </small>
+            </div>
+            <div class="manual-input">
+                <label for="scanner-manual-input" class="form-label">Or enter barcode manually:</label>
+                <div class="input-group">
+                    <input type="text" id="scanner-manual-input" class="form-control" placeholder="Scan or type barcode...">
+                    <button type="button" id="scanner-manual-btn" class="btn btn-outline-primary">Process</button>
+                </div>
+            </div>
+        `;
+        scannerInterface.appendChild(controlsDiv);
+
+        // Initialize scanner instance
+        scanner = new UniversalScanner({
+            containerId: 'scanner-container',
+            resultCallback: handleScanResult,
+            errorCallback: handleScanError,
+        });
+
+        // Initialize scanner
+        scanner.init().then((success) => {
+            if (success) {
+                Log.debug('Scanner initialized successfully');
+            } else {
+                Log.error('Scanner initialization failed');
+                showFallbackInterface();
+            }
+        });
+
+        // Set up control buttons
+        setupScannerControls();
+
+        // Add network test button
+        addNetworkTestButton();
+    }
+
+    /**
+     * Set up scanner control buttons.
+     */
+    function setupScannerControls() {
+        const startBtn = document.getElementById('start-camera-btn');
+        const stopBtn = document.getElementById('stop-camera-btn');
+        const scanBtn = document.getElementById('scan-barcode-btn');
+        const flipBtn = document.getElementById('flip-camera-btn');
+        const manualInput = document.getElementById('scanner-manual-input');
+        const manualBtn = document.getElementById('scanner-manual-btn');
+
+        let isScanning = false;
+        let scanTimeout = null;
+        let isMirrored = false; // Default to mirrored (good for webcams)
+
+        startBtn.addEventListener('click', async () => {
+            try {
+                // Use robust camera detection
+                scanner.stream = await getCameraStreamRobust();
+
+                scanner.video.srcObject = scanner.stream;
+                await scanner.video.play();
+
+                // Set canvas dimensions to match video
+                scanner.canvas.width = scanner.video.videoWidth;
+                scanner.canvas.height = scanner.video.videoHeight;
+
+                scanner.updateStatus(
+                    'Camera ready - click Scan to detect barcode'
+                );
+
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                scanBtn.style.display = 'inline-block';
+                flipBtn.style.display = 'inline-block';
+
+                // Apply initial mirror state
+                updateVideoMirror();
+            } catch (error) {
+                Log.error('Failed to start camera:', error);
+
+                // Show detailed error information
+                const compatibility = await checkCameraCompatibility();
+                if (!compatibility.supported) {
+                    showDetailedCompatibilityError(compatibility);
+                } else {
+                    Notification.addNotification({
+                        message: 'Failed to start camera: ' + error.message,
+                        type: 'error',
+                    });
+                }
+            }
+        });
+
+        stopBtn.addEventListener('click', () => {
+            // Stop camera and hide scan button
+            if (scanner.stream) {
+                scanner.stream.getTracks().forEach((track) => track.stop());
+                scanner.stream = null;
+            }
+            if (scanner.video) {
+                scanner.video.srcObject = null;
+            }
+
+            scanner.updateStatus('Camera stopped');
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            scanBtn.style.display = 'none';
+            flipBtn.style.display = 'none';
+
+            // Clear any active scanning
+            if (scanTimeout) {
+                clearTimeout(scanTimeout);
+                scanTimeout = null;
+            }
+            isScanning = false;
+        });
+
+        // Flip camera button - toggles horizontal mirror
+        flipBtn.addEventListener('click', () => {
+            isMirrored = !isMirrored;
+            updateVideoMirror();
+
+            // Update button text to show current state
+            const icon = isMirrored ? 'fa-arrows-h' : 'fa-arrows-h';
+            const text = isMirrored ? 'Flip (Mirrored)' : 'Flip (Normal)';
+            flipBtn.innerHTML = `<i class="fa ${icon}"></i> ${text}`;
+
+            // Show feedback message
+            const message = isMirrored
+                ? 'Camera mirrored (good for webcams)'
+                : 'Camera normal (good for mobile)';
+            showSuccessMessage(message);
+        });
+
+        /**
+         * Update video mirror state based on isMirrored flag.
+         */
+        function updateVideoMirror() {
+            // Find the video element in the scanner container
+            const videoElement = document.querySelector(
+                '#scanner-container video'
+            );
+
+            if (videoElement) {
+                // Apply transform directly via inline style (more reliable)
+                if (isMirrored) {
+                    videoElement.style.transform = 'scaleX(-1)';
+                } else {
+                    videoElement.style.transform = 'scaleX(1)';
+                }
+
+                Log.debug(
+                    'Video mirror updated:',
+                    isMirrored ? 'mirrored (scaleX(-1))' : 'normal (scaleX(1))',
+                    'Video element found:',
+                    !!videoElement,
+                    'Applied transform:',
+                    videoElement.style.transform
+                );
+            } else {
+                Log.error('Video element not found for mirror update');
+            }
+        }
+
+        // Scan button - triggers 1-second scan window
+        scanBtn.addEventListener('click', async () => {
+            if (isScanning) {
+                return;
+            }
+
+            isScanning = true;
+            scanBtn.disabled = true;
+            scanBtn.innerHTML =
+                '<i class="fa fa-spinner fa-spin"></i> Scanning...';
+            scanner.updateStatus('Scanning for barcode...');
+
+            try {
+                const result = await performSingleScan();
+                if (result) {
+                    // Barcode found and processed
+                    scanner.updateStatus('Scan successful!');
+                    scanner.showScanSuccess();
+                } else {
+                    // No barcode found
+                    scanner.updateStatus('No barcode detected - try again');
+                    showErrorMessage(
+                        'No barcode detected. Please position the barcode in the target area and try again.'
+                    );
+                }
+            } catch (error) {
+                Log.error('Scan error:', error);
+                scanner.updateStatus('Scan failed');
+                showErrorMessage('Scan failed. Please try again.');
+            }
+
+            // Reset button state
+            isScanning = false;
+            scanBtn.disabled = false;
+            scanBtn.innerHTML = '<i class="fa fa-qrcode"></i> Scan';
+
+            // Reset status after a delay
+            setTimeout(() => {
+                scanner.updateStatus(
+                    'Ready to scan - position barcode and click Scan'
+                );
+            }, 2000);
+        });
+
+        /**
+         * Perform a single 1-second scan attempt.
+         * @returns {Promise<boolean>} True if barcode was found and processed
+         */
+        async function performSingleScan() {
+            return new Promise((resolve) => {
+                let scanAttempts = 0;
+                const maxAttempts = 30; // ~1 second at 30fps
+                let found = false;
+
+                const scanFrame = async () => {
+                    if (found || scanAttempts >= maxAttempts) {
+                        resolve(found);
+                        return;
+                    }
+
+                    try {
+                        // Check if video is ready
+                        if (
+                            !scanner.video ||
+                            scanner.video.readyState !==
+                                scanner.video.HAVE_ENOUGH_DATA
+                        ) {
+                            scanAttempts++;
+                            requestAnimationFrame(scanFrame);
+                            return;
+                        }
+
+                        // Draw current frame to canvas
+                        scanner.context.drawImage(
+                            scanner.video,
+                            0,
+                            0,
+                            scanner.canvas.width,
+                            scanner.canvas.height
+                        );
+
+                        // Try native BarcodeDetector first (Chrome/Edge)
+                        if (scanner.hasBarcodeDetector) {
+                            try {
+                                // eslint-disable-next-line no-undef
+                                const detector = new BarcodeDetector({
+                                    formats: [
+                                        'qr_code',
+                                        'ean_13',
+                                        'ean_8',
+                                        'upc_a',
+                                        'upc_e',
+                                        'code_128',
+                                        'code_39',
+                                    ],
+                                });
+
+                                const barcodes = await detector.detect(
+                                    scanner.canvas
+                                );
+
+                                if (barcodes.length > 0) {
+                                    const barcode = barcodes[0];
+                                    Log.debug(
+                                        'Barcode detected:',
+                                        barcode.rawValue,
+                                        barcode.format
+                                    );
+                                    processBarcode(barcode.rawValue);
+                                    found = true;
+                                    resolve(true);
+                                    return;
+                                }
+                            } catch (error) {
+                                Log.debug('BarcodeDetector failed:', error);
+                            }
+                        }
+
+                        // Fallback: Try QR code detection
+                        try {
+                            const imageData = scanner.context.getImageData(
+                                0,
+                                0,
+                                scanner.canvas.width,
+                                scanner.canvas.height
+                            );
+
+                            // Use jsQR library for QR code detection
+                            const code = jsQR.scan(
+                                imageData.data,
+                                imageData.width,
+                                imageData.height
+                            );
+
+                            if (code && code.data) {
+                                Log.debug('QR code detected:', code.data);
+                                processBarcode(code.data);
+                                found = true;
+                                resolve(true);
+                                return;
+                            }
+                        } catch (error) {
+                            Log.debug('QR detection failed:', error);
+                        }
+                    } catch (error) {
+                        Log.debug('Frame processing error:', error);
+                    }
+
+                    scanAttempts++;
+                    requestAnimationFrame(scanFrame);
+                };
+
+                // Start scanning
+                requestAnimationFrame(scanFrame);
+            });
+        }
+
+        // Manual input handling
+        manualBtn.addEventListener('click', () => {
+            const barcode = manualInput.value.trim();
+            if (barcode) {
+                processBarcode(barcode);
+                manualInput.value = '';
+            }
+        });
+
+        manualInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                manualBtn.click();
+            }
+        });
+    }
+
+    /**
+     * Handle scan result from scanner.
+     *
+     * @param {Object} result Scan result
+     */
+    function handleScanResult(result) {
+        if (result.success && result.data) {
+            // Extract barcode data from the scan result
+            const barcodeData = result.data.barcode_data || result.data;
+            Log.debug('Scan successful, processing barcode:', barcodeData);
+            processBarcode(barcodeData);
+        } else {
+            Log.error('Scan failed:', result);
+            // Show error message to user
+            const errorMsg = result.message || 'Scan failed. Please try again.';
+            showErrorMessage(errorMsg);
+        }
+    }
+
+    /**
+     * Handle scan error from scanner.
+     *
+     * @param {string} errorCode Error code
+     * @param {string} message Error message
+     */
+    function handleScanError(errorCode, message) {
+        Log.error('Scanner error:', errorCode, message);
+
+        if (errorCode === 'camera_access_failed') {
+            showFallbackInterface();
+        }
+    }
+
+    /**
+     * Show fallback interface when camera is not available.
+     */
+    function showFallbackInterface() {
+        const scannerContainer = document.getElementById('scanner-container');
+        if (scannerContainer) {
+            const isMobile =
+                /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+                    navigator.userAgent
+                );
+            const isHTTP = window.location.protocol === 'http:';
+
+            let content = '';
+
+            if (isMobile && isHTTP) {
+                // Mobile + HTTP specific guidance
+                content = `
+                    <div class="alert alert-info">
+                        <h5><i class="fa fa-mobile"></i> Mobile Camera Setup Required</h5>
+                        <p><strong>To enable camera scanning on mobile:</strong></p>
+                        <ol class="text-start mb-3">
+                            <li>Open Chrome menu (⋮) → <strong>Settings</strong></li>
+                            <li>Go to <strong>Site Settings</strong> → <strong>Camera</strong></li>
+                            <li>Find this site and set to <strong>"Allow"</strong></li>
+                        </ol>
+                        <p><strong>Alternative:</strong> In Chrome address bar, type:<br>
+                        <code>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code><br>
+                        Add: <code>${window.location.origin}</code></p>
+                        <button type="button" id="test-camera-btn" class="btn btn-primary btn-sm mt-2">
+                            <i class="fa fa-camera"></i> Test Camera Access
+                        </button>
+                    </div>
+                `;
+            } else if (isMobile) {
+                // Mobile + HTTPS
+                content = `
+                    <div class="alert alert-warning text-center">
+                        <i class="fa fa-mobile"></i>
+                        <strong>Camera access denied</strong><br>
+                        Please check your browser settings and allow camera access for this site.
+                        <button type="button" id="test-camera-btn" class="btn btn-primary btn-sm mt-2">
+                            <i class="fa fa-camera"></i> Test Camera Access
+                        </button>
+                    </div>
+                `;
+            } else {
+                // Desktop fallback
+                content = `
+                    <div class="alert alert-warning text-center">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        <strong>Camera not available</strong><br>
+                        Please use the manual input below to enter barcodes.
+                    </div>
+                `;
+            }
+
+            scannerContainer.innerHTML = content;
+
+            // Add test camera button functionality
+            const testBtn = document.getElementById('test-camera-btn');
+            if (testBtn) {
+                testBtn.addEventListener('click', testCameraAccess);
+            }
+
+            // Show file upload option for mobile users
+            if (isMobile) {
+                const fileUploadSection = document.getElementById(
+                    'file-upload-section'
+                );
+                if (fileUploadSection) {
+                    fileUploadSection.style.display = 'block';
+                    setupFileUpload();
+                }
+            }
+        }
+    }
+
+    /**
+     * Set up file upload functionality for mobile users.
+     */
+    function setupFileUpload() {
+        const fileInput = document.getElementById('barcode-file-input');
+        const processFileBtn = document.getElementById('process-file-btn');
+
+        if (!fileInput || !processFileBtn) {
+            return;
+        }
+
+        // Enable process button when file is selected
+        fileInput.addEventListener('change', function () {
+            processFileBtn.disabled = !this.files.length;
+        });
+
+        // Process uploaded file
+        processFileBtn.addEventListener('click', async function () {
+            const file = fileInput.files[0];
+            if (!file) {
+                return;
+            }
+
+            const originalText = this.innerHTML;
+            this.disabled = true;
+            this.innerHTML =
+                '<i class="fa fa-spinner fa-spin"></i> Scanning Photo...';
+
+            try {
+                const barcode = await processImageFile(file);
+                if (barcode) {
+                    showSuccessMessage('Barcode detected from photo!');
+                    processBarcode(barcode);
+                    // Clear the file input
+                    fileInput.value = '';
+                } else {
+                    showErrorMessage(
+                        'No barcode found in the image. Please try taking a clearer photo with better lighting.'
+                    );
+                }
+            } catch (error) {
+                Log.error('File processing error:', error);
+                showErrorMessage('Failed to process image. Please try again.');
+            }
+
+            this.disabled = false;
+            this.innerHTML = originalText;
+            processFileBtn.disabled = true; // Disable until new file selected
+        });
+    }
+
+    /**
+     * Process an uploaded image file for barcodes.
+     * @param {File} file Image file
+     * @returns {Promise<string|null>} Detected barcode or null
+     */
+    async function processImageFile(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const img = new Image();
+
+                img.onload = async function () {
+                    try {
+                        // Create a temporary canvas for processing
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d', {
+                            willReadFrequently: true,
+                        });
+
+                        // Set canvas size to image size
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+
+                        // Draw image to canvas
+                        context.drawImage(img, 0, 0);
+
+                        // Try native BarcodeDetector first (Chrome/Edge)
+                        if ('BarcodeDetector' in window) {
+                            try {
+                                // eslint-disable-next-line no-undef
+                                const detector = new BarcodeDetector({
+                                    formats: [
+                                        'qr_code',
+                                        'ean_13',
+                                        'ean_8',
+                                        'upc_a',
+                                        'upc_e',
+                                        'code_128',
+                                        'code_39',
+                                    ],
+                                });
+
+                                const barcodes = await detector.detect(canvas);
+
+                                if (barcodes.length > 0) {
+                                    Log.debug(
+                                        'Barcode detected from file:',
+                                        barcodes[0].rawValue
+                                    );
+                                    resolve(barcodes[0].rawValue);
+                                    return;
+                                }
+                            } catch (error) {
+                                Log.debug(
+                                    'BarcodeDetector failed on file:',
+                                    error
+                                );
+                            }
+                        }
+
+                        // Fallback: Try QR code detection with jsQR
+                        try {
+                            const imageData = context.getImageData(
+                                0,
+                                0,
+                                canvas.width,
+                                canvas.height
+                            );
+                            const code = jsQR.scan(
+                                imageData.data,
+                                imageData.width,
+                                imageData.height
+                            );
+
+                            if (code && code.data) {
+                                Log.debug(
+                                    'QR code detected from file:',
+                                    code.data
+                                );
+                                resolve(code.data);
+                                return;
+                            }
+                        } catch (error) {
+                            Log.debug('jsQR failed on file:', error);
+                        }
+
+                        // No barcode found
+                        resolve(null);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+
+                img.onerror = function () {
+                    reject(new Error('Failed to load image'));
+                };
+
+                img.src = e.target.result;
+            };
+
+            reader.onerror = function () {
+                reject(new Error('Failed to read file'));
+            };
+
+            reader.readAsDataURL(file);
+        });
+    }
+
+    /**
+     * Test camera access with comprehensive compatibility checking.
+     */
+    async function testCameraAccess() {
+        const testBtn = document.getElementById('test-camera-btn');
+        const originalText = testBtn.innerHTML;
+
+        testBtn.disabled = true;
+        testBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Testing...';
+
+        // First, run comprehensive compatibility check
+        const compatibility = await checkCameraCompatibility();
+
+        if (!compatibility.supported) {
+            showDetailedCompatibilityError(compatibility);
+            testBtn.disabled = false;
+            testBtn.innerHTML = originalText;
+            return;
+        }
+
+        // Try to access camera using the best available method
+        try {
+            const stream = await getCameraStreamRobust();
+
+            // Success! Camera access granted
+            stream.getTracks().forEach((track) => track.stop());
+
+            showSuccessMessage(
+                'Camera access granted! You can now use the Start Camera button.'
+            );
+
+            // Re-initialize scanner interface
+            initScanner();
+        } catch (error) {
+            // Provide specific error guidance
+            let errorMessage = 'Camera access failed. ';
+
+            if (error.name === 'NotAllowedError') {
+                errorMessage +=
+                    'Please allow camera permissions in your browser settings.';
+            } else if (error.name === 'NotFoundError') {
+                errorMessage += 'No camera found on this device.';
+            } else if (error.name === 'NotSupportedError') {
+                errorMessage += 'Camera not supported on this browser/device.';
+            } else if (error.name === 'NotReadableError') {
+                errorMessage += 'Camera is being used by another application.';
+            } else {
+                errorMessage += `Error: ${error.message}`;
+            }
+
+            showErrorMessage(errorMessage);
+
+            testBtn.disabled = false;
+            testBtn.innerHTML = originalText;
+        }
+    }
+
+    /**
+     * Comprehensive camera compatibility check.
+     * @returns {Promise<Object>} Compatibility information
+     */
+    async function checkCameraCompatibility() {
+        const result = {
+            supported: false,
+            method: null,
+            issues: [],
+            browserInfo: getBrowserInfo(),
+            apis: {
+                mediaDevices: false,
+                getUserMedia: false,
+                webkitGetUserMedia: false,
+                mozGetUserMedia: false,
+            },
+        };
+
+        Log.debug('Browser info:', result.browserInfo);
+
+        // Check for modern MediaDevices API
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            result.apis.mediaDevices = true;
+            result.method = 'mediaDevices';
+            result.supported = true;
+        }
+
+        // Check for legacy getUserMedia
+        if (navigator.getUserMedia) {
+            result.apis.getUserMedia = true;
+            if (!result.supported) {
+                result.method = 'getUserMedia';
+                result.supported = true;
+            }
+        }
+
+        // Check for webkit prefixed version (older Chrome/Safari)
+        if (navigator.webkitGetUserMedia) {
+            result.apis.webkitGetUserMedia = true;
+            if (!result.supported) {
+                result.method = 'webkitGetUserMedia';
+                result.supported = true;
+            }
+        }
+
+        // Check for moz prefixed version (older Firefox)
+        if (navigator.mozGetUserMedia) {
+            result.apis.mozGetUserMedia = true;
+            if (!result.supported) {
+                result.method = 'mozGetUserMedia';
+                result.supported = true;
+            }
+        }
+
+        // Check for HTTPS/secure context
+        if (
+            location.protocol !== 'https:' &&
+            location.hostname !== 'localhost'
+        ) {
+            result.issues.push('insecure_context');
+        }
+
+        // Check if we're in a mobile browser
+        if (result.browserInfo.mobile && !result.supported) {
+            result.issues.push('mobile_no_camera_api');
+        }
+
+        Log.debug('Camera compatibility check:', result);
+        return result;
+    }
+
+    /**
+     * Get detailed browser information.
+     * @returns {Object} Browser information
+     */
+    function getBrowserInfo() {
+        const ua = navigator.userAgent;
+        const result = {
+            mobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+                ua
+            ),
+            chrome: /Chrome/i.test(ua),
+            firefox: /Firefox/i.test(ua),
+            safari: /Safari/i.test(ua) && !/Chrome/i.test(ua),
+            edge: /Edge/i.test(ua),
+            version: null,
+            android: /Android/i.test(ua),
+            ios: /iPhone|iPad|iPod/i.test(ua),
+        };
+
+        // Extract Chrome version
+        if (result.chrome) {
+            const match = ua.match(/Chrome\/(\d+)/);
+            if (match) {
+                result.version = parseInt(match[1]);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Robust camera stream acquisition with fallbacks.
+     * @returns {Promise<MediaStream>} Camera stream
+     */
+    async function getCameraStreamRobust() {
+        const constraints = {
+            video: {
+                facingMode: 'environment',
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+            },
+        };
+
+        // Try modern API first
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            try {
+                Log.debug('Trying modern mediaDevices.getUserMedia');
+                return await navigator.mediaDevices.getUserMedia(constraints);
+            } catch (error) {
+                Log.debug('Modern API failed:', error);
+                // Continue to fallbacks
+            }
+        }
+
+        // Try legacy getUserMedia with Promise wrapper
+        if (navigator.getUserMedia) {
+            try {
+                Log.debug('Trying legacy getUserMedia');
+                return await new Promise((resolve, reject) => {
+                    navigator.getUserMedia(constraints, resolve, reject);
+                });
+            } catch (error) {
+                Log.debug('Legacy getUserMedia failed:', error);
+            }
+        }
+
+        // Try webkit prefixed version
+        if (navigator.webkitGetUserMedia) {
+            try {
+                Log.debug('Trying webkitGetUserMedia');
+                return await new Promise((resolve, reject) => {
+                    navigator.webkitGetUserMedia(constraints, resolve, reject);
+                });
+            } catch (error) {
+                Log.debug('webkitGetUserMedia failed:', error);
+            }
+        }
+
+        // Try moz prefixed version
+        if (navigator.mozGetUserMedia) {
+            try {
+                Log.debug('Trying mozGetUserMedia');
+                return await new Promise((resolve, reject) => {
+                    navigator.mozGetUserMedia(constraints, resolve, reject);
+                });
+            } catch (error) {
+                Log.debug('mozGetUserMedia failed:', error);
+            }
+        }
+
+        throw new Error('No camera API available');
+    }
+
+    /**
+     * Show detailed compatibility error with specific guidance.
+     * @param {Object} compatibility Compatibility check result
+     */
+    function showDetailedCompatibilityError(compatibility) {
+        let message =
+            '<div class="alert alert-danger"><h5><i class="fa fa-exclamation-triangle"></i> Camera Not Supported</h5>';
+
+        message +=
+            '<p><strong>Browser:</strong> ' + compatibility.browserInfo.chrome
+                ? `Chrome ${compatibility.browserInfo.version || 'Unknown'}`
+                : 'Unknown browser';
+
+        message +=
+            '<br><strong>Mobile:</strong> ' +
+            (compatibility.browserInfo.mobile ? 'Yes' : 'No');
+        message +=
+            '<br><strong>Secure Context:</strong> ' +
+            (location.protocol === 'https:' ? 'Yes' : 'No') +
+            '</p>';
+
+        message += '<p><strong>Available APIs:</strong></p><ul>';
+        Object.keys(compatibility.apis).forEach((api) => {
+            message += `<li>${api}: ${
+                compatibility.apis[api] ? '✓' : '✗'
+            }</li>`;
+        });
+        message += '</ul>';
+
+        if (compatibility.issues.length > 0) {
+            message += '<p><strong>Issues Found:</strong></p><ul>';
+            compatibility.issues.forEach((issue) => {
+                switch (issue) {
+                    case 'insecure_context':
+                        message +=
+                            '<li>Site is not served over HTTPS (required for camera access)</li>';
+                        break;
+                    case 'mobile_no_camera_api':
+                        message +=
+                            '<li>Mobile browser does not support camera API</li>';
+                        break;
+                }
+            });
+            message += '</ul>';
+        }
+
+        // Specific guidance based on browser
+        if (
+            compatibility.browserInfo.chrome &&
+            compatibility.browserInfo.mobile
+        ) {
+            message +=
+                '<div class="mt-3"><strong>Chrome Mobile Solutions:</strong>';
+            message += '<ol>';
+            message += '<li>Ensure Chrome is updated to latest version</li>';
+            message += '<li>Try clearing Chrome cache and data</li>';
+            message +=
+                '<li>Check if "Use camera" is enabled in Chrome settings</li>';
+            message += '<li>Try accessing via Chrome Incognito mode</li>';
+            message += '</ol></div>';
+        }
+
+        message += '</div>';
+
+        const scannerContainer = document.getElementById('scanner-container');
+        if (scannerContainer) {
+            scannerContainer.innerHTML = message;
+        }
+    }
+
+    /**
+     * Normalize UPC code to standard 12-digit format (client-side).
+     * @param {string} upc Raw UPC code
+     * @returns {string|null} Normalized UPC or null if invalid
+     */
+    function normalizeUPC(upc) {
+        // Remove any non-numeric characters
+        upc = upc.replace(/[^0-9]/g, '');
+
+        // Check if it's a valid length (8-14 digits)
+        const length = upc.length;
+        if (length < 8 || length > 14) {
+            return null;
+        }
+
+        // Handle different UPC formats
+        switch (length) {
+            case 8:
+                // UPC-E format - pad to 12 digits
+                return upc.padStart(12, '0');
+
+            case 12:
+                // UPC-A format - this is our target format
+                return upc;
+
+            case 13:
+                // EAN-13 format - remove leading zero if it's 0
+                if (upc.charAt(0) === '0') {
+                    return upc.substring(1);
+                }
+                // Non-US EAN code - keep as-is
+                return upc;
+
+            case 14:
+                // GTIN-14 format - remove leading zeros
+                return upc.replace(/^0+/, '');
+
+            default:
+                // 9, 10, 11 digits - pad to 12
+                return upc.padStart(12, '0');
+        }
+    }
+
+    /**
+     * Process a barcode (from scan or manual entry).
+     *
+     * @param {string} barcode Barcode data
+     */
+    function processBarcode(barcode) {
+        const locationId = locationSelect.value;
+        if (!locationId) {
+            Notification.addNotification({
+                message: 'Please select a location first',
+                type: 'error',
+            });
+            return;
+        }
+
+        // Normalize UPC on client side for immediate feedback
+        const originalBarcode = barcode;
+        const normalizedBarcode = normalizeUPC(barcode);
+
+        if (!normalizedBarcode) {
+            showErrorMessage(
+                `Invalid UPC format: "${originalBarcode}". UPC must be 8-14 digits.`
+            );
+            return;
+        }
+
+        // Log normalization for debugging
+        if (originalBarcode !== normalizedBarcode) {
+            Log.debug(
+                `UPC normalized: "${originalBarcode}" -> "${normalizedBarcode}"`
+            );
+            showSuccessMessage(
+                `UPC normalized: ${originalBarcode} → ${normalizedBarcode}`
+            );
+        }
+
+        // Show processing state
+        const processingBtn = document.getElementById('scanner-manual-btn');
+        if (processingBtn) {
+            processingBtn.disabled = true;
+            processingBtn.textContent = 'Processing...';
+        }
+
+        // Process via existing UPC validation endpoint
+        processUPC(normalizedBarcode, locationId).finally(() => {
+            // Reset button state
+            if (processingBtn) {
+                processingBtn.disabled = false;
+                processingBtn.textContent = 'Process';
+            }
+        });
+    }
+
+    /**
+     * Process UPC using existing validation endpoint.
+     *
+     * @param {string} upc UPC code
+     * @param {string} locationId Location ID
+     * @returns {Promise} Processing promise
+     */
+    async function processUPC(upc, locationId) {
+        const requestUrl =
+            M.cfg.wwwroot +
+            '/local/equipment/classes/external/validate_upc.php';
+        const requestData = {
+            upc: upc,
+            locationid: locationId,
+            sesskey: M.cfg.sesskey,
+        };
+
+        Log.debug('Processing UPC request:', {
+            url: requestUrl,
+            data: requestData,
+            wwwroot: M.cfg.wwwroot,
+            currentOrigin: window.location.origin,
+            currentHost: window.location.host,
+        });
+
+        try {
+            const response = await fetch(requestUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                },
+                body: JSON.stringify(requestData),
+            });
+
+            Log.debug('Response received:', {
+                status: response.status,
+                statusText: response.statusText,
+                ok: response.ok,
+                headers: Object.fromEntries(response.headers.entries()),
+            });
+
+            if (!response.ok) {
+                throw new Error(
+                    `HTTP ${response.status}: ${response.statusText}`
+                );
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const textResponse = await response.text();
+                Log.error('Non-JSON response received:', textResponse);
+                throw new Error(
+                    `Expected JSON response, got: ${contentType}. Response: ${textResponse.substring(
+                        0,
+                        200
+                    )}`
+                );
+            }
+
+            const data = await response.json();
+            Log.debug('Parsed response data:', data);
+
+            if (data.success) {
+                // Item added successfully
+                sessionItemCount++;
+                sessionItemIds.push(data.itemid);
+                updateSessionDisplay();
+                showSuccessMessage(data.product_name);
+            } else {
+                // Error occurred
+                showErrorMessage(data.message, data.product_url);
+            }
+        } catch (error) {
+            Log.error('Error processing UPC:', {
+                error: error.message,
+                stack: error.stack,
+                upc: upc,
+                locationId: locationId,
+                requestUrl: requestUrl,
+            });
+
+            // Show detailed error message
+            let errorMessage = 'Network error occurred. ';
+
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                errorMessage +=
+                    'Unable to connect to server. Check your network connection.';
+            } else if (error.message.includes('HTTP')) {
+                errorMessage += `Server error: ${error.message}`;
+            } else if (error.message.includes('JSON')) {
+                errorMessage += 'Server returned invalid response format.';
+            } else {
+                errorMessage += `Details: ${error.message}`;
+            }
+
+            showErrorMessage(errorMessage);
+        }
+    }
+
+    /**
+     * Update session display.
+     */
+    function updateSessionDisplay() {
+        sessionCount.textContent = sessionItemCount;
+        if (sessionItemCount > 0) {
+            printQrBtn.style.display = 'inline-block';
+        } else {
+            printQrBtn.style.display = 'none';
+        }
+    }
+
+    /**
+     * Show success message.
+     *
+     * @param {string} productName Product name
+     */
+    function showSuccessMessage(productName) {
+        const alert = document.createElement('div');
+        alert.className =
+            'alert alert-success alert-dismissible fade show mt-2';
+        alert.innerHTML = `
+            <strong>✓ Success!</strong> Added ${productName} to inventory.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        sessionItems.appendChild(alert);
+
+        // Auto-dismiss after 3 seconds
+        setTimeout(() => {
+            if (alert.parentNode) {
+                alert.remove();
+            }
+        }, 3000);
+    }
+
+    /**
+     * Show error message.
+     *
+     * @param {string} message Error message
+     * @param {string} productUrl Product URL (optional)
+     */
+    function showErrorMessage(message, productUrl = null) {
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-danger alert-dismissible fade show mt-2';
+        let content = `<strong>✗ Error:</strong> ${message}`;
+        if (productUrl) {
+            content += ` <a href="${productUrl}" class="alert-link">Add this product type</a>`;
+        }
+        content += `<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        alert.innerHTML = content;
+        sessionItems.appendChild(alert);
+    }
+
+    /**
+     * Test network connectivity to the server.
+     * @returns {Promise<boolean>} True if connectivity is working
+     */
+    async function testNetworkConnectivity() {
+        try {
+            const testUrl =
+                M.cfg.wwwroot +
+                '/local/equipment/classes/external/validate_upc.php';
+
+            Log.debug('Testing network connectivity to:', testUrl);
+
+            // Send a simple OPTIONS request to test connectivity
+            const response = await fetch(testUrl, {
+                method: 'OPTIONS',
+                headers: {
+                    Accept: 'application/json',
+                },
+            });
+
+            Log.debug('Network test response:', {
+                status: response.status,
+                ok: response.ok,
+                headers: Object.fromEntries(response.headers.entries()),
+            });
+
+            return response.ok;
+        } catch (error) {
+            Log.error('Network connectivity test failed:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Adds a network test button to the scanner controls interface.
+     *
+     * Creates and appends a network test button to the existing scanner controls container.
+     * The button includes a click handler that performs an asynchronous network connectivity
+     * test with visual feedback (loading spinner) and displays success/error messages.
+     *
+     * @function addNetworkTestButton
+     * @returns {void} This function does not return a value
+     *
+     * @requires testNetworkConnectivity - Async function that tests network connectivity
+     * @requires showSuccessMessage - Function to display success notifications
+     * @requires showErrorMessage - Function to display error notifications
+     *
+     * @example
+     * // Call after DOM is loaded to add the network test button
+     * addNetworkTestButton();
+     *
+     * @since 1.0.0
+     *
+     * @description
+     * - Searches for an element with class 'scanner-controls'
+     * - Only creates button if container exists and button doesn't already exist
+     * - Button shows WiFi icon and "Test Network" text
+     * - During testing, button is disabled and shows spinner with "Testing..." text
+     * - Results are communicated via success/error message functions
+     * - Button is re-enabled after test completion regardless of result
+     *
+     * @sideeffects
+     * - Modifies the DOM by appending a button element
+     * - May display success/error messages to the user
+     */
+    function addNetworkTestButton() {
+        const scannerControls = document.querySelector('.scanner-controls');
+        if (scannerControls && !document.getElementById('test-network-btn')) {
+            const testButton = document.createElement('button');
+            testButton.id = 'test-network-btn';
+            testButton.type = 'button';
+            testButton.className = 'btn btn-outline-info btn-sm mt-2';
+            testButton.innerHTML = '<i class="fa fa-wifi"></i> Test Network';
+
+            testButton.addEventListener('click', async function () {
+                const originalText = this.innerHTML;
+                this.disabled = true;
+                this.innerHTML =
+                    '<i class="fa fa-spinner fa-spin"></i> Testing...';
+
+                const isConnected = await testNetworkConnectivity();
+
+                if (isConnected) {
+                    showSuccessMessage('Network connectivity test passed!');
+                } else {
+                    showErrorMessage(
+                        'Network connectivity test failed. Check your connection.'
+                    );
+                }
+
+                this.disabled = false;
+                this.innerHTML = originalText;
+            });
+
+            scannerControls.appendChild(testButton);
+        }
+    }
+
+    // Handle existing manual UPC input
+    addItemBtn.addEventListener('click', function () {
+        const upc = manualUpc.value.trim();
+        if (upc) {
+            processBarcode(upc);
+            manualUpc.value = '';
+        }
+    });
+
+    // Allow Enter key in existing UPC input
+    manualUpc.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            addItemBtn.click();
+        }
+    });
+
+    // Handle print QR codes button
+    printQrBtn.addEventListener('click', function () {
+        if (sessionItemIds.length > 0) {
+            const url =
+                M.cfg.wwwroot + '/local/equipment/inventory/generate_qr.php';
+            const params = new URLSearchParams({
+                action: 'generate_for_items',
+                itemids: sessionItemIds.join(','),
+                sesskey: M.cfg.sesskey,
+            });
+            window.open(url + '?' + params.toString(), '_blank');
+        }
+    });
+}

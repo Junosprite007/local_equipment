@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Services for the Equipment plugin.
+ * External services for the Equipment plugin.
  *
  * @package     local_equipment
- * @copyright   2025 onwards Joshua Kirby <josh@funlearningcompany.com>
+ * @copyright   2024 onwards Joshua Kirby <josh@funlearningcompany.com>
  * @author      Joshua Kirby
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -26,21 +26,35 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = [
-    'local_equipment_get_recipient_count' => [
-        'classname'   => 'local_equipment\external\get_recipient_count',
-        'description' => 'Get count of recipients for equipment mass messaging',
-        'type'        => 'read',
-        'ajax'        => true,
-        'capabilities' => 'local/equipment:viewrecipients',
-        'services'    => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    'local_equipment_validate_upc' => [
+        'classname' => 'local_equipment\external\validate_upc',
+        'methodname' => 'execute',
+        'classpath' => '',
+        'description' => 'Validate UPC code against external API',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'local/equipment:manageinventory',
+        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ],
+    'local_equipment_process_scan' => [
+        'classname' => 'local_equipment\external\process_scan',
+        'methodname' => 'execute',
+        'classpath' => '',
+        'description' => 'Process barcode scan (QR code or UPC)',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/equipment:checkinout',
+        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
     ],
 ];
 
 $services = [
     'Equipment Management Service' => [
-        'functions' => ['local_equipment_get_recipient_count'],
+        'functions' => [
+            'local_equipment_validate_upc',
+            'local_equipment_process_scan',
+        ],
         'restrictedusers' => 0,
         'enabled' => 1,
-        'shortname' => 'equipment_service',
     ],
 ];

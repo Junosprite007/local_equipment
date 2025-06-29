@@ -33,6 +33,10 @@ require_capability('local/equipment:checkinout', context_system::instance());
 // Set up admin external page
 admin_externalpage_setup('local_equipment_inventory_additems');
 
+// Load the scanner AMD module and CSS before header
+$PAGE->requires->js_call_amd('local_equipment/add-items-scanner', 'init');
+$PAGE->requires->css('/local/equipment/scss/scanner.scss');
+
 echo $OUTPUT->header();
 
 echo $OUTPUT->heading(get_string('additems', 'local_equipment'));
@@ -100,18 +104,18 @@ echo html_writer::end_tag('div');
 
 echo html_writer::start_tag('div', ['class' => 'card-body']);
 
-// Scanner placeholder (will be implemented in JavaScript phase)
+// Scanner interface (will be populated by JavaScript)
 echo html_writer::start_tag('div', ['id' => 'scanner_interface']);
 echo html_writer::tag(
     'div',
-    'QR/Barcode scanner will be implemented here. For now, you can manually enter UPC codes below.',
-    ['class' => 'alert alert-secondary text-center p-4']
+    'Initializing scanner... Please wait.',
+    ['class' => 'alert alert-info text-center p-4']
 );
 echo html_writer::end_tag('div');
 
-// Manual UPC input (for testing until scanner is implemented)
+// Manual UPC input (fallback and testing)
 echo html_writer::start_div('mt-3');
-echo html_writer::tag('label', 'Manual UPC Entry (for testing):', ['for' => 'manual_upc', 'class' => 'form-label']);
+echo html_writer::tag('label', 'Manual UPC Entry:', ['for' => 'manual_upc', 'class' => 'form-label']);
 echo html_writer::start_tag('div', ['class' => 'input-group']);
 echo html_writer::empty_tag('input', [
     'type' => 'text',

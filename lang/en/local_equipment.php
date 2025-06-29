@@ -775,6 +775,7 @@ $string['reminder_template_days_desc'] = 'Template for the reminder message sent
 $string['reminder_template_hours_desc'] = 'Template for the reminder message sent hours before an exchange.';
 $string['reminder_template_days_default'] = 'REMINDER: Your equipment exchange is in {DAYS} days on {DATE} from {START} to {END}. Location: {LOCATION}.';
 $string['reminder_template_hours_default'] = 'REMINDER: Your equipment exchange is in {HOURS} hour(s) today from {START} to {END}. Location: {LOCATION}. Don\'t forget!';
+$string['reminder_inadvance_days'] = 'Reminder in advance (days)';
 
 
 // Welcome messages
@@ -1835,3 +1836,27 @@ $string['endoflife'] = 'End of life';
 $string['disposed'] = 'Disposed';
 $string['stolen'] = 'Stolen';
 $string['returnedtovendor'] = 'Returned to vendor';
+
+// Scanning interface strings
+$string['scanequipment'] = 'Scan equipment';
+$string['scanequipment_desc'] = 'Use this interface to scan QR codes and barcodes for equipment management.';
+$string['camerascan'] = 'Camera scan';
+$string['camerascan_instructions'] = 'Use your device camera to scan QR codes or barcodes.';
+$string['uploadscan'] = 'Upload scan';
+$string['uploadscan_instructions'] = 'Upload an image containing a QR code or barcode to scan.';
+$string['manualscan'] = 'Manual entry';
+$string['manualscan_instructions'] = 'Manually enter barcode data if scanning is not available.';
+$string['startscan'] = 'Start scanning';
+$string['stopscan'] = 'Stop scanning';
+$string['selectimage'] = 'Select image';
+$string['processimage'] = 'Process image';
+$string['barcodedata'] = 'Barcode data';
+$string['enterbarcode'] = 'Enter barcode data';
+$string['scantype'] = 'Scan type';
+$string['autodetect'] = 'Auto-detect';
+$string['qrcode'] = 'QR code';
+$string['upccode'] = 'UPC code';
+$string['processscan'] = 'Process scan';
+$string['scanresults'] = 'Scan results';
+$string['availableactions'] = 'Available actions';
+$string['equipment:checkinout'] = 'Check in/out equipment';
