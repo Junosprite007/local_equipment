@@ -39,7 +39,7 @@ class inventory_manager {
      * @param int|null $locationid Optional location filter
      * @return array Array of available equipment items
      */
-    public function get_available_items($productid, $locationid = null) {
+    public function get_available_items(int $productid, ?int $locationid = null): array {
         global $DB;
 
         $params = [
@@ -72,7 +72,7 @@ class inventory_manager {
      * @param string $notes Optional transaction notes
      * @return object Result object with success status and message
      */
-    public function check_out_item($itemuuid, $userid, $processedby, $notes = '') {
+    public function check_out_item(string $itemuuid, int $userid, int $processedby, string $notes = ''): object {
         global $DB;
 
         try {
@@ -134,7 +134,7 @@ class inventory_manager {
      * @param string $notes Optional transaction notes
      * @return object Result object with success status and message
      */
-    public function check_in_item($itemuuid, $locationid, $processedby, $condition_status = '', $notes = '') {
+    public function check_in_item(string $itemuuid, int $locationid, int $processedby, string $condition_status = '', string $notes = ''): object {
         global $DB;
 
         try {
@@ -186,8 +186,71 @@ class inventory_manager {
                 'message' => get_string('itemcheckedin', 'local_equipment'),
                 'item' => $item
             ];
+        } catch (\moodle_exception $e) {
+            $transaction->rollback($e);
+            return (object)[
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
         } catch (\Exception $e) {
             $transaction->rollback($e);
+            return (object)[
+                'success' => false,
+                'message' => get_string('unexpectederror', 'local_equipment')
+            ];
+        }
+    }
+
+    /**
+     * Get equipment details by UUID with full information.
+     *
+     * @param string $uuid Equipment item UUID
+     * @return object Result object with equipment details
+     */
+    public function get_equipment_details(string $uuid): object {
+        global $DB;
+
+        try {
+            $sql = "SELECT ei.*, ep.name as product_name, ep.manufacturer, ep.category, ep.description,
+                           el.name as location_name,
+                           u.id as user_id, u.firstname, u.lastname, u.email as user_email
+                    FROM {local_equipment_items} ei
+                    JOIN {local_equipment_products} ep ON ei.productid = ep.id
+                    LEFT JOIN {local_equipment_locations} el ON ei.locationid = el.id
+                    LEFT JOIN {user} u ON ei.current_userid = u.id
+                    WHERE ei.uuid = ?";
+
+            $item = $DB->get_record_sql($sql, [$uuid]);
+
+            if (!$item) {
+                return (object)[
+                    'success' => false,
+                    'message' => 'Equipment item not found'
+                ];
+            }
+
+            // Get recent transactions for this item
+            $transactions_sql = "SELECT t.*,
+                                        u1.firstname as from_firstname, u1.lastname as from_lastname,
+                                        u2.firstname as to_firstname, u2.lastname as to_lastname,
+                                        l1.name as from_location, l2.name as to_location
+                                 FROM {local_equipment_transactions} t
+                                 LEFT JOIN {user} u1 ON t.from_userid = u1.id
+                                 LEFT JOIN {user} u2 ON t.to_userid = u2.id
+                                 LEFT JOIN {local_equipment_locations} l1 ON t.from_locationid = l1.id
+                                 LEFT JOIN {local_equipment_locations} l2 ON t.to_locationid = l2.id
+                                 WHERE t.itemid = ?
+                                 ORDER BY t.timestamp DESC
+                                 LIMIT 5";
+
+            $transactions = $DB->get_records_sql($transactions_sql, [$item->id]);
+
+            return (object)[
+                'success' => true,
+                'item' => $item,
+                'transactions' => array_values($transactions)
+            ];
+        } catch (\Exception $e) {
             return (object)[
                 'success' => false,
                 'message' => $e->getMessage()
@@ -196,23 +259,363 @@ class inventory_manager {
     }
 
     /**
-     * Get equipment item by UUID.
+     * Assign equipment to a user.
      *
-     * @param string $uuid Item UUID
-     * @return object|false Item record or false if not found
+     * @param string $uuid Equipment item UUID
+     * @param int $userid User ID to assign to
+     * @param int $processedby User ID processing the assignment
+     * @param string $notes Optional notes
+     * @return object Result object
      */
-    public function get_item_by_uuid($uuid) {
+    public function assign_to_user(string $uuid, int $userid, int $processedby, string $notes = ''): object {
         global $DB;
 
-        $sql = "SELECT ei.*, ep.name as product_name, ep.manufacturer, ep.category,
-                       el.name as location_name, u.firstname, u.lastname
+        try {
+            $transaction = $DB->start_delegated_transaction();
+
+            // Get the equipment item
+            $item = $DB->get_record('local_equipment_items', ['uuid' => $uuid]);
+            if (!$item) {
+                throw new \moodle_exception('Equipment item not found');
+            }
+
+            // Get user details for validation
+            $user = $DB->get_record('user', ['id' => $userid], 'id, firstname, lastname, email');
+            if (!$user) {
+                throw new \moodle_exception('User not found');
+            }
+
+            $from_userid = $item->current_userid;
+            $from_locationid = $item->locationid;
+
+            // Update item status
+            $item->status = 'checked_out';
+            $item->current_userid = $userid;
+            $item->locationid = null; // Clear location when assigned to user
+            $item->timemodified = time();
+            $DB->update_record('local_equipment_items', $item);
+
+            // Create transaction record
+            $transaction_record = new \stdClass();
+            $transaction_record->itemid = $item->id;
+            $transaction_record->transaction_type = 'checkout';
+            $transaction_record->from_userid = $from_userid;
+            $transaction_record->to_userid = $userid;
+            $transaction_record->from_locationid = $from_locationid;
+            $transaction_record->processed_by = $processedby;
+            $transaction_record->notes = $notes;
+            $transaction_record->timestamp = time();
+            $DB->insert_record('local_equipment_transactions', $transaction_record);
+
+            $transaction->allow_commit();
+
+            return (object)[
+                'success' => true,
+                'message' => "Equipment assigned to {$user->firstname} {$user->lastname}"
+            ];
+        } catch (\moodle_exception $e) {
+            if (isset($transaction)) {
+                $transaction->rollback($e);
+            }
+            return (object)[
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        } catch (\Exception $e) {
+            if (isset($transaction)) {
+                $transaction->rollback($e);
+            }
+            return (object)[
+                'success' => false,
+                'message' => get_string('unexpectederror', 'local_equipment')
+            ];
+        }
+    }
+
+    /**
+     * Assign equipment to a location.
+     *
+     * @param string $uuid Equipment item UUID
+     * @param int $locationid Location ID to assign to
+     * @param int $processedby User ID processing the assignment
+     * @param string $notes Optional notes
+     * @return object Result object
+     */
+    public function assign_to_location(string $uuid, int $locationid, int $processedby, string $notes = ''): object {
+        global $DB;
+
+        try {
+            $transaction = $DB->start_delegated_transaction();
+
+            // Get the equipment item
+            $item = $DB->get_record('local_equipment_items', ['uuid' => $uuid]);
+            if (!$item) {
+                throw new \moodle_exception('Equipment item not found');
+            }
+
+            // Get location details for validation
+            $location = $DB->get_record('local_equipment_locations', ['id' => $locationid], 'id, name');
+            if (!$location) {
+                throw new \moodle_exception('Location not found');
+            }
+
+            $from_userid = $item->current_userid;
+            $from_locationid = $item->locationid;
+
+            // Update item status
+            $item->status = 'available';
+            $item->current_userid = null; // Clear user when assigned to location
+            $item->locationid = $locationid;
+            $item->timemodified = time();
+            $DB->update_record('local_equipment_items', $item);
+
+            // Determine transaction type
+            $transaction_type = $from_userid ? 'checkin' : 'transfer';
+
+            // Create transaction record
+            $transaction_record = new \stdClass();
+            $transaction_record->itemid = $item->id;
+            $transaction_record->transaction_type = $transaction_type;
+            $transaction_record->from_userid = $from_userid;
+            $transaction_record->from_locationid = $from_locationid;
+            $transaction_record->to_locationid = $locationid;
+            $transaction_record->processed_by = $processedby;
+            $transaction_record->notes = $notes;
+            $transaction_record->timestamp = time();
+            $DB->insert_record('local_equipment_transactions', $transaction_record);
+
+            $transaction->allow_commit();
+
+            return (object)[
+                'success' => true,
+                'message' => "Equipment transferred to {$location->name}"
+            ];
+        } catch (\Exception $e) {
+            if (isset($transaction)) {
+                $transaction->rollback($e);
+            }
+            return (object)[
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Unassign equipment (make it available without specific location).
+     *
+     * @param string $uuid Equipment item UUID
+     * @param int $processedby User ID processing the unassignment
+     * @param string $notes Optional notes
+     * @return object Result object
+     */
+    public function unassign_equipment(string $uuid, int $processedby, string $notes = ''): object {
+        global $DB;
+
+        try {
+            $transaction = $DB->start_delegated_transaction();
+
+            // Get the equipment item
+            $item = $DB->get_record('local_equipment_items', ['uuid' => $uuid]);
+            if (!$item) {
+                throw new \moodle_exception('Equipment item not found');
+            }
+
+            $from_userid = $item->current_userid;
+            $from_locationid = $item->locationid;
+
+            // Update item status
+            $item->status = 'available';
+            $item->current_userid = null;
+            $item->locationid = null; // No specific location
+            $item->timemodified = time();
+            $DB->update_record('local_equipment_items', $item);
+
+            // Create transaction record
+            $transaction_record = new \stdClass();
+            $transaction_record->itemid = $item->id;
+            $transaction_record->transaction_type = 'checkin';
+            $transaction_record->from_userid = $from_userid;
+            $transaction_record->from_locationid = $from_locationid;
+            $transaction_record->processed_by = $processedby;
+            $transaction_record->notes = $notes;
+            $transaction_record->timestamp = time();
+            $DB->insert_record('local_equipment_transactions', $transaction_record);
+
+            $transaction->allow_commit();
+
+            return (object)[
+                'success' => true,
+                'message' => 'Equipment unassigned and made available'
+            ];
+        } catch (\Exception $e) {
+            if (isset($transaction)) {
+                $transaction->rollback($e);
+            }
+            return (object)[
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Search for users by name or email.
+     *
+     * @param string $query Search query
+     * @param int $limit Maximum number of results
+     * @return array Array of user objects
+     */
+    public function search_users(string $query, int $limit = 10): array {
+        global $DB;
+
+        if (strlen(trim($query)) < 2) {
+            return [];
+        }
+
+        $query = '%' . $DB->sql_like_escape(trim($query)) . '%';
+
+        $sql = "SELECT id, firstname, lastname, email
+                FROM {user}
+                WHERE deleted = 0 AND suspended = 0
+                AND (
+                    " . $DB->sql_like('firstname', ':query1', false) . "
+                    OR " . $DB->sql_like('lastname', ':query2', false) . "
+                    OR " . $DB->sql_like('email', ':query3', false) . "
+                    OR " . $DB->sql_like($DB->sql_concat('firstname', "' '", 'lastname'), ':query4', false) . "
+                )
+                ORDER BY lastname, firstname
+                LIMIT :limit";
+
+        $params = [
+            'query1' => $query,
+            'query2' => $query,
+            'query3' => $query,
+            'query4' => $query,
+            'limit' => $limit
+        ];
+
+        return array_values($DB->get_records_sql($sql, $params));
+    }
+
+    /**
+     * Get all active locations.
+     *
+     * @return array Array of location objects
+     */
+    public function get_active_locations(): array {
+        global $DB;
+
+        return array_values($DB->get_records(
+            'local_equipment_locations',
+            ['active' => 1],
+            'name ASC',
+            'id, name, description, zone'
+        ));
+    }
+
+    /**
+     * Update equipment notes.
+     *
+     * @param string $uuid Equipment item UUID
+     * @param string $notes Notes to add
+     * @param int $processedby User ID adding the notes
+     * @return object Result object
+     */
+    public function update_equipment_notes(string $uuid, string $notes, int $processedby): object {
+        global $DB;
+
+        try {
+            // Get the equipment item
+            $item = $DB->get_record('local_equipment_items', ['uuid' => $uuid]);
+            if (!$item) {
+                throw new \moodle_exception('Equipment item not found');
+            }
+
+            // Create transaction record for notes
+            $transaction_record = new \stdClass();
+            $transaction_record->itemid = $item->id;
+            $transaction_record->transaction_type = 'condition_update';
+            $transaction_record->processed_by = $processedby;
+            $transaction_record->notes = $notes;
+            $transaction_record->timestamp = time();
+            $DB->insert_record('local_equipment_transactions', $transaction_record);
+
+            return (object)[
+                'success' => true,
+                'message' => 'Notes added successfully'
+            ];
+        } catch (\moodle_exception $e) {
+            return (object)[
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        } catch (\Exception $e) {
+            return (object)[
+                'success' => false,
+                'message' => get_string('unexpectederror', 'local_equipment')
+            ];
+        }
+    }
+
+    /**
+     * Get equipment items by status.
+     *
+     * @param string $status Equipment status
+     * @param int $limit Maximum number of results
+     * @return array Array of equipment items
+     */
+    public function get_items_by_status(string $status, int $limit = 50): array {
+        global $DB;
+
+        $sql = "SELECT ei.*, ep.name as product_name, ep.manufacturer,
+                       el.name as location_name,
+                       u.firstname, u.lastname
                 FROM {local_equipment_items} ei
                 JOIN {local_equipment_products} ep ON ei.productid = ep.id
                 LEFT JOIN {local_equipment_locations} el ON ei.locationid = el.id
                 LEFT JOIN {user} u ON ei.current_userid = u.id
-                WHERE ei.uuid = :uuid";
+                WHERE ei.status = ?
+                ORDER BY ei.timemodified DESC
+                LIMIT ?";
 
-        return $DB->get_record_sql($sql, ['uuid' => $uuid]);
+        return array_values($DB->get_records_sql($sql, [$status, $limit]));
+    }
+
+    /**
+     * Get equipment items by location.
+     *
+     * @param int $locationid Location ID
+     * @return array Array of equipment items
+     */
+    public function get_items_by_location(int $locationid): array {
+        global $DB;
+
+        $sql = "SELECT ei.*, ep.name as product_name, ep.manufacturer, ep.category
+                FROM {local_equipment_items} ei
+                JOIN {local_equipment_products} ep ON ei.productid = ep.id
+                WHERE ei.locationid = ? AND ei.status = 'available'
+                ORDER BY ep.name, ei.timecreated";
+
+        return array_values($DB->get_records_sql($sql, [$locationid]));
+    }
+
+    /**
+     * Get equipment items assigned to a user.
+     *
+     * @param int $userid User ID
+     * @return array Array of equipment items
+     */
+    public function get_items_by_user(int $userid): array {
+        global $DB;
+
+        $sql = "SELECT ei.*, ep.name as product_name, ep.manufacturer, ep.category
+                FROM {local_equipment_items} ei
+                JOIN {local_equipment_products} ep ON ei.productid = ep.id
+                WHERE ei.current_userid = ? AND ei.status = 'checked_out'
+                ORDER BY ep.name, ei.timemodified DESC";
+
+        return array_values($DB->get_records_sql($sql, [$userid]));
     }
 
     /**
@@ -220,7 +623,7 @@ class inventory_manager {
      *
      * @return object Summary statistics
      */
-    public function get_inventory_summary() {
+    public function get_inventory_summary(): object {
         global $DB;
 
         $summary = new \stdClass();
@@ -261,7 +664,7 @@ class inventory_manager {
      * @param int $processedby User ID of admin processing the transaction
      * @return object Result object with success status and details
      */
-    public function process_bulk_checkin($items, $processedby) {
+    public function process_bulk_checkin(array $items, int $processedby): object {
         global $DB;
 
         $results = [
@@ -303,7 +706,7 @@ class inventory_manager {
      * @param int $processedby User ID of admin processing the transaction
      * @return object Result object with success status and details
      */
-    public function process_bulk_checkout($items, $processedby) {
+    public function process_bulk_checkout(array $items, int $processedby): object {
         global $DB;
 
         $results = [
@@ -343,7 +746,7 @@ class inventory_manager {
      * @param int $days_overdue Number of days to consider overdue
      * @return array Array of overdue items
      */
-    public function get_overdue_items($days_overdue = 30) {
+    public function get_overdue_items(int $days_overdue = 30): array {
         global $DB;
 
         $cutoff_time = time() - ($days_overdue * 24 * 60 * 60);
@@ -365,5 +768,24 @@ class inventory_manager {
                 ORDER BY t.timestamp ASC";
 
         return $DB->get_records_sql($sql, ['cutoff_time' => $cutoff_time]);
+    }
+
+    /**
+     * Generate a new UUID.
+     *
+     * @return string UUID
+     */
+    private function generate_uuid(): string {
+        return sprintf(
+            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0x0fff) | 0x4000,
+            mt_rand(0, 0x3fff) | 0x8000,
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff)
+        );
     }
 }

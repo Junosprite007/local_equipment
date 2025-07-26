@@ -35,6 +35,10 @@ require_capability('local/equipment:manageinventory', $context);
 $PAGE->set_title(get_string('removeitems', 'local_equipment'));
 $PAGE->set_heading(get_string('removeitemsfromInventory', 'local_equipment'));
 
+// Load the scanner AMD module and CSS before header
+$PAGE->requires->js_call_amd('local_equipment/remove-items-scanner', 'init');
+$PAGE->requires->css('/local/equipment/scss/scanner.scss');
+
 echo $OUTPUT->header();
 
 echo html_writer::tag('h2', get_string('removeitemsfromInventory', 'local_equipment'));
@@ -54,14 +58,10 @@ echo html_writer::start_div('col-md-6');
 echo html_writer::tag('h3', get_string('scanequipment', 'local_equipment'));
 echo html_writer::tag('p', get_string('scantoidentify', 'local_equipment'));
 
-// QR Scanner placeholder
-echo html_writer::start_div('card mb-3');
-echo html_writer::start_div('card-body text-center');
-echo html_writer::tag(
-    'div',
-    get_string('scannerinterfaceplaceholder', 'local_equipment'),
-    ['class' => 'alert alert-info', 'style' => 'min-height: 200px; display: flex; align-items: center; justify-content: center;']
-);
+// Scanner container - will be populated by JavaScript
+echo html_writer::start_div('scanner-container mb-3', ['id' => 'scanner-container']);
+echo html_writer::start_div('alert alert-info text-center', ['style' => 'min-height: 200px; display: flex; align-items: center; justify-content: center;']);
+echo html_writer::tag('p', 'Scanner is loading... If nothing appears, check that your browser supports camera access.');
 echo html_writer::end_div();
 echo html_writer::end_div();
 
@@ -77,6 +77,7 @@ echo html_writer::start_div('input-group');
 echo html_writer::empty_tag('input', [
     'type' => 'text',
     'name' => 'uuid',
+    'id' => 'manual_uuid',
     'class' => 'form-control',
     'placeholder' => get_string('equipmentuuid', 'local_equipment'),
     'required' => true
@@ -85,6 +86,7 @@ echo html_writer::start_div('input-group-append');
 echo html_writer::tag('button', get_string('lookup', 'local_equipment'), [
     'type' => 'submit',
     'name' => 'lookup',
+    'id' => 'lookup_btn',
     'class' => 'btn btn-primary'
 ]);
 echo html_writer::end_div();
@@ -98,6 +100,10 @@ echo html_writer::end_div(); // End left column
 
 // Right column - Equipment details and removal form
 echo html_writer::start_div('col-md-6');
+
+// Session items container for scanner feedback
+echo html_writer::start_div('session-items-container mb-3', ['id' => 'session_items']);
+echo html_writer::end_div();
 
 // Handle form submissions
 $uuid = optional_param('uuid', '', PARAM_TEXT);

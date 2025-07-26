@@ -35,6 +35,7 @@ admin_externalpage_setup('local_equipment_inventory_additems');
 
 // Load the scanner AMD module and CSS before header
 $PAGE->requires->js_call_amd('local_equipment/add-items-scanner', 'init');
+$PAGE->requires->js_call_amd('local_equipment/queue-notification', 'init');
 $PAGE->requires->css('/local/equipment/scss/scanner.scss');
 
 echo $OUTPUT->header();
@@ -56,9 +57,85 @@ if (empty($locations)) {
     exit;
 }
 
-// Instructions
-echo html_writer::start_tag('div', ['class' => 'alert alert-info']);
-echo html_writer::tag('h5', 'How to Add Items:', ['class' => 'alert-heading']);
+// Main interface - Two column layout
+echo html_writer::start_div('row');
+
+// UPC Scanner Column (Left)
+echo html_writer::start_div('col-md-6');
+echo html_writer::tag('h3', get_string('scanupccode', 'local_equipment'));
+
+// Location selection
+echo html_writer::start_div('mb-3');
+echo html_writer::tag('label', 'Storage Location *', ['for' => 'location_select', 'class' => 'form-label fw-bold']);
+echo html_writer::start_tag('select', [
+    'id' => 'location_select',
+    'class' => 'form-select',
+    'required' => true
+]);
+echo html_writer::tag('option', 'Select a location...', ['value' => '']);
+foreach ($locations as $id => $name) {
+    echo html_writer::tag('option', s($name), ['value' => $id]);
+}
+echo html_writer::end_tag('select');
+echo html_writer::end_div();
+
+// Scanner container
+echo html_writer::start_div('scanner-container mb-3', ['id' => 'scanner-container']);
+echo html_writer::end_div();
+
+// Manual UPC Entry
+echo html_writer::tag('h4', get_string('manualentry', 'local_equipment'));
+echo html_writer::start_div('manual-input');
+echo html_writer::tag('label', get_string('upccode', 'local_equipment'), [
+    'for' => 'manual_upc',
+    'class' => 'form-label'
+]);
+echo html_writer::start_div('input-group');
+echo html_writer::empty_tag('input', [
+    'type' => 'text',
+    'id' => 'manual_upc',
+    'class' => 'form-control',
+    'placeholder' => 'Enter UPC code...',
+    'disabled' => true
+]);
+echo html_writer::tag('button', 'Add Item', [
+    'type' => 'button',
+    'id' => 'add_item_btn',
+    'class' => 'btn btn-outline-primary',
+    'disabled' => true
+]);
+echo html_writer::end_div();
+echo html_writer::end_div();
+
+// Session Summary
+echo html_writer::tag('h4', 'Session Summary', ['class' => 'mt-4']);
+echo html_writer::start_div('session-summary');
+echo html_writer::tag('p', 'Items added this session: <span id="session_count" class="badge bg-primary">0</span>');
+echo html_writer::tag('button', 'Print QR Codes for Session Items', [
+    'type' => 'button',
+    'id' => 'print_qr_btn',
+    'class' => 'btn btn-success btn-sm',
+    'style' => 'display: none;'
+]);
+echo html_writer::end_div();
+
+echo html_writer::end_div(); // col-md-6
+
+// Product Details Column (Right)
+echo html_writer::start_div('col-md-6');
+echo html_writer::tag('h3', get_string('productdetails', 'local_equipment'));
+
+echo html_writer::start_div('product-details-panel', [
+    'id' => 'product-details',
+    'style' => 'border: 1px solid #ddd; padding: 20px; min-height: 400px; background: white; border-radius: 8px;'
+]);
+
+echo html_writer::start_div('alert alert-info');
+echo html_writer::tag('i', '', ['class' => 'fa fa-info-circle me-2']);
+echo 'Select a storage location and scan UPC codes to add items to inventory.';
+echo html_writer::end_div();
+
+echo html_writer::tag('h5', 'How to Add Items:', ['class' => 'mt-3']);
 echo html_writer::start_tag('ol');
 echo html_writer::tag('li', 'Select the storage location where items will be placed');
 echo html_writer::tag('li', 'Scan the UPC barcode on each item\'s packaging');
@@ -71,105 +148,29 @@ echo html_writer::tag(
         'If you scan a UPC that isn\'t in the system, you\'ll be prompted to add it as a new product type first.',
     ['class' => 'mb-0']
 );
-echo html_writer::end_tag('div');
 
-// Location selection
-echo html_writer::start_tag('div', ['class' => 'card mb-4']);
-echo html_writer::start_tag('div', ['class' => 'card-header']);
-echo html_writer::tag('h5', 'Step 1: Select Storage Location', ['class' => 'mb-0']);
-echo html_writer::end_tag('div');
+echo html_writer::end_div(); // product-details-panel
+echo html_writer::end_div(); // col-md-6
 
-echo html_writer::start_tag('div', ['class' => 'card-body']);
-echo html_writer::start_div('mb-3');
-echo html_writer::tag('label', 'Storage Location *', ['for' => 'location_select', 'class' => 'form-label']);
-echo html_writer::start_tag('select', [
-    'id' => 'location_select',
-    'class' => 'form-select',
-    'required' => true
-]);
-echo html_writer::tag('option', 'Select a location...', ['value' => '']);
-foreach ($locations as $id => $name) {
-    echo html_writer::tag('option', s($name), ['value' => $id]);
-}
-echo html_writer::end_tag('select');
+echo html_writer::end_div(); // row
+
+// Session Items Section
+echo html_writer::tag('h3', 'Session Activity', ['class' => 'mt-4']);
+echo html_writer::start_div('session-items-container', ['id' => 'session_items']);
+echo html_writer::tag('p', 'No items added yet this session.', ['class' => 'text-muted']);
 echo html_writer::end_div();
-echo html_writer::end_tag('div');
-echo html_writer::end_tag('div');
-
-// Scanner interface
-echo html_writer::start_tag('div', ['class' => 'card mb-4', 'id' => 'scanner_card', 'style' => 'display: none;']);
-echo html_writer::start_tag('div', ['class' => 'card-header']);
-echo html_writer::tag('h5', 'Step 2: Scan UPC Barcodes', ['class' => 'mb-0']);
-echo html_writer::end_tag('div');
-
-echo html_writer::start_tag('div', ['class' => 'card-body']);
-
-// Scanner interface (will be populated by JavaScript)
-echo html_writer::start_tag('div', ['id' => 'scanner_interface']);
-echo html_writer::tag(
-    'div',
-    'Initializing scanner... Please wait.',
-    ['class' => 'alert alert-info text-center p-4']
-);
-echo html_writer::end_tag('div');
-
-// Manual UPC input (fallback and testing)
-echo html_writer::start_div('mt-3');
-echo html_writer::tag('label', 'Manual UPC Entry:', ['for' => 'manual_upc', 'class' => 'form-label']);
-echo html_writer::start_tag('div', ['class' => 'input-group']);
-echo html_writer::empty_tag('input', [
-    'type' => 'text',
-    'id' => 'manual_upc',
-    'class' => 'form-control',
-    'placeholder' => 'Enter UPC code...',
-    'disabled' => true
-]);
-echo html_writer::tag('button', 'Add Item', [
-    'type' => 'button',
-    'id' => 'add_item_btn',
-    'class' => 'btn btn-primary',
-    'disabled' => true
-]);
-echo html_writer::end_tag('div');
-echo html_writer::end_div();
-
-echo html_writer::end_tag('div');
-echo html_writer::end_tag('div');
-
-// Session summary
-echo html_writer::start_tag('div', ['class' => 'card', 'id' => 'session_summary', 'style' => 'display: none;']);
-echo html_writer::start_tag('div', ['class' => 'card-header']);
-echo html_writer::tag('h5', 'Session Summary', ['class' => 'mb-0']);
-echo html_writer::end_tag('div');
-
-echo html_writer::start_tag('div', ['class' => 'card-body']);
-echo html_writer::tag('p', 'Items added this session: <span id="session_count" class="badge bg-primary">0</span>');
-echo html_writer::start_tag('div', ['id' => 'session_items']);
-echo html_writer::end_tag('div');
-
-// Print QR codes button
-echo html_writer::tag('button', 'Print QR Codes for Session Items', [
-    'type' => 'button',
-    'id' => 'print_qr_btn',
-    'class' => 'btn btn-success mt-3',
-    'style' => 'display: none;'
-]);
-
-echo html_writer::end_tag('div');
-echo html_writer::end_tag('div');
 
 // JavaScript for interface functionality
 echo html_writer::start_tag('script');
 echo '
 document.addEventListener("DOMContentLoaded", function() {
     const locationSelect = document.getElementById("location_select");
-    const scannerCard = document.getElementById("scanner_card");
-    const sessionSummary = document.getElementById("session_summary");
     const manualUpc = document.getElementById("manual_upc");
     const addItemBtn = document.getElementById("add_item_btn");
     const sessionCount = document.getElementById("session_count");
     const sessionItems = document.getElementById("session_items");
     const printQrBtn = document.getElementById("print_qr_btn");
+    const productDetails = document.getElementById("product-details");
 
     let sessionItemCount = 0;
     let sessionItemIds = [];
@@ -177,8 +178,6 @@ document.addEventListener("DOMContentLoaded", function() {
     // Enable scanner when location is selected
     locationSelect.addEventListener("change", function() {
         if (this.value) {
-            scannerCard.style.display = "block";
-            sessionSummary.style.display = "block";
             manualUpc.disabled = false;
             addItemBtn.disabled = false;
 
@@ -186,11 +185,13 @@ document.addEventListener("DOMContentLoaded", function() {
             sessionItemCount = 0;
             sessionItemIds = [];
             updateSessionDisplay();
+
+            // Update product details panel
+            updateProductDetailsPanel("Location selected. Ready to scan UPC codes or enter them manually.");
         } else {
-            scannerCard.style.display = "none";
-            sessionSummary.style.display = "none";
             manualUpc.disabled = true;
             addItemBtn.disabled = true;
+            updateProductDetailsPanel("Please select a storage location first.");
         }
     });
 
@@ -220,6 +221,7 @@ document.addEventListener("DOMContentLoaded", function() {
         // Show processing indicator
         addItemBtn.disabled = true;
         addItemBtn.textContent = "Processing...";
+        updateProductDetailsPanel("Processing UPC: " + upc + "...", "info");
 
         // AJAX call to process UPC
         fetch("' . new moodle_url('/local/equipment/classes/external/validate_upc.php') . '", {
@@ -241,14 +243,25 @@ document.addEventListener("DOMContentLoaded", function() {
                 sessionItemIds.push(data.itemid);
                 updateSessionDisplay();
                 showSuccessMessage(data.product_name);
+
+                // Update product details panel with success info
+                updateProductDetailsPanel(`Successfully added: ${data.product_name}`, "success");
+
+                // Refresh queue notification
+                if (window.QRQueueNotification) {
+                    window.QRQueueNotification.refresh();
+                }
             } else {
                 // Error occurred
                 showErrorMessage(data.message, data.product_url);
+                updateProductDetailsPanel(`Error: ${data.message}`, "danger");
             }
         })
         .catch(error => {
             console.error("Error:", error);
-            showErrorMessage("Network error occurred. Please try again.");
+            const errorMsg = "Network error occurred. Please try again.";
+            showErrorMessage(errorMsg);
+            updateProductDetailsPanel(errorMsg, "danger");
         })
         .finally(() => {
             addItemBtn.disabled = false;
@@ -260,9 +273,34 @@ document.addEventListener("DOMContentLoaded", function() {
         sessionCount.textContent = sessionItemCount;
         if (sessionItemCount > 0) {
             printQrBtn.style.display = "inline-block";
+            // Update session items display
+            if (sessionItems.querySelector(".text-muted")) {
+                sessionItems.innerHTML = `<p>Session activity will appear here as items are added.</p>`;
+            }
         } else {
             printQrBtn.style.display = "none";
         }
+    }
+
+    function updateProductDetailsPanel(message, alertType = "info") {
+        const alertClass = `alert alert-${alertType}`;
+        productDetails.innerHTML = `
+            <div class="${alertClass}">
+                <i class="fa fa-info-circle me-2"></i>
+                ${message}
+            </div>
+            <h5 class="mt-3">How to Add Items:</h5>
+            <ol>
+                <li>Select the storage location where items will be placed</li>
+                <li>Scan the UPC barcode on each item\'s packaging</li>
+                <li>Each scan will automatically add one item to inventory</li>
+                <li>Continue scanning until all items are added</li>
+            </ol>
+            <p class="mb-0">
+                <strong>Note: </strong>
+                If you scan a UPC that isn\'t in the system, you\'ll be prompted to add it as a new product type first.
+            </p>
+        `;
     }
 
     function showSuccessMessage(productName) {

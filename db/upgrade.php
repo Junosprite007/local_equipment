@@ -1101,5 +1101,62 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025062302, 'local', 'equipment');
     }
 
+    // Add missing removal fields to equipment items table
+    if ($oldversion < 2025072201) {
+        $table = new xmldb_table('local_equipment_items');
+
+        // Add removal_reason field
+        $field = new xmldb_field('removal_reason', XMLDB_TYPE_CHAR, '100', null, null, null, null, 'timemodified');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add removal_date field
+        $field = new xmldb_field('removal_date', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'removal_reason');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add removed_by field
+        $field = new xmldb_field('removed_by', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'removal_date');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add foreign key for removed_by field
+        $key = new xmldb_key('removed_by', XMLDB_KEY_FOREIGN, ['removed_by'], 'user', ['id']);
+        $dbman->add_key($table, $key);
+
+        // Equipment removal fields savepoint reached.
+        upgrade_plugin_savepoint(true, 2025072201, 'local', 'equipment');
+    }
+
+    // QR code print queue system for equipment items
+    if ($oldversion < 2025072400) {
+        // Define table local_equipment_qr_print_queue.
+        $table = new xmldb_table('local_equipment_qr_print_queue');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('itemid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('uuid', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('queued_by', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('queued_time', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('printed_time', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('notes', XMLDB_TYPE_TEXT, null, null, null, null, null);
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('itemid', XMLDB_KEY_FOREIGN, ['itemid'], 'local_equipment_items', ['id']);
+        $table->add_key('queued_by', XMLDB_KEY_FOREIGN, ['queued_by'], 'user', ['id']);
+
+        $table->add_index('queued_time', XMLDB_INDEX_NOTUNIQUE, ['queued_time']);
+        $table->add_index('printed_time', XMLDB_INDEX_NOTUNIQUE, ['printed_time']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Equipment QR print queue savepoint reached.
+        upgrade_plugin_savepoint(true, 2025072400, 'local', 'equipment');
+    }
+
     return true;
 }

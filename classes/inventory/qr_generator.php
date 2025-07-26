@@ -35,14 +35,14 @@ class qr_generator {
     /** @var int Default QR code size */
     const DEFAULT_SIZE = 200;
 
-    /** @var int QR codes per printable sheet (5x6 grid) */
+    /** @var int QR codes per printable sheet (4x7 grid) */
     const CODES_PER_SHEET = 28;
 
     /** @var int Columns per sheet */
     const SHEET_COLUMNS = 4;
 
     /** @var int Rows per sheet */
-    const SHEET_ROWS = 6;
+    const SHEET_ROWS = 7;
 
     /**
      * Generate QR code for an equipment item UUID.
@@ -126,7 +126,7 @@ class qr_generator {
         // Generate UUIDs and QR codes
         for ($i = 0; $i < $count; $i++) {
             $uuid = self::generate_uuid();
-            $qr_data = $this->generate_item_qr($uuid, 120); // Optimized size for 4x6 grid printing
+            $qr_data = $this->generate_item_qr($uuid, 100); // Optimized size for 4x7 grid printing
 
             $qr_codes[] = [
                 'uuid' => $uuid,
@@ -311,7 +311,7 @@ class qr_generator {
                 height: 100%;
                 display: grid;
                 grid-template-columns: repeat(4, 1fr);
-                grid-template-rows: repeat(6, 1fr);
+                grid-template-rows: repeat(7, 1fr);
                 gap: 2px;
                 border: 1px solid #ccc;
             }
@@ -357,11 +357,11 @@ class qr_generator {
         @media screen {
             .qr-sheet {
                 max-width: 8.5in;
-                margin: 20px auto;
+                margin: auto;
                 border: 1px solid #ccc;
                 display: grid;
                 grid-template-columns: repeat(4, 1fr);
-                grid-template-rows: repeat(6, 1fr);
+                grid-template-rows: repeat(7, 1fr);
                 gap: 2px;
                 aspect-ratio: 8.5/11;
             }

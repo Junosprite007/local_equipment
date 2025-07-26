@@ -46,6 +46,26 @@ $functions = [
         'capabilities' => 'local/equipment:checkinout',
         'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
     ],
+    'local_equipment_lookup_equipment' => [
+        'classname' => 'local_equipment\external\lookup_equipment',
+        'methodname' => 'execute',
+        'classpath' => '',
+        'description' => 'Lookup equipment details by UUID',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'local/equipment:checkinout',
+        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ],
+    'local_equipment_validate_removal' => [
+        'classname' => 'local_equipment\external\validate_removal',
+        'methodname' => 'execute',
+        'classpath' => '',
+        'description' => 'Validate and process equipment removal',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/equipment:manageinventory',
+        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ],
 ];
 
 $services = [
@@ -53,6 +73,8 @@ $services = [
         'functions' => [
             'local_equipment_validate_upc',
             'local_equipment_process_scan',
+            'local_equipment_lookup_equipment',
+            'local_equipment_validate_removal',
         ],
         'restrictedusers' => 0,
         'enabled' => 1,

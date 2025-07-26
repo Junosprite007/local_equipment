@@ -44,153 +44,82 @@ try {
     // Get inventory summary
     $summary = $inventory_manager->get_inventory_summary();
 
-    // Display summary cards
-    echo html_writer::start_div('row');
+    // Prepare template context
+    $template_context = [
+        'summary' => [
+            'total_items' => $summary->total_items,
+            'available' => $summary->available,
+            'checked_out' => $summary->checked_out,
+            'in_transit' => $summary->in_transit,
+            'maintenance' => $summary->maintenance,
+            'damaged' => $summary->damaged,
+            'lost' => $summary->lost ?? 0,
+            'recent_transactions' => $summary->recent_transactions,
+        ],
+        'actions' => [
+            [
+                'title' => get_string('additems', 'local_equipment'),
+                'description' => get_string('additemsdesc', 'local_equipment'),
+                'url' => (new moodle_url('/local/equipment/inventory/add_items.php'))->out(false),
+                'button_text' => get_string('additems', 'local_equipment'),
+                'button_class' => 'btn btn-success',
+                'icon' => 'fa-plus',
+            ],
+            [
+                'title' => get_string('removeitems', 'local_equipment'),
+                'description' => get_string('removeitemsdesc', 'local_equipment'),
+                'url' => (new moodle_url('/local/equipment/inventory/remove_items.php'))->out(false),
+                'button_text' => get_string('removeitems', 'local_equipment'),
+                'button_class' => 'btn btn-danger',
+                'icon' => 'fa-trash',
+            ],
+            [
+                'title' => get_string('managelocations', 'local_equipment'),
+                'description' => get_string('managelocationsdesc', 'local_equipment'),
+                'url' => (new moodle_url('/local/equipment/inventory/locations.php'))->out(false),
+                'button_text' => get_string('managelocations', 'local_equipment'),
+                'button_class' => 'btn btn-info',
+                'icon' => 'fa-map-marker-alt',
+            ],
+            [
+                'title' => get_string('manageproducts', 'local_equipment'),
+                'description' => get_string('manageproductsdesc', 'local_equipment'),
+                'url' => (new moodle_url('/local/equipment/inventory/products.php'))->out(false),
+                'button_text' => get_string('manageproducts', 'local_equipment'),
+                'button_class' => 'btn btn-primary',
+                'icon' => 'fa-boxes',
+            ],
+        ],
+        'quick_actions' => [
+            [
+                'title' => get_string('generateqr', 'local_equipment'),
+                'description' => get_string('generateqrdesc', 'local_equipment'),
+                'url' => (new moodle_url('/local/equipment/inventory/generate_qr.php'))->out(false),
+                'button_text' => get_string('generateqrcodes', 'local_equipment'),
+                'button_class' => 'btn btn-primary',
+                'icon' => 'fa-qrcode',
+            ],
+            [
+                'title' => get_string('checkinout', 'local_equipment'),
+                'description' => get_string('checkinoutdesc', 'local_equipment'),
+                'url' => (new moodle_url('/local/equipment/inventory/check_inout.php'))->out(false),
+                'button_text' => get_string('checkinout', 'local_equipment'),
+                'button_class' => 'btn btn-primary',
+                'icon' => 'fa-exchange-alt',
+            ],
+            [
+                'title' => get_string('viewtransactions', 'local_equipment'),
+                'description' => get_string('viewtransactionsdesc', 'local_equipment'),
+                'url' => (new moodle_url('/local/equipment/inventory/transactions.php'))->out(false),
+                'button_text' => get_string('viewtransactions', 'local_equipment'),
+                'button_class' => 'btn btn-outline-primary',
+                'icon' => 'fa-history',
+            ],
+        ],
+    ];
 
-    // Total items card
-    echo html_writer::start_div('col-md-3 mb-3');
-    echo html_writer::start_div('card text-white bg-primary');
-    echo html_writer::start_div('card-body');
-    echo html_writer::tag('h5', get_string('totalitems', 'local_equipment'), ['class' => 'card-title']);
-    echo html_writer::tag('h2', $summary->total_items, ['class' => 'card-text']);
-    echo html_writer::end_div(); // card-body
-    echo html_writer::end_div(); // card
-    echo html_writer::end_div(); // col
-
-    // Available items card
-    echo html_writer::start_div('col-md-3 mb-3');
-    echo html_writer::start_div('card text-white bg-success');
-    echo html_writer::start_div('card-body');
-    echo html_writer::tag('h5', get_string('availableitems', 'local_equipment'), ['class' => 'card-title']);
-    echo html_writer::tag('h2', $summary->available, ['class' => 'card-text']);
-    echo html_writer::end_div(); // card-body
-    echo html_writer::end_div(); // card
-    echo html_writer::end_div(); // col
-
-    // Checked out items card
-    echo html_writer::start_div('col-md-3 mb-3');
-    echo html_writer::start_div('card text-white bg-warning');
-    echo html_writer::start_div('card-body');
-    echo html_writer::tag('h5', get_string('checkedoutitems', 'local_equipment'), ['class' => 'card-title']);
-    echo html_writer::tag('h2', $summary->checked_out, ['class' => 'card-text']);
-    echo html_writer::end_div(); // card-body
-    echo html_writer::end_div(); // card
-    echo html_writer::end_div(); // col
-
-    // In transit items card
-    echo html_writer::start_div('col-md-3 mb-3');
-    echo html_writer::start_div('card text-white bg-info');
-    echo html_writer::start_div('card-body');
-    echo html_writer::tag('h5', get_string('intransititems', 'local_equipment'), ['class' => 'card-title']);
-    echo html_writer::tag('h2', $summary->in_transit, ['class' => 'card-text']);
-    echo html_writer::end_div(); // card-body
-    echo html_writer::end_div(); // card
-    echo html_writer::end_div(); // col
-
-    echo html_writer::end_div(); // row
-
-    // Second row for additional actions
-    echo html_writer::start_div('row');
-
-    // Add Items
-    echo html_writer::start_div('col-md-4 mb-3');
-    echo html_writer::start_div('card');
-    echo html_writer::start_div('card-body text-center');
-    echo html_writer::tag('h5', get_string('additems', 'local_equipment'), ['class' => 'card-title']);
-    echo html_writer::tag('p', 'Add new equipment items to inventory', ['class' => 'card-text']);
-    echo html_writer::link(
-        new moodle_url('/local/equipment/inventory/add_items.php'),
-        get_string('additems', 'local_equipment'),
-        ['class' => 'btn btn-success']
-    );
-    echo html_writer::end_div(); // card-body
-    echo html_writer::end_div(); // card
-    echo html_writer::end_div(); // col
-
-    // Remove Items
-    echo html_writer::start_div('col-md-4 mb-3');
-    echo html_writer::start_div('card');
-    echo html_writer::start_div('card-body text-center');
-    echo html_writer::tag('h5', get_string('removeitems', 'local_equipment'), ['class' => 'card-title']);
-    echo html_writer::tag('p', 'Remove equipment items from inventory', ['class' => 'card-text']);
-    echo html_writer::link(
-        new moodle_url('/local/equipment/inventory/remove_items.php'),
-        get_string('removeitems', 'local_equipment'),
-        ['class' => 'btn btn-danger']
-    );
-    echo html_writer::end_div(); // card-body
-    echo html_writer::end_div(); // card
-    echo html_writer::end_div(); // col
-
-    // Manage Locations
-    echo html_writer::start_div('col-md-4 mb-3');
-    echo html_writer::start_div('card');
-    echo html_writer::start_div('card-body text-center');
-    echo html_writer::tag('h5', get_string('managelocations', 'local_equipment'), ['class' => 'card-title']);
-    echo html_writer::tag('p', 'Add and manage storage locations', ['class' => 'card-text']);
-    echo html_writer::link(
-        new moodle_url('/local/equipment/inventory/locations.php'),
-        get_string('managelocations', 'local_equipment'),
-        ['class' => 'btn btn-info']
-    );
-    echo html_writer::end_div(); // card-body
-    echo html_writer::end_div(); // card
-    echo html_writer::end_div(); // col
-
-    echo html_writer::end_div(); // row
-
-    // Quick actions section
-    echo html_writer::tag('h3', get_string('actions', 'local_equipment'), ['class' => 'mt-4']);
-
-    echo html_writer::start_div('row');
-
-    // QR Code Generator
-    echo html_writer::start_div('col-md-4 mb-3');
-    echo html_writer::start_div('card');
-    echo html_writer::start_div('card-body text-center');
-    echo html_writer::tag('h5', get_string('generateqr', 'local_equipment'), ['class' => 'card-title']);
-    echo html_writer::tag('p', 'Generate QR codes for equipment tracking', ['class' => 'card-text']);
-    echo html_writer::link(
-        new moodle_url('/local/equipment/inventory/generate_qr.php'),
-        get_string('generateqrcodes', 'local_equipment'),
-        ['class' => 'btn btn-primary']
-    );
-    echo html_writer::end_div(); // card-body
-    echo html_writer::end_div(); // card
-    echo html_writer::end_div(); // col
-
-    // Check In/Out
-    echo html_writer::start_div('col-md-4 mb-3');
-    echo html_writer::start_div('card');
-    echo html_writer::start_div('card-body text-center');
-    echo html_writer::tag('h5', get_string('checkinout', 'local_equipment'), ['class' => 'card-title']);
-    echo html_writer::tag('p', 'Check equipment in or out using QR codes', ['class' => 'card-text']);
-    echo html_writer::link(
-        new moodle_url('/local/equipment/inventory/checkin.php'),
-        get_string('checkinout', 'local_equipment'),
-        ['class' => 'btn btn-primary']
-    );
-    echo html_writer::end_div(); // card-body
-    echo html_writer::end_div(); // card
-    echo html_writer::end_div(); // col
-
-    // Manage Products
-    echo html_writer::start_div('col-md-4 mb-3');
-    echo html_writer::start_div('card');
-    echo html_writer::start_div('card-body text-center');
-    echo html_writer::tag('h5', get_string('manageproducts', 'local_equipment'), ['class' => 'card-title']);
-    echo html_writer::tag('p', 'Add and manage product catalog', ['class' => 'card-text']);
-    echo html_writer::link(
-        new moodle_url('/local/equipment/inventory/products.php'),
-        get_string('manageproducts', 'local_equipment'),
-        ['class' => 'btn btn-primary']
-    );
-    echo html_writer::end_div(); // card-body
-    echo html_writer::end_div(); // card
-    echo html_writer::end_div(); // col
-
-    echo html_writer::end_div(); // row
-
+    // Render the template
+    echo $OUTPUT->render_from_template('local_equipment/inventory_dashboard', $template_context);
 } catch (Exception $e) {
     echo $OUTPUT->notification('Error loading inventory data: ' . $e->getMessage(), 'error');
 }

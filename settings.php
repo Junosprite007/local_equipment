@@ -389,7 +389,7 @@ if ($hassiteconfig) {
         new admin_externalpage(
             "{$component}_inventory_checkinout",
             new lang_string('checkinout', 'local_equipment'),
-            new moodle_url('/local/equipment/inventory/checkin.php'),
+            new moodle_url('/local/equipment/inventory/check_inout.php'),
             'local/equipment:checkinout'
         )
     );

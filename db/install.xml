@@ -604,5 +604,28 @@
                 <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
             </INDEXES>
         </TABLE>
+
+        <!-- QR code print queue -->
+        <TABLE NAME="local_equipment_qr_print_queue" COMMENT="QR code printing queue for equipment items">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="itemid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="FK to equipment_items"/>
+                <FIELD NAME="uuid" TYPE="char" LENGTH="36" NOTNULL="true" COMMENT="UUID for QR code generation"/>
+                <FIELD NAME="queued_by" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="User who queued the item"/>
+                <FIELD NAME="queued_time" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Timestamp when queued"/>
+                <FIELD NAME="printed_time" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Timestamp when marked as printed"/>
+                <FIELD NAME="notes" TYPE="text" NOTNULL="false" COMMENT="Optional notes about the queue item"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="itemid" TYPE="foreign" FIELDS="itemid" REFTABLE="local_equipment_items" REFFIELDS="id"/>
+                <KEY NAME="queued_by" TYPE="foreign" FIELDS="queued_by" REFTABLE="user" REFFIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="itemid" UNIQUE="false" FIELDS="itemid"/>
+                <INDEX NAME="printed_time" UNIQUE="false" FIELDS="printed_time"/>
+                <INDEX NAME="queued_time" UNIQUE="false" FIELDS="queued_time"/>
+            </INDEXES>
+        </TABLE>
     </TABLES>
 </XMLDB>

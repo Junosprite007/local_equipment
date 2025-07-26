@@ -206,12 +206,22 @@ try {
 
     $DB->insert_record('local_equipment_transactions', $transaction);
 
+    // Automatically add new item to print queue
+    $print_manager = new \local_equipment\inventory\print_queue_manager();
+    $queue_success = $print_manager->add_item_to_queue(
+        $itemid,
+        $uuid,
+        $USER->id,
+        'Auto-queued when added via UPC scan: ' . $upc
+    );
+
     // Return success
     echo json_encode([
         'success' => true,
         'itemid' => $itemid,
         'product_name' => $product->name,
-        'uuid' => $uuid
+        'uuid' => $uuid,
+        'queued_for_printing' => $queue_success
     ]);
 } catch (Exception $e) {
     error_log('UPC validation error: ' . $e->getMessage());

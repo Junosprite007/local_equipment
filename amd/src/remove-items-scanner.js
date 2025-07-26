@@ -14,9 +14,9 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Scanner integration for add items page.
+ * Scanner integration for remove items page.
  *
- * @module     local_equipment/add-items-scanner
+ * @module     local_equipment/remove-items-scanner
  * @copyright  2024 onwards Joshua Kirby <josh@funlearningcompany.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -25,14 +25,16 @@ import UniversalScanner from 'local_equipment/universal-scanner';
 import Notification from 'core/notification';
 import Log from 'core/log';
 import jsQR from 'local_equipment/jsqr';
+import Ajax from 'core/ajax';
+import { debugAjaxResponse } from 'local_equipment/debug-utils';
 
 /**
- * Initialize the scanner for add items page.
+ * Initialize the scanner for remove items page.
  */
 export const init = () => {
-    Log.debug('local_equipment/add-items-scanner: init() called');
+    Log.debug('local_equipment/remove-items-scanner: init() called');
     Log.debug(
-        'local_equipment/add-items-scanner: document.readyState =',
+        'local_equipment/remove-items-scanner: document.readyState =',
         document.readyState
     );
 
@@ -40,18 +42,18 @@ export const init = () => {
     if (document.readyState === 'loading') {
         // DOM is still loading, wait for DOMContentLoaded
         Log.debug(
-            'local_equipment/add-items-scanner: DOM still loading, adding DOMContentLoaded listener'
+            'local_equipment/remove-items-scanner: DOM still loading, adding DOMContentLoaded listener'
         );
         document.addEventListener('DOMContentLoaded', function () {
             Log.debug(
-                'local_equipment/add-items-scanner: DOMContentLoaded event fired'
+                'local_equipment/remove-items-scanner: DOMContentLoaded event fired'
             );
             initializeScanner();
         });
     } else {
         // DOM is already ready, initialize immediately
         Log.debug(
-            'local_equipment/add-items-scanner: DOM already ready, initializing immediately'
+            'local_equipment/remove-items-scanner: DOM already ready, initializing immediately'
         );
         initializeScanner();
     }
@@ -61,62 +63,28 @@ export const init = () => {
  * Initialize the scanner interface.
  */
 function initializeScanner() {
-    Log.debug('local_equipment/add-items-scanner: initializeScanner() called');
+    Log.debug(
+        'local_equipment/remove-items-scanner: initializeScanner() called'
+    );
 
-    const locationSelect = document.getElementById('location_select');
-    const manualUpc = document.getElementById('manual_upc');
-    const addItemBtn = document.getElementById('add_item_btn');
-    const sessionCount = document.getElementById('session_count');
-    const sessionItems = document.getElementById('session_items');
-    const printQrBtn = document.getElementById('print_qr_btn');
     const scannerContainer = document.getElementById('scanner-container');
+    const manualUuid = document.getElementById('manual_uuid');
+    const lookupBtn = document.getElementById('lookup_btn');
+    const sessionItems = document.getElementById('session_items');
 
     Log.debug('DOM elements found:', {
-        locationSelect: !!locationSelect,
-        manualUpc: !!manualUpc,
-        addItemBtn: !!addItemBtn,
-        sessionCount: !!sessionCount,
-        sessionItems: !!sessionItems,
-        printQrBtn: !!printQrBtn,
         scannerContainer: !!scannerContainer,
+        manualUuid: !!manualUuid,
+        lookupBtn: !!lookupBtn,
+        sessionItems: !!sessionItems,
     });
 
     let scanner = null;
-    let sessionItemCount = 0;
-    let sessionItemIds = [];
+    let sessionRemovedCount = 0;
+    let sessionRemovedItems = [];
 
-    // Enable scanner when location is selected
-    locationSelect.addEventListener('change', function () {
-        if (this.value) {
-            // Initialize scanner
-            initScanner();
-
-            // Reset session when location changes
-            sessionItemCount = 0;
-            sessionItemIds = [];
-            updateSessionDisplay();
-
-            // Update product details panel
-            updateProductDetailsPanel(
-                'Location selected. Ready to scan UPC codes or enter them manually.'
-            );
-        } else {
-            // Clear scanner container
-            if (scannerContainer) {
-                scannerContainer.innerHTML = '';
-            }
-
-            // Destroy scanner
-            if (scanner) {
-                scanner.destroy();
-                scanner = null;
-            }
-
-            updateProductDetailsPanel(
-                'Please select a storage location first.'
-            );
-        }
-    });
+    // Initialize scanner immediately
+    initScanner();
 
     /**
      * Initialize the scanner interface.
@@ -158,7 +126,7 @@ function initializeScanner() {
             </div>
             <div class="file-upload-section mb-3" style="display: none;" id="file-upload-section">
                 <label for="barcode-file-input" class="form-label">
-                    <i class="fa fa-camera"></i> Take Photo of Barcode:
+                    <i class="fa fa-camera"></i> Take Photo of Barcode/QR Code:
                 </label>
                 <div class="input-group">
                     <input type="file" id="barcode-file-input" class="form-control" accept="image/*" capture="environment">
@@ -167,13 +135,13 @@ function initializeScanner() {
                     </button>
                 </div>
                 <small class="form-text text-muted">
-                    Take a clear photo of the barcode with good lighting
+                    Take a clear photo of the QR code or barcode with good lighting
                 </small>
             </div>
             <div class="manual-input">
-                <label for="scanner-manual-input" class="form-label">Or enter barcode manually:</label>
+                <label for="scanner-manual-input" class="form-label">Or enter barcode/QR manually:</label>
                 <div class="input-group">
-                    <input type="text" id="scanner-manual-input" class="form-control" placeholder="Scan or type barcode...">
+                    <input type="text" id="scanner-manual-input" class="form-control" placeholder="Scan or type barcode/QR code...">
                     <button type="button" id="scanner-manual-btn" class="btn btn-outline-primary">Process</button>
                 </div>
             </div>
@@ -232,7 +200,7 @@ function initializeScanner() {
                 scanner.canvas.height = scanner.video.videoHeight;
 
                 scanner.updateStatus(
-                    'Camera ready - click Scan to detect barcode'
+                    'Camera ready - click Scan to detect barcode/QR code'
                 );
 
                 startBtn.disabled = true;
@@ -243,9 +211,9 @@ function initializeScanner() {
                 // Apply initial mirror state
                 updateVideoMirror();
 
-                // Update product details panel
-                updateProductDetailsPanel(
-                    "Camera started. Click 'Scan' to detect barcodes in the camera view."
+                updateStatusMessage(
+                    "Camera started. Click 'Scan' to detect QR codes or barcodes in the camera view.",
+                    'info'
                 );
             } catch (error) {
                 Log.error('Failed to start camera:', error);
@@ -342,7 +310,7 @@ function initializeScanner() {
             scanBtn.disabled = true;
             scanBtn.innerHTML =
                 '<i class="fa fa-spinner fa-spin"></i> Scanning...';
-            scanner.updateStatus('Scanning for barcode...');
+            scanner.updateStatus('Scanning for barcode/QR code...');
 
             try {
                 const result = await performSingleScan();
@@ -354,7 +322,7 @@ function initializeScanner() {
                     // No barcode found
                     scanner.updateStatus('No barcode detected - try again');
                     showErrorMessage(
-                        'No barcode detected. Please position the barcode in the target area and try again.'
+                        'No barcode detected. Please position the barcode/QR code in the target area and try again.'
                     );
                 }
             } catch (error) {
@@ -371,7 +339,7 @@ function initializeScanner() {
             // Reset status after a delay
             setTimeout(() => {
                 scanner.updateStatus(
-                    'Ready to scan - position barcode and click Scan'
+                    'Ready to scan - position barcode/QR code and click Scan'
                 );
             }, 2000);
         });
@@ -440,7 +408,10 @@ function initializeScanner() {
                                         barcode.rawValue,
                                         barcode.format
                                     );
-                                    processBarcode(barcode.rawValue);
+                                    processBarcode(
+                                        barcode.rawValue,
+                                        barcode.format
+                                    );
                                     found = true;
                                     resolve(true);
                                     return;
@@ -468,7 +439,7 @@ function initializeScanner() {
 
                             if (code && code.data) {
                                 Log.debug('QR code detected:', code.data);
-                                processBarcode(code.data);
+                                processBarcode(code.data, 'qr_code');
                                 found = true;
                                 resolve(true);
                                 return;
@@ -493,7 +464,7 @@ function initializeScanner() {
         manualBtn.addEventListener('click', () => {
             const barcode = manualInput.value.trim();
             if (barcode) {
-                processBarcode(barcode);
+                processBarcode(barcode, 'manual');
                 manualInput.value = '';
             }
         });
@@ -503,6 +474,9 @@ function initializeScanner() {
                 manualBtn.click();
             }
         });
+
+        // Set up file upload
+        setupFileUpload();
     }
 
     /**
@@ -515,7 +489,7 @@ function initializeScanner() {
             // Extract barcode data from the scan result
             const barcodeData = result.data.barcode_data || result.data;
             Log.debug('Scan successful, processing barcode:', barcodeData);
-            processBarcode(barcodeData);
+            processBarcode(barcodeData, 'scan');
         } else {
             Log.error('Scan failed:', result);
             // Show error message to user
@@ -588,7 +562,7 @@ function initializeScanner() {
                     <div class="alert alert-warning text-center">
                         <i class="fa fa-exclamation-triangle"></i>
                         <strong>Camera not available</strong><br>
-                        Please use the manual input below to enter barcodes.
+                        Please use the manual input below to enter barcodes/QR codes.
                     </div>
                 `;
             }
@@ -608,7 +582,6 @@ function initializeScanner() {
                 );
                 if (fileUploadSection) {
                     fileUploadSection.style.display = 'block';
-                    setupFileUpload();
                 }
             }
         }
@@ -646,7 +619,10 @@ function initializeScanner() {
                 const barcode = await processImageFile(file);
                 if (barcode) {
                     showSuccessMessage('Barcode detected from photo!');
-                    processBarcode(barcode);
+                    processBarcode(
+                        barcode.data,
+                        barcode.format || 'file_upload'
+                    );
                     // Clear the file input
                     fileInput.value = '';
                 } else {
@@ -668,7 +644,7 @@ function initializeScanner() {
     /**
      * Process an uploaded image file for barcodes.
      * @param {File} file Image file
-     * @returns {Promise<string|null>} Detected barcode or null
+     * @returns {Promise<Object|null>} Detected barcode object or null
      */
     async function processImageFile(file) {
         return new Promise((resolve, reject) => {
@@ -715,7 +691,10 @@ function initializeScanner() {
                                         'Barcode detected from file:',
                                         barcodes[0].rawValue
                                     );
-                                    resolve(barcodes[0].rawValue);
+                                    resolve({
+                                        data: barcodes[0].rawValue,
+                                        format: barcodes[0].format,
+                                    });
                                     return;
                                 }
                             } catch (error) {
@@ -745,7 +724,10 @@ function initializeScanner() {
                                     'QR code detected from file:',
                                     code.data
                                 );
-                                resolve(code.data);
+                                resolve({
+                                    data: code.data,
+                                    format: 'qr_code',
+                                });
                                 return;
                             }
                         } catch (error) {
@@ -1065,45 +1047,24 @@ function initializeScanner() {
     }
 
     /**
-     * Normalize UPC code to standard 12-digit format (client-side).
-     * @param {string} upc Raw UPC code
-     * @returns {string|null} Normalized UPC or null if invalid
+     * Determine if a barcode is a UUID (QR code) or UPC code.
+     * @param {string} barcode Barcode data
+     * @returns {string} Type: 'uuid', 'upc', or 'unknown'
      */
-    function normalizeUPC(upc) {
-        // Remove any non-numeric characters
-        upc = upc.replace(/[^0-9]/g, '');
+    function determineBarcodeType(barcode) {
+        // UUID pattern (standard 8-4-4-4-12 format)
+        const uuidPattern =
+            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
-        // Check if it's a valid length (8-14 digits)
-        const length = upc.length;
-        if (length < 8 || length > 14) {
-            return null;
-        }
+        // UPC pattern (8-14 digits)
+        const upcPattern = /^\d{8,14}$/;
 
-        // Handle different UPC formats
-        switch (length) {
-            case 8:
-                // UPC-E format - pad to 12 digits
-                return upc.padStart(12, '0');
-
-            case 12:
-                // UPC-A format - this is our target format
-                return upc;
-
-            case 13:
-                // EAN-13 format - remove leading zero if it's 0
-                if (upc.charAt(0) === '0') {
-                    return upc.substring(1);
-                }
-                // Non-US EAN code - keep as-is
-                return upc;
-
-            case 14:
-                // GTIN-14 format - remove leading zeros
-                return upc.replace(/^0+/, '');
-
-            default:
-                // 9, 10, 11 digits - pad to 12
-                return upc.padStart(12, '0');
+        if (uuidPattern.test(barcode)) {
+            return 'uuid';
+        } else if (upcPattern.test(barcode)) {
+            return 'upc';
+        } else {
+            return 'unknown';
         }
     }
 
@@ -1111,37 +1072,15 @@ function initializeScanner() {
      * Process a barcode (from scan or manual entry).
      *
      * @param {string} barcode Barcode data
+     * @param {string} format Barcode format (optional)
      */
-    function processBarcode(barcode) {
-        const locationId = locationSelect.value;
-        if (!locationId) {
-            Notification.addNotification({
-                message: 'Please select a location first',
-                type: 'error',
-            });
-            return;
-        }
+    function processBarcode(barcode, format = 'unknown') {
+        Log.debug('Processing barcode:', barcode, 'Format:', format);
 
-        // Normalize UPC on client side for immediate feedback
-        const originalBarcode = barcode;
-        const normalizedBarcode = normalizeUPC(barcode);
+        // Determine barcode type
+        const barcodeType = determineBarcodeType(barcode);
 
-        if (!normalizedBarcode) {
-            showErrorMessage(
-                `Invalid UPC format: "${originalBarcode}". UPC must be 8-14 digits.`
-            );
-            return;
-        }
-
-        // Log normalization for debugging
-        if (originalBarcode !== normalizedBarcode) {
-            Log.debug(
-                `UPC normalized: "${originalBarcode}" -> "${normalizedBarcode}"`
-            );
-            showSuccessMessage(
-                `UPC normalized: ${originalBarcode} → ${normalizedBarcode}`
-            );
-        }
+        Log.debug('Determined barcode type:', barcodeType);
 
         // Show processing state
         const processingBtn = document.getElementById('scanner-manual-btn');
@@ -1150,8 +1089,14 @@ function initializeScanner() {
             processingBtn.textContent = 'Processing...';
         }
 
-        // Process via existing UPC validation endpoint
-        processUPC(normalizedBarcode, locationId).finally(() => {
+        // Update status message
+        updateStatusMessage(
+            `Processing ${barcodeType} code: ${barcode}...`,
+            'info'
+        );
+
+        // Process via removal endpoint
+        processRemoval(barcode, barcodeType).finally(() => {
             // Reset button state
             if (processingBtn) {
                 processingBtn.disabled = false;
@@ -1161,139 +1106,408 @@ function initializeScanner() {
     }
 
     /**
-     * Process UPC using existing validation endpoint.
+     * Process item removal using Moodle web service.
      *
-     * @param {string} upc UPC code
-     * @param {string} locationId Location ID
+     * @param {string} barcode Barcode data
+     * @param {string} barcodeType Type of barcode (uuid, upc, unknown)
      * @returns {Promise} Processing promise
      */
-    async function processUPC(upc, locationId) {
-        // Validate session key
-        if (!window.M || !window.M.cfg || !window.M.cfg.sesskey) {
-            showErrorMessage(
-                'Session expired. Please refresh the page and log in again.'
+    async function processRemoval(barcode, barcodeType) {
+        if (!window.M || !window.M.cfg) {
+            throw new Error(
+                'Moodle environment not properly loaded. Please refresh the page.'
             );
-            return;
         }
 
-        const requestUrl =
-            M.cfg.wwwroot +
-            '/local/equipment/classes/external/validate_upc.php';
-        const requestData = {
-            upc: upc,
-            locationid: locationId,
-            sesskey: M.cfg.sesskey,
-        };
-
-        Log.debug('Processing UPC request:', {
-            url: requestUrl,
-            data: requestData,
-            wwwroot: M.cfg.wwwroot,
-            currentOrigin: window.location.origin,
-            currentHost: window.location.host,
-        });
+        Log.debug(
+            'local_equipment/remove-items-scanner: Processing removal request',
+            {
+                barcode: barcode,
+                type: barcodeType,
+                timestamp: new Date().toISOString(),
+            }
+        );
 
         try {
-            const response = await fetch(requestUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
+            const request = {
+                methodname: 'local_equipment_validate_removal',
+                args: {
+                    barcode: barcode,
+                    type: barcodeType,
                 },
-                body: JSON.stringify(requestData),
-            });
+            };
 
-            Log.debug('Response received:', {
-                status: response.status,
-                statusText: response.statusText,
-                ok: response.ok,
-                headers: Object.fromEntries(response.headers.entries()),
-            });
+            Log.debug(
+                'local_equipment/remove-items-scanner: Making AJAX request',
+                request
+            );
 
-            if (!response.ok) {
+            const response = await Ajax.call([request]);
+            const data = await response[0];
+
+            Log.debug(
+                'local_equipment/remove-items-scanner: Raw response received',
+                {
+                    response: response,
+                    data: data,
+                    responseType: typeof data,
+                    keys: Object.keys(data || {}),
+                    stringified: JSON.stringify(data),
+                }
+            );
+
+            // Check if we got a valid response structure
+            if (!data || typeof data !== 'object') {
+                Log.error(
+                    'local_equipment/remove-items-scanner: Invalid response structure',
+                    {
+                        response: response,
+                        data: data,
+                        dataType: typeof data,
+                    }
+                );
+
                 throw new Error(
-                    `HTTP ${response.status}: ${response.statusText}`
+                    'Invalid response from server - expected object, got: ' +
+                        typeof data
                 );
             }
 
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                const textResponse = await response.text();
-                Log.error('Non-JSON response received:', textResponse);
-                throw new Error(
-                    `Expected JSON response, got: ${contentType}. Response: ${textResponse.substring(
-                        0,
-                        200
-                    )}`
+            // Enhanced debugging: log every property of the response
+            Log.debug(
+                'local_equipment/remove-items-scanner: Complete response analysis',
+                {
+                    fullResponse: response,
+                    dataObject: data,
+                    dataKeys: Object.keys(data),
+                    dataValues: Object.values(data),
+                    hasSuccessProperty: 'success' in data,
+                    successValue: data.success,
+                    successType: typeof data.success,
+                    hasMessageProperty: 'message' in data,
+                    messageValue: data.message,
+                    hasErrorProperty: 'error' in data,
+                    errorValue: data.error,
+                    hasErrorCodeProperty: 'error_code' in data,
+                    errorCodeValue: data.error_code,
+                    hasExceptionProperty: 'exception' in data,
+                    exceptionValue: data.exception,
+                    responseAsString: JSON.stringify(data, null, 2),
+                }
+            );
+
+            // Log the complete response structure for debugging
+            if (data.success === true) {
+                Log.debug(
+                    'local_equipment/remove-items-scanner: Success response received',
+                    data
                 );
-            }
-
-            const data = await response.json();
-            Log.debug('Parsed response data:', data);
-
-            if (data.success) {
-                // Item added successfully
-                sessionItemCount++;
-                sessionItemIds.push(data.itemid);
-                updateSessionDisplay();
-                showSuccessMessage(data.product_name);
+                handleRemovalSuccess(data);
+            } else if (data.success === false) {
+                Log.debug(
+                    'local_equipment/remove-items-scanner: Error response received',
+                    data
+                );
+                handleRemovalError(data);
             } else {
-                // Error occurred
-                showErrorMessage(data.message, data.product_url);
+                // Handle case where success property is missing or invalid
+                debugAjaxResponse(
+                    'Response missing or invalid success property',
+                    data,
+                    {
+                        Barcode: barcode,
+                        'Barcode Type': barcodeType,
+                        Function: 'processRemoval',
+                        'All Properties':
+                            Object.getOwnPropertyNames(data).join(', '),
+                    }
+                );
+
+                // Check if this looks like a Moodle error response
+                let errorMessage = 'Unknown response format from server';
+                let debugInfo = data;
+
+                if (data.exception) {
+                    // This looks like a Moodle exception response
+                    errorMessage = `Moodle Exception: ${data.exception} - ${
+                        data.message || 'No message provided'
+                    }`;
+                    if (data.debuginfo) {
+                        errorMessage += ` (Debug: ${data.debuginfo})`;
+                    }
+                } else if (data.error) {
+                    // This looks like an error response without success property
+                    errorMessage = `Server Error: ${data.error}`;
+                } else if (data.message && !data.success) {
+                    // Message without success - probably an error
+                    errorMessage = `Server Response: ${data.message}`;
+                } else {
+                    // Try to show any message that came back
+                    errorMessage =
+                        data.message ||
+                        data.error ||
+                        'Unknown response format from server';
+                    errorMessage += ` (Server returned: ${JSON.stringify(
+                        data
+                    )})`;
+                }
+
+                handleRemovalError({
+                    success: false,
+                    message: errorMessage,
+                    error_code: 'invalid_response_format',
+                    debug_info: debugInfo,
+                });
             }
         } catch (error) {
-            Log.error('Error processing UPC:', {
-                error: error.message,
-                stack: error.stack,
-                upc: upc,
-                locationId: locationId,
-                requestUrl: requestUrl,
-            });
+            Log.error(
+                'local_equipment/remove-items-scanner: Exception during removal processing',
+                {
+                    error: error.message,
+                    stack: error.stack,
+                    barcode: barcode,
+                    barcodeType: barcodeType,
+                    timestamp: new Date().toISOString(),
+                }
+            );
 
-            // Show detailed error message
-            let errorMessage = 'Network error occurred. ';
+            // Enhanced error message handling
+            let errorMessage = 'Network or server error occurred. ';
+            let isKnownError = false;
 
-            if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                errorMessage +=
-                    'Unable to connect to server. Check your network connection.';
-            } else if (error.message.includes('HTTP')) {
-                errorMessage += `Server error: ${error.message}`;
-            } else if (error.message.includes('JSON')) {
-                errorMessage += 'Server returned invalid response format.';
-            } else {
-                errorMessage += `Details: ${error.message}`;
+            // Check for specific Moodle error patterns
+            if (error.message && error.message.includes('invalidparameter')) {
+                errorMessage = 'Invalid barcode format provided to server.';
+                isKnownError = true;
+            } else if (
+                error.message &&
+                error.message.includes('nopermissions')
+            ) {
+                errorMessage = 'You do not have permission to remove items.';
+                isKnownError = true;
+            } else if (
+                error.message &&
+                error.message.includes('requireloggedin')
+            ) {
+                errorMessage = 'Please log in to remove items.';
+                isKnownError = true;
+            } else if (error.message && error.message.includes('webservice')) {
+                errorMessage = 'Web service error: ' + error.message;
+                isKnownError = true;
+            } else if (error.message && error.message.includes('network')) {
+                errorMessage =
+                    'Network connection error. Please check your connection.';
+                isKnownError = true;
             }
 
-            showErrorMessage(errorMessage);
+            // For unknown errors, show more detail in developer mode
+            if (!isKnownError) {
+                // Check if we're in developer mode by looking for debug indicators
+                const isDeveloperMode =
+                    document.body.classList.contains('debug') ||
+                    (window.M && window.M.cfg && window.M.cfg.developerdebug);
+
+                if (isDeveloperMode) {
+                    errorMessage =
+                        'Exception: ' +
+                        error.message +
+                        ' (Check browser console for details)';
+                } else {
+                    errorMessage +=
+                        'Please contact administrator if this persists.';
+                }
+            }
+
+            // Use Moodle's notification system for better error display
+            Notification.addNotification({
+                message: errorMessage,
+                type: 'error',
+            });
+
+            updateStatusMessage(errorMessage, 'danger');
         }
     }
 
     /**
-     * Update session display.
+     * Handle successful removal response.
+     * @param {Object} data Response data
+     */
+    function handleRemovalSuccess(data) {
+        // Update session tracking
+        sessionRemovedCount++;
+        sessionRemovedItems.push({
+            id: data.item_id,
+            uuid: data.uuid,
+            product_name: data.product_name,
+            removal_method: data.removal_method,
+        });
+
+        // Show success message
+        const message =
+            data.removal_method === 'emergency_upc'
+                ? `Emergency removal: ${data.product_name} (via UPC)`
+                : `Removed: ${data.product_name}`;
+
+        showSuccessMessage(message);
+        updateStatusMessage(
+            `Successfully removed item: ${data.product_name}`,
+            'success'
+        );
+
+        // Update session display
+        updateSessionDisplay();
+
+        // If this is an item details page, refresh the right column
+        if (data.redirect_url) {
+            // Optionally redirect or update the page
+            window.location.href = data.redirect_url;
+        }
+    }
+
+    /**
+     * Handle removal error response.
+     * @param {Object} data Response data
+     */
+    function handleRemovalError(data) {
+        let errorMessage = data.message || 'Removal failed';
+
+        // Handle specific error types
+        switch (data.error_code) {
+            case 'item_not_found':
+                errorMessage = `Equipment item not found: ${data.barcode}`;
+                break;
+            case 'already_removed':
+                errorMessage = `Item has already been removed: ${data.product_name}`;
+                break;
+            case 'upc_with_qr_exists':
+                errorMessage = `This item has a QR code. Please scan the QR code instead of the UPC barcode to remove it.`;
+                break;
+            case 'item_checked_out':
+                errorMessage = `Cannot remove item that is currently checked out to: ${data.current_user}`;
+                break;
+            case 'invalid_barcode_type':
+                errorMessage = `Invalid barcode format. Please scan a valid QR code or UPC barcode.`;
+                break;
+            default:
+                errorMessage = data.message || 'Unknown removal error occurred';
+        }
+
+        showErrorMessage(errorMessage);
+        updateStatusMessage(errorMessage, 'danger');
+
+        // If removal URL is provided, show link to manual removal
+        if (data.manual_removal_url) {
+            const alert = document.querySelector('.alert:last-child');
+            if (alert) {
+                alert.innerHTML += ` <a href="${data.manual_removal_url}" class="alert-link">Remove manually</a>`;
+            }
+        }
+    }
+
+    /**
+     * Update session display with removed items count.
      */
     function updateSessionDisplay() {
-        sessionCount.textContent = sessionItemCount;
-        if (sessionItemCount > 0) {
-            printQrBtn.style.display = 'inline-block';
-        } else {
-            printQrBtn.style.display = 'none';
+        // Update any session counter elements
+        const sessionCounters = document.querySelectorAll(
+            '.session-removed-count'
+        );
+        sessionCounters.forEach((counter) => {
+            counter.textContent = sessionRemovedCount;
+        });
+
+        // Show session items if container exists
+        if (sessionItems && sessionRemovedCount > 0) {
+            let sessionHtml = `<h4>Session Removed Items (${sessionRemovedCount})</h4>`;
+            sessionHtml += '<ul class="list-group">';
+
+            sessionRemovedItems.forEach((item) => {
+                const methodBadge =
+                    item.removal_method === 'emergency_upc'
+                        ? '<span class="badge bg-warning">Emergency UPC</span>'
+                        : '<span class="badge bg-primary">QR Code</span>';
+
+                sessionHtml += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        ${item.product_name} (${item.uuid})
+                        ${methodBadge}
+                    </li>
+                `;
+            });
+
+            sessionHtml += '</ul>';
+
+            // Only update if content has changed
+            if (sessionItems.innerHTML !== sessionHtml) {
+                sessionItems.innerHTML = sessionHtml;
+            }
+        }
+    }
+
+    /**
+     * Update status message in the UI.
+     * @param {string} message Status message to display
+     * @param {string} alertType Bootstrap alert type (info, success, warning, danger)
+     */
+    function updateStatusMessage(message, alertType = 'info') {
+        // Look for existing status message container
+        let statusContainer = document.getElementById('scanner-status-message');
+
+        if (!statusContainer) {
+            // Create status container if it doesn't exist
+            statusContainer = document.createElement('div');
+            statusContainer.id = 'scanner-status-message';
+            statusContainer.className = 'mt-3';
+
+            // Insert after scanner container
+            if (scannerContainer && scannerContainer.parentNode) {
+                scannerContainer.parentNode.insertBefore(
+                    statusContainer,
+                    scannerContainer.nextSibling
+                );
+            }
+        }
+
+        const alertClass = `alert alert-${alertType}`;
+        statusContainer.innerHTML = `
+            <div class="${alertClass}">
+                <i class="fa fa-info-circle me-2"></i>
+                ${message}
+            </div>
+        `;
+
+        // Auto-hide info messages after 5 seconds
+        if (alertType === 'info') {
+            setTimeout(() => {
+                if (statusContainer.innerHTML.includes(message)) {
+                    statusContainer.innerHTML = '';
+                }
+            }, 5000);
         }
     }
 
     /**
      * Show success message.
      *
-     * @param {string} productName Product name
+     * @param {string} message Success message
      */
-    function showSuccessMessage(productName) {
+    function showSuccessMessage(message) {
         const alert = document.createElement('div');
         alert.className =
             'alert alert-success alert-dismissible fade show mt-2';
         alert.innerHTML = `
-            <strong>✓ Success!</strong> Added ${productName} to inventory.
+            <strong>✓ Success!</strong> ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
-        sessionItems.appendChild(alert);
+
+        if (sessionItems) {
+            sessionItems.appendChild(alert);
+        } else {
+            // Fallback to scanner container
+            if (scannerContainer) {
+                scannerContainer.appendChild(alert);
+            }
+        }
 
         // Auto-dismiss after 3 seconds
         setTimeout(() => {
@@ -1307,18 +1521,26 @@ function initializeScanner() {
      * Show error message.
      *
      * @param {string} message Error message
-     * @param {string} productUrl Product URL (optional)
+     * @param {string} actionUrl Action URL (optional)
      */
-    function showErrorMessage(message, productUrl = null) {
+    function showErrorMessage(message, actionUrl = null) {
         const alert = document.createElement('div');
         alert.className = 'alert alert-danger alert-dismissible fade show mt-2';
         let content = `<strong>✗ Error:</strong> ${message}`;
-        if (productUrl) {
-            content += ` <a href="${productUrl}" class="alert-link">Add this product type</a>`;
+        if (actionUrl) {
+            content += ` <a href="${actionUrl}" class="alert-link">Take action</a>`;
         }
         content += `<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
         alert.innerHTML = content;
-        sessionItems.appendChild(alert);
+
+        if (sessionItems) {
+            sessionItems.appendChild(alert);
+        } else {
+            // Fallback to scanner container
+            if (scannerContainer) {
+                scannerContainer.appendChild(alert);
+            }
+        }
     }
 
     /**
@@ -1329,7 +1551,7 @@ function initializeScanner() {
         try {
             const testUrl =
                 M.cfg.wwwroot +
-                '/local/equipment/classes/external/validate_upc.php';
+                '/local/equipment/classes/external/validate_removal.php';
 
             Log.debug('Testing network connectivity to:', testUrl);
 
@@ -1356,35 +1578,6 @@ function initializeScanner() {
 
     /**
      * Adds a network test button to the scanner controls interface.
-     *
-     * Creates and appends a network test button to the existing scanner controls container.
-     * The button includes a click handler that performs an asynchronous network connectivity
-     * test with visual feedback (loading spinner) and displays success/error messages.
-     *
-     * @function addNetworkTestButton
-     * @returns {void} This function does not return a value
-     *
-     * @requires testNetworkConnectivity - Async function that tests network connectivity
-     * @requires showSuccessMessage - Function to display success notifications
-     * @requires showErrorMessage - Function to display error notifications
-     *
-     * @example
-     * // Call after DOM is loaded to add the network test button
-     * addNetworkTestButton();
-     *
-     * @since 1.0.0
-     *
-     * @description
-     * - Searches for an element with class 'scanner-controls'
-     * - Only creates button if container exists and button doesn't already exist
-     * - Button shows WiFi icon and "Test Network" text
-     * - During testing, button is disabled and shows spinner with "Testing..." text
-     * - Results are communicated via success/error message functions
-     * - Button is re-enabled after test completion regardless of result
-     *
-     * @sideeffects
-     * - Modifies the DOM by appending a button element
-     * - May display success/error messages to the user
      */
     function addNetworkTestButton() {
         const scannerControls = document.querySelector('.scanner-controls');
@@ -1419,71 +1612,22 @@ function initializeScanner() {
         }
     }
 
-    /**
-     * Update product details panel with status information.
-     * @param {string} message Status message to display
-     * @param {string} alertType Bootstrap alert type (info, success, warning, danger)
-     */
-    function updateProductDetailsPanel(message, alertType = 'info') {
-        const productDetails = document.getElementById('product-details');
-        if (!productDetails) {
-            Log.debug('Product details panel not found');
-            return;
-        }
-
-        const alertClass = `alert alert-${alertType}`;
-        productDetails.innerHTML = `
-            <div class="${alertClass}">
-                <i class="fa fa-info-circle me-2"></i>
-                ${message}
-            </div>
-            <h5 class="mt-3">How to Add Items:</h5>
-            <ol>
-                <li>Select the storage location where items will be placed</li>
-                <li>Scan the UPC barcode on each item's packaging</li>
-                <li>Each scan will automatically add one item to inventory</li>
-                <li>Continue scanning until all items are added</li>
-            </ol>
-            <p class="mb-0">
-                <strong>Note: </strong>
-                If you scan a UPC that isn't in the system, you'll be prompted to add it as a new product type first.
-            </p>
-        `;
-    }
-
-    // Handle existing manual UPC input
-    if (addItemBtn) {
-        addItemBtn.addEventListener('click', function () {
-            const upc = manualUpc.value.trim();
-            if (upc) {
-                processBarcode(upc);
-                manualUpc.value = '';
+    // Handle existing manual UUID input if present
+    if (lookupBtn) {
+        lookupBtn.addEventListener('click', function () {
+            const uuid = manualUuid.value.trim();
+            if (uuid) {
+                processBarcode(uuid, 'manual');
+                manualUuid.value = '';
             }
         });
     }
 
-    // Allow Enter key in existing UPC input
-    if (manualUpc) {
-        manualUpc.addEventListener('keypress', function (e) {
+    // Allow Enter key in existing UUID input
+    if (manualUuid) {
+        manualUuid.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
-                addItemBtn.click();
-            }
-        });
-    }
-
-    // Handle print QR codes button
-    if (printQrBtn) {
-        printQrBtn.addEventListener('click', function () {
-            if (sessionItemIds.length > 0) {
-                const url =
-                    M.cfg.wwwroot +
-                    '/local/equipment/inventory/generate_qr.php';
-                const params = new URLSearchParams({
-                    action: 'generate_for_items',
-                    itemids: sessionItemIds.join(','),
-                    sesskey: M.cfg.sesskey,
-                });
-                window.open(url + '?' + params.toString(), '_blank');
+                lookupBtn.click();
             }
         });
     }
