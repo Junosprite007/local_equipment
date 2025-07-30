@@ -312,7 +312,7 @@ try {
     global $DB;
     $products = $DB->get_records_sql("
         SELECT p.*,
-               COUNT(ei.id) as item_count,
+               COUNT(CASE WHEN ei.status != 'removed' OR ei.status IS NULL THEN 1 END) as item_count,
                COUNT(CASE WHEN ei.status = 'available' THEN 1 END) as available_count,
                COUNT(CASE WHEN ei.status = 'checked_out' THEN 1 END) as checked_out_count
         FROM {local_equipment_products} p

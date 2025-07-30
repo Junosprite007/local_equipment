@@ -118,28 +118,44 @@ if ($uuid && $remove && $reason) {
         // Get the item
         $item = $DB->get_record('local_equipment_items', ['uuid' => $uuid], '*', MUST_EXIST);
 
-        // Update item status to removed
-        $item->status = 'removed';
-        $item->timemodified = time();
-        $DB->update_record('local_equipment_items', $item);
+        // Check if item is already removed - prevent duplicate removal
+        if ($item->status === 'removed') {
+            $DB->rollback_sql();
+            echo html_writer::div(
+                get_string('equipmentalreadyremoved', 'local_equipment'),
+                'alert alert-warning'
+            );
+        } else {
+            // Update item status to removed
+            $item->status = 'removed';
+            $item->timemodified = time();
+            $DB->update_record('local_equipment_items', $item);
 
-        // Log the removal transaction
-        $transaction = new stdClass();
-        $transaction->itemid = $item->id;
-        $transaction->transaction_type = 'removal';
-        $transaction->from_userid = $item->current_userid;
-        $transaction->from_locationid = $item->locationid;
-        $transaction->processed_by = $USER->id;
-        $transaction->notes = $reason;
-        $transaction->timestamp = time();
-        $DB->insert_record('local_equipment_transactions', $transaction);
+            // Log the removal transaction
+            $transaction = new stdClass();
+            $transaction->itemid = $item->id;
+            $transaction->transaction_type = 'removal';
+            $transaction->from_userid = $item->current_userid;
+            $transaction->from_locationid = $item->locationid;
+            $transaction->processed_by = $USER->id;
+            $transaction->notes = $reason;
+            $transaction->timestamp = time();
+            $DB->insert_record('local_equipment_transactions', $transaction);
 
-        $DB->commit_sql();
+            // Remove item from print queue if it exists
+            $print_queue_manager = new \local_equipment\inventory\print_queue_manager();
+            $was_in_queue = $print_queue_manager->item_exists_in_queue($item->id);
+            if ($was_in_queue) {
+                $print_queue_manager->remove_item_from_queue_by_itemid($item->id);
+            }
 
-        echo html_writer::div(
-            get_string('itemremoved', 'local_equipment'),
-            'alert alert-success'
-        );
+            $DB->commit_sql();
+
+            echo html_writer::div(
+                get_string('itemremoved', 'local_equipment'),
+                'alert alert-success'
+            );
+        }
     } catch (Exception $e) {
         $DB->rollback_sql();
         echo html_writer::div(

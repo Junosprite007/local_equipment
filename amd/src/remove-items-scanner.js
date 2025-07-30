@@ -1340,19 +1340,35 @@ function initializeScanner() {
             uuid: data.uuid,
             product_name: data.product_name,
             removal_method: data.removal_method,
+            was_in_print_queue: data.was_in_print_queue || false,
         });
 
-        // Show success message
-        const message =
-            data.removal_method === 'emergency_upc'
-                ? `Emergency removal: ${data.product_name} (via UPC)`
-                : `Removed: ${data.product_name}`;
+        // Build success message based on what happened
+        let message = `Removed: ${data.product_name}`;
+
+        if (data.was_in_print_queue) {
+            message += ' (also removed from print queue)';
+        }
+
+        // Use the enhanced message from the server if available
+        const serverMessage = data.message;
+        if (
+            serverMessage &&
+            serverMessage !== 'Item successfully removed from inventory'
+        ) {
+            message = serverMessage;
+        }
 
         showSuccessMessage(message);
         updateStatusMessage(
-            `Successfully removed item: ${data.product_name}`,
+            serverMessage || `Successfully removed item: ${data.product_name}`,
             'success'
         );
+
+        // Refresh print queue notification if item was in queue
+        if (data.was_in_print_queue) {
+            refreshPrintQueueNotification();
+        }
 
         // Update session display
         updateSessionDisplay();
@@ -1361,6 +1377,26 @@ function initializeScanner() {
         if (data.redirect_url) {
             // Optionally redirect or update the page
             window.location.href = data.redirect_url;
+        }
+    }
+
+    /**
+     * Refresh the print queue notification to show updated count.
+     */
+    function refreshPrintQueueNotification() {
+        try {
+            // Check if the global queue notification object exists
+            if (
+                window.QRQueueNotification &&
+                typeof window.QRQueueNotification.refresh === 'function'
+            ) {
+                Log.debug('Refreshing print queue notification after removal');
+                window.QRQueueNotification.refresh();
+            } else {
+                Log.debug('Print queue notification not available for refresh');
+            }
+        } catch (error) {
+            Log.error('Error refreshing print queue notification:', error);
         }
     }
 

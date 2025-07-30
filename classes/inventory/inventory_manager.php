@@ -628,8 +628,8 @@ class inventory_manager {
 
         $summary = new \stdClass();
 
-        // Total items
-        $summary->total_items = $DB->count_records('local_equipment_items');
+        // Total active items (excludes removed items for accurate inventory count)
+        $summary->total_items = $DB->count_records_select('local_equipment_items', 'status != ?', ['removed']);
 
         // Items by status
         $summary->available = $DB->count_records('local_equipment_items', ['status' => 'available']);
@@ -638,6 +638,9 @@ class inventory_manager {
         $summary->maintenance = $DB->count_records('local_equipment_items', ['status' => 'maintenance']);
         $summary->damaged = $DB->count_records('local_equipment_items', ['status' => 'damaged']);
         $summary->lost = $DB->count_records('local_equipment_items', ['status' => 'lost']);
+
+        // Add removed items as separate count for audit purposes
+        $summary->removed = $DB->count_records('local_equipment_items', ['status' => 'removed']);
 
         // Items by condition
         $summary->excellent = $DB->count_records('local_equipment_items', ['condition_status' => 'excellent']);
@@ -768,6 +771,200 @@ class inventory_manager {
                 ORDER BY t.timestamp ASC";
 
         return $DB->get_records_sql($sql, ['cutoff_time' => $cutoff_time]);
+    }
+
+    /**
+     * Remove an equipment item from inventory permanently.
+     *
+     * @param string $uuid Equipment item UUID
+     * @param string $reason Reason for removal
+     * @param int $processedby User ID processing the removal
+     * @param string $notes Optional removal notes
+     * @return object Result object with success status and message
+     */
+    public function remove_item_from_inventory(string $uuid, string $reason, int $processedby, string $notes = ''): object {
+        global $DB;
+
+        // 1. Validate UUID format first
+        if (!$this->is_valid_uuid_format($uuid)) {
+            return (object)[
+                'success' => false,
+                'message' => get_string('invalidqrformat', 'local_equipment'),
+                'error_code' => 'invalid_uuid_format'
+            ];
+        }
+
+        // 2. Check if item exists in database
+        $item = $DB->get_record('local_equipment_items', ['uuid' => $uuid]);
+        if (!$item) {
+            return (object)[
+                'success' => false,
+                'message' => get_string('qrnotfound', 'local_equipment'),
+                'error_code' => 'item_not_found'
+            ];
+        }
+
+        // 3. Check if already removed
+        if ($item->status === 'removed') {
+            return (object)[
+                'success' => false,
+                'message' => get_string('itempreviouslyremoved', 'local_equipment'),
+                'error_code' => 'already_removed'
+            ];
+        }
+
+        // 4. Don't allow removal of items that are checked out unless forced
+        if ($item->status === 'checked_out') {
+            return (object)[
+                'success' => false,
+                'message' => get_string('cannotremovecheckedout', 'local_equipment'),
+                'error_code' => 'item_checked_out'
+            ];
+        }
+
+        try {
+            $transaction = $DB->start_delegated_transaction();
+
+            $old_status = $item->status;
+            $from_userid = $item->current_userid;
+            $from_locationid = $item->locationid;
+
+            // Update item status to removed
+            $item->status = 'removed';
+            $item->current_userid = null;
+            $item->locationid = null;
+            $item->timemodified = time();
+            $DB->update_record('local_equipment_items', $item);
+
+            // Create transaction record for removal
+            $transaction_record = new \stdClass();
+            $transaction_record->itemid = $item->id;
+            $transaction_record->transaction_type = 'removal';
+            $transaction_record->from_userid = $from_userid;
+            $transaction_record->from_locationid = $from_locationid;
+            $transaction_record->processed_by = $processedby;
+            $transaction_record->notes = "Reason: {$reason}. {$notes}";
+            $transaction_record->condition_before = $item->condition_status;
+            $transaction_record->timestamp = time();
+            $DB->insert_record('local_equipment_transactions', $transaction_record);
+
+            // Automatically remove from print queue
+            $print_queue_manager = new \local_equipment\inventory\print_queue_manager();
+            $print_queue_manager->remove_item_from_queue_by_itemid($item->id);
+
+            $transaction->allow_commit();
+
+            return (object)[
+                'success' => true,
+                'message' => 'Equipment item removed from inventory successfully',
+                'item' => $item,
+                'previous_status' => $old_status
+            ];
+        } catch (\moodle_exception $e) {
+            if (isset($transaction)) {
+                $transaction->rollback($e);
+            }
+            return (object)[
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        } catch (\Exception $e) {
+            if (isset($transaction)) {
+                $transaction->rollback($e);
+            }
+            return (object)[
+                'success' => false,
+                'message' => 'Unexpected error: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Force remove an equipment item from inventory (even if checked out).
+     *
+     * @param string $uuid Equipment item UUID
+     * @param string $reason Reason for removal
+     * @param int $processedby User ID processing the removal
+     * @param string $notes Optional removal notes
+     * @return object Result object with success status and message
+     */
+    public function force_remove_item_from_inventory(string $uuid, string $reason, int $processedby, string $notes = ''): object {
+        global $DB;
+
+        try {
+            $transaction = $DB->start_delegated_transaction();
+
+            // Get the equipment item
+            $item = $DB->get_record('local_equipment_items', ['uuid' => $uuid]);
+            if (!$item) {
+                throw new \moodle_exception('Equipment item not found');
+            }
+
+            $old_status = $item->status;
+            $from_userid = $item->current_userid;
+            $from_locationid = $item->locationid;
+
+            // Update item status to removed (forced)
+            $item->status = 'removed';
+            $item->current_userid = null;
+            $item->locationid = null;
+            $item->timemodified = time();
+            $DB->update_record('local_equipment_items', $item);
+
+            // Create transaction record for forced removal
+            $transaction_record = new \stdClass();
+            $transaction_record->itemid = $item->id;
+            $transaction_record->transaction_type = 'removal';
+            $transaction_record->from_userid = $from_userid;
+            $transaction_record->from_locationid = $from_locationid;
+            $transaction_record->processed_by = $processedby;
+            $transaction_record->notes = "FORCED REMOVAL - Reason: {$reason}. {$notes}";
+            $transaction_record->condition_before = $item->condition_status;
+            $transaction_record->timestamp = time();
+            $DB->insert_record('local_equipment_transactions', $transaction_record);
+
+            // Automatically remove from print queue
+            $print_queue_manager = new \local_equipment\inventory\print_queue_manager();
+            $print_queue_manager->remove_item_from_queue_by_itemid($item->id);
+
+            $transaction->allow_commit();
+
+            return (object)[
+                'success' => true,
+                'message' => 'Equipment item force removed from inventory successfully',
+                'item' => $item,
+                'previous_status' => $old_status,
+                'forced' => true
+            ];
+        } catch (\moodle_exception $e) {
+            if (isset($transaction)) {
+                $transaction->rollback($e);
+            }
+            return (object)[
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        } catch (\Exception $e) {
+            if (isset($transaction)) {
+                $transaction->rollback($e);
+            }
+            return (object)[
+                'success' => false,
+                'message' => 'Unexpected error: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Validate UUID format.
+     *
+     * @param string $uuid UUID string to validate
+     * @return bool True if valid UUID format
+     */
+    private function is_valid_uuid_format(string $uuid): bool {
+        // Standard UUID format: 8-4-4-4-12 hexadecimal digits
+        $pattern = '/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/';
+        return preg_match($pattern, $uuid) === 1;
     }
 
     /**

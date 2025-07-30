@@ -80,7 +80,7 @@ class print_queue_manager {
     }
 
     /**
-     * Get all unprinted items in the queue.
+     * Get all unprinted items in the queue that correspond to available inventory.
      *
      * @return array Array of queue records
      * @throws \dml_exception
@@ -93,6 +93,7 @@ class print_queue_manager {
                 JOIN {local_equipment_items} i ON q.itemid = i.id
                 JOIN {local_equipment_products} p ON i.productid = p.id
                 WHERE q.printed_time IS NULL
+                AND i.status = 'available'
                 ORDER BY q.queued_time ASC";
 
         return $DB->get_records_sql($sql);
@@ -140,15 +141,25 @@ class print_queue_manager {
     }
 
     /**
-     * Get queue count.
+     * Get queue count with automatic cleanup of orphaned items.
      *
      * @return int Number of unprinted items in queue
      * @throws \dml_exception
      */
     public function get_queue_count(): int {
+        // First cleanup orphaned items, then return accurate count
+        $this->cleanup_orphaned_queue_items();
+
         global $DB;
 
-        return $DB->count_records('local_equipment_qr_print_queue', ['printed_time' => null]);
+        // Only count items that correspond to available inventory
+        $sql = "SELECT COUNT(q.id)
+                FROM {local_equipment_qr_print_queue} q
+                JOIN {local_equipment_items} i ON q.itemid = i.id
+                WHERE q.printed_time IS NULL
+                AND i.status = 'available'";
+
+        return (int)$DB->count_records_sql($sql);
     }
 
     /**
@@ -176,23 +187,85 @@ class print_queue_manager {
     }
 
     /**
-     * Clear printed items from queue and return count.
+     * Clear all printed items from the queue.
      *
      * @return int Number of items cleared
-     * @throws \dml_exception
      */
     public function clear_printed_items(): int {
         global $DB;
 
-        // Count printed items first
-        $count = $DB->count_records_select('local_equipment_qr_print_queue', 'printed_time IS NOT NULL');
+        $count = $DB->count_records('local_equipment_print_queue', ['printed' => 1]);
 
-        // Delete printed items
         if ($count > 0) {
-            $DB->delete_records_select('local_equipment_qr_print_queue', 'printed_time IS NOT NULL');
+            $DB->delete_records('local_equipment_print_queue', ['printed' => 1]);
         }
 
         return $count;
+    }
+
+    /**
+     * Clean up orphaned queue items where equipment no longer exists or is not available.
+     *
+     * @return array Array with cleanup results ['count' => int, 'uuids' => array]
+     */
+    public function cleanup_orphaned_queue_items(): array {
+        global $DB;
+
+        // Find queue items where the equipment item is missing or has status != 'available'
+        $sql = "SELECT pq.id, pq.itemid, ei.uuid
+                FROM {local_equipment_qr_print_queue} pq
+                LEFT JOIN {local_equipment_items} ei ON pq.itemid = ei.id
+                WHERE ei.id IS NULL OR ei.status != 'available'";
+
+        $orphaned_items = $DB->get_records_sql($sql);
+
+        if (empty($orphaned_items)) {
+            return ['count' => 0, 'uuids' => []];
+        }
+
+        // Collect UUIDs and queue IDs for removal
+        $queue_ids = [];
+        $uuids = [];
+
+        foreach ($orphaned_items as $item) {
+            $queue_ids[] = $item->id;
+            if (!empty($item->uuid)) {
+                $uuids[] = substr($item->uuid, 0, 8) . '...'; // Show short UUID for user
+            } else {
+                $uuids[] = 'Unknown UUID (ID: ' . $item->itemid . ')';
+            }
+        }
+
+        // Remove orphaned items from print queue
+        if (!empty($queue_ids)) {
+            list($in_sql, $params) = $DB->get_in_or_equal($queue_ids);
+            $DB->delete_records_select('local_equipment_qr_print_queue', "id $in_sql", $params);
+        }
+
+        return [
+            'count' => count($orphaned_items),
+            'uuids' => $uuids
+        ];
+    }
+
+    /**
+     * Get queue count with automatic cleanup of orphaned items.
+     *
+     * @return array Array with count and cleanup information
+     */
+    public function get_queue_count_with_cleanup(): array {
+        // First perform cleanup
+        $cleanup_result = $this->cleanup_orphaned_queue_items();
+
+        // Then get the clean count
+        $clean_count = $this->get_queue_count();
+
+        return [
+            'count' => $clean_count,
+            'cleanup_performed' => $cleanup_result['count'] > 0,
+            'cleanup_count' => $cleanup_result['count'],
+            'cleanup_uuids' => $cleanup_result['uuids']
+        ];
     }
 
     /**
@@ -209,5 +282,35 @@ class print_queue_manager {
             'itemid' => $itemid,
             'printed_time' => null
         ]);
+    }
+
+    /**
+     * Remove item from queue by equipment item ID.
+     *
+     * This method is used when an equipment item is removed from inventory
+     * to automatically clean up the print queue.
+     *
+     * @param int $itemid The equipment item ID
+     * @return bool True if item was removed from queue, false if not found
+     * @throws \dml_exception
+     */
+    public function remove_item_from_queue_by_itemid(int $itemid): bool {
+        global $DB;
+
+        // Remove both printed and unprinted queue entries for this item
+        return $DB->delete_records('local_equipment_qr_print_queue', ['itemid' => $itemid]);
+    }
+
+    /**
+     * Check if item exists in queue (printed or unprinted) by item ID.
+     *
+     * @param int $itemid The equipment item ID
+     * @return bool True if item exists in queue
+     * @throws \dml_exception
+     */
+    public function item_exists_in_queue(int $itemid): bool {
+        global $DB;
+
+        return $DB->record_exists('local_equipment_qr_print_queue', ['itemid' => $itemid]);
     }
 }

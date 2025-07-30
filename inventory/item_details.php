@@ -67,29 +67,55 @@ $qr_generator = new qr_generator();
 
 // Handle actions.
 if ($action && confirm_sesskey()) {
-    switch ($action) {
-        case 'addtoqueue':
-            if (!$print_manager->is_item_in_queue($itemid)) {
-                $success = $print_manager->add_item_to_queue($itemid, $item->uuid, $USER->id, 'Added via item details page');
-                if ($success) {
-                    \core\notification::add(get_string('qrcodequeued', 'local_equipment'), \core\notification::SUCCESS);
-                } else {
-                    \core\notification::add(get_string('qrcodequeuefailed', 'local_equipment'), \core\notification::ERROR);
+    // Check if item is removed - prevent all QR-related actions
+    if ($item->status === 'removed') {
+        \core\notification::add(
+            get_string('cannot_perform_action_removed_item', 'local_equipment'),
+            \core\notification::ERROR
+        );
+    } else {
+        switch ($action) {
+            case 'addtoqueue':
+                // Only allow queueing for available items
+                if ($item->status !== 'available') {
+                    \core\notification::add(
+                        get_string('can_only_queue_available_items', 'local_equipment'),
+                        \core\notification::WARNING
+                    );
+                    break;
                 }
-            } else {
-                \core\notification::add(get_string('qrcodequeuedalready', 'local_equipment'), \core\notification::WARNING);
-            }
-            break;
 
-        case 'printdirect':
-            // Generate and display single QR code for immediate printing
-            $qr_url = new moodle_url('/local/equipment/inventory/generate_qr.php', [
-                'mode' => 'single',
-                'uuid' => $item->uuid,
-                'sesskey' => sesskey()
-            ]);
-            redirect($qr_url);
-            break;
+                if (!$print_manager->is_item_in_queue($itemid)) {
+                    $success = $print_manager->add_item_to_queue($itemid, $item->uuid, $USER->id, 'Added via item details page');
+                    if ($success) {
+                        \core\notification::add(get_string('qrcodequeued', 'local_equipment'), \core\notification::SUCCESS);
+                    } else {
+                        \core\notification::add(get_string('qrcodequeuefailed', 'local_equipment'), \core\notification::ERROR);
+                    }
+                } else {
+                    \core\notification::add(get_string('qrcodequeuedalready', 'local_equipment'), \core\notification::WARNING);
+                }
+                break;
+
+            case 'printdirect':
+                // Only allow direct printing for available items
+                if ($item->status !== 'available') {
+                    \core\notification::add(
+                        get_string('can_only_print_available_items', 'local_equipment'),
+                        \core\notification::WARNING
+                    );
+                    break;
+                }
+
+                // Generate and display single QR code for immediate printing
+                $qr_url = new moodle_url('/local/equipment/inventory/generate_qr.php', [
+                    'mode' => 'single',
+                    'uuid' => $item->uuid,
+                    'sesskey' => sesskey()
+                ]);
+                redirect($qr_url);
+                break;
+        }
     }
 }
 
@@ -107,40 +133,112 @@ echo $OUTPUT->header();
 // Item header.
 echo html_writer::tag('h2', format_string($item->product_name) . ' - ' . $item->uuid);
 
-// Action buttons.
-echo html_writer::start_div('mb-3');
-
-// Add to queue button.
-if (!$in_queue) {
-    $add_queue_url = new moodle_url('/local/equipment/inventory/item_details.php', [
-        'id' => $itemid,
-        'action' => 'addtoqueue',
-        'sesskey' => sesskey()
-    ]);
-    echo html_writer::link(
-        $add_queue_url,
-        get_string('addtoqrqueue', 'local_equipment'),
-        ['class' => 'btn btn-secondary me-2']
-    );
-} else {
-    echo html_writer::tag(
-        'span',
-        get_string('qrcodequeued', 'local_equipment'),
-        ['class' => 'btn btn-secondary me-2 disabled']
+// Status-based notice for removed items
+if ($item->status === 'removed') {
+    echo html_writer::div(
+        html_writer::tag('i', '', ['class' => 'fa fa-exclamation-triangle me-2']) .
+            get_string('item_removed_notice', 'local_equipment'),
+        'alert alert-warning mb-3'
     );
 }
 
-// Direct print button.
-$print_url = new moodle_url('/local/equipment/inventory/item_details.php', [
-    'id' => $itemid,
-    'action' => 'printdirect',
-    'sesskey' => sesskey()
-]);
-echo html_writer::link(
-    $print_url,
-    get_string('reprintqrcode', 'local_equipment'),
-    ['class' => 'btn btn-primary me-2']
-);
+// Action buttons - conditionally displayed based on status
+echo html_writer::start_div('mb-3');
+
+if ($item->status === 'removed') {
+    // Show disabled buttons for removed items with explanatory text
+    echo html_writer::tag(
+        'button',
+        get_string('addtoqrqueue', 'local_equipment'),
+        [
+            'class' => 'btn btn-secondary me-2 disabled',
+            'disabled' => 'disabled',
+            'title' => get_string('action_disabled_item_removed', 'local_equipment')
+        ]
+    );
+
+    echo html_writer::tag(
+        'button',
+        get_string('reprintqrcode', 'local_equipment'),
+        [
+            'class' => 'btn btn-primary me-2 disabled',
+            'disabled' => 'disabled',
+            'title' => get_string('action_disabled_item_removed', 'local_equipment')
+        ]
+    );
+
+    echo html_writer::tag(
+        'small',
+        get_string('actions_disabled_explanation', 'local_equipment'),
+        ['class' => 'text-muted d-block mt-2']
+    );
+} else {
+    // Show active buttons for non-removed items
+
+    // Add to queue button - only for available items
+    if ($item->status === 'available') {
+        if (!$in_queue) {
+            $add_queue_url = new moodle_url('/local/equipment/inventory/item_details.php', [
+                'id' => $itemid,
+                'action' => 'addtoqueue',
+                'sesskey' => sesskey()
+            ]);
+            echo html_writer::link(
+                $add_queue_url,
+                get_string('addtoqrqueue', 'local_equipment'),
+                ['class' => 'btn btn-secondary me-2']
+            );
+        } else {
+            echo html_writer::tag(
+                'span',
+                get_string('qrcodequeued', 'local_equipment'),
+                ['class' => 'btn btn-secondary me-2 disabled']
+            );
+        }
+
+        // Direct print button - only for available items
+        $print_url = new moodle_url('/local/equipment/inventory/item_details.php', [
+            'id' => $itemid,
+            'action' => 'printdirect',
+            'sesskey' => sesskey()
+        ]);
+        echo html_writer::link(
+            $print_url,
+            get_string('reprintqrcode', 'local_equipment'),
+            ['class' => 'btn btn-primary me-2']
+        );
+    } else {
+        // Show disabled buttons for non-available, non-removed items (checked out, maintenance, etc.)
+        echo html_writer::tag(
+            'button',
+            get_string('addtoqrqueue', 'local_equipment'),
+            [
+                'class' => 'btn btn-secondary me-2 disabled',
+                'disabled' => 'disabled',
+                'title' => get_string('action_disabled_not_available', 'local_equipment')
+            ]
+        );
+
+        echo html_writer::tag(
+            'button',
+            get_string('reprintqrcode', 'local_equipment'),
+            [
+                'class' => 'btn btn-primary me-2 disabled',
+                'disabled' => 'disabled',
+                'title' => get_string('action_disabled_not_available', 'local_equipment')
+            ]
+        );
+
+        echo html_writer::tag(
+            'small',
+            get_string('qr_actions_only_available', 'local_equipment'),
+            ['class' => 'text-muted d-block mt-2']
+        );
+    }
+}
+
+// General navigation buttons - always available
+echo html_writer::start_div('mt-3 pt-3 border-top');
 
 // Link to check in/out page.
 $checkinout_url = new moodle_url('/local/equipment/inventory/check_inout.php');
@@ -155,9 +253,18 @@ $products_url = new moodle_url('/local/equipment/inventory/products.php');
 echo html_writer::link(
     $products_url,
     get_string('manageproducts', 'local_equipment'),
-    ['class' => 'btn btn-outline-secondary']
+    ['class' => 'btn btn-outline-secondary me-2']
 );
 
+// Link back to main inventory
+$inventory_url = new moodle_url('/local/equipment/inventory/manage.php');
+echo html_writer::link(
+    $inventory_url,
+    get_string('backtoinventory', 'local_equipment'),
+    ['class' => 'btn btn-outline-info']
+);
+
+echo html_writer::end_div();
 echo html_writer::end_div();
 
 // Item details table.

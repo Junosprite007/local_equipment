@@ -219,7 +219,7 @@ $string['schoolyearrangetoautoselect_end_desc'] = 'The ending school year to use
 $string['schoolyearrangetoautoselect_appendingdesc'] = 'This setting will alway default to the currect school year, which is probably what you want, so keep this setting empty to default to whatever this school year is, unless you want to define a specific school year';
 $string['partnershipcategoryprefix'] = 'Partnership category prefix';
 $string['partnershipcategoryprefix_desc'] = 'The prefix keyword used for defining the "Category ID number" setting for a given Partnership course category.';
-$string['nopartnershipcategoriesfoundforschoolyear'] = 'No partnership categories found for the school year with \'idnumber\' "{$a}".';
+$string['nopartnershipcategoriesfoundforschoolyear'] = 'No partnership categories found for the school year with \'idnumber\' "partnership#[id]_{$a}".';
 $string['nocoursesfoundforthispartnership'] = 'No courses found for this partnership.';
 $string['totalcourses'] = 'Total courses';
 $string['collapsepartnership'] = 'Toggle partnership courses';
@@ -1932,3 +1932,34 @@ $string['clearqueueconfirm'] = 'Are you sure you want to clear all printed items
 $string['clearedprinteditems'] = 'Successfully cleared {$a} printed items from the queue';
 $string['noprinteditemstoclear'] = 'No printed items found to clear';
 $string['clearingfailed'] = 'Failed to clear printed items from queue';
+
+// Print queue cleanup strings
+$string['cleanupqueuemessage'] = 'Removed {$a->count} QR code(s) from queue (equipment no longer in inventory)';
+$string['cleanupqueuesingle'] = 'Removed 1 QR code from queue (equipment no longer in inventory)';
+$string['cleanupqueuemultiple'] = 'Removed {$a} QR codes from queue (equipment no longer in inventory)';
+$string['queuecleanuperror'] = 'Error occurred during queue cleanup';
+$string['orphanedqueueitemsremoved'] = 'Orphaned queue items removed';
+$string['queuevalidationperformed'] = 'Queue validation performed';
+$string['invalidqueueitemsdetected'] = 'Invalid queue items detected and removed';
+
+// Item details page strings for removed items
+$string['item_removed_notice'] = 'This item has been removed from inventory and is no longer available for use.';
+$string['action_disabled_item_removed'] = 'Action disabled: item has been removed from inventory';
+$string['actions_disabled_explanation'] = 'All equipment actions are disabled because this item has been removed from inventory.';
+$string['action_disabled_not_available'] = 'Action disabled: item is not available';
+$string['qr_actions_only_available'] = 'QR code actions are only available for equipment with "Available" status.';
+$string['backtoinventory'] = 'Back to inventory';
+$string['cannot_perform_action_removed_item'] = 'Cannot perform action on equipment that has been removed from inventory.';
+$string['can_only_queue_available_items'] = 'Can only add available items to QR print queue.';
+$string['can_only_print_available_items'] = 'Can only print QR codes for available items.';
+
+// Removal history strings
+$string['removal_history'] = 'Removal History';
+$string['view_removal_history'] = 'View removal history';
+$string['removalhistory'] = 'Removal history';
+
+// Error messages for equipment removal validation
+$string['invalidqrformat'] = 'Invalid QR code format for inventory system';
+$string['qrnotfound'] = 'QR code not found in inventory system';
+$string['itempreviouslyremoved'] = 'This item was previously removed from inventory';
+$string['cannotremovecheckedout'] = 'Cannot remove item that is currently checked out';
