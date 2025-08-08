@@ -14,6 +14,11 @@ require_once($CFG->libdir . '/adminlib.php');
 require_login();
 require_capability('local/equipment:manageinventory', context_system::instance());
 
+// $isdeveloper = ($CFG->debug >= DEBUG_DEVELOPER);
+// if (!$isdeveloper) {
+//     return ''; // Moodle Notification goes here.
+// }
+
 echo "<!DOCTYPE html>\n<html>\n<head>\n<title>Queue Database Debug</title>\n</head>\n<body>\n";
 echo "<h1>Queue Database Debug</h1>\n";
 

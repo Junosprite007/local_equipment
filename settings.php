@@ -28,18 +28,11 @@ defined('MOODLE_INTERNAL') || die;
 require_once($CFG->dirroot . '/local/equipment/lib.php');
 
 if ($hassiteconfig) {
-
-    // Let's define some variables for all the name of the part of the admin tree where the setting will be added.
-
-    // The Site administration tab that these settings will be seen under.
-    // The 'Plugins' tab is actually called 'modules' in the code. Took me forever to figure that out.
     $component = 'local_equipment';
 
-    // Let's create all the categories and subcategories we will need for the admins to access.
-    // Remember, categories and subcategories do not appear until they have a page or link added to them.
-
-    // Main category must be created first!
-    // Create a new category under the Site administration > Plugins tab, which is actually called 'modules' in the codebase. Took me forever to figure that out.
+    // ========================================
+    // 1. CREATE MAIN CATEGORY
+    // ========================================
     $ADMIN->add(
         'modules',
         new admin_category(
@@ -48,22 +41,22 @@ if ($hassiteconfig) {
         )
     );
 
-    // This is just creating a standard settings page for the Equipment plugin.
-    $settings = new admin_settingpage("{$component}_settings", get_string('equipmentsettings', 'local_equipment'));
+    // ========================================
+    // 2. GENERAL SETTINGS PAGE
+    // ========================================
+    $generalsettings = new admin_settingpage(
+        "{$component}_settings",
+        get_string('equipmentsettings', 'local_equipment')
+    );
 
-    // Add Partnership sub-settings
-    $settings->add(new admin_setting_heading(
+    // Partnership settings section
+    $generalsettings->add(new admin_setting_heading(
         "{$component}/partnershipheading",
-        get_string(
-            'partnershipsettings',
-            'local_equipment'
-        ),
+        get_string('partnershipsettings', 'local_equipment'),
         get_string('partnershipsettings_desc', 'local_equipment')
     ));
 
-    // The starting school year to use for displaying courses for a given partnership.
-    // Defaults to the starting year of the current school in the United States.
-    $settings->add(new admin_setting_configtext(
+    $generalsettings->add(new admin_setting_configtext(
         "{$component}/schoolyearrangetoautoselect_start",
         get_string('schoolyearrangetoautoselect_start', 'local_equipment'),
         get_string('schoolyearrangetoautoselect_start_desc', 'local_equipment') . ' ' .
@@ -72,9 +65,7 @@ if ($hassiteconfig) {
         PARAM_TEXT
     ));
 
-    // The ending school year to use for displaying courses for a given partnership.
-    // Defaults to the ending year of the current school in the United States.
-    $settings->add(new admin_setting_configtext(
+    $generalsettings->add(new admin_setting_configtext(
         "{$component}/schoolyearrangetoautoselect_end",
         get_string('schoolyearrangetoautoselect_end', 'local_equipment'),
         get_string('schoolyearrangetoautoselect_end_desc', 'local_equipment') . ' ' .
@@ -83,13 +74,7 @@ if ($hassiteconfig) {
         PARAM_TEXT
     ));
 
-
-    // Prefix keyword for each Partnerships' "idnumber" field in mdl_course_categories, as entered by a system administrator.
-    // Default is "partnership".
-    // Format is "{prefix}#{partnershipid}_{schoolyearrangetoautoselect_start}-{schoolyearrangetoautoselect_end}".
-    // Example: "partnership" prefix, a partnership with id of "8", "2024" schoolyear start, and "2025" school year end
-    //     would result in "partnership#8_2024-2025".
-    $settings->add(new admin_setting_configtext(
+    $generalsettings->add(new admin_setting_configtext(
         "{$component}/partnershipcategoryprefix",
         get_string('partnershipcategoryprefix', 'local_equipment'),
         get_string('partnershipcategoryprefix_desc', 'local_equipment'),
@@ -97,141 +82,110 @@ if ($hassiteconfig) {
         PARAM_TEXT
     ));
 
-
-
-
-    // Add Pickups sub-settings
-    $settings->add(new admin_setting_heading(
+    // Pickups settings section
+    $generalsettings->add(new admin_setting_heading(
         "{$component}/pickupheading",
-        get_string(
-            'pickupsettings',
-            'local_equipment'
-        ),
+        get_string('pickupsettings', 'local_equipment'),
         get_string('pickupsettings_desc', 'local_equipment')
     ));
 
-    // Number of ended pickups to show.
-    $settings->add(new admin_setting_configtext(
+    $generalsettings->add(new admin_setting_configtext(
         "{$component}/endedpickupstoshow",
         get_string('endedpickupstoshow', 'local_equipment'),
         get_string('endedpickupstoshow_desc', 'local_equipment'),
-        '7', // Default value
+        '7',
         PARAM_INT
     ));
 
+    $ADMIN->add($component, $generalsettings);
 
-    $ADMIN->add($component, $settings);
+    // ========================================
+    // 3. NOTIFICATIONS SETTINGS PAGE
+    // ========================================
+    $notificationsettings = new admin_settingpage(
+        "{$component}_notifications",
+        get_string('notificationsettings', 'local_equipment')
+    );
 
-    // settings.php
-    // $ADMIN->add($component, new admin_settingpage("{$component}_notifications", get_string('notificationsettings', 'local_equipment')));
-
-    $settings = new admin_settingpage("{$component}_notifications", get_string('notificationsettings', 'local_equipment'));
-
-    // Parent notification settings
-    $settings->add(new admin_setting_configcheckbox(
-        'local_equipment/notify_parents',
+    $notificationsettings->add(new admin_setting_configcheckbox(
+        "{$component}/notify_parents",
         get_string('notifyparents', 'local_equipment'),
         get_string('notifyparents_desc', 'local_equipment'),
         1
     ));
 
-    // Student notification settings
-    $settings->add(new admin_setting_configcheckbox(
-        'local_equipment/notify_students',
+    $notificationsettings->add(new admin_setting_configcheckbox(
+        "{$component}/notify_students",
         get_string('notifystudents', 'local_equipment'),
         get_string('notifystudents_desc', 'local_equipment'),
         1
     ));
 
-    // Message sender setting
     $options = [
-        // ENROL_SEND_EMAIL_FROM_COURSE_CONTACT => get_string(
-        //     'fromcoursecontact',
-        //     'local_equipment'
-        // ),
         ENROL_SEND_EMAIL_FROM_KEY_HOLDER => get_string('fromkeyholder', 'local_equipment'),
-        ENROL_SEND_EMAIL_FROM_NOREPLY => get_string(
-            'fromnoreply',
-            'local_equipment'
-        )
+        ENROL_SEND_EMAIL_FROM_NOREPLY => get_string('fromnoreply', 'local_equipment')
     ];
 
-    $settings->add(new admin_setting_configselect(
-        'local_equipment/messagesender',
+    $notificationsettings->add(new admin_setting_configselect(
+        "{$component}/messagesender",
         get_string('messagesender', 'local_equipment'),
         get_string('messagesender_desc', 'local_equipment'),
-        ENROL_SEND_EMAIL_FROM_NOREPLY,  // default value
+        ENROL_SEND_EMAIL_FROM_NOREPLY,
         $options
     ));
-    // Add Reminders sub-settings
-    $settings->add(new admin_setting_heading(
+
+    // Reminders section
+    $notificationsettings->add(new admin_setting_heading(
         "{$component}/reminderheading",
-        get_string(
-            'reminderheading',
-            'local_equipment'
-        ),
+        get_string('reminderheading', 'local_equipment'),
         get_string('reminderheading_desc', 'local_equipment')
     ));
 
-    // Number of days in advance to send the first reminder message for upcoming equipment exchange.
-    $settings->add(new admin_setting_configtext(
+    $notificationsettings->add(new admin_setting_configtext(
         "{$component}/inadvance_days",
         get_string('reminder_inadvance_days', 'local_equipment'),
         get_string('reminder_inadvance_days_desc', 'local_equipment'),
-        '7', // Default value
+        '7',
         PARAM_INT
     ));
-    // Number of minutes in advance to send the second reminder message for upcoming equipment exchange.
-    $settings->add(new admin_setting_configtext(
+
+    $notificationsettings->add(new admin_setting_configtext(
         "{$component}/inadvance_hours",
         get_string('reminder_inadvance_hours', 'local_equipment'),
         get_string('reminder_inadvance_hours_desc', 'local_equipment'),
-        '1', // Default value
+        '1',
         PARAM_INT
     ));
 
-    // Days before exchange to send reminders
-    $settings->add(new admin_setting_configtext(
-        'local_equipment/reminder_timeout',
+    $notificationsettings->add(new admin_setting_configtext(
+        "{$component}/reminder_timeout",
         get_string('reminder_timeout', 'local_equipment'),
         get_string('reminder_timeout_desc', 'local_equipment'),
-        '24', // Default value - one week, 3 days, and 1 day before
+        '24',
         PARAM_TEXT
     ));
 
-
-    // Template settings
-    $settings->add(new admin_setting_configtextarea(
-        'local_equipment/reminder_template_days',
+    $notificationsettings->add(new admin_setting_configtextarea(
+        "{$component}/reminder_template_days",
         get_string('reminder_template_days', 'local_equipment'),
         get_string('reminder_template_days_desc', 'local_equipment'),
         get_string('reminder_template_days_default', 'local_equipment'),
         PARAM_TEXT
     ));
 
-    $settings->add(new admin_setting_configtextarea(
-        'local_equipment/reminder_template_hours',
+    $notificationsettings->add(new admin_setting_configtextarea(
+        "{$component}/reminder_template_hours",
         get_string('reminder_template_hours', 'local_equipment'),
         get_string('reminder_template_hours_desc', 'local_equipment'),
         get_string('reminder_template_hours_default', 'local_equipment'),
         PARAM_TEXT
     ));
 
-    $ADMIN->add(
-        $component,
-        $settings
-    );
+    $ADMIN->add($component, $notificationsettings);
 
-
-
-    // $settings = new admin_settingpage("{$component}_reminders", get_string('remindersettings', 'local_equipment'));
-
-
-
-
-
-
-    // Add 'Partnerships' subcategory.
+    // ========================================
+    // 4. CREATE SUBCATEGORIES
+    // ========================================
     $ADMIN->add(
         $component,
         new admin_category(
@@ -240,8 +194,6 @@ if ($hassiteconfig) {
         )
     );
 
-
-    // Add 'Pickups' subcategory.
     $ADMIN->add(
         $component,
         new admin_category(
@@ -249,7 +201,7 @@ if ($hassiteconfig) {
             new lang_string('pickups', 'local_equipment')
         )
     );
-    // Add 'Agreements' subcategory.
+
     $ADMIN->add(
         $component,
         new admin_category(
@@ -257,102 +209,7 @@ if ($hassiteconfig) {
             new lang_string('agreements', 'local_equipment')
         )
     );
-    // Add 'Virtual course consent (vcc) form' subcategory.
-    $ADMIN->add(
-        $component,
-        new admin_category(
-            "{$component}_vccsubmission_cat",
-            new lang_string('virtualcourseconsent', 'local_equipment')
-        )
-    );
-    // Add 'Add bulk families' subcategory.
-    $ADMIN->add(
-        $component,
-        new admin_category(
-            "{$component}_addbulkfamilies_cat",
-            new lang_string('addbulkfamilies', 'local_equipment')
-        )
-    );
 
-    // An external page is a link to a page outside of the Moodle admin settings, i.e. to a file within the custom plugin.
-    // Add the manage partnerships page.
-    $ADMIN->add(
-        "{$component}_partnerships_cat",
-        new admin_externalpage(
-            "{$component}_partnerships", // Needs to match the parameter in 'admin_externalpage_setup()' on the partnerships.php page.
-            new lang_string('viewmanagepartnerships', 'local_equipment'),
-            new moodle_url('/local/equipment/partnerships.php'),
-        )
-    );
-    // Add a link to the add partnership page.
-    $ADMIN->add(
-        "{$component}_partnerships_cat",
-        new admin_externalpage(
-            "{$component}_addpartnerships",
-            new lang_string('addpartnerships', 'local_equipment'),
-            new moodle_url('/local/equipment/partnerships/addpartnerships.php')
-        )
-    );
-    // Add the manage pickups page.
-    $ADMIN->add(
-        "{$component}_pickups_cat",
-        new admin_externalpage(
-            "{$component}_pickups",
-            new lang_string('viewmanagepickups', 'local_equipment'),
-            new moodle_url('/local/equipment/pickups.php'),
-        )
-    );
-    // Add a link to the add pickups page.
-    $ADMIN->add(
-        "{$component}_pickups_cat",
-        new admin_externalpage(
-            "{$component}_addpickups",
-            new lang_string('addpickups', 'local_equipment'),
-            new moodle_url('/local/equipment/pickups/addpickups.php')
-        )
-    );
-    // Add the manage agreements page.
-    $ADMIN->add(
-        "{$component}_agreements_cat",
-        new admin_externalpage(
-            "{$component}_agreements",
-            new lang_string('viewmanageagreements', 'local_equipment'),
-            new moodle_url('/local/equipment/agreements.php'),
-        )
-    );
-    // Add a link to the add agreements page.
-    $ADMIN->add(
-        "{$component}_agreements_cat",
-        new admin_externalpage(
-            "{$component}_addagreements",
-            new lang_string('addagreements', 'local_equipment'),
-            new moodle_url('/local/equipment/agreements/addagreements.php')
-        )
-    );
-
-    // Add the manage virtual course consent (vcc) form page.
-    $ADMIN->add($component, new admin_externalpage(
-        'local_equipment_vccsubmissions',
-        new lang_string('managevccsubmissions', 'local_equipment'),
-        new moodle_url('/local/equipment/vccsubmissions.php')
-    ));
-
-    // Add the 'Add bulk families' form page.
-    $ADMIN->add($component, new admin_externalpage(
-        'local_equipment_addbulkfamilies',
-        new lang_string('addbulkfamilies', 'local_equipment'),
-        new moodle_url('/local/equipment/addbulkfamilies.php')
-    ));
-
-    // Add the mass text messaging page.
-    $ADMIN->add($component, new admin_externalpage(
-        'local_equipment_mass_text',
-        new lang_string('masstextmessaging', 'local_equipment'),
-        new moodle_url('/local/equipment/mass_text_message.php'),
-        'local/equipment:sendmasstextmessages'
-    ));
-
-    // Add 'Inventory Management' subcategory.
     $ADMIN->add(
         $component,
         new admin_category(
@@ -361,7 +218,78 @@ if ($hassiteconfig) {
         )
     );
 
-    // Add the main inventory dashboard page.
+    // ========================================
+    // 5. PARTNERSHIPS EXTERNAL PAGES
+    // ========================================
+    $ADMIN->add(
+        "{$component}_partnerships_cat",
+        new admin_externalpage(
+            "{$component}_partnerships",
+            new lang_string('viewmanagepartnerships', 'local_equipment'),
+            new moodle_url('/local/equipment/partnerships.php'),
+            'local/equipment:managepartnerships'
+        )
+    );
+
+    $ADMIN->add(
+        "{$component}_partnerships_cat",
+        new admin_externalpage(
+            "{$component}_addpartnerships",
+            new lang_string('addpartnerships', 'local_equipment'),
+            new moodle_url('/local/equipment/partnerships/addpartnerships.php'),
+            'local/equipment:managepartnerships'
+        )
+    );
+
+    // ========================================
+    // 6. PICKUPS EXTERNAL PAGES
+    // ========================================
+    $ADMIN->add(
+        "{$component}_pickups_cat",
+        new admin_externalpage(
+            "{$component}_pickups",
+            new lang_string('viewmanagepickups', 'local_equipment'),
+            new moodle_url('/local/equipment/pickups.php'),
+            'local/equipment:managepickups'
+        )
+    );
+
+    $ADMIN->add(
+        "{$component}_pickups_cat",
+        new admin_externalpage(
+            "{$component}_addpickups",
+            new lang_string('addpickups', 'local_equipment'),
+            new moodle_url('/local/equipment/pickups/addpickups.php'),
+            'local/equipment:managepickups'
+        )
+    );
+
+    // ========================================
+    // 7. AGREEMENTS EXTERNAL PAGES
+    // ========================================
+    $ADMIN->add(
+        "{$component}_agreements_cat",
+        new admin_externalpage(
+            "{$component}_agreements",
+            new lang_string('viewmanageagreements', 'local_equipment'),
+            new moodle_url('/local/equipment/agreements.php'),
+            'local/equipment:manageagreements'
+        )
+    );
+
+    $ADMIN->add(
+        "{$component}_agreements_cat",
+        new admin_externalpage(
+            "{$component}_addagreements",
+            new lang_string('addagreements', 'local_equipment'),
+            new moodle_url('/local/equipment/agreements/addagreements.php'),
+            'local/equipment:manageagreements'
+        )
+    );
+
+    // ========================================
+    // 8. INVENTORY EXTERNAL PAGES
+    // ========================================
     $ADMIN->add(
         "{$component}_inventory_cat",
         new admin_externalpage(
@@ -372,7 +300,6 @@ if ($hassiteconfig) {
         )
     );
 
-    // Add the QR code generator page.
     $ADMIN->add(
         "{$component}_inventory_cat",
         new admin_externalpage(
@@ -383,7 +310,6 @@ if ($hassiteconfig) {
         )
     );
 
-    // Add the check-in/check-out page.
     $ADMIN->add(
         "{$component}_inventory_cat",
         new admin_externalpage(
@@ -394,7 +320,6 @@ if ($hassiteconfig) {
         )
     );
 
-    // Add the products management page.
     $ADMIN->add(
         "{$component}_inventory_cat",
         new admin_externalpage(
@@ -405,7 +330,6 @@ if ($hassiteconfig) {
         )
     );
 
-    // Add the locations management page.
     $ADMIN->add(
         "{$component}_inventory_cat",
         new admin_externalpage(
@@ -416,7 +340,6 @@ if ($hassiteconfig) {
         )
     );
 
-    // Add the add items page.
     $ADMIN->add(
         "{$component}_inventory_cat",
         new admin_externalpage(
@@ -427,7 +350,6 @@ if ($hassiteconfig) {
         )
     );
 
-    // Add the remove items page.
     $ADMIN->add(
         "{$component}_inventory_cat",
         new admin_externalpage(
@@ -438,7 +360,6 @@ if ($hassiteconfig) {
         )
     );
 
-    // Add the course assignments page.
     $ADMIN->add(
         "{$component}_inventory_cat",
         new admin_externalpage(
@@ -449,7 +370,6 @@ if ($hassiteconfig) {
         )
     );
 
-    // Add the inventory reports page.
     $ADMIN->add(
         "{$component}_inventory_cat",
         new admin_externalpage(
@@ -460,100 +380,110 @@ if ($hassiteconfig) {
         )
     );
 
+    // ========================================
+    // 9. OTHER DIRECT PAGES UNDER MAIN CATEGORY
+    // ========================================
+    $ADMIN->add(
+        $component,
+        new admin_externalpage(
+            "{$component}_vccsubmissions",
+            new lang_string('managevccsubmissions', 'local_equipment'),
+            new moodle_url('/local/equipment/vccsubmissions.php'),
+            'local/equipment:managevccsubmissions'
+        )
+    );
 
+    $ADMIN->add(
+        $component,
+        new admin_externalpage(
+            "{$component}_addbulkfamilies",
+            new lang_string('addbulkfamilies', 'local_equipment'),
+            new moodle_url('/local/equipment/addbulkfamilies.php')
+        )
+    );
 
+    $ADMIN->add(
+        $component,
+        new admin_externalpage(
+            "{$component}_mass_text",
+            new lang_string('masstextmessaging', 'local_equipment'),
+            new moodle_url('/local/equipment/mass_text_message.php'),
+            'local/equipment:sendmasstextmessages'
+        )
+    );
 
+    // ========================================
+    // 10. SERVER CATEGORY ADDITIONS
+    // ========================================
+    $ADMIN->add(
+        'server',
+        new admin_externalpage(
+            "{$component}_testoutgoingtextconf",
+            new lang_string('testoutgoingtextconf', 'local_equipment'),
+            new moodle_url('/local/equipment/phonecommunication/testoutgoingtextconf.php'),
+            'moodle/site:config',
+            true
+        )
+    );
 
-    // Virtual course consent (vcc) submissions should not be limited to managers. All users will have access to this page for now.
-    // $ADMIN->add(
-    //     "{$component}_vccsubmission_cat",
-    //     new admin_externalpage(
-    //         "{$component}_vccsubmission",
-    //         new lang_string('viewmanagevccsubmission', 'local_equipment'),
-    //         new moodle_url('/local/equipment/virtualcourseconsent/index.php'),
-    //     )
-    // );
+    $ADMIN->add(
+        'server',
+        new admin_externalpage(
+            "{$component}_verifytestotp",
+            new lang_string('verifytestotp', 'local_equipment'),
+            new moodle_url('/local/equipment/phonecommunication/verifytestotp.php'),
+            'moodle/site:config',
+            true
+        )
+    );
 
-    $ADMIN->add('server', new admin_externalpage(
-        "{$component}_testoutgoingtextconf",
-        new lang_string('testoutgoingtextconf', 'local_equipment'),
-        new moodle_url('/local/equipment/phonecommunication/testoutgoingtextconf.php'),
-        'moodle/site:config',
-        true
-    ));
-    $ADMIN->add('server', new admin_externalpage(
-        'local_equipment_verifytestotp',
-        new lang_string('verifytestotp', 'local_equipment'),
-        new moodle_url('/local/equipment/phonecommunication/verifytestotp.php'),
-        'moodle/site:config',
-        true
-    ));
+    // ========================================
+    // 11. PHONE PROVIDER SETTINGS
+    // ========================================
+    $ADMIN->add(
+        'server',
+        new admin_category(
+            "{$component}_phone",
+            new lang_string('phone', 'local_equipment')
+        )
+    );
 
-    $ADMIN->add('server', new admin_category('local_equipment_phone', new lang_string('phone', 'local_equipment')));
-    $settingspage = new admin_settingpage('local_equipment_managetoolphoneverification', new lang_string('phoneproviderconfiguration', 'local_equipment'));
+    $phonesettings = new admin_settingpage(
+        "{$component}_phoneprovider",
+        new lang_string('phoneproviderconfiguration', 'local_equipment')
+    );
 
     if ($ADMIN->fulltree) {
-
-        // Gateway to use for sending SMS.
+        // Gateway selection
         $link = html_writer::link($CFG->wwwroot . '/sms/sms_gateways.php', get_string('here', 'local_equipment'));
         $gateways = local_equipment_get_sms_gateways();
-        $options = [0 => get_string('selectagateway', 'local_equipment')] + $gateways;
-        $settingspage->add(new admin_setting_heading(
-            'local_equipment/gateway',
+        $gatewayoptions = [0 => get_string('selectagateway', 'local_equipment')] + $gateways;
+
+        $phonesettings->add(new admin_setting_heading(
+            "{$component}/gateway",
             new lang_string('smsgatewaystouse', 'local_equipment'),
             new lang_string('smsgatewaystouse_desc', 'local_equipment', $link)
         ));
-        $settingspage->add(new admin_setting_configselect(
-            'local_equipment/otpgateway',
+
+        $phonesettings->add(new admin_setting_configselect(
+            "{$component}/otpgateway",
             new lang_string('otpgateway', 'local_equipment'),
             new lang_string('otpgateway_desc', 'local_equipment'),
             '',
-            $options
+            $gatewayoptions
         ));
 
-        $settingspage->add(new admin_setting_configselect(
-            'local_equipment/infogateway',
+        $phonesettings->add(new admin_setting_configselect(
+            "{$component}/infogateway",
             new lang_string('infogateway', 'local_equipment'),
             new lang_string('infogateway_desc', 'local_equipment'),
             '',
-            $options
-        ));
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/awsinfooriginatorphone',
-            new lang_string('awsinfooriginatorphone', 'local_equipment'),
-            new lang_string('awsinfooriginatorphone_desc', 'local_equipment'),
-            '',
-            PARAM_TEXT,
-            69
-        ));
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/awsotporiginatorphone',
-            new lang_string('awsotporiginatorphone', 'local_equipment'),
-            new lang_string('awsotporiginatorphone_desc', 'local_equipment'),
-            '',
-            PARAM_TEXT,
-            69
-        ));
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/awsinfopoolid',
-            new lang_string('awsinfopoolid', 'local_equipment'),
-            new lang_string('awsinfopoolid_desc', 'local_equipment'),
-            '',
-            PARAM_TEXT,
-            69
-        ));
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/awsotppoolid',
-            new lang_string('awsotppoolid', 'local_equipment'),
-            new lang_string('awsotppoolid_desc', 'local_equipment'),
-            '',
-            PARAM_TEXT,
-            69
+            $gatewayoptions
         ));
 
-        // AWS Configuration Set (optional)
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/awsconfigurationset',
+        // AWS Configuration
+        $phonesettings->add(new admin_setting_configtext(
+            "{$component}/awsconfigurationset",
             new lang_string('awsconfigurationset', 'local_equipment'),
             new lang_string('awsconfigurationset_desc', 'local_equipment'),
             '',
@@ -561,9 +491,8 @@ if ($hassiteconfig) {
             30
         ));
 
-        // AWS info pool ID
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/awsinfopoolid',
+        $phonesettings->add(new admin_setting_configtext(
+            "{$component}/awsinfopoolid",
             new lang_string('awsinfopoolid', 'local_equipment'),
             new lang_string('awsinfopoolid_desc', 'local_equipment'),
             '',
@@ -571,9 +500,8 @@ if ($hassiteconfig) {
             50
         ));
 
-        // AWS OTP pool ID
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/awsotppoolid',
+        $phonesettings->add(new admin_setting_configtext(
+            "{$component}/awsotppoolid",
             new lang_string('awsotppoolid', 'local_equipment'),
             new lang_string('awsotppoolid_desc', 'local_equipment'),
             '',
@@ -581,9 +509,8 @@ if ($hassiteconfig) {
             50
         ));
 
-        // AWS info originator phone number
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/awsinfooriginatorphone',
+        $phonesettings->add(new admin_setting_configtext(
+            "{$component}/awsinfooriginatorphone",
             new lang_string('awsinfooriginatorphone', 'local_equipment'),
             new lang_string('awsinfooriginatorphone_desc', 'local_equipment'),
             '',
@@ -591,9 +518,8 @@ if ($hassiteconfig) {
             20
         ));
 
-        // AWS OTP originator phone number
-        $settingspage->add(new admin_setting_configtext(
-            'local_equipment/awsotporiginatorphone',
+        $phonesettings->add(new admin_setting_configtext(
+            "{$component}/awsotporiginatorphone",
             new lang_string('awsotporiginatorphone', 'local_equipment'),
             new lang_string('awsotporiginatorphone_desc', 'local_equipment'),
             '',
@@ -601,142 +527,23 @@ if ($hassiteconfig) {
             20
         ));
 
-        // // Infobip
-        // $link = html_writer::link('https://portal.infobip.com/', get_string('here', 'local_equipment'));
-        // $settingspage->add(new admin_setting_heading(
-        //     'local_equipment_infobip',
-        //     new lang_string('infobip', 'local_equipment'),
-        //     new lang_string('infobip_desc', 'local_equipment', $link)
-        // ));
-        // $settingspage->add(new admin_setting_configpasswordunmask(
-        //     'local_equipment/infobipapikey',
-        //     new lang_string('infobipapikey', 'local_equipment'),
-        //     new lang_string('infobipapikey_desc', 'local_equipment'),
-        //     '',
-        // ));
-        // $settingspage->add(new admin_setting_configtext(
-        //     'local_equipment/infobipapibaseurl',
-        //     new lang_string('infobipapibaseurl', 'local_equipment'),
-        //     new lang_string('infobipapibaseurl_desc', 'local_equipment'),
-        //     '',
-        //     PARAM_URL
-        // ));
-
-        // Twilio
-        // NOT YET COMPATIBLE
-
-        // $link = html_writer::link('https://www.twilio.com/', get_string('here', 'local_equipment'));
-        // $settingspage->add(new admin_setting_heading(
-        //     'local_equipment_twilio',
-        //     new lang_string('twilio', 'local_equipment'),
-        //     new lang_string('twilio_desc', 'local_equipment', $link)
-        // ));
-        // $settingspage->add(new admin_setting_configtext(
-        //     'local_equipment/twilioaccountsid',
-        //     new lang_string('twilioaccountsid', 'local_equipment'),
-        //     new lang_string('twilioaccountsid_desc', 'local_equipment'),
-        //     '',
-        //     PARAM_TEXT
-        //     // '/^[a-f0-9]{32}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/',
-        //     // 69
-        // ));
-        // $settingspage->add(new admin_setting_configtext(
-        //     'local_equipment/twilioauthtoken',
-        //     new lang_string('twilioauthtoken', 'local_equipment'),
-        //     new lang_string('twilioauthtoken_desc', 'local_equipment'),
-        //     '',
-        //     PARAM_URL
-        // ));
-        // $settingspage->add(new admin_setting_configtext(
-        //     'local_equipment/twilionumber',
-        //     new lang_string('twilionumber', 'local_equipment'),
-        //     new lang_string('twilionumber_desc', 'local_equipment'),
-        //     '',
-        //     PARAM_TEXT
-        // ));
-
-        // // AWS End User Messaging
-        // $link = html_writer::link('https://console.aws.amazon.com/sms-voice/', get_string('here', 'local_equipment'));
-        // $settingspage->add(new admin_setting_heading(
-        //     'local_equipment_awssmsvoice',
-        //     new lang_string('awssmsvoice', 'local_equipment'),
-        //     new lang_string('awssmsvoice_desc', 'local_equipment', $link)
-        // ));
-        // $settingspage->add(new admin_setting_configtext(
-        //     'local_equipment/awsaccesskey',
-        //     new lang_string('awsaccesskey', 'local_equipment'),
-        //     new lang_string('awsaccesskey_desc', 'local_equipment'),
-        //     '',
-        //     PARAM_TEXT,
-        //     69
-        // ));
-        // $settingspage->add(new admin_setting_configpasswordunmask(
-        //     'local_equipment/awssecretkey',
-        //     new lang_string('awssecretkey', 'local_equipment'),
-        //     new lang_string('awssecretkey_desc', 'local_equipment'),
-        //     '',
-        //     PARAM_TEXT,
-        //     69
-        // ));
-        // $settingspage->add(new admin_setting_configtext(
-        //     'local_equipment/awsregion',
-        //     new lang_string('awsregion', 'local_equipment'),
-        //     new lang_string('awsregion_desc', 'local_equipment'),
-        //     '',
-        //     PARAM_TEXT,
-        //     69
-        // ));
-
-        // // AWS SNS
-        // $link = html_writer::link('https://aws.amazon.com/sns/', get_string('here', 'local_equipment'));
-        // $settingspage->add(new admin_setting_heading(
-        //     'local_equipment_awssns',
-        //     new lang_string('awssns', 'local_equipment'),
-        //     new lang_string('awssns_desc', 'local_equipment', $link)
-        // ));
-        // $settingspage->add(new admin_setting_configtext(
-        //     'local_equipment/awssnsaccesskey',
-        //     new lang_string('awssnsaccesskey', 'local_equipment'),
-        //     new lang_string('awssnsaccesskey_desc', 'local_equipment'),
-        //     '',
-        //     PARAM_TEXT,
-        //     69
-        // ));
-        // $settingspage->add(new admin_setting_configtext(
-        //     'local_equipment/awssnssecretkey',
-        //     new lang_string('awssnssecretkey', 'local_equipment'),
-        //     new lang_string('awssnssecretkey_desc', 'local_equipment'),
-        //     '',
-        //     PARAM_TEXT,
-        //     69
-        // ));
-        // $settingspage->add(new admin_setting_configtext(
-        //     'local_equipment/awssnsregion',
-        //     new lang_string('awssnsregion', 'local_equipment'),
-        //     new lang_string('awssnsregion_desc', 'local_equipment'),
-        //     '',
-        //     PARAM_TEXT,
-        //     69
-        // ));
-
-        // Test outgoing text configuration.
-        $url = new moodle_url('/local/equipment/phonecommunication/testoutgoingtextconf.php');
-        $link = html_writer::link($url, get_string('testoutgoingtextconf', 'local_equipment'));
-        $settingspage->add(new admin_setting_heading(
-            'local_equipment_testoutgoingtextconf',
+        // Test configuration links
+        $testurl = new moodle_url('/local/equipment/phonecommunication/testoutgoingtextconf.php');
+        $testlink = html_writer::link($testurl, get_string('testoutgoingtextconf', 'local_equipment'));
+        $phonesettings->add(new admin_setting_heading(
+            "{$component}_testoutgoingtextconf",
             new lang_string('testoutgoingtextconf', 'local_equipment'),
-            new lang_string('testoutgoingtextdetail', 'local_equipment', $link)
+            new lang_string('testoutgoingtextdetail', 'local_equipment', $testlink)
         ));
 
-        // Verify OTP.
-        $url = new moodle_url('/local/equipment/phonecommunication/verifytestotp.php');
-        $link = html_writer::link($url, get_string('verifytestotp', 'local_equipment'));
-        $settingspage->add(new admin_setting_heading(
-            'local_equipment_verifytestotp',
+        $otpurl = new moodle_url('/local/equipment/phonecommunication/verifytestotp.php');
+        $otplink = html_writer::link($otpurl, get_string('verifytestotp', 'local_equipment'));
+        $phonesettings->add(new admin_setting_heading(
+            "{$component}_verifytestotp",
             new lang_string('verifytestotp', 'local_equipment'),
-            new lang_string('verifytestotpdetail', 'local_equipment', $link)
+            new lang_string('verifytestotpdetail', 'local_equipment', $otplink)
         ));
     }
 
-    $ADMIN->add('local_equipment_phone', $settingspage);
+    $ADMIN->add("{$component}_phone", $phonesettings);
 }

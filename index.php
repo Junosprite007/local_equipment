@@ -258,54 +258,60 @@ $templatedata = [
             'title' => get_string('administrativetools', 'local_equipment'),
             'items' => [
                 [
-                    'url' => (new \moodle_url('/admin/settings.php', ['section' => 'localsettingequipment']))->out(false),
+                    'url' => (new \moodle_url('/admin/settings.php', ['section' => 'local_equipment_settings']))->out(false),
                     'title' => get_string('equipmentpluginsettings', 'local_equipment'),
                     'class' => 'btn-secondary',
                     'gridclass' => 'col-md-12'
                 ]
             ]
         ],
-        // Development and Testing Tools Section
-        [
+
+    ],
+
+];
+
+$isdeveloper = ($CFG->debug >= DEBUG_DEVELOPER);
+if ($isdeveloper) {
+    // Development and Testing Tools Section
+    $devandtestingtools = [
             'title' => get_string('developmenttestingtools', 'local_equipment'),
             'items' => [
-                [
-                    'url' => (new \moodle_url('/local/equipment/test_inventory_basic.php'))->out(false),
-                    'title' => get_string('basicinventorysystemtest', 'local_equipment'),
-                    'class' => 'btn-warning',
-                    'gridclass' => 'col-md-3'
-                ],
-                [
-                    'url' => (new \moodle_url('/local/equipment/test_inventory_system.php'))->out(false),
-                    'title' => get_string('comprehensiveinventorytest', 'local_equipment'),
-                    'class' => 'btn-warning',
-                    'gridclass' => 'col-md-3'
-                ],
-                [
-                    'url' => (new \moodle_url('/local/equipment/debug_queue.php'))->out(false),
-                    'title' => get_string('qrprintqueuedebugging', 'local_equipment'),
-                    'class' => 'btn-danger',
-                    'gridclass' => 'col-md-3'
-                ],
-                [
-                    'url' => (new \moodle_url('/local/equipment/debug_queue_database.php'))->out(false),
-                    'title' => get_string('databasequeuedebugging', 'local_equipment'),
-                    'class' => 'btn-danger',
-                    'gridclass' => 'col-md-3'
-                ]
+            // CLI usage only
+            // [
+            //     'url' => (new \moodle_url('/local/equipment/test_inventory_basic.php'))->out(false),
+            //     'title' => get_string('basicinventorysystemtest', 'local_equipment'),
+            //     'class' => 'btn-warning',
+            //     'gridclass' => 'col-md-3'
+            // ],
+            [
+                'url' => (new \moodle_url('/local/equipment/test_inventory_system.php'))->out(false),
+                'title' => get_string('comprehensiveinventorytest', 'local_equipment'),
+                'class' => 'btn-warning',
+                'gridclass' => 'col-md-3'
+            ],
+            // CLI usage only
+            // [
+            //     'url' => (new \moodle_url('/local/equipment/debug_queue.php'))->out(false),
+            //     'title' => get_string('qrprintqueuedebugging', 'local_equipment'),
+            //     'class' => 'btn-danger',
+            //     'gridclass' => 'col-md-3'
+            // ],
+            [
+                'url' => (new \moodle_url('/local/equipment/debug_queue_database.php'))->out(false),
+                'title' => get_string('databasequeuedebugging', 'local_equipment'),
+                'class' => 'btn-danger',
+                'gridclass' => 'col-md-3'
             ]
         ]
-    ],
-    'warnings' => [
+    ];
+    array_push($templatedata['sections'], $devandtestingtools);
+
+    $templatedata['warnings'] = [
         [
             'message' => get_string('developmenttoolswarning', 'local_equipment')
         ]
-    ],
-    'help' => [
-        'title' => get_string('quickhelp', 'local_equipment'),
-        'content' => get_string('dashboardhelp', 'local_equipment')
-    ]
-];
+    ];
+}
 
 // Render the dashboard using the Mustache template
 echo $OUTPUT->render_from_template('local_equipment/equipment_dashboard', $templatedata);
