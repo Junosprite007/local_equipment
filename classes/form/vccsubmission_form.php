@@ -112,7 +112,7 @@ class vccsubmission_form extends \moodleform {
         // $userid = $USER->id;
         // $editprofileurl = new \moodle_url('/user/edit.php', array('id' => $userid));
         // $editprofilelink = \html_writer::link($editprofileurl, get_string('editmyprofile'));
-        // $mform->addElement('html', '<div class="mb-4 ml-4">' . new \lang_string('toeditprofile', 'local_equipment', $editprofilelink) . '</div>');
+        // $mform->addElement('html', '<div class="mb-4 ms-4">' . new \lang_string('toeditprofile', 'local_equipment', $editprofilelink) . '</div>');
 
         $phone = $USER->phone2 ?: $USER->phone1;
         if (empty($phone)) {

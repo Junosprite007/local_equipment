@@ -1,0 +1,51 @@
+{{!
+    @template local_equipment/equipment_dashboard
+
+    Equipment Plugin Main Dashboard - Navigation to all accessible pages
+
+    Context variables:
+    * pagetitle - The page title
+    * sections - Array of navigation sections with:
+      - title - Section heading
+      - items - Array of navigation items with:
+        - url - Link URL
+        - title - Link text
+        - class - CSS classes for styling
+        - description - Optional description text
+    * warnings - Array of warning messages to display
+    * help - Help information object with:
+      - title - Help section title
+      - content - Help content text
+}}
+
+<div class="equipment-dashboard">
+    {{#sections}}
+    <h3>{{title}}</h3>
+    <div class="ms-3 mb-4">
+        {{#items}}
+        <div class="mb-2">
+            <a href="{{url}}" {{#description}}title="{{description}}"{{/description}}>
+                {{title}}
+            </a>
+            {{#description}}
+            <div class="text-muted small mt-1">{{description}}</div>
+            {{/description}}
+        </div>
+        {{/items}}
+    </div>
+    {{/sections}}
+
+    {{#warnings}}
+    <div class="alert alert-warning">
+        <strong>{{#str}}warning, core{{/str}}: </strong>
+        {{message}}
+    </div>
+    {{/warnings}}
+
+    {{#help}}
+    <div class="alert alert-info mt-4">
+        <h4>{{title}}</h4>
+        <p>{{content}}</p>
+    </div>
+    {{/help}}
+</div>

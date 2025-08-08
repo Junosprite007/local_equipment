@@ -463,8 +463,18 @@ line 212 of /local/equipment/vccsubmissions.php: call to mysqli_native_moodle_da
 
 
 
+If I want to add menu items via "Custom menu items" under advanced theme settings:
 
-
+{ifadmin}Equipment
+-Inventory|/local/equipment/inventory/manage.php
+-Partnerships|/local/equipment/partnerships.php
+-Families|/local/equipment/vccsubmissions.php
+-Exchanges|/local/equipment/pickups.php
+-Agreements|/local/equipment/agreements.php
+-###
+-Add & enroll|/local/equipment/addbulkfamilies.php
+-###
+-Settings|/admin/category.php?category=local_equipment{/ifadmin}
 
 
 

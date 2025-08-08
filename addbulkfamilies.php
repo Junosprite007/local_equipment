@@ -26,26 +26,25 @@
 // File location: local/equipment/addbulkfamilies.php
 
 require_once(__DIR__ . '/../../config.php');
-require_once($CFG->dirroot . '/local/equipment/classes/form/addbulkfamilies_form.php');
 require_once($CFG->dirroot . '/local/equipment/lib.php');
 require_once($CFG->dirroot . '/user/lib.php');
 
 require_login();
-require_capability('moodle/user:create', context_system::instance());
+require_capability('moodle/user:create', \context_system::instance());
 
-$PAGE->set_context(context_system::instance());
-$PAGE->set_url(new moodle_url('/local/equipment/addbulkfamilies.php'));
+$PAGE->set_context(\context_system::instance());
+$PAGE->set_url(new \moodle_url('/local/equipment/addbulkfamilies.php'));
 $PAGE->set_title(get_string('bulkfamilyupload', 'local_equipment'));
 $PAGE->set_heading(get_string('bulkfamilyupload', 'local_equipment'));
 $PAGE->requires->js_call_amd('local_equipment/bulkfamilyupload', 'init');
 $PAGE->requires->js_call_amd('local_equipment/bulkfamilyupload', 'rotateSymbol');
 $PAGE->requires->js_call_amd('local_equipment/editpartnership_form', 'init');
 
-$form = new addbulkfamilies_form();
+$mform = new \local_equipment\form\addbulkfamilies_form();
 
-if ($form->is_cancelled()) {
-    redirect(new moodle_url('/'));
-} else if ($data = $form->get_data()) {
+if ($mform->is_cancelled()) {
+    redirect(new \moodle_url('/'));
+} else if ($data = $mform->get_data()) {
     global $DB, $SITE;
 
 
@@ -53,7 +52,7 @@ if ($form->is_cancelled()) {
     echo $OUTPUT->heading(get_string('uploadresults', 'local_equipment'));
 
     // Start a container for results
-    echo html_writer::start_div('local-equipment-upload-results');
+    echo \html_writer::start_div('local-equipment-upload-results');
 
     // Get the JSON content of the 'value' attribute from the hidden #id_familiesdata input element.
     $familiesdata = json_decode($data->familiesdata);
@@ -70,8 +69,8 @@ if ($form->is_cancelled()) {
     $notifyenabled_students = get_config('local_equipment', 'notify_students');
 
     if (!$notifyenabled_parents && !$notifyenabled_students) {
-        $url = new moodle_url('/admin/settings.php?section=local_equipment_notifications');
-        $link = html_writer::link($url, get_string('notificationsettings', 'local_equipment'));
+        $url = new \moodle_url('/admin/settings.php?section=local_equipment_notifications');
+        $link = \html_writer::link($url, get_string('notificationsettings', 'local_equipment'));
         $str = (object) [
             'role1' => strtolower(get_string('parent', 'local_equipment')),
             'role2' => strtolower(get_string('student', 'local_equipment')),
@@ -81,8 +80,8 @@ if ($form->is_cancelled()) {
         echo $OUTPUT->notification(get_string('notificationsdisabledforusertypes', 'local_equipment', $str), 'warning');
     } else {
         if (!$notifyenabled_parents) {
-            $url = new moodle_url('/admin/settings.php?section=local_equipment_notifications');
-            $link = html_writer::link($url, get_string('notificationsettings', 'local_equipment'));
+            $url = new \moodle_url('/admin/settings.php?section=local_equipment_notifications');
+            $link = \html_writer::link($url, get_string('notificationsettings', 'local_equipment'));
             $str = (object) [
                 'role' => strtolower(get_string('parent', 'local_equipment')),
                 'user' => $USER->firstname,
@@ -92,8 +91,8 @@ if ($form->is_cancelled()) {
         }
 
         if (!$notifyenabled_students) {
-            $url = new moodle_url('/admin/settings.php?section=local_equipment_notifications');
-            $link = html_writer::link($url, get_string('notificationsettings', 'local_equipment'));
+            $url = new \moodle_url('/admin/settings.php?section=local_equipment_notifications');
+            $link = \html_writer::link($url, get_string('notificationsettings', 'local_equipment'));
             $str = (object) [
                 'role' => strtolower(get_string('student', 'local_equipment')),
                 'user' => $USER->firstname,
@@ -165,11 +164,10 @@ if ($form->is_cancelled()) {
 
                     // Force passord update for the parent's on next login.
                     if ($newparent_preferenceupdate = $DB->get_record('user_preferences', [
-                            'userid' => $userid,
-                            'name' => 'auth_forcepasswordchange',
-                            'value' => 0
-                        ])
-                    ) {
+                        'userid' => $userid,
+                        'name' => 'auth_forcepasswordchange',
+                        'value' => 0
+                    ])) {
                         $newparent_preferenceupdate->value = 1;
                         $DB->update_record('user_preferences', $newparent_preferenceupdate);
                     } else {
@@ -196,11 +194,11 @@ if ($form->is_cancelled()) {
                             $email_messageinput->username = $parent->username;
                             $email_messageinput->password = $password ?? get_string('contactusforyourpassword', 'local_equipment');
 
-                            $loginurl = new moodle_url('/login/index.php');
-                            $loginlink = html_writer::link($loginurl, $loginurl);
+                            $loginurl = new \moodle_url('/login/index.php');
+                            $loginlink = \html_writer::link($loginurl, $loginurl);
                             $email_messageinput->loginurl = $loginlink;
 
-                            $contactuser = core_user::get_noreply_user();
+                            $contactuser = \core_user::get_noreply_user();
                             $subject = get_string('welcomeemail_subject', 'local_equipment', $email_messageinput);
                             $email_message = get_string('welcomeemail_body', 'local_equipment', $email_messageinput);
 
@@ -225,7 +223,7 @@ if ($form->is_cancelled()) {
                                     $email_messageinput
                                 );
                             }
-                        } catch (moodle_exception $e) {
+                        } catch (\moodle_exception $e) {
                             $messages->errors[] = $e->getMessage();
                         }
                     }
@@ -248,8 +246,14 @@ if ($form->is_cancelled()) {
                     $messages->errors[] = get_string('usernotaddedtofamily', 'local_equipment', $parent) . ' ' . get_string('errorcreatinguser', 'local_equipment', $parent);
                     continue;
                 }
+
                 // By the end of the last iteration of this parents loop, $allstudentsofallparents should contain all students with
                 // unique IDs that have these parents already assigned to them. This is used later in this file.
+                // We're collecting unique students by ID to prevent duplicates. The array union operator '+' is actually the correct choice here because:
+                //      1. Purpose: '$allstudentsofallparents' collects existing students already associated with any of the parents in this family
+                //      2. De-duplication Need: If the same student is associated with multiple parents (common in families), you only want that student to appear once
+                //      3. Array Union Behavior: The '+' operator keeps the first occurrence and ignores subsequent entries with the same key (student ID)
+                //      4. Desired Result: Exactly what we want - a deduplicated collection of students by ID
                 $allstudentsofallparents = $allstudentsofallparents + local_equipment_get_students_of_parent($parent->id);
                 $parent->partnershipid = $familydata->partnership->data ?? '';
                 $parents[] = $parent;
@@ -355,11 +359,11 @@ if ($form->is_cancelled()) {
                             $email_messageinput->username = $student->username;
                             $email_messageinput->password = $password ?? get_string('contactusforyourpassword', 'local_equipment');
 
-                            $loginurl = new moodle_url('/login/index.php');
-                            $loginlink = html_writer::link($loginurl, $loginurl);
+                            $loginurl = new \moodle_url('/login/index.php');
+                            $loginlink = \html_writer::link($loginurl, $loginurl);
                             $email_messageinput->loginurl = $loginlink;
 
-                            $contactuser = core_user::get_noreply_user();
+                            $contactuser = \core_user::get_noreply_user();
                             $subject = get_string('welcomeemail_subject', 'local_equipment', $email_messageinput);
                             $email_message = get_string('welcomeemail_body', 'local_equipment', $email_messageinput);
 
@@ -384,11 +388,10 @@ if ($form->is_cancelled()) {
                                     $email_messageinput
                                 );
                             }
-                        } catch (moodle_exception $e) {
+                        } catch (\moodle_exception $e) {
                             $messages->errors[] = $e->getMessage();
                         }
                     }
-
                 } else if ($user) {
                     $messages->successes[] = get_string('accountalreadyexists', 'local_equipment', $student);
                     unset($parent->otherfirst);
@@ -416,7 +419,8 @@ if ($form->is_cancelled()) {
                         array_push($messages->errors, ...$student->courses_results[$c]->errors);
 
                         if (!empty($student->courses_results[$c]->successes)) {
-                            $courseurl = new moodle_url('/course/view.php',
+                            $courseurl = new moodle_url(
+                                '/course/view.php',
                                 ['id' => $c]
                             );
                             $courselink = html_writer::link($courseurl, $student->courses_results[$c]->coursename);
@@ -524,7 +528,7 @@ if ($form->is_cancelled()) {
             } else if (count($family->students) > 0) {
                 $familyname = $family->students[0]->lastname;
             } else {
-                throw new moodle_exception('familyhasnousers', 'local_equipment');
+                throw new \moodle_exception('familyhasnousers', 'local_equipment');
             }
 
             // Generate and output the notification
@@ -596,22 +600,22 @@ if ($form->is_cancelled()) {
         // }
         // die();
 
-    } catch (moodle_exception $e) {
+    } catch (\moodle_exception $e) {
         // Errors will be caught here. In general, we'll need to be displaying success and non-fatal warning messages to the admin
         // user as the form is processing. Even if there is an error, the script should continue to process the rest of the family
         // in question as well as the rest of the families in the form.
         echo $OUTPUT->notification($e->getMessage(), 'error');
     }
 
-    echo html_writer::end_div(); // local-equipment-upload-results container
+    echo \html_writer::end_div(); // local-equipment-upload-results container
 
     // Add continue button that returns to the previous page or a specific destination
-    $continueurl = new moodle_url('/local/equipment/addbulkfamilies.php'); // Or whatever destination URL you prefer
+    $continueurl = new \moodle_url('/local/equipment/addbulkfamilies.php'); // Or whatever destination URL you prefer
     echo $OUTPUT->continue_button($continueurl);
 
     echo $OUTPUT->footer();
 } else {
     echo $OUTPUT->header();
-    $form->display();
+    $mform->display();
     echo $OUTPUT->footer();
 }

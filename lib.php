@@ -1803,7 +1803,7 @@ function local_equipment_get_vcc_students($submission) {
             $studentinfo[] = html_writer::tag('span', $student->email);
         }
 
-        $studentinfo[] = html_writer::tag('div', implode('<br />', $courseinfo), ['class' => 'ml-4']);
+        $studentinfo[] = html_writer::tag('div', implode('<br />', $courseinfo), ['class' => 'ms-4']);
     }
 
     return implode('<br />', $studentinfo);
@@ -3383,33 +3383,311 @@ function local_equipment_enrol_user_in_course(
     }
 }
 
-/**
- * Extends the navigation by adding an "Equipment" item to the primary navigation.
- *
- * @param global_navigation $navigation
- */
-function local_equipment_extend_navigation(global_navigation $navigation) {
-    global $PAGE, $CFG;
 
-    // Only add this for users who can see it
-    if (!has_capability('local/equipment:manageequipment', context_system::instance())) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * Extend the settings navigation tree in the settings block.
+ *
+ * This function is called when the settings block is being built.
+ * This is the most reliable way to add navigation items in Moodle 5.0.
+ *
+ * @param settings_navigation $settingsnav The settings navigation object
+ * @param context $context The current context
+ */
+function local_equipment_extend_settings_navigation(settings_navigation $settingsnav, context $context) {
+    global $PAGE;
+
+    // Only show for users with the manage equipment capability or site admins
+    if (!has_capability('local/equipment:manageequipment', $context) && !is_siteadmin()) {
         return;
     }
 
-    $node = navigation_node::create(
-        get_string('equipmentmanagement', 'local_equipment'),
-        new moodle_url('/local/equipment/management.php'),
+    // Add to different contexts as appropriate
+    switch ($context->contextlevel) {
+        case CONTEXT_SYSTEM:
+            local_equipment_extend_site_settings($settingsnav, $context);
+            break;
+        case CONTEXT_COURSE:
+            local_equipment_extend_course_settings($settingsnav, $context, $PAGE->course);
+            break;
+    }
+}
+
+/**
+ * Add equipment management to site administration.
+ *
+ * @param settings_navigation $settingsnav The settings navigation object
+ * @param context $context The current context
+ */
+function local_equipment_extend_site_settings(settings_navigation $settingsnav, context $context) {
+    // Find site administration node
+    if ($siteadmin = $settingsnav->find('siteadministration', navigation_node::TYPE_SITE_ADMIN)) {
+
+        // Create main equipment management section
+        $equipmentnode = $siteadmin->add(
+            get_string('equipment', 'local_equipment'),
+            null,
+            navigation_node::TYPE_CONTAINER,
+            null,
+            'equipment_management',
+            new pix_icon('i/settings', '', 'core')
+        );
+
+        // Add inventory management
+        $inventorynode = $equipmentnode->add(
+            get_string('inventory', 'local_equipment'),
+            null,
+            navigation_node::TYPE_CONTAINER,
+            null,
+            'inventory_menu',
+            new pix_icon('i/item', '', 'core')
+        );
+
+        $inventorynode->add(
+            get_string('inventorydashboard', 'local_equipment'),
+            new moodle_url('/local/equipment/inventory/view.php'),
+            navigation_node::TYPE_CUSTOM,
+            null,
+            'view_inventory'
+        );
+
+        $inventorynode->add(
+            get_string('additems', 'local_equipment'),
+            new moodle_url('/local/equipment/inventory/add.php'),
+            navigation_node::TYPE_CUSTOM,
+            null,
+            'add_inventory'
+        );
+
+        // Add partnerships management
+        $partnershipsnode = $equipmentnode->add(
+            get_string('partnerships', 'local_equipment'),
+            null,
+            navigation_node::TYPE_CONTAINER,
+            null,
+            'partnerships_menu',
+            new pix_icon('i/group', '', 'core')
+        );
+
+        $partnershipsnode->add(
+            get_string('managepartnerships', 'local_equipment'),
+            new moodle_url('/local/equipment/partnerships/manage.php'),
+            navigation_node::TYPE_CUSTOM,
+            null,
+            'manage_partnerships'
+        );
+
+        // Add families management
+        $familiesnode = $equipmentnode->add(
+            get_string('families', 'local_equipment'),
+            new moodle_url('/local/equipment/families/manage.php'),
+            navigation_node::TYPE_CUSTOM,
+            null,
+            'manage_families',
+            new pix_icon('i/cohort', '', 'core')
+        );
+
+        // Add exchanges management
+        $exchangesnode = $equipmentnode->add(
+            get_string('exchanges', 'local_equipment'),
+            new moodle_url('/local/equipment/exchanges/manage.php'),
+            navigation_node::TYPE_CUSTOM,
+            null,
+            'manage_exchanges',
+            new pix_icon('i/export', '', 'core')
+        );
+
+        // Add agreements management
+        $agreementsnode = $equipmentnode->add(
+            get_string('agreements', 'local_equipment'),
+            null,
+            navigation_node::TYPE_CONTAINER,
+            null,
+            'agreements_menu',
+            new pix_icon('i/edit', '', 'core')
+        );
+
+        $agreementsnode->add(
+            get_string('manageagreements', 'local_equipment'),
+            new moodle_url('/local/equipment/agreements/manage.php'),
+            navigation_node::TYPE_CUSTOM,
+            null,
+            'manage_agreements'
+        );
+
+        $agreementsnode->add(
+            get_string('addenroll', 'local_equipment'),
+            new moodle_url('/local/equipment/agreements/enroll.php'),
+            navigation_node::TYPE_CUSTOM,
+            null,
+            'add_enroll'
+        );
+
+        // Configure expandability
+        $equipmentnode->isexpandable = true;
+        $inventorynode->isexpandable = true;
+        $partnershipsnode->isexpandable = true;
+        $agreementsnode->isexpandable = true;
+    }
+}
+
+/**
+ * Add equipment management to course settings.
+ *
+ * @param settings_navigation $settingsnav The settings navigation object
+ * @param context $context The current context
+ * @param stdClass $course The course object
+ */
+function local_equipment_extend_course_settings(settings_navigation $settingsnav, context $context, stdClass $course) {
+    // Find course administration node
+    if ($courseadmin = $settingsnav->find('courseadmin', navigation_node::TYPE_COURSE)) {
+
+        $equipmentnode = $courseadmin->add(
+            get_string('courseequipment', 'local_equipment'),
+            null,
+            navigation_node::TYPE_CONTAINER,
+            null,
+            'course_equipment',
+            new pix_icon('i/settings', '', 'core')
+        );
+
+        $equipmentnode->add(
+            get_string('managecourseequipment', 'local_equipment'),
+            new moodle_url('/local/equipment/course/manage.php', ['courseid' => $course->id]),
+            navigation_node::TYPE_CUSTOM,
+            null,
+            'manage_course_equipment'
+        );
+
+        $equipmentnode->add(
+            get_string('equipmentreports', 'local_equipment'),
+            new moodle_url('/local/equipment/course/reports.php', ['courseid' => $course->id]),
+            navigation_node::TYPE_CUSTOM,
+            null,
+            'equipment_reports'
+        );
+
+        $equipmentnode->isexpandable = true;
+    }
+}
+
+/**
+ * Extend the global navigation tree.
+ *
+ * This adds items to the navigation block but NOT to the primary navigation bar.
+ * In Moodle 5.0, this appears in the navigation block only.
+ *
+ * @param global_navigation $navigation The global navigation object
+ */
+function local_equipment_extend_navigation(global_navigation $navigation) {
+    global $PAGE;
+
+    // Only show for logged-in users with appropriate capabilities
+    if (!isloggedin() || isguestuser()) {
+        return;
+    }
+
+    $context = context_system::instance();
+    if (!has_capability('local/equipment:manageequipment', $context) && !is_siteadmin()) {
+        return;
+    }
+
+    // Add to navigation block (not primary navigation)
+    $equipmentnode = $navigation->add(
+        get_string('equipment', 'local_equipment'),
+        new moodle_url('/local/equipment/index.php'),
         navigation_node::TYPE_CUSTOM,
         null,
-        'equipmentmanagement',
-        new pix_icon('i/settings', '')
+        'equipment_main',
+        new pix_icon('i/settings', '', 'core')
     );
 
-    $node->showinflatnavigation = true;
-
-    // Add to the primary navigation
-    $navigation->add_node($node);
+    // This will appear in the navigation block only
+    $equipmentnode->showinflatnavigation = false; // Not supported in 4.0+, but good practice
 }
+
+/**
+ * Add equipment management links to the course navigation.
+ *
+ * @param navigation_node $parentnode The parent navigation node
+ * @param stdClass $course The course object
+ * @param context_course $context The course context
+ */
+function local_equipment_extend_navigation_course(navigation_node $parentnode, stdClass $course, context_course $context) {
+    if (!has_capability('local/equipment:manageequipment', $context) && !is_siteadmin()) {
+        return;
+    }
+
+    $equipmentnode = $parentnode->add(
+        get_string('equipment', 'local_equipment'),
+        new moodle_url('/local/equipment/course.php', ['courseid' => $course->id]),
+        navigation_node::TYPE_CUSTOM,
+        null,
+        'course_equipment',
+        new pix_icon('i/settings', '', 'core')
+    );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Bulk enroll a student in multiple courses.
