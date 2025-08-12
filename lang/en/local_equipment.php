@@ -2012,3 +2012,6 @@ $string['databasequeuedebugging'] = 'Database Queue Debugging';
 $string['developmenttoolswarning'] = 'These tools are for development and debugging purposes only. Use with caution in production environments.';
 $string['quickhelp'] = 'Quick Help';
 $string['dashboardhelp'] = 'This dashboard provides access to all Equipment plugin functionality. Click on any button to navigate to the specific feature you need.';
+
+// New VCC form strings
+$string['theformyouattemptedtoaccessisnotcurrentlyavailable'] = 'The form you attempted to access is not currently available. We think this may be the form you\'re actually trying to access instead, but who knows? We could be wrong.';
