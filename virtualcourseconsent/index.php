@@ -30,9 +30,26 @@ require_once($CFG->dirroot . '/lib/accesslib.php');
 
 require_login();
 // Check if the user is a guest and redirect or display an error message
+$msgparams = new stdClass();
+$msgparams->form = get_string('virtualcourseconsent', 'local_equipment');
+$msgparams->site = $SITE->shortname;
+$msgparams->help = html_writer::link(new moodle_url('/login/index.php'), get_string('clickhere'));
+
+
 if (isguestuser()) {
-    $msgparams = ['form' => get_string('virtualcourseconsent', 'local_equipment'), 'site' => $SITE->shortname];
+    // $msgparams = ['form' => get_string('virtualcourseconsent', 'local_equipment'), 'site' => $SITE->shortname];
     redirect(new moodle_url('/login/index.php'), get_string('mustlogintoyourownaccount', 'local_equipment', $msgparams), null, \core\output\notification::NOTIFY_ERROR);
+}
+
+$students = local_equipment_get_students_of_user_as('parent', $USER->id);
+
+// Use the following when you're ready to prevent non-parents from accessing the form.
+if ($students === false) {
+    // If you have no students, there's no reason to fill out this form, since if you're old enough to sign your own form, we'll
+    // have a different form for you to fill out.
+
+    // Redirect with an error message for the user who's trying to fill out the form from a non-parent account.
+    redirect(new moodle_url('/'), get_string('attnparents_useyouraccount', 'local_equipment', $msgparams), null, \core\output\notification::NOTIFY_WARNING);
 }
 
 $context = \core\context\system::instance();

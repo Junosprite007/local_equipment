@@ -40,14 +40,16 @@ class vccsubmission_form extends \moodleform {
 
         $students = local_equipment_get_students_of_user_as('parent', $USER->id);
 
-        // Use the following when you're ready to prevent non-parents from accessing the form.
-        if ($students === false) {
-            // If you have no students, there's no reason to fill out this form, since if you're old enough to sign your own form,
-            // we'll have a different form for you to fill out.
+        // // Use the following when you're ready to prevent non-parents from accessing the form.
+        // if ($students === false) {
+        //     // If you have no students, there's no reason to fill out this form, since if you're old enough to sign your own form,
+        //     // we'll have a different form for you to fill out.
 
-            // Redirect with an error message for the user who's trying to fill out the form from a non-parent account.
-            // redirect(new \moodle_url('/'));
-        }
+        //     // var_dump($students);
+        //     // die();
+        //     // Redirect with an error message for the user who's trying to fill out the form from a non-parent account.
+        //     redirect(new moodle_url('/'), get_string('attnparents_useyouraccount', 'local_equipment', $SITE->name), null, \core\output\notification::NOTIFY_WARNING);
+        // }
 
         $repeatno = optional_param('repeatno', 1, PARAM_INT);
         $deletebuttonname = 'delete_student';
@@ -83,7 +85,8 @@ class vccsubmission_form extends \moodleform {
             }
         }
 
-        $mform->addElement('html', '<div class="alert alert-warning" role="alert">' . get_string('attnparents_useyouraccount', 'local_equipment', $SITE->shortname) . '</div>');
+
+        // $mform->addElement('html', '<div class="alert alert-warning" role="alert">' . get_string('attnparents_useyouraccount', 'local_equipment', $SITE->shortname) . '</div>');
 
 
         // Users would fill out this form while logged into one of their students accounts, so the email, first name,

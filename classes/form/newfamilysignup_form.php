@@ -83,7 +83,13 @@ class vccsubmission_form extends \moodleform {
             }
         }
 
-        $mform->addElement('html', '<div class="alert alert-warning" role="alert">' . get_string('attnparents_useyouraccount', 'local_equipment', $SITE->shortname) . '</div>');
+        // // Check if the user is a guest and redirect or display an error message
+        // $msgparams = new stdClass();
+        // $msgparams->form = get_string('virtualcourseconsent', 'local_equipment');
+        // $msgparams->site = $SITE->shortname;
+        // $msgparams->help = new moodle_url('/login/index.php');
+
+        // $mform->addElement('html', '<div class="alert alert-warning" role="alert">' . get_string('attnparents_useyouraccount', 'local_equipment', $SITE->shortname) . '</div>');
 
 
         // Users would fill out this form while logged into one of their students accounts, so the email, first name,

@@ -309,7 +309,9 @@ $string['addvccsubmission'] = 'Add VCC Submission';
 $string['admin_notes'] = 'Admin notes';
 $string['adminnotes'] = 'Admin notes';
 $string['apt'] = 'Apt.';
-$string['attnparents_useyouraccount'] = 'ATTENTION, PARENTS! You must be logged into your own, personal {$a} account to fill out this form.';
+$string['attnparents_useyouraccount'] = 'ATTENTION, PARENTS! You must be logged into your own, personal {$a->site} account to fill out the {$a->form} form.<br /><br />
+Need help? {$a->help}.';
+
 $string['chooseoption'] = 'Choose an option';
 $string['confirmationid'] = 'Confirmation ID';
 $string['confirmdeletevccsubmission'] = 'Are you sure you want to delete this VCC submission?';
@@ -2015,3 +2017,4 @@ $string['dashboardhelp'] = 'This dashboard provides access to all Equipment plug
 
 // New VCC form strings
 $string['theformyouattemptedtoaccessisnotcurrentlyavailable'] = 'The form you attempted to access is not currently available. We think this may be the form you\'re actually trying to access instead, but who knows? We could be wrong.';
+$string['quickhelp'] = 'Quick Help';
