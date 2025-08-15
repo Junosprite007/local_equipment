@@ -33,23 +33,35 @@ require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/local/equipment/lib.php');
 
 class vccsubmission_form extends \moodleform {
+
+    /** @var array Auto-populated parent data */
+    private array $parentdata;
+
+    /** @var array Auto-populated student data */
+    private array $studentdata;
+
+    /** @var array Student eligibility warnings */
+    private array $warnings = [];
+
     public function definition() {
         global $USER, $DB, $SITE;
         $mform = $this->_form;
         $customdata = $this->_customdata;
 
-        $students = local_equipment_get_students_of_user_as('parent', $USER->id);
+        // Phase 2: Get auto-populated data using existing functions
+        $this->load_parent_data($USER->id);
+        $this->load_student_data($USER->id);
+        $this->validate_student_eligibility();
 
-        // // Use the following when you're ready to prevent non-parents from accessing the form.
-        // if ($students === false) {
-        //     // If you have no students, there's no reason to fill out this form, since if you're old enough to sign your own form,
-        //     // we'll have a different form for you to fill out.
-
-        //     // var_dump($students);
-        //     // die();
-        //     // Redirect with an error message for the user who's trying to fill out the form from a non-parent account.
-        //     redirect(new moodle_url('/'), get_string('attnparents_useyouraccount', 'local_equipment', $SITE->name), null, \core\output\notification::NOTIFY_WARNING);
-        // }
+        // Check if parent has any eligible students
+        if (empty($this->studentdata)) {
+            redirect(
+                new \moodle_url('/'),
+                get_string('nostudentsenrolled', 'local_equipment'),
+                null,
+                \core\output\notification::NOTIFY_WARNING
+            );
+        }
 
         $repeatno = optional_param('repeatno', 1, PARAM_INT);
         $deletebuttonname = 'delete_student';
@@ -98,41 +110,57 @@ class vccsubmission_form extends \moodleform {
         // to force users to be logged in to their own personal account by validating that the logged in user has the 'Parent' role
         // assigned to their account.
 
-        // Profile email.
-        $mform->addElement('text', 'email', get_string('email'), ['value' => $USER->email]);
+        // Phase 3: Use auto-populated parent data to display fields as labels or pre-filled inputs
+
+        // Profile email - display as label (read-only)
+        $mform->addElement('html', '<div class="row mb-3">
+            <label class="col-sm-3 col-form-label">' . get_string('email') . '</label>
+            <div class="col-sm-9">
+                <div class="form-control-plaintext">' . s($this->parentdata['email']) . '</div>
+            </div>
+        </div>');
+        $mform->addElement('hidden', 'email', $this->parentdata['email']);
         $mform->setType('email', PARAM_EMAIL);
 
-        // Profile first name.
-        $mform->addElement('text', 'firstname', get_string('firstname'), ['value' => $USER->firstname]);
+        // Profile first name - display as label (read-only)
+        $mform->addElement('html', '<div class="row mb-3">
+            <label class="col-sm-3 col-form-label">' . get_string('firstname') . '</label>
+            <div class="col-sm-9">
+                <div class="form-control-plaintext">' . s($this->parentdata['firstname']) . '</div>
+            </div>
+        </div>');
+        $mform->addElement('hidden', 'firstname', $this->parentdata['firstname']);
         $mform->setType('firstname', PARAM_TEXT);
 
-        // Profile last name.
-        $mform->addElement('text', 'lastname', get_string('lastname'), ['value' => $USER->lastname]);
+        // Profile last name - display as label (read-only)
+        $mform->addElement('html', '<div class="row mb-3">
+            <label class="col-sm-3 col-form-label">' . get_string('lastname') . '</label>
+            <div class="col-sm-9">
+                <div class="form-control-plaintext">' . s($this->parentdata['lastname']) . '</div>
+            </div>
+        </div>');
+        $mform->addElement('hidden', 'lastname', $this->parentdata['lastname']);
         $mform->setType('lastname', PARAM_TEXT);
 
-
-        // This is a convenience for users, but we're not using it right now.
-        // $userid = $USER->id;
-        // $editprofileurl = new \moodle_url('/user/edit.php', array('id' => $userid));
-        // $editprofilelink = \html_writer::link($editprofileurl, get_string('editmyprofile'));
-        // $mform->addElement('html', '<div class="mb-4 ms-4">' . new \lang_string('toeditprofile', 'local_equipment', $editprofilelink) . '</div>');
-
-        $phone = $USER->phone2 ?: $USER->phone1;
-        if (empty($phone)) {
-            $phone = '';
+        // Phone - display as label (read-only) if exists, otherwise show input
+        if (!empty($this->parentdata['phone'])) {
+            $mform->addElement('html', '<div class="row mb-3">
+                <label class="col-sm-3 col-form-label">' . get_string('phone') . '</label>
+                <div class="col-sm-9">
+                    <div class="form-control-plaintext">' . s($this->parentdata['phone']) . '</div>
+                </div>
+            </div>');
+            $mform->addElement('hidden', 'phone', $this->parentdata['phone']);
+            $mform->setType('phone', PARAM_TEXT);
         } else {
-            $phoneobj = local_equipment_parse_phone_number($phone);
-            $phone = $phoneobj->phone;
-            $phone = local_equipment_format_phone_number($phone);
+            // Enter mobile phone if no existing phone
+            $mform->addElement('text', 'phone', get_string('phone'));
+            $mform->setType('phone', PARAM_TEXT);
+            $mform->addRule('phone', get_string('required'), 'required', null, 'client');
+            $mform->addRule('phone', get_string('invalidusphonenumber', 'local_equipment'), 'regex', "/^\s*(1\d{10}|(?:\+1\s?)?(?:\(?\d{3}\)?[\s.-]?)?\d{3}[\s.-]?\d{4})\s*$/", 'client');
         }
 
-        // Enter mobile phone.
-        $mform->addElement('text', 'phone', get_string('phone'), ['value' => $phone]);
-        $mform->setType('phone', PARAM_TEXT);
-        $mform->addRule('phone', get_string('required'), 'required', null, 'client');
-        $mform->addRule('phone', get_string('invalidusphonenumber', 'local_equipment'), 'regex', "/^\s*(1\d{10}|(?:\+1\s?)?(?:\(?\d{3}\)?[\s.-]?)?\d{3}[\s.-]?\d{4})\s*$/", 'client');
-
-        // Select partnership.
+        // Select partnership - pre-filled dropdown (still editable)
         $partnershipdata = local_equipment_get_partnerships_with_courses();
         $partnerships = $DB->get_records_menu('local_equipment_partnership', ['active' => 1], '', 'id,name');
         $partnerships = ['' => get_string('selectpartnership', 'local_equipment')] + $partnerships;
@@ -145,14 +173,18 @@ class vccsubmission_form extends \moodleform {
         );
         $mform->addRule('partnership', get_string('required'), 'required', null, 'client');
 
+        // Set default partnership if exists
+        if (!empty($this->parentdata['partnership'])) {
+            $mform->setDefault('partnership', $this->parentdata['partnership']);
+        }
+
         // // We'll need to access the partnership name in the submission form.
         // // We want to save all the information as the parent saw it when submitting the form.
         // $mform->addElement('hidden', 'partnership_name', '');
         // $mform->setType('partnership_name', PARAM_TEXT);
 
 
-        // Mailing address-related fields.
-        // Display all address related fields.
+        // Mailing address-related fields - Phase 3: Pre-filled but still editable
         $groupview = false;
         $address = local_equipment_add_address_block($mform, 'mailing', '', false, false, true, false, $groupview, true);
         foreach ($address->elements as $elementname => $element) {
@@ -174,14 +206,30 @@ class vccsubmission_form extends \moodleform {
         foreach ($address->options as $elementname => $element) {
             if (!empty($element['rules'])) {
                 $rules = $element['rules'];
-                // echo '<pre>';
-                // var_dump($rules);
-                // echo '</pre>';
-                // die();
                 foreach ($rules as $key => $rule) {
                     $mform->addRule($elementname, $rule['message'], $key, $rule['format'], 'client');
                 }
             }
+        }
+
+        // Set default values from auto-populated parent address data
+        if (!empty($this->parentdata['address']['street'])) {
+            $mform->setDefault('mailing_streetaddress', $this->parentdata['address']['street']);
+        }
+        if (!empty($this->parentdata['address']['apartment'])) {
+            $mform->setDefault('mailing_apartment', $this->parentdata['address']['apartment']);
+        }
+        if (!empty($this->parentdata['address']['city'])) {
+            $mform->setDefault('mailing_city', $this->parentdata['address']['city']);
+        }
+        if (!empty($this->parentdata['address']['state'])) {
+            $mform->setDefault('mailing_state', $this->parentdata['address']['state']);
+        }
+        if (!empty($this->parentdata['address']['country'])) {
+            $mform->setDefault('mailing_country', $this->parentdata['address']['country']);
+        }
+        if (!empty($this->parentdata['address']['zipcode'])) {
+            $mform->setDefault('mailing_zipcode', $this->parentdata['address']['zipcode']);
         }
 
         // // Billing address-related fields.
@@ -211,47 +259,105 @@ class vccsubmission_form extends \moodleform {
         // }
 
 
+        // echo '<pre>';
+        // var_dump($this->studentdata);
+        // echo '</pre>';
+        // die();
 
+        // Phase 3: Student-specific sections - Auto-populated from database, no manual entry required
+        $studentcount = count($this->studentdata);
 
-        // Student-specific input fields.
-        // Add one or many students to the form, and update the 'Student' header with corresponding student firstname in real-time with JavaScript.
-        $repeatarray = [];
-        $repeatoptions = [];
+        // Hidden field to store total number of students for form processing
+        $mform->addElement('hidden', 'students', $studentcount);
+        $mform->setType('students', PARAM_INT);
 
-        // Add a hidden input to store selected courses
-        $repeatarray['studentheader'] = $mform->createElement('header', 'studentheader', get_string('student', 'local_equipment'), ['class' => 'local-equipment-student-header']);
-        $repeatarray['delete'] = $mform->createElement('html', '<button type="button" class="local-equipment-remove-student btn btn-secondary"><i class="fa fa-trash"></i>&nbsp;&nbsp;' . get_string('deletestudent', 'local_equipment') . '</button>');
-        $repeatarray['student_firstname'] = $mform->createElement('text', 'student_firstname', get_string('firstname'));
-        $repeatarray['student_lastname'] = $mform->createElement('text', 'student_lastname', get_string('lastname'));
-        $repeatarray['student_email'] = $mform->createElement('text', 'student_email', get_string('email'));
-        $repeatarray['student_dob'] = $mform->createElement('date_selector', 'student_dob', get_string('dateofbirth', 'local_equipment'));
-        $repeatarray['student_courses'] = $mform->createElement('select', 'student_courses', get_string('selectcourses', 'local_equipment'), $coursesformatted_properlynamed, ['multiple' => true, 'size' => 10, 'class' => 'custom-multiselect']);
+        foreach ($this->studentdata as $index => $student) {
+            // Student header with auto-populated name
+            $mform->addElement(
+                'header',
+                "studentheader_{$index}",
+                get_string('student', 'local_equipment') . ': ' . $student['firstname'] . ' ' . $student['lastname']
+            );
 
-        // Set types.
-        $repeatoptions['students']['type'] = PARAM_INT;
-        $repeatoptions['student_firstname']['type'] = PARAM_TEXT;
-        $repeatoptions['student_lastname']['type'] = PARAM_TEXT;
-        $repeatoptions['student_email']['type'] = PARAM_EMAIL;
-        $repeatoptions['student_dob']['type'] = PARAM_INT;
-        $repeatoptions['student_courses']['type'] = PARAM_RAW;
+            // Set the student ID as a hidden variable for use in later processing.
+            $mform->addElement('hidden', "student_id[{$index}]", $student['id']);
+            $mform->setType("student_id[{$index}]", PARAM_TEXT);
 
-        // Set rules.
-        $repeatoptions['student_firstname']['rule'] = 'required';
-        $repeatoptions['student_lastname']['rule'] = 'required';
-        $repeatoptions['student_dob']['rule'] = 'required';
+            // Student first name - display as label (read-only)
+            $mform->addElement('html', '<div class="row mb-3">
+                <label class="col-sm-3 col-form-label">' . get_string('firstname') . '</label>
+                <div class="col-sm-9">
+                    <div class="form-control-plaintext">' . s($student['firstname']) . '</div>
+                </div>
+            </div>');
+            $mform->addElement('hidden', "student_firstname[{$index}]", $student['firstname']);
+            $mform->setType("student_firstname[{$index}]", PARAM_TEXT);
 
-        // Set other options.
-        $repeatoptions['studentheader']['expanded'] = false; // This is not working for some reason.
+            // Student last name - display as label (read-only)
+            $mform->addElement('html', '<div class="row mb-3">
+                <label class="col-sm-3 col-form-label">' . get_string('lastname') . '</label>
+                <div class="col-sm-9">
+                    <div class="form-control-plaintext">' . s($student['lastname']) . '</div>
+                </div>
+            </div>');
+            $mform->addElement('hidden', "student_lastname[{$index}]", $student['lastname']);
+            $mform->setType("student_lastname[{$index}]", PARAM_TEXT);
 
-        $this->repeat_elements(
-            $repeatarray,
-            $repeatno,
-            $repeatoptions,
-            'students',
-            $addfieldsname,
-            1,
-            get_string('addstudent', 'local_equipment'),
-        );
+            // Student email - display as label (read-only)
+            $mform->addElement('html', '<div class="row mb-3">
+                <label class="col-sm-3 col-form-label">' . get_string('email') . '</label>
+                <div class="col-sm-9">
+                    <div class="form-control-plaintext">' . s($student['email']) . '</div>
+                </div>
+            </div>');
+            $mform->addElement('hidden', "student_email[{$index}]", $student['email']);
+            $mform->setType("student_email[{$index}]", PARAM_EMAIL);
+
+            // Student date of birth - editable date selector (parents can update this)
+            $mform->addElement('date_selector', "student_dob[{$index}]", get_string('dateofbirth', 'local_equipment'));
+            $mform->setType("student_dob[{$index}]", PARAM_INT);
+            $mform->addRule("student_dob[{$index}]", get_string('required'), 'required', null, 'client');
+
+            // Set default date of birth if available
+            if (!empty($student['dateofbirth'])) {
+                $mform->setDefault("student_dob[{$index}]", $student['dateofbirth']);
+            }
+
+            // Student courses - display as text list (read-only, auto-populated from enrollments)
+            $courselisthtml = '<div class="row mb-3">
+                <label class="col-sm-3 col-form-label">' . get_string('courses', 'core') . '</label>
+                <div class="col-sm-9">
+                    <div class="form-control-plaintext">';
+
+            $courseids = [];
+            $coursenames = [];
+            foreach ($student['courses'] as $course) {
+                $courseids[] = $course->id;
+                $coursenames[] = s($course->fullname);
+            }
+
+            $courselisthtml .= implode('<br>', $coursenames);
+            $courselisthtml .= '</div></div></div>';
+
+            $mform->addElement('html', $courselisthtml);
+
+            // Hidden field to store course IDs for form processing
+            $mform->addElement('hidden', "student_courses[{$index}]", implode(',', $courseids));
+            $mform->setType("student_courses[{$index}]", PARAM_RAW);
+        }
+
+        // Display any warnings about student eligibility
+        if (!empty($this->warnings)) {
+            // \core\output\html_writer::div();
+            $mform->addElement('html', '<div class="alert border bg-secondary p-3" role="alert">');
+            $mform->addElement('html', '<p>' . get_string('somestudentsnottakingcourses', 'local_equipment') . '</p>');
+            foreach ($this->warnings as $warning) {
+                $mform->addElement('html', '<div class="ms-4">' . $warning . '</div>');
+            }
+            $mform->addElement('html', '</div>');
+        }
+
+        $mform->addElement('header', 'pickup_header', get_string('pickupinformation', 'local_equipment'));
 
         // Pickup input fields.
         $formattedpickuplocations = ['0' => get_string('contactusforpickup', 'local_equipment')];
@@ -273,8 +379,8 @@ class vccsubmission_form extends \moodleform {
             $partnership ? $name = $partnership->name : $name = $pickup->pickup_city;
 
             $datetime = userdate($pickup->starttime, get_string('strftimedate', 'langconfig')) . ' ' .
-            userdate($pickup->starttime, get_string('strftimetime', 'langconfig')) . ' - ' .
-            userdate($pickup->endtime, get_string('strftimetime', 'langconfig'));
+                userdate($pickup->starttime, get_string('strftimetime', 'langconfig')) . ' - ' .
+                userdate($pickup->endtime, get_string('strftimetime', 'langconfig'));
 
             $pattern = '/#(.*?)#/';
 
@@ -295,7 +401,6 @@ class vccsubmission_form extends \moodleform {
                 if (isset($pickuptimedata[$id]) && isset($pickuptimedata[$id][$i])) {
                     $formattedpickuptimes[$id] = $pickuptimedata[$id][$i];
                     $i++;
-
                 }
             }
             // if ($USER->id == '2') {
@@ -343,12 +448,14 @@ class vccsubmission_form extends \moodleform {
         $mform->addElement('textarea', 'usernotes', get_string('usernotes', 'local_equipment'));
         $mform->setType('usernotes', PARAM_TEXT);
 
+        $mform->addElement('header', 'agreements_header', get_string('agreementsandconsent', 'local_equipment'));
+
         // Agreements
         $agreements = local_equipment_get_active_agreements();
         $mform->addElement('hidden', 'agreements', count($agreements));
         $mform->setType('agreements', PARAM_INT);
 
-        $mform->addElement('html', '<hr class="my-4 border-gray">');
+        // $mform->addElement('html', '<hr class="my-4 border-gray">');
         $i = 0;
         foreach ($agreements as $agreement) {
             $mform->addElement('html', '<h4 class="agreement-title mt-4 mb-4 text-center">' . $agreement->title . '</h4>');
@@ -492,5 +599,142 @@ class vccsubmission_form extends \moodleform {
         }
 
         return $errors;
+    }
+
+    /**
+     * Load parent data using existing functions
+     *
+     * @param int $userid Parent user ID
+     */
+    private function load_parent_data(int $userid): void {
+        global $USER, $DB;
+
+        // Get parent data using existing equipment user table
+        $equipmentuser = $DB->get_record('local_equipment_user', ['userid' => $userid]);
+
+        $this->parentdata = [
+            'email' => $USER->email,
+            'firstname' => $USER->firstname,
+            'lastname' => $USER->lastname,
+            'phone' => $this->get_formatted_phone($USER),
+            'partnership' => $equipmentuser->partnershipid ?? '',
+            'address' => [
+                'street' => $equipmentuser->mailing_streetaddress ?? '',
+                'apartment' => $equipmentuser->mailing_apartment ?? '',
+                'city' => $equipmentuser->mailing_city ?? '',
+                'state' => $equipmentuser->mailing_state ?? '',
+                'country' => $equipmentuser->mailing_country ?? '',
+                'zipcode' => $equipmentuser->mailing_zipcode ?? ''
+            ]
+        ];
+    }
+
+    /**
+     * Load student data using existing functions
+     *
+     * @param int $parentuserid Parent user ID
+     */
+    private function load_student_data(int $parentuserid): void {
+        global $DB;
+
+        // Get students using existing function
+        $students = local_equipment_get_students_of_parent($parentuserid);
+
+        if (empty($students)) {
+            $this->studentdata = [];
+            return;
+        }
+
+        $this->studentdata = [];
+        foreach ($students as $student) {
+            // Get student's course enrollments
+            // $sql = "SELECT c.id, c.fullname, c.shortname, ue.timeend as enddate
+            //         FROM {course} c
+            //         JOIN {enrol} e ON e.courseid = c.id
+            //         JOIN {user_enrolments} ue ON ue.enrolid = e.id
+            //         WHERE ue.userid = :userid AND ue.status = 0";
+
+            // $courses = $DB->get_records_sql($sql, ['userid' => $student->id]);
+
+            $ongoing_courses = local_equipment_get_student_courses_with_future_end_dates($student->id);
+            // if ($student->id == '3546') {
+
+            //     echo '<pre>';
+            //     var_dump($courses);
+            //     echo '</pre>';
+            //     echo '<br />';
+            //     echo '<br />';
+            //     echo '<br />';
+
+
+
+            // }
+
+            // $allstudents = local_equipment_get_students_in_courses_with_future_end_dates();
+
+            // Only include students with complete data and active courses
+            if (!empty($student->firstname) && !empty($student->email) && !empty($ongoing_courses)) {
+                // Get date of birth from equipment user table
+                $equipmentstudent = $DB->get_record('local_equipment_user', ['userid' => $student->id]);
+
+                $this->studentdata[] = [
+                    'id' => $student->id,
+                    'firstname' => $student->firstname,
+                    'lastname' => $student->lastname,
+                    'email' => $student->email,
+                    'dateofbirth' => $equipmentstudent->dateofbirth ?? null,
+                    'courses' => $ongoing_courses
+                ];
+            } else {
+                // Add warning for incomplete student data
+                if (empty($student->firstname) || empty($student->email)) {
+                    $this->warnings[] = get_string('incompletestudentdata', 'local_equipment');
+                } else if (empty($ongoing_courses)) {
+                    $this->warnings[] = get_string(
+                        'studentnoenrollments',
+                        'local_equipment',
+                        ($student->firstname ?? '') . ' ' . ($student->lastname ?? '')
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * Validate student eligibility for form access
+     */
+    private function validate_student_eligibility(): void {
+        // Check if any students have future course enrollments
+        $hasfutureenrollments = false;
+        $currenttime = time();
+
+        foreach ($this->studentdata as $student) {
+            foreach ($student['courses'] as $course) {
+                if (isset($course->enddate) && $course->enddate > $currenttime) {
+                    $hasfutureenrollments = true;
+                    break 2;
+                }
+            }
+        }
+
+        if (!$hasfutureenrollments) {
+            $this->warnings[] = get_string('nofutureenrollments', 'local_equipment');
+        }
+    }
+
+    /**
+     * Get formatted phone number
+     *
+     * @param object $user User object
+     * @return string Formatted phone number
+     */
+    private function get_formatted_phone($user): string {
+        $phone = $user->phone2 ?: $user->phone1;
+        if (empty($phone)) {
+            return '';
+        }
+
+        $phoneobj = local_equipment_parse_phone_number($phone);
+        return local_equipment_format_phone_number($phoneobj->phone ?? $phone);
     }
 }

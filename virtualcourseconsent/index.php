@@ -235,10 +235,12 @@ if ($mform->is_cancelled()) {
         $studentids = [];
         for ($i = 0; $i < $data->students; $i++) {
             $vccsubmission_student = new stdClass();
-            // The string value of $i.
-            $s = strval($i);
-            // The selectedcourses string should have already been decoded above.
-            $selectedcourses = $data->student_courses[$i];
+            // Convert comma-separated string to array of course IDs
+            $coursestring = $data->student_courses[$i];
+            $selectedcourses = explode(',', $coursestring);
+            $selectedcourses = array_map('trim', $selectedcourses); // Remove whitespace
+            $selectedcourses = array_filter($selectedcourses); // Remove empty values
+            $selectedcourses = array_map('intval', $selectedcourses); // Ensure integer values
 
 
             $vccsubmission_student->userid = $data->student_id[$i] ?? 0;
@@ -253,6 +255,20 @@ if ($mform->is_cancelled()) {
             $vccsubmission_student->id = $DB->insert_record('local_equipment_vccsubmission_student', $vccsubmission_student);
             // Make an array of student IDs for later use.
             $studentids[] = $vccsubmission_student->id;
+
+            $studentrecord = $vccsubmission_student;
+            $studentrecord->partnershipid = $data->partnership;
+            $studentrecord_existing = $DB->get_record('local_equipment_user', ['userid' => $studentrecord->userid]);
+
+            // Sometimes student records will already exist within the database, but are not totally filled out. For example, a
+            // student may not be associated with a partnership or their date of birth may not have been saved properly in the past.
+            // The statement should reconcile that.
+            if ($studentrecord_existing) {
+                $studentrecord->id = $studentrecord_existing->id;
+                $DB->update_record('local_equipment_user', $studentrecord);
+            } else {
+                $studentrecord->id = $DB->insert_record('local_equipment_user', $studentrecord);
+            }
 
             // Insert student course records
             foreach ($selectedcourses as $courseid) {
@@ -352,59 +368,68 @@ if ($mform->is_cancelled()) {
 
         // Commit transaction
         $transaction->allow_commit();
-
     } catch (Exception $e) {
         $transaction->rollback($e);
         $success = false;
     }
 
     if ($success) {
-        $successmsg = get_string('formsubmitted', 'local_equipment',  get_string('virtualcourseconsent', 'local_equipment'));
         $textuser = new stdClass();
         $textuser->tonumber = $vccsubmission->phone;
 
         $provider = get_config('local_equipment', 'otpgateway');
-        $phoneisverified = $DB->get_record('local_equipment_phonecommunication_otp', ['userid' => $USER->id, 'tophonenumber' => $textuser->tonumber, 'phoneisverified' => 1], '*', IGNORE_MULTIPLE);
+        $phoneisverified = $DB->get_record(
+            'local_equipment_phonecommunication_otp',
+            ['userid' => $USER->id, 'tophonenumber' => $textuser->tonumber, 'phoneisverified' => 1],
+            '*',
+            IGNORE_MULTIPLE
+        );
 
-        if ($provider && !$phoneisverified) {
-            $textuser->notes = [
-                'shortname' => $SITE->shortname
-            ];
-
-            if (
-                $USER->phone2 == '' && $USER->phone2 != $vccsubmission->phone
-            ) {
-                $USER->phone2 = $vccsubmission->phone;
-                $DB->update_record('user', $USER);
-            }
-            $responseobject = local_equipment_send_secure_otp($provider, $textuser->tonumber);
-
-            // We're eventually going to need to handle Moodle debugging options. Check out 'testoutgoingmailconf.php' for an example.
-
-            if ($responseobject->success) {
-                $redirecturl = new moodle_url('/local/equipment/phonecommunication/verifyotp.php');
-                $msgparams = new stdClass();
-                $msgparams->tonumber = $textuser->tonumber;
-                $msgparams->link = $link;
-                $successmsg = $successmsg . "<br /><br />" . get_string('phoneverificationrequire', 'local_equipment', $msgparams);
-                $successmsg = $successmsg . " " . get_string('acodehasbeensent', 'local_equipment', $msgparams);
-                $notificationtype = \core\output\notification::NOTIFY_SUCCESS;
-                redirect($redirecturl, $successmsg, null, $notificationtype);
-            } else {
-                $notificationtype = 'notifyproblem';
-                $successmsg = get_string('senttextfailure', 'local_equipment', $responseobject->errormessage);
-            }
-        } else if (!$provider) {
-            $successmsg = $successmsg . "<br /><br />" . get_string('noproviderfound_user', 'local_equipment');
+        // Update user phone if different
+        if ($USER->phone2 == '' && $USER->phone2 != $vccsubmission->phone) {
+            $USER->phone2 = $vccsubmission->phone;
+            $DB->update_record('user', $USER);
         }
 
+        // Check if phone verification is needed
+        if ($provider && !$phoneisverified) {
+            $responseobject = local_equipment_send_secure_otp($provider, $textuser->tonumber);
 
-        redirect(
-            new moodle_url('/'),
-            $successmsg,
-            null,
-            \core\output\notification::NOTIFY_SUCCESS
-        );
+            if ($responseobject->success) {
+                // Redirect to verification page with simple success message
+                $successmsg = get_string('formsubmitted', 'local_equipment', get_string('virtualcourseconsent', 'local_equipment'));
+                $successmsg .= ' ' . get_string('phoneverificationrequire', 'local_equipment');
+
+                redirect(
+                    new moodle_url('/local/equipment/phonecommunication/verifyotp.php'),
+                    $successmsg,
+                    null,
+                    \core\output\notification::NOTIFY_SUCCESS
+                );
+            } else {
+                // Handle SMS failure
+                $errormsg = get_string('senttextfailure', 'local_equipment', $responseobject->errormessage);
+                redirect(
+                    new moodle_url('/local/equipment/virtualcourseconsent/index.php'),
+                    $errormsg,
+                    null,
+                    \core\output\notification::NOTIFY_ERROR
+                );
+            }
+        } else {
+            // No phone verification needed or no provider configured
+            $successmsg = get_string('formsubmitted', 'local_equipment', get_string('virtualcourseconsent', 'local_equipment'));
+            if (!$provider) {
+                $successmsg .= ' ' . get_string('noproviderfound_user', 'local_equipment');
+            }
+
+            redirect(
+                new moodle_url('/'),
+                $successmsg,
+                null,
+                \core\output\notification::NOTIFY_SUCCESS
+            );
+        }
     } else {
         redirect(
             new moodle_url('/local/equipment/virtualcourseconsent/index.php'),
@@ -418,4 +443,3 @@ if ($mform->is_cancelled()) {
     $mform->display();
     echo $OUTPUT->footer();
 }
-

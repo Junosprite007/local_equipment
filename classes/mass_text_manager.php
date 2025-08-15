@@ -54,7 +54,7 @@ class mass_text_manager {
     }
 
     /**
-     * Get students enrolled in courses with future end dates.
+     * Get students enrolled in courses with end dates.
      *
      * @return array Array of unique student user IDs
      */
@@ -73,6 +73,39 @@ class mass_text_manager {
                 ORDER BY u.id";
 
         $params = ['currenttime' => $currenttime];
+        $records = $this->db->get_records_sql($sql, $params);
+
+        return array_keys($records);
+    }
+
+    /**
+     * Get students enrolled in courses with end dates that are in the future, i.e. courses that are still ongoing.
+     *
+     * @return array Array of unique student user IDs
+     */
+    public function get_students_in_courses_with_future_end_dates(): array {
+        $currenttime = $this->clock->now()->getTimestamp();
+
+        $sql = "SELECT DISTINCT u.id as studentid
+                FROM {user} u
+                JOIN {user_enrolments} ue ON ue.userid = u.id
+                JOIN {enrol} e ON e.id = ue.enrolid
+                JOIN {course} c ON c.id = e.courseid
+                JOIN {context} ctx ON ctx.instanceid = c.id AND ctx.contextlevel = :contextlevel
+                JOIN {role_assignments} ra ON ra.userid = u.id AND ra.contextid = ctx.id
+                JOIN {role} r ON r.id = ra.roleid
+                WHERE c.enddate > :currenttime
+                AND c.enddate IS NOT NULL
+                AND ue.status = 0
+                AND u.deleted = 0
+                AND r.shortname = :studentrole
+                ORDER BY u.id";
+
+        $params = [
+            'currenttime' => $currenttime,
+            'contextlevel' => CONTEXT_COURSE,  // Context level for courses (50)
+            'studentrole' => 'student'         // Standard student role shortname
+        ];
         $records = $this->db->get_records_sql($sql, $params);
 
         return array_keys($records);

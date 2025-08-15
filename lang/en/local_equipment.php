@@ -72,6 +72,7 @@ $string['courseid'] = 'Course ID';
 $string['courseids'] = 'Course IDs';
 $string['coursename'] = 'Course name';
 $string['courses'] = 'Courses';
+$string['courseequipment'] = 'Courses equipment';
 $string['createcategoryhere'] = 'Create a category here.';
 $string['createcoursehere'] = 'Create a course here.';
 $string['deletepartnership'] = 'Delete partnership';
@@ -109,6 +110,7 @@ $string['mailing_address'] = 'Mailing address';
 $string['mailing_extrainstructions'] = 'Mailing extra instructions';
 $string['manage'] = 'Manage';
 $string['manageagreements'] = 'Manage agreements';
+$string['managecourseequipment'] = 'Manage course equipment';
 $string['manageequipment'] = 'Manage equipment';
 $string['managekitpickuptimes'] = 'Manage kit pickup times';
 $string['managepartnerships'] = 'Manage partnerships';
@@ -2017,4 +2019,10 @@ $string['dashboardhelp'] = 'This dashboard provides access to all Equipment plug
 
 // New VCC form strings
 $string['theformyouattemptedtoaccessisnotcurrentlyavailable'] = 'The form you attempted to access is not currently available. We think this may be the form you\'re actually trying to access instead, but who knows? We could be wrong.';
-$string['quickhelp'] = 'Quick Help';
+$string['incompletestudentdata'] = 'Incomplete student data';
+$string['nofutureenrollments'] = 'No future enrollments';
+$string['nostudentsenrolled'] = 'No students enrolled';
+$string['agreementsandconsent'] = 'Agreements & Consent';
+$string['studentnoenrollments'] = 'No active enrollments found for {$a}.';
+$string['somestudentsnottakingcourses'] = 'It looks like you have other students in our system who are not enrolled in any current courses for this year. If this is expected, you can disregard this message. Otherwise, please contact us to get the rest of your students enrolled!';
+$string['nousersfound'] = 'No users found';

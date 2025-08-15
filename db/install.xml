@@ -146,7 +146,7 @@
             </INDEXES>
         </TABLE>
         <!-- additional user (parent) information -->
-        <TABLE NAME="local_equipment_user" COMMENT="An extension to Moodle's core 'user' table that hold different information">
+        <TABLE NAME="local_equipment_user" COMMENT="additional user information">
             <FIELDS>
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
                 <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the user"/>
@@ -176,6 +176,8 @@
                 <FIELD NAME="billing_country" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
                 <FIELD NAME="billing_zipcode" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
                 <FIELD NAME="billing_extrainstructions" TYPE="text" NOTNULL="false"/>
+                <!-- Date of birth -->
+                <FIELD NAME="dateofbirth" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="User's date of birth as timestamp"/>
 
                 <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Timestamp of when the record was created"/>
                 <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Timestamp of when the record was last modified"/>

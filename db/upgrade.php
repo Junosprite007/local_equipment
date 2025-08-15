@@ -1158,5 +1158,20 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025072400, 'local', 'equipment');
     }
 
+    // Add dateofbirth field to local_equipment_user table for VCC form enhancement
+    if ($oldversion < 2025081401) {
+        // Define field dateofbirth to be added to local_equipment_user.
+        $table = new xmldb_table('local_equipment_user');
+        $field = new xmldb_field('dateofbirth', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'billing_extrainstructions');
+
+        // Conditionally launch add field dateofbirth.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Equipment dateofbirth field savepoint reached.
+        upgrade_plugin_savepoint(true, 2025081401, 'local', 'equipment');
+    }
+
     return true;
 }

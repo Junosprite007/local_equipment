@@ -3972,13 +3972,62 @@ function local_equipment_generate_family_notification(string $familyname, stdCla
 }
 
 /**
- * Get students enrolled in courses with future end dates.
+ * Get students enrolled in courses with end dates.
  *
  * @return array Array of unique student user IDs
  */
 function local_equipment_get_students_in_courses_with_end_dates() {
     $manager = new \local_equipment\mass_text_manager();
     return $manager->get_students_in_courses_with_end_dates();
+}
+
+/**
+ * Get students enrolled in courses with future end dates.
+ *
+ * @return array Array of unique student user IDs
+ */
+function local_equipment_get_students_in_courses_with_future_end_dates() {
+    $manager = new \local_equipment\mass_text_manager();
+    return $manager->get_students_in_courses_with_future_end_dates();
+}
+
+/**
+ * Get all courses that a specific student is enrolled in that have end dates that are in the future.
+ *
+ * @param int $userid The student's ID
+ * @return array Array of unique course IDs
+ */
+function local_equipment_get_student_courses_with_future_end_dates($userid) {
+    global $DB;
+
+    $currenttime = \core\di::get(\core\clock::class)->now()->getTimestamp();
+
+    $sql = "SELECT DISTINCT c.*
+            FROM {course} c
+            JOIN {enrol} e ON e.courseid = c.id
+            JOIN {user_enrolments} ue ON ue.enrolid = e.id
+            JOIN {user} u ON u.id = ue.userid
+            JOIN {context} ctx ON ctx.instanceid = c.id AND ctx.contextlevel = :contextlevel
+            JOIN {role_assignments} ra ON ra.userid = u.id AND ra.contextid = ctx.id
+            JOIN {role} r ON r.id = ra.roleid
+            WHERE c.enddate > :currenttime
+            AND c.enddate IS NOT NULL
+            AND ue.status = 0
+            AND u.deleted = 0
+            AND u.id = :userid
+            AND r.shortname = :studentrole
+            ORDER BY c.id";
+
+    $params = [
+        'currenttime' => $currenttime,
+        'contextlevel' => CONTEXT_COURSE,  // Context level for courses (50)
+        'userid' => $userid,               // Filter by specific student
+        'studentrole' => 'student'         // Standard student role shortname
+    ];
+
+    $records = $DB->get_records_sql($sql, $params);
+
+    return $records;
 }
 
 /**
