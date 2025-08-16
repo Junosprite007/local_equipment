@@ -206,7 +206,9 @@ if ($mform->is_cancelled()) {
         // $vccsubmission->pickuppersondetails = NULL;
         // $vccsubmission->usernotes = NULL;
 
-        $vccsubmission->timecreated = $vccsubmission->timemodified = time();
+        $clock = \core\di::get(\core\clock::class);
+        $now = $clock->now()->getTimestamp();
+        $vccsubmission->timecreated = $vccsubmission->timemodified = $now;
 
         // Insert vccsubmission record.
         $vccsubmission->id = $DB->insert_record('local_equipment_vccsubmission', $vccsubmission);
@@ -224,6 +226,9 @@ if ($mform->is_cancelled()) {
         $exchangesubmission->pickup_person_phone = $data->pickuppersonphone ?? '';
         $exchangesubmission->pickup_person_details = $data->pickuppersondetails ?? '';
         $exchangesubmission->user_notes = $data->usernotes ?? '';
+
+        $now = $clock->now()->getTimestamp();
+        $exchangesubmission->timecreated = $exchangesubmission->timemodified = $now;
 
         // Insert exchangesubmission record.
         $exchangesubmission->id = $DB->insert_record('local_equipment_exchange_submission', $exchangesubmission);
