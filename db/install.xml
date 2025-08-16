@@ -197,6 +197,7 @@
                 <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the parent user"/>
                 <FIELD NAME="partnershipid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the selected partnership"/>
                 <FIELD NAME="pickupid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="ID of the selected pickup time"/>
+                <FIELD NAME="exchange_partnershipid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="ID of the selected exchange location partnership"/>
                 <FIELD NAME="studentids" TYPE="text" NOTNULL="false"/>
                 <FIELD NAME="agreementids" TYPE="text" NOTNULL="false"/>
                 <FIELD NAME="confirmationid" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="A confirmation id, which should just be a hash of this table's 'id' field. This is intended for easy and secure lookups."/>
@@ -244,6 +245,7 @@
                 <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
                 <KEY NAME="partnershipid" TYPE="foreign" FIELDS="partnershipid" REFTABLE="local_equipment_partnership" REFFIELDS="id"/>
                 <KEY NAME="pickupid" TYPE="foreign" FIELDS="pickupid" REFTABLE="local_equipment_pickup" REFFIELDS="id"/>
+                <KEY NAME="exchange_partnershipid" TYPE="foreign" FIELDS="exchange_partnershipid" REFTABLE="local_equipment_partnership" REFFIELDS="id"/>
             </KEYS>
             <INDEXES>
                 <INDEX NAME="confirmationid" UNIQUE="false" FIELDS="confirmationid"/>
@@ -277,7 +279,7 @@
                 <FIELD NAME="firstname" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Student's first name"/>
                 <FIELD NAME="lastname" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Student's last name"/>
                 <FIELD NAME="email" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Student's email"/>
-<FIELD NAME="dateofbirth" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Student's date of birth"/>
+                <FIELD NAME="dateofbirth" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Student's date of birth"/>
 
                 <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Timestamp of when the record was created"/>
             </FIELDS>
@@ -287,7 +289,7 @@
                 <KEY NAME="vccsubmissionid" TYPE="foreign" FIELDS="vccsubmissionid" REFTABLE="local_equipment_vccsubmission" REFFIELDS="id"/>
             </KEYS>
             <INDEXES>
-<INDEX NAME="email" UNIQUE="false" FIELDS="email"/>
+                <INDEX NAME="email" UNIQUE="false" FIELDS="email"/>
 
                 <INDEX NAME="timecreated" UNIQUE="false" FIELDS="timecreated"/>
             </INDEXES>
@@ -333,6 +335,7 @@
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
                 <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
                 <FIELD NAME="exchangeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="exchange_partnershipid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="ID of the selected exchange location partnership"/>
                 <FIELD NAME="reminder_code" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
                 <FIELD NAME="reminder_method" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
                 <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -342,6 +345,7 @@
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
                 <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
                 <KEY NAME="exchangeid" TYPE="foreign" FIELDS="exchangeid" REFTABLE="local_equipment_pickup" REFFIELDS="id"/>
+                <KEY NAME="exchange_partnershipid" TYPE="foreign" FIELDS="exchange_partnershipid" REFTABLE="local_equipment_partnership" REFFIELDS="id"/>
             </KEYS>
         </TABLE>
         <!-- Exchange submissions -->
@@ -350,6 +354,7 @@
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
                 <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the user submitting the exchange form"/>
                 <FIELD NAME="exchangeid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the selected exchange time"/>
+                <FIELD NAME="exchange_partnershipid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="ID of the selected exchange location partnership"/>
                 <FIELD NAME="pickup_method" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Method of equipment pickup"/>
                 <FIELD NAME="pickup_person_name" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Name of the person picking up the equipment (if different from user)"/>
                 <FIELD NAME="pickup_person_phone" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Phone number of the person picking up"/>
@@ -362,6 +367,7 @@
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
                 <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
                 <KEY NAME="exchangeid" TYPE="foreign" FIELDS="exchangeid" REFTABLE="local_equipment_pickup" REFFIELDS="id"/>
+                <KEY NAME="exchange_partnershipid" TYPE="foreign" FIELDS="exchange_partnershipid" REFTABLE="local_equipment_partnership" REFFIELDS="id"/>
             </KEYS>
             <INDEXES>
                 <INDEX NAME="timecreated" UNIQUE="false" FIELDS="timecreated"/>

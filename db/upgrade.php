@@ -1194,5 +1194,47 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025081500, 'local', 'equipment');
     }
 
+    // Add exchange_partnershipid field for VCC form refactoring
+    if ($oldversion < 2025081601) {
+        // Add exchange_partnershipid field to local_equipment_vccsubmission table
+        $table = new xmldb_table('local_equipment_vccsubmission');
+        $field = new xmldb_field('exchange_partnershipid', XMLDB_TYPE_INTEGER, '10', null, false, null, null, 'partnershipid');
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add foreign key for exchange_partnershipid
+        $key = new xmldb_key('exchange_partnershipid', XMLDB_KEY_FOREIGN, ['exchange_partnershipid'], 'local_equipment_partnership', ['id']);
+        $dbman->add_key($table, $key);
+
+        // Add exchange_partnershipid field to local_equipment_exchange_submission table
+        $table = new xmldb_table('local_equipment_exchange_submission');
+        $field = new xmldb_field('exchange_partnershipid', XMLDB_TYPE_INTEGER, '10', null, false, null, null, 'userid');
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add foreign key for exchange_partnershipid
+        $key = new xmldb_key('exchange_partnershipid', XMLDB_KEY_FOREIGN, ['exchange_partnershipid'], 'local_equipment_partnership', ['id']);
+        $dbman->add_key($table, $key);
+
+        // Add exchange_partnershipid field to local_equipment_user_exchange table
+        $table = new xmldb_table('local_equipment_user_exchange');
+        $field = new xmldb_field('exchange_partnershipid', XMLDB_TYPE_INTEGER, '10', null, false, null, null, 'userid');
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add foreign key for exchange_partnershipid
+        $key = new xmldb_key('exchange_partnershipid', XMLDB_KEY_FOREIGN, ['exchange_partnershipid'], 'local_equipment_partnership', ['id']);
+        $dbman->add_key($table, $key);
+
+        // Equipment exchange_partnershipid field savepoint reached
+        upgrade_plugin_savepoint(true, 2025081601, 'local', 'equipment');
+    }
+
     return true;
 }

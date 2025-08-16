@@ -371,6 +371,10 @@ $string['pickup_person'] = 'Pickup person';
 $string['pickup_personname'] = 'Pickup person name';
 $string['pickup_personphone'] = 'Pickup person phone';
 $string['pickuplocationtime'] = 'Pickup location & time';
+$string['exchangelocation'] = 'Exchange location';
+$string['pickupdatetime'] = 'Pickup date & time';
+$string['haveuscontactyou'] = 'Have us contact you with pickup/drop-off timeframes';
+$string['exchangelocationnotice'] = 'Please note: If specific pickup times are not available for your selected location, we will contact you with available timeframes.';
 $string['pickupmethod'] = 'Equipment pickup method';
 $string['pickupother'] = 'Someone else will pick up all equipment on my behalf';
 $string['pickuppersondetails'] = 'Additional details for pickup';
@@ -2040,3 +2044,4 @@ $string['vccformwarning_desc'] = 'A warning alert box that will appear at the to
 <br /><br />
 
 Leave this setting blank if you don\'t want anything to appear at the top of the form.';
+$string['selectexchangelocation'] = 'Select exchange location';

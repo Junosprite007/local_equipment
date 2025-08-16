@@ -376,15 +376,40 @@ class vccsubmission_form extends \moodleform {
 
         $mform->addElement('header', 'pickup_header', get_string('pickupinformation', 'local_equipment'));
 
-        // Pickup input fields.
-        $formattedpickuplocations = ['0' => get_string('contactusforpickup', 'local_equipment')];
-        $formattedpickuptimes = ['0' => get_string('contactusforpickup', 'local_equipment')];
-        $pickuptimedata = local_equipment_get_partnerships_with_pickuptimes();
+        // Exchange location field - populated from active partnerships
+        $exchangelocations = ['' => get_string('selectexchangelocation', 'local_equipment')];
+        $partnerships = $DB->get_records('local_equipment_partnership', ['active' => 1], 'name ASC');
+
+        foreach ($partnerships as $partnership) {
+            $locationstring = $partnership->name;
+            if (!empty($partnership->pickup_streetaddress)) {
+                $locationstring .= ' — ' . $partnership->pickup_streetaddress;
+                if (!empty($partnership->pickup_city) && !empty($partnership->pickup_state)) {
+                    $locationstring .= ', ' . $partnership->pickup_city . ', ' . $partnership->pickup_state;
+                    if (!empty($partnership->pickup_zipcode)) {
+                        $locationstring .= ' ' . $partnership->pickup_zipcode;
+                    }
+                }
+            }
+            $exchangelocations[$partnership->id] = $locationstring;
+        }
+
+        $mform->addElement(
+            'select',
+            'exchange_partnershipid',
+            get_string('exchangelocation', 'local_equipment'),
+            $exchangelocations
+        );
+        $mform->addRule('exchange_partnershipid', get_string('required'), 'required', null, 'client');
+
+        // Add informational notice between location and time fields
+        $mform->addElement('html', '<div class="alert alert-info mt-2 mb-3" role="alert">' .
+            get_string('exchangelocationnotice', 'local_equipment') . '</div>');
+
+        // Pickup date & time field - similar to current functionality but with default selection
+        $formattedpickuptimes = ['0' => get_string('haveuscontactyou', 'local_equipment')];
         $pickuptimes = $DB->get_records('local_equipment_pickup', ['status' => 'confirmed']);
 
-
-        $i = 0;
-        // Creates the list of formatted pickup locations and times for the user to select from.
         foreach ($pickuptimes as $id => $pickup) {
             $showpickuptime = $pickup->starttime >= time();
             if (!$showpickuptime) {
@@ -392,56 +417,26 @@ class vccsubmission_form extends \moodleform {
             }
 
             $partnership = $DB->get_record('local_equipment_partnership', ['id' => $pickup->partnershipid]);
-
-            $partnership ? $name = $partnership->name : $name = $pickup->pickup_city;
+            $partnershipname = $partnership ? $partnership->name : $pickup->pickup_city;
 
             $datetime = userdate($pickup->starttime, get_string('strftimedate', 'langconfig')) . ' ' .
                 userdate($pickup->starttime, get_string('strftimetime', 'langconfig')) . ' - ' .
                 userdate($pickup->endtime, get_string('strftimetime', 'langconfig'));
 
-            $pattern = '/#(.*?)#/';
-
-            // if (
-            //     preg_match($pattern, $partnership->pickup_extrainstructions, $matches)
-            //     && $partnership->pickup_streetaddress
-            //     && $partnership->pickup_city
-            //     && $partnership->pickup_state
-            //     && $partnership->pickup_zipcode
-            // ) {
-            //     $name = $partnership->locationname = $matches[1];
-            //     $partnership->pickup_extrainstructions = trim(preg_replace($pattern, '', $partnership->pickup_extrainstructions, 1));
-            // }
-            // Pickup locations are required to have a pickup_streetaddress as of March 31, 2025
-
             if ($pickup->pickup_streetaddress) {
-                $formattedpickuplocations[$id] = "$name — $datetime — $pickup->pickup_streetaddress, $pickup->pickup_city, $pickup->pickup_state $pickup->pickup_zipcode";
-                if (isset($pickuptimedata[$id]) && isset($pickuptimedata[$id][$i])) {
-                    $formattedpickuptimes[$id] = $pickuptimedata[$id][$i];
-                    $i++;
-                }
+                $formattedpickuptimes[$id] = $partnershipname . ' — ' . $datetime;
             }
-            // if ($USER->id == '2') {
-            //     // pickup date: 1754024400
-            //     // start time: 1754024400
-            //     echo '<pre>';
-            //     // var_dump($formattedpickuplocations[$id]);
-            //     // var_dump();
-            //     var_dump(get_users_needing_reminders());
-            //     // var_dump(userdate(1741824403));
-            //     echo '</pre>';
-            //     die();
-            // }
         }
 
         $mform->addElement(
             'select',
             'pickup',
-            get_string('pickuplocationtime', 'local_equipment'),
-            $formattedpickuplocations,
-            ['multiple' => false, 'size' => 10]
+            get_string('pickupdatetime', 'local_equipment'),
+            $formattedpickuptimes,
+            ['multiple' => false, 'size' => 8]
         );
         $mform->addRule('pickup', get_string('required'), 'required', null, 'client');
-        $mform->setDefault('pickup', '-1');
+        $mform->setDefault('pickup', '0'); // Default to "Have us contact you"
 
         $pickupmethods = local_equipment_get_pickup_methods();
         $mform->addElement('select', 'pickupmethod', get_string('pickupmethod', 'local_equipment'), $pickupmethods);

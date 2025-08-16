@@ -68,6 +68,7 @@ $PAGE->set_heading(get_string('consentformheading', 'local_equipment'));
 $PAGE->requires->js_call_amd('local_equipment/vccsubmission_addstudents_form', 'init');
 $PAGE->requires->js_call_amd('local_equipment/formhandling', 'setupFieldsetNameUpdates', ['student', 'header']);
 $PAGE->requires->js_call_amd('local_equipment/formhandling', 'setupMultiSelects');
+$PAGE->requires->js_call_amd('local_equipment/virtualcourseconsent_form', 'init');
 
 // Import the Select2 library for selecting multiple courses on mobile devices.
 $PAGE->requires->css(new moodle_url('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css'));
@@ -196,9 +197,10 @@ if ($mform->is_cancelled()) {
         $vccsubmission->billing_extrainsructions = $data->billing_extrainsructions ?? '';
         $vccsubmission->electronicsignature = $data->signature;
 
-        // Pickup information: we're using a new table now, but we have to enter dummy information because of that.
-        $vccsubmission->pickupid = -1;
-        $vccsubmission->pickupmethod = '0';
+        // Pickup information: save the actual pickup ID and exchange partnership ID
+        $vccsubmission->pickupid = $data->pickup; // Use actual pickup selection
+        $vccsubmission->exchange_partnershipid = $data->exchange_partnershipid; // Add exchange partnership ID
+        $vccsubmission->pickupmethod = $data->pickupmethod;
 
         // I don't think I need these:
         // $vccsubmission->pickuppersonname = NULL;
@@ -220,6 +222,7 @@ if ($mform->is_cancelled()) {
 
         // Equipment exchange information
         $exchangesubmission->userid = $USER->id;
+        $exchangesubmission->exchange_partnershipid = $data->exchange_partnershipid;
         $exchangesubmission->exchangeid = $data->pickup;
         $exchangesubmission->pickup_method = $pickupmethod;
         $exchangesubmission->pickup_person_name = $data->pickuppersonname ?? '';

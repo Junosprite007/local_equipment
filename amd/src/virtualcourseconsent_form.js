@@ -32,6 +32,7 @@ export const init = () => {
     setupPickupMethodToggle();
     setupDynamicCourseSelection();
     setupStudentEmailGeneration();
+    setupExchangeLocationFiltering();
 };
 
 /**
@@ -123,4 +124,55 @@ const setupStudentEmailGeneration = () => {
             }
         });
     });
+};
+
+/**
+ * Set up dynamic filtering of pickup times based on exchange location selection.
+ */
+const setupExchangeLocationFiltering = () => {
+    const $exchangeLocation = $('#id_exchange_partnershipid');
+    const $pickupTime = $('#id_pickup');
+
+    // Store all pickup time options on page load
+    const allPickupOptions = $pickupTime.find('option').clone();
+
+    const filterPickupTimes = () => {
+        const selectedPartnershipId = $exchangeLocation.val();
+
+        // Clear current options except the default "Have us contact you" option
+        $pickupTime.empty();
+        $pickupTime.append(allPickupOptions.filter('[value="0"]').clone());
+
+        if (selectedPartnershipId && selectedPartnershipId !== '') {
+            // Filter options by partnership - pickup times should contain partnership name
+            allPickupOptions.each(function () {
+                const $option = $(this);
+                const optionValue = $option.val();
+                const optionText = $option.text();
+
+                // Skip the default "Have us contact you" option (value = 0)
+                if (optionValue !== '0' && optionValue !== '') {
+                    // Get partnership name to compare
+                    const selectedPartnership = $exchangeLocation
+                        .find('option:selected')
+                        .text();
+                    const partnershipName = selectedPartnership.split(' — ')[0]; // Get partnership name before address
+
+                    // Check if pickup time option contains the selected partnership name
+                    if (optionText.includes(partnershipName)) {
+                        $pickupTime.append($option.clone());
+                    }
+                }
+            });
+        }
+
+        // Ensure the default option remains selected
+        $pickupTime.val('0');
+    };
+
+    // Set up event listener for exchange location changes
+    $exchangeLocation.on('change', filterPickupTimes);
+
+    // Apply initial filtering
+    filterPickupTimes();
 };
