@@ -313,6 +313,11 @@ $string['adminnotes'] = 'Admin notes';
 $string['apt'] = 'Apt.';
 $string['attnparents_useyouraccount'] = 'ATTENTION, PARENTS! You must be logged into your own, personal {$a->site} account to fill out the {$a->form} form.<br /><br />
 Need help? {$a->help}.';
+$string['vccformredirect_notaparent'] = 'VCC form non-parent redirect';
+$string['vccformredirect_notaparent_desc'] = 'The warning text that non-parent account will see after being redirected to their home page. You can include links to help docs and things like that here.';
+$string['vccformredirect_isguestuser'] = 'VCC form guest user redirect';
+$string['vccformredirect_isguestuser_desc'] = 'The warning text that guest user accounts will see after being redirected to their home page. You can include links to help docs and things like that here.';
+$string['currentlyloggedinassiteadmin'] = 'Please note that you are currently logged in as a site administrator. You can still fill out the form if you\'d like, though.';
 
 $string['chooseoption'] = 'Choose an option';
 $string['confirmationid'] = 'Confirmation ID';
@@ -2022,7 +2027,16 @@ $string['theformyouattemptedtoaccessisnotcurrentlyavailable'] = 'The form you at
 $string['incompletestudentdata'] = 'Incomplete student data';
 $string['nofutureenrollments'] = 'No future enrollments';
 $string['nostudentsenrolled'] = 'No students enrolled';
+$string['nostudentsinsystem'] = 'You cannot complete this action because you do not have any students enrolled in our system.';
+$string['enrolledstudentswouldshowhere'] = 'Enrolled students would show here, but it looks like you don\'t have any students enrolled.';
 $string['agreementsandconsent'] = 'Agreements & Consent';
 $string['studentnoenrollments'] = 'No active enrollments found for {$a}.';
 $string['somestudentsnottakingcourses'] = 'It looks like you have other students in our system who are not enrolled in any current courses for this year. If this is expected, you can disregard this message. Otherwise, please contact us to get the rest of your students enrolled!';
 $string['nousersfound'] = 'No users found';
+$string['vccformsettings'] = 'VCC form settings';
+$string['vccformsettings_desc'] = 'All settings for the Virtual Course Consent (VCC) form.';
+$string['vccformwarning'] = 'VCC form warning';
+$string['vccformwarning_desc'] = 'A warning alert box that will appear at the top of the VCC form. This should be used if you want parents filling out the form to be notified of something important.
+<br /><br />
+
+Leave this setting blank if you don\'t want anything to appear at the top of the form.';

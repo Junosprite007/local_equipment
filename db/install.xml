@@ -277,7 +277,8 @@
                 <FIELD NAME="firstname" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Student's first name"/>
                 <FIELD NAME="lastname" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Student's last name"/>
                 <FIELD NAME="email" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Student's email"/>
-                <FIELD NAME="dateofbirth" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Student's date of birth"/>
+<FIELD NAME="dateofbirth" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Student's date of birth"/>
+
                 <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Timestamp of when the record was created"/>
             </FIELDS>
             <KEYS>
@@ -286,8 +287,8 @@
                 <KEY NAME="vccsubmissionid" TYPE="foreign" FIELDS="vccsubmissionid" REFTABLE="local_equipment_vccsubmission" REFFIELDS="id"/>
             </KEYS>
             <INDEXES>
-                <INDEX NAME="email" UNIQUE="false" FIELDS="email"/>
-                <INDEX NAME="dateofbirth" UNIQUE="false" FIELDS="dateofbirth"/>
+<INDEX NAME="email" UNIQUE="false" FIELDS="email"/>
+
                 <INDEX NAME="timecreated" UNIQUE="false" FIELDS="timecreated"/>
             </INDEXES>
         </TABLE>

@@ -1173,5 +1173,26 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025081401, 'local', 'equipment');
     }
 
+    if ($oldversion < 2025081500) {
+
+        // Define table to be modified
+        $table = new xmldb_table('local_equipment_vccsubmission_student');
+
+        // First, drop the dateofbirth index if it exists
+        $index = new xmldb_index('dateofbirth', XMLDB_INDEX_NOTUNIQUE, array('dateofbirth'));
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define field dateofbirth to be modified
+        $field = new xmldb_field('dateofbirth', XMLDB_TYPE_INTEGER, '10', null, false, null, null, 'email');
+
+        // Launch change of nullability for field dateofbirth
+        $dbman->change_field_notnull($table, $field);
+
+        // Equipment savepoint reached
+        upgrade_plugin_savepoint(true, 2025081500, 'local', 'equipment');
+    }
+
     return true;
 }

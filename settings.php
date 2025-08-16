@@ -97,6 +97,38 @@ if ($hassiteconfig) {
         PARAM_INT
     ));
 
+    // VCC form settings
+    $generalsettings->add(new admin_setting_heading(
+        "{$component}/vccformheading",
+        get_string('vccformsettings', 'local_equipment'),
+        get_string('vccformsettings_desc', 'local_equipment')
+    ));
+
+    $generalsettings->add(new admin_setting_configtextarea(
+        "{$component}/vccformwarning",
+        get_string('vccformwarning', 'local_equipment'),
+        get_string('vccformwarning_desc', 'local_equipment'),
+        '',
+        PARAM_TEXT
+    ));
+
+    $generalsettings->add(new admin_setting_configtextarea(
+        "{$component}/vccformredirect_notaparent",
+        get_string('vccformredirect_notaparent', 'local_equipment'),
+        get_string('vccformredirect_notaparent_desc', 'local_equipment'),
+        '',
+        PARAM_TEXT
+    ));
+
+    $generalsettings->add(new admin_setting_configtextarea(
+        "{$component}/vccformredirect_isguestuser",
+        get_string('vccformredirect_isguestuser', 'local_equipment'),
+        get_string('vccformredirect_isguestuser_desc', 'local_equipment'),
+        '',
+        PARAM_TEXT
+    ));
+
+
     $ADMIN->add($component, $generalsettings);
 
     // ========================================

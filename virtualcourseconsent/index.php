@@ -30,26 +30,33 @@ require_once($CFG->dirroot . '/lib/accesslib.php');
 
 require_login();
 // Check if the user is a guest and redirect or display an error message
-$msgparams = new stdClass();
-$msgparams->form = get_string('virtualcourseconsent', 'local_equipment');
-$msgparams->site = $SITE->shortname;
-$msgparams->help = html_writer::link(new moodle_url('/login/index.php'), get_string('clickhere'));
+// $msgparams = new stdClass();
+// $msgparams->form = get_string('virtualcourseconsent', 'local_equipment');
+// $msgparams->site = $SITE->shortname;
+// $msgparams->help = html_writer::link(new moodle_url('/login/index.php'), get_string('clickhere'));
 
 
 if (isguestuser()) {
-    // $msgparams = ['form' => get_string('virtualcourseconsent', 'local_equipment'), 'site' => $SITE->shortname];
-    redirect(new moodle_url('/login/index.php'), get_string('mustlogintoyourownaccount', 'local_equipment', $msgparams), null, \core\output\notification::NOTIFY_ERROR);
+    $headertext = get_config('local_equipment', 'vccformredirect_isguestuser');
+    redirect(new moodle_url('/login/index.php'), $headertext, null, \core\output\notification::NOTIFY_ERROR);
 }
 
 $students = local_equipment_get_students_of_user_as('parent', $USER->id);
 
 // Use the following when you're ready to prevent non-parents from accessing the form.
-if ($students === false) {
+if ($students === false && !is_siteadmin()) {
+
     // If you have no students, there's no reason to fill out this form, since if you're old enough to sign your own form, we'll
     // have a different form for you to fill out.
 
     // Redirect with an error message for the user who's trying to fill out the form from a non-parent account.
-    redirect(new moodle_url('/'), get_string('attnparents_useyouraccount', 'local_equipment', $msgparams), null, \core\output\notification::NOTIFY_WARNING);
+
+    $headertext = get_config('local_equipment', 'vccformredirect_notaparent');
+
+    // Help page could be determined by the 'local_helppages plugin:
+    // local/helppages/view.php?page=[some_page]
+
+    redirect(new moodle_url('/'), $headertext, null, \core\output\notification::NOTIFY_WARNING);
 }
 
 $context = \core\context\system::instance();
@@ -249,7 +256,9 @@ if ($mform->is_cancelled()) {
             $vccsubmission_student->firstname = $data->student_firstname[$i];
             $vccsubmission_student->lastname = $data->student_lastname[$i];
             $vccsubmission_student->email = $data->student_email[$i] ?? local_equipment_generate_student_email($USER->email, $vccsubmission_student->firstname);
-            $vccsubmission_student->dateofbirth = $data->student_dob[$i];
+            // TODO: we might add this later on.
+            // $vccsubmission_student->dateofbirth = $data->student_dob[$i];
+            $vccsubmission_student->dateofbirth = NULL;
             $vccsubmission_student->timecreated = time();
 
             $vccsubmission_student->id = $DB->insert_record('local_equipment_vccsubmission_student', $vccsubmission_student);
@@ -261,11 +270,13 @@ if ($mform->is_cancelled()) {
             $studentrecord_existing = $DB->get_record('local_equipment_user', ['userid' => $studentrecord->userid]);
 
             // Sometimes student records will already exist within the database, but are not totally filled out. For example, a
-            // student may not be associated with a partnership or their date of birth may not have been saved properly in the past.
+            // student may not be associated with a partnership or their date of birth may not have been saved properly in the past
+            // (although we're not saving date of birth for the time being).
             // The statement should reconcile that.
             if ($studentrecord_existing) {
+
                 $studentrecord->id = $studentrecord_existing->id;
-                $DB->update_record('local_equipment_user', $studentrecord);
+                $var = $DB->update_record('local_equipment_user', $studentrecord);
             } else {
                 $studentrecord->id = $DB->insert_record('local_equipment_user', $studentrecord);
             }

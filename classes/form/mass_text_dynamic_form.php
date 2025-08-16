@@ -27,7 +27,6 @@ namespace local_equipment\form;
 
 use core_form\dynamic_form;
 use context_system;
-use moodle_url;
 
 defined('MOODLE_INTERNAL') || die();
 

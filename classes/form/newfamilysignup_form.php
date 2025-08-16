@@ -29,6 +29,10 @@ use core\output\notification;
 
 defined('MOODLE_INTERNAL') || die();
 
+// This page is not currently in use.
+// Remove 'die();' after implementation... obviously.
+die();
+
 require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/local/equipment/lib.php');
 

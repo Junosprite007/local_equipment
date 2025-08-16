@@ -67,7 +67,7 @@ $studentdata = [
     'student_firstname' => $firstnames,
     'student_lastname' => $lastnames,
     'student_email' => $emails,
-    'student_dob' => $dobs,
+    // 'student_dob' => $dobs,
     'student_courses' => $courses
 ];
 

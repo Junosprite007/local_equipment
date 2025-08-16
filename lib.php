@@ -30,12 +30,6 @@ use core\exception\moodle_exception;
 use core_payment\external\get_available_gateways;
 use core_sms\gateway;
 
-// use core\user;
-// use core_user;
-// use html_writer;
-// use moodle_url;
-// use moodle_url;
-
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -1690,7 +1684,7 @@ function local_equipment_save_vcc_form($data) {
             $studentrecord->firstname = $data->student_firstname[$i];
             $studentrecord->lastname = $data->student_lastname[$i];
             $studentrecord->email = $data->student_email[$i] ?? local_equipment_generate_student_email($USER->email, $studentrecord->firstname);
-            $studentrecord->dateofbirth = $data->student_dob[$i];
+            // $studentrecord->dateofbirth = $data->student_dob[$i];
 
             $studentrecord->id = $DB->insert_record('local_equipment_vccsubmission_student', $studentrecord);
             // Make an array of student IDs for later use.

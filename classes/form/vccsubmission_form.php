@@ -25,6 +25,7 @@
 
 namespace local_equipment\form;
 
+use moodle_url;
 use core\output\notification;
 
 defined('MOODLE_INTERNAL') || die();
@@ -48,19 +49,31 @@ class vccsubmission_form extends \moodleform {
         $mform = $this->_form;
         $customdata = $this->_customdata;
 
-        // Phase 2: Get auto-populated data using existing functions
+        // Get auto-populated data using existing functions
         $this->load_parent_data($USER->id);
         $this->load_student_data($USER->id);
         $this->validate_student_eligibility();
 
         // Check if parent has any eligible students
-        if (empty($this->studentdata)) {
+        if (empty($this->studentdata) && !is_siteadmin()) {
             redirect(
                 new \moodle_url('/'),
                 get_string('nostudentsenrolled', 'local_equipment'),
                 null,
                 \core\output\notification::NOTIFY_WARNING
             );
+        }
+
+        if (is_siteadmin()) {
+            $mform->addElement('html', '<div class="alert alert-warning" role="alert">' . get_string('currentlyloggedinassiteadmin', 'local_equipment') . '</div>');
+        }
+
+        // Get the admin setting for header text
+        $headertext = get_config('local_equipment', 'vccformwarning');
+
+        // Only add the header text if it's not empty
+        if (!empty($headertext)) {
+            $mform->addElement('html', '<div class="alert alert-warning" role="alert">' . format_text($headertext) . '</div>');
         }
 
         $repeatno = optional_param('repeatno', 1, PARAM_INT);
@@ -110,7 +123,7 @@ class vccsubmission_form extends \moodleform {
         // to force users to be logged in to their own personal account by validating that the logged in user has the 'Parent' role
         // assigned to their account.
 
-        // Phase 3: Use auto-populated parent data to display fields as labels or pre-filled inputs
+        // Use auto-populated parent data to display fields as labels or pre-filled inputs
 
         // Profile email - display as label (read-only)
         $mform->addElement('html', '<div class="row mb-3">
@@ -184,7 +197,7 @@ class vccsubmission_form extends \moodleform {
         // $mform->setType('partnership_name', PARAM_TEXT);
 
 
-        // Mailing address-related fields - Phase 3: Pre-filled but still editable
+        // Mailing address-related fields - Pre-filled but still editable
         $groupview = false;
         $address = local_equipment_add_address_block($mform, 'mailing', '', false, false, true, false, $groupview, true);
         foreach ($address->elements as $elementname => $element) {
@@ -264,88 +277,92 @@ class vccsubmission_form extends \moodleform {
         // echo '</pre>';
         // die();
 
-        // Phase 3: Student-specific sections - Auto-populated from database, no manual entry required
+        // Student-specific sections - Auto-populated from database, no manual entry required
         $studentcount = count($this->studentdata);
 
         // Hidden field to store total number of students for form processing
         $mform->addElement('hidden', 'students', $studentcount);
         $mform->setType('students', PARAM_INT);
 
-        foreach ($this->studentdata as $index => $student) {
-            // Student header with auto-populated name
-            $mform->addElement(
-                'header',
-                "studentheader_{$index}",
-                get_string('student', 'local_equipment') . ': ' . $student['firstname'] . ' ' . $student['lastname']
-            );
+        if (empty($this->studentdata)) {
+            $mform->addElement('html', '<div class="alert alert-warning" role="alert">' . get_string('enrolledstudentswouldshowhere', 'local_equipment') . '</div>');
+        } else {
+            foreach ($this->studentdata as $index => $student) {
+                // Student header with auto-populated name
+                $mform->addElement(
+                    'header',
+                    "studentheader_{$index}",
+                    get_string('student', 'local_equipment') . ': ' . $student['firstname'] . ' ' . $student['lastname']
+                );
 
-            // Set the student ID as a hidden variable for use in later processing.
-            $mform->addElement('hidden', "student_id[{$index}]", $student['id']);
-            $mform->setType("student_id[{$index}]", PARAM_TEXT);
+                // Set the student ID as a hidden variable for use in later processing.
+                $mform->addElement('hidden', "student_id[{$index}]", $student['id']);
+                $mform->setType("student_id[{$index}]", PARAM_TEXT);
 
-            // Student first name - display as label (read-only)
-            $mform->addElement('html', '<div class="row mb-3">
-                <label class="col-sm-3 col-form-label">' . get_string('firstname') . '</label>
-                <div class="col-sm-9">
-                    <div class="form-control-plaintext">' . s($student['firstname']) . '</div>
-                </div>
-            </div>');
-            $mform->addElement('hidden', "student_firstname[{$index}]", $student['firstname']);
-            $mform->setType("student_firstname[{$index}]", PARAM_TEXT);
+                // Student first name - display as label (read-only)
+                $mform->addElement('html', '<div class="row mb-3">
+                    <label class="col-sm-3 col-form-label">' . get_string('firstname') . '</label>
+                    <div class="col-sm-9">
+                        <div class="form-control-plaintext">' . s($student['firstname']) . '</div>
+                    </div>
+                </div>');
+                $mform->addElement('hidden', "student_firstname[{$index}]", $student['firstname']);
+                $mform->setType("student_firstname[{$index}]", PARAM_TEXT);
 
-            // Student last name - display as label (read-only)
-            $mform->addElement('html', '<div class="row mb-3">
-                <label class="col-sm-3 col-form-label">' . get_string('lastname') . '</label>
-                <div class="col-sm-9">
-                    <div class="form-control-plaintext">' . s($student['lastname']) . '</div>
-                </div>
-            </div>');
-            $mform->addElement('hidden', "student_lastname[{$index}]", $student['lastname']);
-            $mform->setType("student_lastname[{$index}]", PARAM_TEXT);
+                // Student last name - display as label (read-only)
+                $mform->addElement('html', '<div class="row mb-3">
+                    <label class="col-sm-3 col-form-label">' . get_string('lastname') . '</label>
+                    <div class="col-sm-9">
+                        <div class="form-control-plaintext">' . s($student['lastname']) . '</div>
+                    </div>
+                </div>');
+                $mform->addElement('hidden', "student_lastname[{$index}]", $student['lastname']);
+                $mform->setType("student_lastname[{$index}]", PARAM_TEXT);
 
-            // Student email - display as label (read-only)
-            $mform->addElement('html', '<div class="row mb-3">
-                <label class="col-sm-3 col-form-label">' . get_string('email') . '</label>
-                <div class="col-sm-9">
-                    <div class="form-control-plaintext">' . s($student['email']) . '</div>
-                </div>
-            </div>');
-            $mform->addElement('hidden', "student_email[{$index}]", $student['email']);
-            $mform->setType("student_email[{$index}]", PARAM_EMAIL);
+                // Student email - display as label (read-only)
+                $mform->addElement('html', '<div class="row mb-3">
+                    <label class="col-sm-3 col-form-label">' . get_string('email') . '</label>
+                    <div class="col-sm-9">
+                        <div class="form-control-plaintext">' . s($student['email']) . '</div>
+                    </div>
+                </div>');
+                $mform->addElement('hidden', "student_email[{$index}]", $student['email']);
+                $mform->setType("student_email[{$index}]", PARAM_EMAIL);
 
-            // Student date of birth - editable date selector (parents can update this)
-            $mform->addElement('date_selector', "student_dob[{$index}]", get_string('dateofbirth', 'local_equipment'));
-            $mform->setType("student_dob[{$index}]", PARAM_INT);
-            $mform->addRule("student_dob[{$index}]", get_string('required'), 'required', null, 'client');
+                // TODO: we might add this later on.
+                // // Student date of birth - editable date selector (parents can update this)
+                // $mform->addElement('date_selector', "student_dob[{$index}]", get_string('dateofbirth', 'local_equipment'));
+                // $mform->setType("student_dob[{$index}]", PARAM_INT);
+                // $mform->addRule("student_dob[{$index}]", get_string('required'), 'required', null, 'client');
 
-            // Set default date of birth if available
-            if (!empty($student['dateofbirth'])) {
-                $mform->setDefault("student_dob[{$index}]", $student['dateofbirth']);
+                // // Set default date of birth if available
+                // if (!empty($student['dateofbirth'])) {
+                //     $mform->setDefault("student_dob[{$index}]", $student['dateofbirth']);
+                // }
+
+                // Student courses - display as text list (read-only, auto-populated from enrollments)
+                $courselisthtml = '<div class="row mb-3">
+                    <label class="col-sm-3 col-form-label">' . get_string('courses', 'core') . '</label>
+                    <div class="col-sm-9">
+                        <div class="form-control-plaintext">';
+
+                $courseids = [];
+                $coursenames = [];
+                foreach ($student['courses'] as $course) {
+                    $courseids[] = $course->id;
+                    $coursenames[] = s($course->fullname);
+                }
+
+                $courselisthtml .= implode('<br>', $coursenames);
+                $courselisthtml .= '</div></div></div>';
+
+                $mform->addElement('html', $courselisthtml);
+
+                // Hidden field to store course IDs for form processing
+                $mform->addElement('hidden', "student_courses[{$index}]", implode(',', $courseids));
+                $mform->setType("student_courses[{$index}]", PARAM_RAW);
             }
-
-            // Student courses - display as text list (read-only, auto-populated from enrollments)
-            $courselisthtml = '<div class="row mb-3">
-                <label class="col-sm-3 col-form-label">' . get_string('courses', 'core') . '</label>
-                <div class="col-sm-9">
-                    <div class="form-control-plaintext">';
-
-            $courseids = [];
-            $coursenames = [];
-            foreach ($student['courses'] as $course) {
-                $courseids[] = $course->id;
-                $coursenames[] = s($course->fullname);
-            }
-
-            $courselisthtml .= implode('<br>', $coursenames);
-            $courselisthtml .= '</div></div></div>';
-
-            $mform->addElement('html', $courselisthtml);
-
-            // Hidden field to store course IDs for form processing
-            $mform->addElement('hidden', "student_courses[{$index}]", implode(',', $courseids));
-            $mform->setType("student_courses[{$index}]", PARAM_RAW);
         }
-
         // Display any warnings about student eligibility
         if (!empty($this->warnings)) {
             // \core\output\html_writer::div();
@@ -556,16 +573,23 @@ class vccsubmission_form extends \moodleform {
             unset($errors['partnership']);
         }
 
-        // Student courses validation
-        $sixmonthsago = usergetmidnight(time()) - 15778476;
-        for ($i = 0; $i < $data['students']; $i++) {
-            if ($data['student_dob'][$i] > $sixmonthsago) {
-                $errors['student_dob'][$i] = get_string('needstobeatleastsixmonthsold', 'local_equipment', $data['student_firstname'][$i]);
-                $customerrors[] = new notification(get_string('needstobeatleastsixmonthsold', 'local_equipment', $data['student_firstname'][$i]), notification::NOTIFY_ERROR);
-            } else {
-                unset($errors['student_dob'][$i]);
-            }
+        // Existing students validation
+        if (empty($this->studentdata)) {
+            $errors['student_data'] = get_string('nostudentsinsystem', 'local_equipment');
+        } else {
+            unset($errors['student_data']);
         }
+
+        // // Student courses validation
+        // $sixmonthsago = usergetmidnight(time()) - 15778476;
+        // for ($i = 0; $i < $data['students']; $i++) {
+        //     if ($data['student_dob'][$i] > $sixmonthsago) {
+        //         $errors['student_dob'][$i] = get_string('needstobeatleastsixmonthsold', 'local_equipment', $data['student_firstname'][$i]);
+        //         $customerrors[] = new notification(get_string('needstobeatleastsixmonthsold', 'local_equipment', $data['student_firstname'][$i]), notification::NOTIFY_ERROR);
+        //     } else {
+        //         unset($errors['student_dob'][$i]);
+        //     }
+        // }
 
         // Student courses validation
         for ($i = 0; $i < $data['students']; $i++) {
@@ -682,7 +706,7 @@ class vccsubmission_form extends \moodleform {
                     'firstname' => $student->firstname,
                     'lastname' => $student->lastname,
                     'email' => $student->email,
-                    'dateofbirth' => $equipmentstudent->dateofbirth ?? null,
+                    // 'dateofbirth' => $equipmentstudent->dateofbirth ?? null,
                     'courses' => $ongoing_courses
                 ];
             } else {
@@ -704,6 +728,15 @@ class vccsubmission_form extends \moodleform {
      * Validate student eligibility for form access
      */
     private function validate_student_eligibility(): void {
+        global $USER;
+
+        // Get students using existing function
+        $students = local_equipment_get_students_of_parent($USER->id);
+
+        if (empty($students)) {
+            $this->studentdata = [];
+            return;
+        }
         // Check if any students have future course enrollments
         $hasfutureenrollments = false;
         $currenttime = time();

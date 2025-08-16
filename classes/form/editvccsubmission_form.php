@@ -285,7 +285,7 @@ class editvccsubmission_form extends \moodleform {
         $repeatarray['student_firstname'] = $mform->createElement('text', 'student_firstname', get_string('firstname'));
         $repeatarray['student_lastname'] = $mform->createElement('text', 'student_lastname', get_string('lastname'));
         $repeatarray['student_email'] = $mform->createElement('text', 'student_email', get_string('email'));
-        $repeatarray['student_dob'] = $mform->createElement('date_selector', 'student_dob', get_string('dateofbirth', 'local_equipment'));
+        // $repeatarray['student_dob'] = $mform->createElement('date_selector', 'student_dob', get_string('dateofbirth', 'local_equipment'));
         $repeatarray['student_courses'] = $mform->createElement('select', 'student_courses', get_string('selectcourses', 'local_equipment'), $coursesformatted_properlynamed, ['multiple' => true, 'size' => 10, 'class' => 'custom-multiselect']);
 
         // Set types.
@@ -293,13 +293,13 @@ class editvccsubmission_form extends \moodleform {
         $repeatoptions['student_firstname']['type'] = PARAM_TEXT;
         $repeatoptions['student_lastname']['type'] = PARAM_TEXT;
         $repeatoptions['student_email']['type'] = PARAM_EMAIL;
-        $repeatoptions['student_dob']['type'] = PARAM_INT;
+        // $repeatoptions['student_dob']['type'] = PARAM_INT;
         $repeatoptions['student_courses']['type'] = PARAM_RAW;
 
         // Set rules.
         $repeatoptions['student_firstname']['rule'] = 'required';
         $repeatoptions['student_lastname']['rule'] = 'required';
-        $repeatoptions['student_dob']['rule'] = 'required';
+        // $repeatoptions['student_dob']['rule'] = 'required';
         // $repeatoptions['student_courses']['rule'] = 'required';
 
         // Set other options.
