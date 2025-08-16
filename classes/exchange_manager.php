@@ -120,6 +120,12 @@ class exchange_manager {
             return false;
         }
 
+        // CRITICAL FIX: Validate that the record has a valid ID field
+        if (!isset($record->id) || empty($record->id) || !is_numeric($record->id)) {
+            error_log("exchange_manager::update_reminder_status() - Invalid or missing ID field for userid={$userid}, exchangeid={$exchangeid}");
+            return false;
+        }
+
         // Start a transaction for this update
         $transaction = $this->db->start_delegated_transaction();
 
@@ -152,8 +158,9 @@ class exchange_manager {
                 $transaction->rollback(new \Exception("Failed to update reminder status"));
                 return false;
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $transaction->rollback($e);
+            error_log("exchange_manager::update_reminder_status() - Exception: " . $e->getMessage());
             return false;
         }
     }
