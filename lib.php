@@ -1978,7 +1978,7 @@ function local_equipment_handle_aws_gateway_with_pool($gatewayobj, $tonumber, $m
             $params['ConfigurationSetName'] = preg_replace('/[^a-zA-Z0-9_-]/', '', $configsetname);
             local_equipment_debug_log("Using AWS configuration set: {$configsetname}");
         } else {
-            debugging("No AWS configuration set configured - skipping", DEBUG_DEVELOPER);
+            local_equipment_debug_log("No AWS configuration set configured - using default AWS settings");
         }
 
         // Use pool ID if provided, otherwise fall back to origination number
