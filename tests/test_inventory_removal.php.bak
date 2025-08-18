@@ -34,7 +34,7 @@ require_once(__DIR__ . '/../../../config.php');
  *
  * @group local_equipment
  */
-class inventory_removal_test extends \advanced_testcase {
+class test_inventory_removal extends \advanced_testcase {
 
     /**
      * Set up test environment.
