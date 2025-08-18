@@ -6,6 +6,10 @@ namespace Aws;
  *
  * @method \Aws\ACMPCA\ACMPCAClient createACMPCA(array $args = [])
  * @method \Aws\MultiRegionClient createMultiRegionACMPCA(array $args = [])
+ * @method \Aws\AIOps\AIOpsClient createAIOps(array $args = [])
+ * @method \Aws\MultiRegionClient createMultiRegionAIOps(array $args = [])
+ * @method \Aws\ARCRegionSwitch\ARCRegionSwitchClient createARCRegionSwitch(array $args = [])
+ * @method \Aws\MultiRegionClient createMultiRegionARCRegionSwitch(array $args = [])
  * @method \Aws\ARCZonalShift\ARCZonalShiftClient createARCZonalShift(array $args = [])
  * @method \Aws\MultiRegionClient createMultiRegionARCZonalShift(array $args = [])
  * @method \Aws\AccessAnalyzer\AccessAnalyzerClient createAccessAnalyzer(array $args = [])
@@ -76,6 +80,8 @@ namespace Aws;
  * @method \Aws\MultiRegionClient createMultiRegionBCMDataExports(array $args = [])
  * @method \Aws\BCMPricingCalculator\BCMPricingCalculatorClient createBCMPricingCalculator(array $args = [])
  * @method \Aws\MultiRegionClient createMultiRegionBCMPricingCalculator(array $args = [])
+ * @method \Aws\BCMRecommendedActions\BCMRecommendedActionsClient createBCMRecommendedActions(array $args = [])
+ * @method \Aws\MultiRegionClient createMultiRegionBCMRecommendedActions(array $args = [])
  * @method \Aws\Backup\BackupClient createBackup(array $args = [])
  * @method \Aws\MultiRegionClient createMultiRegionBackup(array $args = [])
  * @method \Aws\BackupGateway\BackupGatewayClient createBackupGateway(array $args = [])
@@ -88,6 +94,10 @@ namespace Aws;
  * @method \Aws\MultiRegionClient createMultiRegionBedrock(array $args = [])
  * @method \Aws\BedrockAgent\BedrockAgentClient createBedrockAgent(array $args = [])
  * @method \Aws\MultiRegionClient createMultiRegionBedrockAgent(array $args = [])
+ * @method \Aws\BedrockAgentCore\BedrockAgentCoreClient createBedrockAgentCore(array $args = [])
+ * @method \Aws\MultiRegionClient createMultiRegionBedrockAgentCore(array $args = [])
+ * @method \Aws\BedrockAgentCoreControl\BedrockAgentCoreControlClient createBedrockAgentCoreControl(array $args = [])
+ * @method \Aws\MultiRegionClient createMultiRegionBedrockAgentCoreControl(array $args = [])
  * @method \Aws\BedrockAgentRuntime\BedrockAgentRuntimeClient createBedrockAgentRuntime(array $args = [])
  * @method \Aws\MultiRegionClient createMultiRegionBedrockAgentRuntime(array $args = [])
  * @method \Aws\BedrockDataAutomation\BedrockDataAutomationClient createBedrockDataAutomation(array $args = [])
@@ -406,6 +416,8 @@ namespace Aws;
  * @method \Aws\MultiRegionClient createMultiRegionKendraRanking(array $args = [])
  * @method \Aws\Keyspaces\KeyspacesClient createKeyspaces(array $args = [])
  * @method \Aws\MultiRegionClient createMultiRegionKeyspaces(array $args = [])
+ * @method \Aws\KeyspacesStreams\KeyspacesStreamsClient createKeyspacesStreams(array $args = [])
+ * @method \Aws\MultiRegionClient createMultiRegionKeyspacesStreams(array $args = [])
  * @method \Aws\Kinesis\KinesisClient createKinesis(array $args = [])
  * @method \Aws\MultiRegionClient createMultiRegionKinesis(array $args = [])
  * @method \Aws\KinesisAnalytics\KinesisAnalyticsClient createKinesisAnalytics(array $args = [])
@@ -546,6 +558,8 @@ namespace Aws;
  * @method \Aws\MultiRegionClient createMultiRegionOSIS(array $args = [])
  * @method \Aws\ObservabilityAdmin\ObservabilityAdminClient createObservabilityAdmin(array $args = [])
  * @method \Aws\MultiRegionClient createMultiRegionObservabilityAdmin(array $args = [])
+ * @method \Aws\Odb\OdbClient createOdb(array $args = [])
+ * @method \Aws\MultiRegionClient createMultiRegionOdb(array $args = [])
  * @method \Aws\Omics\OmicsClient createOmics(array $args = [])
  * @method \Aws\MultiRegionClient createMultiRegionOmics(array $args = [])
  * @method \Aws\OpenSearchServerless\OpenSearchServerlessClient createOpenSearchServerless(array $args = [])
@@ -664,6 +678,8 @@ namespace Aws;
  * @method \Aws\MultiRegionClient createMultiRegionS3Outposts(array $args = [])
  * @method \Aws\S3Tables\S3TablesClient createS3Tables(array $args = [])
  * @method \Aws\MultiRegionClient createMultiRegionS3Tables(array $args = [])
+ * @method \Aws\S3Vectors\S3VectorsClient createS3Vectors(array $args = [])
+ * @method \Aws\MultiRegionClient createMultiRegionS3Vectors(array $args = [])
  * @method \Aws\SSMContacts\SSMContactsClient createSSMContacts(array $args = [])
  * @method \Aws\MultiRegionClient createMultiRegionSSMContacts(array $args = [])
  * @method \Aws\SSMGuiConnect\SSMGuiConnectClient createSSMGuiConnect(array $args = [])
@@ -798,6 +814,8 @@ namespace Aws;
  * @method \Aws\MultiRegionClient createMultiRegionWorkSpacesThinClient(array $args = [])
  * @method \Aws\WorkSpacesWeb\WorkSpacesWebClient createWorkSpacesWeb(array $args = [])
  * @method \Aws\MultiRegionClient createMultiRegionWorkSpacesWeb(array $args = [])
+ * @method \Aws\WorkspacesInstances\WorkspacesInstancesClient createWorkspacesInstances(array $args = [])
+ * @method \Aws\MultiRegionClient createMultiRegionWorkspacesInstances(array $args = [])
  * @method \Aws\XRay\XRayClient createXRay(array $args = [])
  * @method \Aws\MultiRegionClient createMultiRegionXRay(array $args = [])
  * @method \Aws\drs\drsClient createdrs(array $args = [])
@@ -817,7 +835,7 @@ namespace Aws;
  */
 class Sdk
 {
-    const VERSION = '3.345.0';
+    const VERSION = '3.354.1';
 
     /** @var array Arguments for creating clients */
     private $args;

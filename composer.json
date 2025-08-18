@@ -4,6 +4,7 @@
 	"type": "moodle-local",
 	"require": {
 		"php": ">=8.2",
+		"aws/aws-sdk-php": "^3.354",
 		"ext-json": "*",
 		"ext-curl": "*",
 		"ext-mbstring": "*"
