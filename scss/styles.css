@@ -1,0 +1,237 @@
+@charset "UTF-8";
+#page-admin-local-equipment-partnerships .nowrap {
+  white-space: nowrap;
+}
+
+#page-admin-local-equipment-partnerships-addpartnerships .form-input-group-labels,
+#page-local-equipment-partnerships-editpartnership .form-input-group-labels {
+  margin-top: 25px;
+  font-weight: bold;
+}
+
+#page-admin-local-equipment-partnerships .pickup-extainstructions {
+  white-space: wrap;
+  min-width: 300px;
+}
+
+.local-equipment-pickups-addpickups-time-selectors {
+  display: block;
+}
+
+#page-local-equipment-virtualcourseconsent-index select.form-control {
+  width: 100%;
+  min-width: 200px;
+}
+
+.local-equipment-stacked-address-fields {
+  display: flex;
+  flex-direction: column;
+  min-width: 300px;
+}
+
+.local-equipment-stacked-address-fields label {
+  order: -1;
+  white-space: nowrap;
+  margin-right: 5px;
+}
+
+th.local-equipment-nowrap-header {
+  white-space: nowrap;
+}
+
+td.local-equipment-nowrap-cell {
+  white-space: nowrap;
+}
+
+.custom-multiselect select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 5px;
+  max-height: 200px;
+}
+.custom-multiselect select option {
+  position: relative;
+  padding-left: 25px;
+  cursor: pointer;
+}
+.custom-multiselect select option::before {
+  content: "";
+  display: inline-block;
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  border: 1px solid #aaa;
+  background: #fff;
+}
+.custom-multiselect select option:checked {
+  background-color: #e1e1e1;
+}
+.custom-multiselect select option:checked::before {
+  content: "✓";
+  color: #000;
+  text-align: center;
+  line-height: 14px;
+}
+.custom-multiselect select option:hover {
+  background-color: light-dark(rgb(206, 206, 206), rgb(84, 84, 84));
+  color: light-dark(rgb(16, 16, 16), rgb(255, 255, 255));
+}
+
+.custom-multiselect select option {
+  padding: 8px;
+  padding-left: 30px;
+}
+
+.local-equipment-bulkfamilyupload-container {
+  display: flex;
+  gap: 20px;
+}
+
+.local-equipment-bulkfamilyupload-textarea {
+  flex: 1;
+  resize: vertical;
+}
+
+.local-equipment-bulkfamilyupload-preprocess-output {
+  flex: 1;
+  border: 1px solid #ccc;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.local-equipment_partnership-courses-container {
+  width: 100%;
+}
+.local-equipment_partnership-courses-container .local-equipment_main-courses-container {
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  background-color: #fff;
+}
+.local-equipment_partnership-courses-container .local-equipment_courses-header {
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  font-weight: 700;
+}
+.local-equipment_partnership-courses-container .local-equipment_courses-scroll-content {
+  height: 239px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #ced4da #f8f9fa;
+}
+.local-equipment_partnership-courses-container .local-equipment_courses-scroll-content::-webkit-scrollbar {
+  width: 6px;
+}
+.local-equipment_partnership-courses-container .local-equipment_courses-scroll-content::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+.local-equipment_partnership-courses-container .local-equipment_courses-scroll-content::-webkit-scrollbar-thumb {
+  background-color: #ced4da;
+  border-radius: 3px;
+}
+.local-equipment_partnership-courses-container .local-equipment_course-row {
+  display: flex;
+  padding: 0.75rem;
+  border-bottom: 1px solid #e9ecef;
+}
+.local-equipment_partnership-courses-container .local-equipment_course-row:last-child {
+  border-bottom: none;
+}
+.local-equipment_partnership-courses-container .local-equipment_course-row:nth-child(odd) {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+.local-equipment_partnership-courses-container .local-equipment_course-row:hover {
+  background-color: rgba(0, 0, 0, 0.075);
+}
+.local-equipment_partnership-courses-container .local-equipment_course-id-col {
+  width: 100px;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+.local-equipment_partnership-courses-container .local-equipment_course-name-col {
+  flex-grow: 1;
+}
+.local-equipment_partnership-courses-container .local-equipment_courses-footer {
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+  font-weight: 700;
+  text-align: right;
+}
+
+.local-equipment_generaltable td .btn-link {
+  padding: 0.5rem;
+  text-decoration: none;
+  color: #212529;
+}
+.local-equipment_generaltable td .btn-link:hover {
+  background-color: rgba(13, 110, 253, 0.1);
+}
+.local-equipment_generaltable td .btn-link .icon {
+  margin-right: 0.5rem;
+  transition: transform 0.2s ease;
+}
+.local-equipment_generaltable td .btn-link.collapsed .icon {
+  transform: rotate(0deg);
+}
+.local-equipment_generaltable td .btn-link:not(.collapsed) .icon {
+  transform: rotate(90deg);
+}
+.local-equipment_generaltable td .collapse {
+  padding: 1rem;
+}
+
+.local-equipment-family-notifications {
+  margin: 2rem 0;
+}
+
+.local-equipment-family-notification {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.local-equipment-family-notification .local-equipment-notification-header {
+  background-color: #f8f9fa;
+  transition: background-color 0.2s ease;
+}
+
+.local-equipment-family-notification .local-equipment-notification-header:hover {
+  background-color: #e9ecef;
+  cursor: pointer;
+}
+
+.local-equipment-family-notification .local-equipment-notification-header.success {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+}
+
+.local-equipment-family-notification .local-equipment-notification-header.warning {
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+}
+
+.local-equipment-family-notification .local-equipment-notification-header.error {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+}
+
+.local-equipment-family-notification .icon-container i {
+  transition: transform 0.3s ease;
+}
+
+.local-equipment-family-notification .local-equipment-notification-header[aria-expanded=true] .icon-container i {
+  transform: rotate(90deg);
+}
+
+.local-equipment-family-notification .content-wrapper {
+  background-color: #ffffff;
+}
+
+.local-equipment-notification-content {
+  margin-top: -1px;
+}/*# sourceMappingURL=styles.css.map */

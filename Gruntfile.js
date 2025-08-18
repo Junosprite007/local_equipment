@@ -11,34 +11,39 @@ module.exports = function (grunt) {
         sass: {
             development: {
                 options: {
-                    style: "expanded",
+                    style: 'expanded',
                 },
                 files: {
-                    "styles.css": "scss/styles.scss",
+                    'styles.css': 'scss/styles.scss',
                 },
             },
             prod: {
                 options: {
-                    style: "compressed",
+                    style: 'compressed',
                 },
                 files: {
-                    "styles-prod.css": "scss/styles.scss",
+                    'styles-prod.css': 'scss/styles.scss',
                 },
             },
         },
         watch: {
             scss: {
-                files: ["scss/*.scss"],
-                tasks: ["sass:development"],
+                files: ['scss/*.scss'],
+                tasks: ['sass:development'],
             },
             amd: {
-                files: ["amd/src/**/*.js"],
-                tasks: ["exec:amd"],
+                files: ['amd/src/**/*.js'],
+                tasks: ['exec:amd'],
             },
         },
         exec: {
             amd: {
                 cmd: 'cd ../../ && grunt amd --root="local/equipment"',
+                stdout: true,
+                stderr: true,
+            },
+            scss: {
+                cmd: 'cd ../../ && grunt scss --root="local/equipment"',
                 stdout: true,
                 stderr: true,
             },
