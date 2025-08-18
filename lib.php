@@ -1949,9 +1949,9 @@ function local_equipment_handle_aws_gateway_with_pool($gatewayobj, $tonumber, $m
             return $responseobject;
         }
 
-        // Initialize AWS End User Messaging (PinpointSmsVoiceV2) client
+        // Initialize AWS End User Messaging (PinpointSMSVoiceV2) client
         try {
-            $client = new Aws\PinpointSmsVoiceV2\PinpointSmsVoiceV2Client([
+            $client = new Aws\PinpointSMSVoiceV2\PinpointSMSVoiceV2Client([
                 'version' => 'latest',
                 'region' => $awsconfig->api_region,
                 'credentials' => [

@@ -3,7 +3,7 @@
         'name' => 'local/equipment',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '75ab6ce10d4d5cf2ac98a54ab2e4e431b87b6ddb',
+        'reference' => '980381085295af0287f4c3afafe1cb34f84b586a',
         'type' => 'moodle-local',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -58,7 +58,7 @@
         'local/equipment' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '75ab6ce10d4d5cf2ac98a54ab2e4e431b87b6ddb',
+            'reference' => '980381085295af0287f4c3afafe1cb34f84b586a',
             'type' => 'moodle-local',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
