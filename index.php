@@ -234,7 +234,7 @@ $templatedata = [
                     'gridclass' => 'col-md-4'
                 ],
                 [
-                    'url' => (new \moodle_url('/local/equipment/vccsubmissions.php'))->out(false),
+                    'url' => (new \moodle_url('/local/equipment/vccsubmissions/view.php'))->out(false),
                     'title' => get_string('viewconsentsubmissions', 'local_equipment'),
                     'class' => 'btn-secondary',
                     'gridclass' => 'col-md-4'

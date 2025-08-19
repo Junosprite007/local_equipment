@@ -1,0 +1,476 @@
+/* Enhanced VCC Submissions Table Styles - Bootstrap 5 Compliant */
+
+// Filter card styling
+.vcc-filters-card {
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius-lg);
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+
+    .card-header {
+        background-color: var(--bs-light);
+        border-bottom: 1px solid var(--bs-border-color);
+        padding: 1rem 1.25rem;
+
+        .card-title {
+            color: var(--bs-body-color);
+            font-weight: 600;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+        }
+    }
+
+    .card-body {
+        padding: 1.25rem;
+    }
+}
+
+// Enhanced table styling
+.vcc-submissions-table {
+    font-size: 0.875rem;
+    border-collapse: separate;
+    border-spacing: 0;
+
+    // Header styling
+    thead th {
+        background-color: var(--bs-light);
+        color: var(--bs-body-color);
+        font-weight: 600;
+        border-bottom: 2px solid var(--bs-border-color);
+        padding: 0.75rem 0.5rem;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+
+        &.sortable {
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.15s ease-in-out;
+
+            &:hover {
+                background-color: var(--bs-gray-200);
+            }
+
+            .sort-icon {
+                opacity: 0.5;
+                margin-left: 0.25rem;
+                transition: opacity 0.15s ease-in-out;
+
+                &.active {
+                    opacity: 1;
+                }
+            }
+        }
+    }
+
+    // Body styling
+    tbody {
+        tr {
+            transition: background-color 0.15s ease-in-out;
+
+            &:hover {
+                background-color: var(--bs-gray-50);
+            }
+
+            &:nth-child(even) {
+                background-color: var(--bs-gray-25, #fbfbfb);
+
+                &:hover {
+                    background-color: var(--bs-gray-100);
+                }
+            }
+        }
+
+        td {
+            padding: 0.75rem 0.5rem;
+            vertical-align: top;
+            border-bottom: 1px solid var(--bs-border-color);
+
+            // Column-specific styling
+            &.timecreated {
+                white-space: nowrap;
+                width: 140px;
+                font-family: var(--bs-font-monospace);
+                font-size: 0.8rem;
+            }
+
+            &.partnership_name {
+                white-space: nowrap;
+                width: 150px;
+                font-weight: 500;
+            }
+
+            &.students_info {
+                max-width: 280px;
+                line-height: 1.4;
+            }
+
+            &.mailing_address {
+                max-width: 200px;
+                font-size: 0.8rem;
+                line-height: 1.3;
+                color: var(--bs-gray-700);
+            }
+
+            &.pickup_info {
+                max-width: 180px;
+                font-size: 0.8rem;
+                line-height: 1.3;
+            }
+
+            &.status_info {
+                width: 120px;
+                text-align: center;
+            }
+
+            &.actions {
+                width: 100px;
+                text-align: center;
+                white-space: nowrap;
+            }
+        }
+    }
+}
+
+// Student display in cells
+.vcc-students-cell {
+    .student-item {
+        &:not(:last-child) {
+            border-bottom: 1px solid var(--bs-border-color-translucent);
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .student-name {
+            font-weight: 600;
+            color: var(--bs-body-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .student-courses {
+            .badge {
+                font-size: 0.7rem;
+                margin-right: 0.25rem;
+                margin-bottom: 0.25rem;
+
+                // Use Bootstrap 5 semantic badge colors
+                &.text-bg-primary {
+                    background-color: var(--bs-primary) !important;
+                    color: white !important;
+                }
+
+                // Default styling for standard badges
+                &:not([class*="text-bg-"]) {
+                    background-color: var(--bs-primary-bg-subtle) !important;
+                    color: var(--bs-primary-text-emphasis) !important;
+                    border: 1px solid var(--bs-primary-border-subtle);
+                }
+            }
+        }
+    }
+}
+
+// Pickup info styling
+.vcc-pickup-cell {
+    .pickup-location,
+    .pickup-method,
+    .pickup-person {
+        margin-bottom: 0.25rem;
+        font-size: 0.8rem;
+
+        strong {
+            color: var(--bs-body-color);
+        }
+    }
+
+    small {
+        color: var(--bs-gray-600);
+    }
+}
+
+// Status badges styling
+.vcc-status-cell {
+    .status-badges {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        align-items: center;
+
+        .badge {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            min-width: 60px;
+
+            i {
+                margin-right: 0.25rem;
+            }
+
+            &.text-bg-success {
+                background-color: var(--bs-success) !important;
+                color: white !important;
+            }
+
+            &.text-bg-danger {
+                background-color: var(--bs-danger) !important;
+                color: white !important;
+            }
+
+            &.text-bg-warning {
+                background-color: var(--bs-warning) !important;
+                color: var(--bs-dark) !important;
+            }
+
+            // Legacy Bootstrap 4 support (to be removed eventually)
+            &.bg-success {
+                background-color: var(--bs-success) !important;
+                color: white !important;
+            }
+
+            &.bg-danger {
+                background-color: var(--bs-danger) !important;
+                color: white !important;
+            }
+
+            &.bg-warning {
+                background-color: var(--bs-warning) !important;
+                color: var(--bs-dark) !important;
+            }
+        }
+    }
+}
+
+// Actions button group
+.vcc-actions-cell {
+    .btn-group {
+        .btn {
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--bs-border-radius-sm);
+
+            &:not(:last-child) {
+                margin-right: 0.125rem;
+            }
+
+            i {
+                font-size: 0.75rem;
+            }
+
+            &.btn-outline-primary {
+                &:hover {
+                    background-color: var(--bs-primary);
+                    border-color: var(--bs-primary);
+                    color: white;
+                }
+            }
+
+            &.btn-outline-danger {
+                &:hover {
+                    background-color: var(--bs-danger);
+                    border-color: var(--bs-danger);
+                    color: white;
+                }
+            }
+        }
+    }
+}
+
+// Export buttons styling
+.table-download-buttons {
+    background-color: var(--bs-light);
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+    padding: 1rem;
+    margin-top: 1rem;
+
+    .btn {
+        margin-right: 0.5rem;
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+
+        &:last-child {
+            margin-right: 0;
+        }
+
+        i {
+            margin-right: 0.25rem;
+        }
+    }
+}
+
+// Pagination improvements
+.pagination {
+    margin: 1.5rem 0;
+
+    .page-item {
+        .page-link {
+            color: var(--bs-primary);
+            border: 1px solid var(--bs-border-color);
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            transition: all 0.15s ease-in-out;
+
+            &:hover {
+                background-color: var(--bs-primary-bg-subtle);
+                border-color: var(--bs-primary-border-subtle);
+                color: var(--bs-primary-text-emphasis);
+            }
+
+            &:focus {
+                box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+            }
+        }
+
+        &.active .page-link {
+            background-color: var(--bs-primary);
+            border-color: var(--bs-primary);
+            color: white;
+        }
+
+        &.disabled .page-link {
+            color: var(--bs-gray-400);
+            background-color: var(--bs-gray-100);
+            border-color: var(--bs-border-color);
+        }
+    }
+}
+
+// Alert styling improvements
+.alert-info {
+    background-color: var(--bs-info-bg-subtle);
+    border-color: var(--bs-info-border-subtle);
+    color: var(--bs-info-text-emphasis);
+    border-radius: var(--bs-border-radius);
+    padding: 0.75rem 1rem;
+
+    i {
+        color: var(--bs-info);
+    }
+
+    strong {
+        font-weight: 600;
+    }
+}
+
+// Responsive design
+@media (max-width: 1400px) {
+    .vcc-submissions-table {
+        font-size: 0.8rem;
+
+        td.students_info {
+            max-width: 220px;
+        }
+
+        td.mailing_address {
+            max-width: 160px;
+        }
+
+        td.pickup_info {
+            max-width: 140px;
+        }
+    }
+}
+
+@media (max-width: 1200px) {
+    .vcc-filters-card .row {
+        .col-md-3 {
+            margin-bottom: 1rem;
+        }
+    }
+
+    .vcc-submissions-table {
+        font-size: 0.75rem;
+
+        thead th,
+        tbody td {
+            padding: 0.5rem 0.25rem;
+        }
+
+        td.students_info {
+            max-width: 180px;
+        }
+
+        td.mailing_address {
+            max-width: 120px;
+        }
+
+        .vcc-students-cell .student-courses .badge {
+            font-size: 0.65rem;
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .vcc-submissions-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+
+        // Consider showing a mobile-optimized view
+        &.mobile-responsive {
+            display: table;
+
+            // Hide less important columns on mobile
+            .mailing_address,
+            .pickup_info {
+                display: none;
+            }
+
+            td.students_info {
+                max-width: 150px;
+            }
+        }
+    }
+
+    .vcc-filters-card {
+        .card-body {
+            padding: 0.75rem;
+        }
+
+        .row .col-md-3 {
+            margin-bottom: 0.75rem;
+        }
+    }
+}
+
+// Dark mode support (if theme supports it)
+@media (prefers-color-scheme: dark) {
+    .vcc-filters-card {
+        .card-header {
+            background-color: var(--bs-dark);
+            color: var(--bs-light);
+        }
+    }
+
+    .vcc-submissions-table {
+        thead th {
+            background-color: var(--bs-dark);
+            color: var(--bs-light);
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: var(--bs-gray-900);
+        }
+
+        tbody tr:hover {
+            background-color: var(--bs-gray-800);
+        }
+    }
+}
+
+// Print styles
+@media print {
+    .vcc-filters-card,
+    .table-download-buttons,
+    .pagination,
+    .vcc-actions-cell {
+        display: none !important;
+    }
+
+    .vcc-submissions-table {
+        font-size: 0.7rem;
+
+        td {
+            padding: 0.25rem;
+        }
+    }
+}

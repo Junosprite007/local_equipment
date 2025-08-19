@@ -2045,3 +2045,89 @@ $string['vccformwarning_desc'] = 'A warning alert box that will appear at the to
 
 Leave this setting blank if you don\'t want anything to appear at the top of the form.';
 $string['selectexchangelocation'] = 'Select exchange location';
+
+// Enhanced VCC table strings
+$string['all'] = 'All';
+$string['status'] = 'Status';
+$string['apt'] = 'Apt';
+$string['filters'] = 'Filters';
+$string['filtersapplied'] = 'Filters Applied';
+$string['showingsubmissions'] = 'Showing submissions';
+$string['filtered'] = 'Filtered';
+$string['nocourses'] = 'No courses';
+$string['location'] = 'Location';
+$string['method'] = 'Method';
+$string['person'] = 'Person';
+$string['expired'] = 'Expired';
+$string['applyfilters'] = 'Apply Filters';
+$string['resetfilters'] = 'Reset Filters';
+$string['datestart'] = 'Start Date';
+$string['dateend'] = 'End Date';
+$string['searchplaceholder'] = 'Name, email, phone...';
+$string['dateendbeforestart'] = 'End date must be after start date';
+$string['searchtooshort'] = 'Search must be at least 2 characters';
+$string['submissionnotfound'] = 'VCC submission not found';
+
+// Export strings
+$string['exportexcel'] = 'Export to Excel';
+$string['exportcsv'] = 'Export to CSV';
+$string['exportdata'] = 'Export Data';
+
+// Table accessibility strings
+$string['sorttableby'] = 'Sort table by {$a}';
+$string['sortascending'] = 'Sort ascending';
+$string['sortdescending'] = 'Sort descending';
+
+// Filter form strings
+$string['filterby'] = 'Filter by';
+$string['clearfilters'] = 'Clear all filters';
+$string['activefilters'] = 'Active filters';
+$string['nofiltersapplied'] = 'No filters applied';
+
+// Status strings for better accessibility
+$string['emailconfirmed'] = 'Email confirmed';
+$string['emailnotconfirmed'] = 'Email not confirmed';
+$string['phoneconfirmed'] = 'Phone confirmed';
+$string['phonenotconfirmed'] = 'Phone not confirmed';
+$string['submissionexpired'] = 'Submission expired';
+
+// Pagination strings
+$string['showingrecords'] = 'Showing {$a->start} to {$a->end} of {$a->total} records';
+$string['recordsperpage'] = 'Records per page';
+
+// Error strings
+$string['errorloadingdata'] = 'Error loading data';
+$string['nosubmissionsfound'] = 'No VCC submissions found matching your criteria';
+$string['pleasetryagain'] = 'Please try again';
+
+// Bulk actions (for future enhancement)
+$string['bulkactions'] = 'Bulk Actions';
+$string['selectall'] = 'Select All';
+$string['selectnone'] = 'Select None';
+$string['withselected'] = 'With Selected';
+
+// Advanced features
+$string['advancedfilters'] = 'Advanced Filters';
+$string['quickfilters'] = 'Quick Filters';
+$string['recentsubmissions'] = 'Recent Submissions';
+$string['thisweek'] = 'This Week';
+$string['thismonth'] = 'This Month';
+$string['thisyear'] = 'This Year';
+
+// Help strings
+$string['vccfiltershelp'] = 'Use these filters to narrow down the VCC submissions shown in the table below.';
+$string['vccexporthelp'] = 'Export the filtered data to Excel or CSV format for external analysis.';
+$string['vcctablehelp'] = 'This table shows all VCC submissions. Use the filters above to narrow down the results.';
+
+// Accessibility enhancement strings
+$string['students_info'] = 'Student information';
+$string['coursesfor'] = 'Courses for';
+$string['course'] = 'Course';
+$string['nostudents'] = 'No students';
+$string['status_info'] = 'Status information';
+$string['verification_status'] = 'Verification status';
+$string['email_verified'] = 'Email address has been verified';
+$string['email_not_verified'] = 'Email address has not been verified';
+$string['phone_verified'] = 'Phone number has been verified';
+$string['phone_not_verified'] = 'Phone number has not been verified';
+$string['submission_expired'] = 'This submission has expired';
