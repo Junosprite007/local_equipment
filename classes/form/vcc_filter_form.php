@@ -112,13 +112,13 @@ class vcc_filter_form extends moodleform {
             'submit',
             'submitbutton',
             get_string('applyfilters', 'local_equipment'),
-            ['class' => 'btn btn-primary']
+            ['class' => 'mx-2']
         );
         $buttonarray[] = $mform->createElement(
             'submit',
             'resetfilters',
             get_string('resetfilters', 'local_equipment'),
-            ['class' => 'btn btn-secondary']
+            ['class' => 'mx-2 btn btn-secondary']
         );
 
         $mform->addGroup($buttonarray, 'buttonar', '', ' ', false);
