@@ -2068,6 +2068,22 @@ $string['dateendbeforestart'] = 'End date must be after start date';
 $string['searchtooshort'] = 'Search must be at least 2 characters';
 $string['submissionnotfound'] = 'VCC submission not found';
 
+// Exchange column strings for VCC submissions table
+$string['exchangepartnership'] = 'Exchange Partnership';
+$string['exchangetimeframe'] = 'Exchange Timeframe';
+$string['exchangepickupmethod'] = 'Exchange Pickup Method';
+$string['exchangepickupperson'] = 'Exchange Pickup Person';
+$string['exchangepickupphone'] = 'Exchange Pickup Phone';
+$string['exchangepickupdetails'] = 'Exchange Pickup Details';
+$string['exchangeaddressdetails'] = 'Exchange Address Details';
+
+// Exchange pickup method strings
+$string['pickupmethod_self'] = 'Self pickup';
+$string['pickupmethod_other'] = 'Other person pickup';
+$string['pickupmethod_ship'] = 'Shipping';
+$string['pickupmethod_purchased'] = 'Already purchased';
+$string['pickupmethod_contact'] = 'Contact for pickup';
+
 // Export strings
 $string['exportexcel'] = 'Export to Excel';
 $string['exportcsv'] = 'Export to CSV';

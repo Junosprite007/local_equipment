@@ -23,6 +23,13 @@ use moodle_url;
 use stdClass;
 use local_equipment\service\vcc_submission_service;
 
+// Ensure Moodle core classes are properly imported
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->libdir . '/tablelib.php');
+require_once($CFG->dirroot . '/lib/weblib.php');
+require_once($CFG->libdir . '/classes/url.php');
+
 /**
  * Table for displaying VCC submissions with proper Moodle 5.0 conventions
  *
@@ -57,7 +64,7 @@ class vcc_submissions_table extends table_sql {
      * Set up table configuration
      */
     private function setup_table(): void {
-        // Define columns with proper type safety - ALL VCC submission fields for admin visibility
+        // Define columns with proper type safety - ALL VCC submission fields + exchange fields for admin visibility
         $columns = [
             'timecreated',
             'firstname',
@@ -69,6 +76,13 @@ class vcc_submissions_table extends table_sql {
             'mailing_address',
             'billing_address',
             'pickup_info',
+            'exchange_partnership',
+            'exchange_timeframe',
+            'exchange_pickup_method',
+            'exchange_pickup_person',
+            'exchange_pickup_phone',
+            'exchange_pickup_details',
+            'exchange_address_details',
             'electronicsignature',
             'confirmationid',
             'usernotes',
@@ -88,6 +102,13 @@ class vcc_submissions_table extends table_sql {
             get_string('mailingaddress', 'local_equipment'),
             get_string('billingaddress', 'local_equipment'),
             get_string('pickup', 'local_equipment'),
+            get_string('exchangepartnership', 'local_equipment'),
+            get_string('exchangetimeframe', 'local_equipment'),
+            get_string('exchangepickupmethod', 'local_equipment'),
+            get_string('exchangepickupperson', 'local_equipment'),
+            get_string('exchangepickupphone', 'local_equipment'),
+            get_string('exchangepickupdetails', 'local_equipment'),
+            get_string('exchangeaddressdetails', 'local_equipment'),
             get_string('electronicsignature', 'local_equipment'),
             get_string('confirmationid', 'local_equipment'),
             get_string('usernotes', 'local_equipment'),
@@ -105,6 +126,8 @@ class vcc_submissions_table extends table_sql {
         $this->no_sorting('mailing_address');
         $this->no_sorting('billing_address');
         $this->no_sorting('pickup_info');
+        $this->no_sorting('exchange_pickup_details');
+        $this->no_sorting('exchange_address_details');
         $this->no_sorting('usernotes');
         $this->no_sorting('adminnotes');
         $this->no_sorting('status_info');
@@ -121,6 +144,11 @@ class vcc_submissions_table extends table_sql {
         // Column styling with Bootstrap 5
         $this->column_class('timecreated', 'text-nowrap');
         $this->column_class('partnership_name', 'text-nowrap');
+        $this->column_class('exchange_partnership', 'text-nowrap');
+        $this->column_class('exchange_timeframe', 'text-nowrap');
+        $this->column_class('exchange_pickup_method', 'text-nowrap');
+        $this->column_class('exchange_pickup_person', 'text-nowrap');
+        $this->column_class('exchange_pickup_phone', 'text-nowrap');
         $this->column_class('actions', 'text-nowrap text-center');
         $this->column_class('status_info', 'text-center');
     }
@@ -271,6 +299,118 @@ class vcc_submissions_table extends table_sql {
     }
 
     /**
+     * Format the exchange partnership column with fallback to VCC data
+     */
+    public function col_exchange_partnership(stdClass $row): string {
+        // Priority: exchange submission -> VCC submission partnership
+        return $row->exchange_partnership_name ?? ($row->partnership_name ?? ($row->p_name ?? '-'));
+    }
+
+    /**
+     * Format the exchange timeframe column with fallback
+     */
+    public function col_exchange_timeframe(stdClass $row): string {
+        // Format exchange timeframe from pickup schedule data
+        if (!empty($row->exchange_pickup_date)) {
+            $date_str = userdate($row->exchange_pickup_date, get_string('strftimedate', 'core_langconfig'));
+
+            $time_parts = [];
+            if (!empty($row->exchange_pickup_starttime)) {
+                $time_parts[] = userdate($row->exchange_pickup_starttime, get_string('strftimetime12', 'core_langconfig'));
+            }
+            if (!empty($row->exchange_pickup_endtime)) {
+                $time_parts[] = userdate($row->exchange_pickup_endtime, get_string('strftimetime12', 'core_langconfig'));
+            }
+
+            $time_str = empty($time_parts) ? '' : implode(' - ', $time_parts);
+            return trim($date_str . ($time_str ? ' at ' . $time_str : ''));
+        }
+
+        // Fallback to VCC pickup timeframe if available
+        return !empty($row->pickup_locationtime) ? s($row->pickup_locationtime) : '-';
+    }
+
+    /**
+     * Format the exchange pickup method column with fallback
+     */
+    public function col_exchange_pickup_method(stdClass $row): string {
+        // Priority: exchange submission -> VCC submission pickup method
+        $method = $row->exchange_pickup_method ?? ($row->pickupmethod ?? null);
+
+        if (!empty($method)) {
+            // Check if the string exists, fallback to raw value if not
+            if (get_string_manager()->string_exists('pickupmethod_' . $method, 'local_equipment')) {
+                return get_string('pickupmethod_' . $method, 'local_equipment');
+            }
+            return s($method);
+        }
+
+        return '-';
+    }
+
+    /**
+     * Format the exchange pickup person column with fallback
+     */
+    public function col_exchange_pickup_person(stdClass $row): string {
+        // Priority: exchange submission -> VCC submission pickup person
+        $name = $row->exchange_pickup_person_name ?? ($row->pickuppersonname ?? null);
+        return !empty($name) ? s($name) : '-';
+    }
+
+    /**
+     * Format the exchange pickup phone column with fallback
+     */
+    public function col_exchange_pickup_phone(stdClass $row): string {
+        // Priority: exchange submission -> VCC submission pickup phone
+        $phone = $row->exchange_pickup_person_phone ?? ($row->pickuppersonphone ?? null);
+        return !empty($phone) ? s($phone) : '-';
+    }
+
+    /**
+     * Format the exchange pickup details column with fallback
+     */
+    public function col_exchange_pickup_details(stdClass $row): string {
+        // Priority: exchange submission -> VCC submission pickup details
+        $details = $row->exchange_pickup_person_details ?? ($row->pickuppersondetails ?? null);
+
+        if (!empty($details)) {
+            $formatted_details = s($details);
+            return strlen($formatted_details) > 50 ? substr($formatted_details, 0, 50) . '...' : $formatted_details;
+        }
+
+        return '-';
+    }
+
+    /**
+     * Format the exchange address details column (partnership address info)
+     */
+    public function col_exchange_address_details(stdClass $row): string {
+        // Priority: exchange partnership address -> regular partnership address
+        $address = $row->exchange_partnership_pickup_address ??
+            ($row->exchange_partnership_address ??
+                ($row->exchange_partnership_mailing_address ?? ''));
+
+        if (empty($address) && !empty($row->p_name)) {
+            // Fallback to constructing address from VCC partnership data if available
+            $address_parts = array_filter([
+                $row->mailing_streetaddress ?? '',
+                $row->mailing_apartment ? get_string('apt', 'local_equipment') . ' ' . $row->mailing_apartment : '',
+                $row->mailing_city ?? '',
+                $row->mailing_state ?? '',
+                $row->mailing_zipcode ?? ''
+            ]);
+            $address = implode(', ', $address_parts);
+        }
+
+        if (!empty($address)) {
+            $trimmed_address = trim($address);
+            return strlen($trimmed_address) > 60 ? substr($trimmed_address, 0, 60) . '...' : $trimmed_address;
+        }
+
+        return '-';
+    }
+
+    /**
      * Format the actions column with proper Bootstrap 5 button groups
      */
     public function col_actions(stdClass $row): string {
@@ -291,35 +431,6 @@ class vcc_submissions_table extends table_sql {
         return $OUTPUT->render_from_template('local_equipment/vcc_actions_cell', $actions_data);
     }
 
-    /**
-     * Override download method for custom export with proper data formatting - ALL fields included
-     */
-    public function download(): void {
-        // Get all filtered data for export
-        $export_data = $this->vcc_service->get_export_data($this->filters);
-
-        foreach ($export_data as $record) {
-            $row = [
-                userdate($record->timecreated, '%Y-%m-%d %H:%M'),
-                $record->firstname ?? $record->u_firstname ?? '',
-                $record->lastname ?? $record->u_lastname ?? '',
-                $record->email ?? $record->u_email ?? '',
-                $record->phone ?? $record->u_phone2 ?? $record->u_phone1 ?? '',
-                $record->partnership_name ?? $record->p_name ?? '',
-                $this->vcc_service->get_students_text_for_export($record),
-                $this->get_mailing_address_text_for_export($record),
-                $this->get_billing_address_text_for_export($record),
-                $this->vcc_service->get_pickup_text_for_export($record),
-                $record->electronicsignature ?? '-',
-                $record->confirmationid ?? '-',
-                $record->usernotes ?? '-',
-                $record->adminnotes ?? '-',
-                $this->get_status_text_for_export($record)
-            ];
-
-            $this->add_data_keyed($row);
-        }
-    }
 
     /**
      * Get mailing address text for export

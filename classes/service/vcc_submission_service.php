@@ -90,7 +90,7 @@ class vcc_submission_service {
     }
 
     /**
-     * Build SQL query for table with filters - includes ALL VCC submission fields
+     * Build SQL query for table with filters - includes ALL VCC submission fields and exchange data
      *
      * @param stdClass $filters
      * @return array [select, from, where, params]
@@ -102,6 +102,7 @@ class vcc_submission_service {
             vccsubmission.partnershipid,
             vccsubmission.pickupid,
             vccsubmission.exchange_partnershipid,
+            vccsubmission.exchangesubmissionid,
             vccsubmission.studentids,
             vccsubmission.agreementids,
             vccsubmission.confirmationid,
@@ -146,7 +147,19 @@ class vcc_submission_service {
             u.phone1 as u_phone1,
             u.phone2 as u_phone2,
             partnership.name as p_name,
-            exchange_partnership.name as exchange_partnership_name
+            exchange_partnership.name as exchange_partnership_name,
+            " . $this->db->sql_concat_join("' '", ['exchange_partnership.physical_streetaddress', 'exchange_partnership.physical_city', 'exchange_partnership.physical_state']) . " as exchange_partnership_address,
+            " . $this->db->sql_concat_join("' '", ['exchange_partnership.mailing_streetaddress', 'exchange_partnership.mailing_city', 'exchange_partnership.mailing_state']) . " as exchange_partnership_mailing_address,
+            " . $this->db->sql_concat_join("' '", ['exchange_partnership.pickup_streetaddress', 'exchange_partnership.pickup_city', 'exchange_partnership.pickup_state']) . " as exchange_partnership_pickup_address,
+            exchange_sub.pickup_method as exchange_pickup_method,
+            exchange_sub.pickup_person_name as exchange_pickup_person_name,
+            exchange_sub.pickup_person_phone as exchange_pickup_person_phone,
+            exchange_sub.pickup_person_details as exchange_pickup_person_details,
+            exchange_sub.user_notes as exchange_user_notes,
+            pickup_schedule.pickupdate as exchange_pickup_date,
+            pickup_schedule.starttime as exchange_pickup_starttime,
+            pickup_schedule.endtime as exchange_pickup_endtime,
+            " . $this->db->sql_concat_join("' '", ['pickup_schedule.pickup_streetaddress', 'pickup_schedule.pickup_city', 'pickup_schedule.pickup_state']) . " as exchange_pickup_location_address
         ";
 
         $from = "
@@ -154,6 +167,8 @@ class vcc_submission_service {
             LEFT JOIN {user} u ON vccsubmission.userid = u.id
             LEFT JOIN {local_equipment_partnership} partnership ON vccsubmission.partnershipid = partnership.id
             LEFT JOIN {local_equipment_partnership} exchange_partnership ON vccsubmission.exchange_partnershipid = exchange_partnership.id
+            LEFT JOIN {local_equipment_exchange_submission} exchange_sub ON vccsubmission.exchangesubmissionid = exchange_sub.id
+            LEFT JOIN {local_equipment_pickup} pickup_schedule ON exchange_sub.exchangeid = pickup_schedule.id
         ";
 
         [$where, $params] = $this->build_where_clause($filters);
@@ -305,7 +320,7 @@ class vcc_submission_service {
     }
 
     /**
-     * Get pickup display data for template
+     * Get pickup display data for template with exchange data priority
      *
      * @param stdClass $row
      * @return array
@@ -313,22 +328,81 @@ class vcc_submission_service {
     public function get_pickup_display_data(stdClass $row): array {
         $pickup_data = [];
 
-        if ($row->pickupid) {
-            $sql = "SELECT p.id, p.partnershipid, partnership.name as partnership_name
-                    FROM {local_equipment_pickup} p
-                    LEFT JOIN {local_equipment_partnership} partnership ON p.partnershipid = partnership.id
-                    WHERE p.id = ?";
-            $pickup = $this->db->get_record_sql($sql, [$row->pickupid]);
-            if ($pickup) {
-                $pickup_data['location'] = $pickup->partnership_name;
+        // Priority 1: Exchange submission data
+        if (!empty($row->exchange_pickup_method) || !empty($row->exchange_pickup_person_name) || !empty($row->exchange_partnership_name)) {
+            $pickup_data['method'] = $row->exchange_pickup_method ?? '';
+            $pickup_data['person_name'] = $row->exchange_pickup_person_name ?? '';
+            $pickup_data['person_phone'] = $row->exchange_pickup_person_phone ?? '';
+            $pickup_data['person_details'] = $row->exchange_pickup_person_details ?? '';
+            $pickup_data['partnership_name'] = $row->exchange_partnership_name ?? '';
+            $pickup_data['partnership_address'] = $this->format_exchange_address($row, 'pickup');
+            $pickup_data['timeframe'] = $this->format_exchange_timeframe($row);
+            $pickup_data['source'] = 'exchange';
+        } else {
+            // Priority 2: Fallback to VCC submission data
+            if ($row->pickupid) {
+                $sql = "SELECT p.id, p.partnershipid, partnership.name as partnership_name
+                        FROM {local_equipment_pickup} p
+                        LEFT JOIN {local_equipment_partnership} partnership ON p.partnershipid = partnership.id
+                        WHERE p.id = ?";
+                $pickup = $this->db->get_record_sql($sql, [$row->pickupid]);
+                if ($pickup) {
+                    $pickup_data['partnership_name'] = $pickup->partnership_name;
+                }
             }
+
+            $pickup_data['method'] = $row->pickupmethod ?? '';
+            $pickup_data['person_name'] = $row->pickuppersonname ?? '';
+            $pickup_data['person_phone'] = $row->pickuppersonphone ?? '';
+            $pickup_data['person_details'] = $row->pickuppersondetails ?? '';
+            $pickup_data['timeframe'] = $row->pickup_locationtime ?? '';
+            $pickup_data['source'] = 'vcc';
         }
 
-        $pickup_data['method'] = $row->pickupmethod ?? '';
-        $pickup_data['person_name'] = $row->pickuppersonname ?? '';
-        $pickup_data['person_phone'] = $row->pickuppersonphone ?? '';
-
         return $pickup_data;
+    }
+
+    /**
+     * Format exchange address based on type
+     *
+     * @param stdClass $row
+     * @param string $type physical|mailing|pickup
+     * @return string
+     */
+    private function format_exchange_address(stdClass $row, string $type = 'pickup'): string {
+        $field_name = "exchange_partnership_{$type}_address";
+
+        if (!empty($row->{$field_name})) {
+            return trim($row->{$field_name});
+        }
+
+        return '';
+    }
+
+    /**
+     * Format exchange timeframe from pickup schedule
+     *
+     * @param stdClass $row
+     * @return string
+     */
+    private function format_exchange_timeframe(stdClass $row): string {
+        if (empty($row->exchange_pickup_date)) {
+            return '';
+        }
+
+        $date_str = userdate($row->exchange_pickup_date, get_string('strftimedate', 'core_langconfig'));
+
+        $time_parts = [];
+        if (!empty($row->exchange_pickup_starttime)) {
+            $time_parts[] = userdate($row->exchange_pickup_starttime, get_string('strftimetime12', 'core_langconfig'));
+        }
+        if (!empty($row->exchange_pickup_endtime)) {
+            $time_parts[] = userdate($row->exchange_pickup_endtime, get_string('strftimetime12', 'core_langconfig'));
+        }
+
+        $time_str = empty($time_parts) ? '' : implode(' - ', $time_parts);
+
+        return trim($date_str . ($time_str ? ' at ' . $time_str : ''));
     }
 
     /**
@@ -375,7 +449,7 @@ class vcc_submission_service {
     }
 
     /**
-     * Get pickup text for export
+     * Get pickup text for export with exchange data priority
      *
      * @param stdClass $row
      * @return string
@@ -383,28 +457,107 @@ class vcc_submission_service {
     public function get_pickup_text_for_export(stdClass $row): string {
         $pickup_parts = [];
 
-        if ($row->pickupid) {
-            $sql = "SELECT p.id, p.partnershipid, partnership.name as partnership_name
-                    FROM {local_equipment_pickup} p
-                    LEFT JOIN {local_equipment_partnership} partnership ON p.partnershipid = partnership.id
-                    WHERE p.id = ?";
-            $pickup = $this->db->get_record_sql($sql, [$row->pickupid]);
-            if ($pickup) {
-                $pickup_parts[] = 'Location: ' . $pickup->partnership_name;
+        // Priority 1: Exchange submission data
+        if (!empty($row->exchange_pickup_method) || !empty($row->exchange_pickup_person_name) || !empty($row->exchange_partnership_name)) {
+            if ($row->exchange_partnership_name) {
+                $pickup_parts[] = 'Partnership: ' . $row->exchange_partnership_name;
             }
-        }
 
-        if ($row->pickupmethod) {
-            $pickup_parts[] = 'Method: ' . $row->pickupmethod;
-        }
-
-        if ($row->pickuppersonname) {
-            $pickup_parts[] = 'Person: ' . $row->pickuppersonname;
-            if ($row->pickuppersonphone) {
-                $pickup_parts[] = 'Phone: ' . $row->pickuppersonphone;
+            if ($row->exchange_pickup_method) {
+                $pickup_parts[] = 'Method: ' . $row->exchange_pickup_method;
             }
+
+            $timeframe = $this->format_exchange_timeframe($row);
+            if ($timeframe) {
+                $pickup_parts[] = 'Timeframe: ' . $timeframe;
+            }
+
+            if ($row->exchange_pickup_person_name) {
+                $pickup_parts[] = 'Person: ' . $row->exchange_pickup_person_name;
+                if ($row->exchange_pickup_person_phone) {
+                    $pickup_parts[] = 'Phone: ' . $row->exchange_pickup_person_phone;
+                }
+            }
+
+            if ($row->exchange_pickup_person_details) {
+                $pickup_parts[] = 'Details: ' . $row->exchange_pickup_person_details;
+            }
+
+            $address = $this->format_exchange_address($row, 'pickup');
+            if ($address) {
+                $pickup_parts[] = 'Address: ' . $address;
+            }
+
+            $pickup_parts[] = 'Source: Exchange';
+        } else {
+            // Priority 2: Fallback to VCC submission data
+            if ($row->pickupid) {
+                $sql = "SELECT p.id, p.partnershipid, partnership.name as partnership_name
+                        FROM {local_equipment_pickup} p
+                        LEFT JOIN {local_equipment_partnership} partnership ON p.partnershipid = partnership.id
+                        WHERE p.id = ?";
+                $pickup = $this->db->get_record_sql($sql, [$row->pickupid]);
+                if ($pickup) {
+                    $pickup_parts[] = 'Location: ' . $pickup->partnership_name;
+                }
+            }
+
+            if ($row->pickupmethod) {
+                $pickup_parts[] = 'Method: ' . $row->pickupmethod;
+            }
+
+            if ($row->pickup_locationtime) {
+                $pickup_parts[] = 'Time: ' . $row->pickup_locationtime;
+            }
+
+            if ($row->pickuppersonname) {
+                $pickup_parts[] = 'Person: ' . $row->pickuppersonname;
+                if ($row->pickuppersonphone) {
+                    $pickup_parts[] = 'Phone: ' . $row->pickuppersonphone;
+                }
+            }
+
+            if ($row->pickuppersondetails) {
+                $pickup_parts[] = 'Details: ' . $row->pickuppersondetails;
+            }
+
+            $pickup_parts[] = 'Source: VCC';
         }
 
         return empty($pickup_parts) ? '-' : implode('; ', $pickup_parts);
+    }
+
+    /**
+     * Get exchange partnership details for display
+     *
+     * @param stdClass $row
+     * @return array
+     */
+    public function get_exchange_partnership_details(stdClass $row): array {
+        return [
+            'name' => $row->exchange_partnership_name ?? '',
+            'physical_address' => $this->format_exchange_address($row, 'physical'),
+            'mailing_address' => $this->format_exchange_address($row, 'mailing'),
+            'pickup_address' => $this->format_exchange_address($row, 'pickup')
+        ];
+    }
+
+    /**
+     * Get complete exchange data for display
+     *
+     * @param stdClass $row
+     * @return array
+     */
+    public function get_exchange_data(stdClass $row): array {
+        return [
+            'partnership' => $this->get_exchange_partnership_details($row),
+            'timeframe' => $this->format_exchange_timeframe($row),
+            'pickup_method' => $row->exchange_pickup_method ?? '',
+            'pickup_person_name' => $row->exchange_pickup_person_name ?? '',
+            'pickup_person_phone' => $row->exchange_pickup_person_phone ?? '',
+            'pickup_person_details' => $row->exchange_pickup_person_details ?? '',
+            'user_notes' => $row->exchange_user_notes ?? '',
+            'pickup_location_address' => $row->exchange_pickup_location_address ?? ''
+        ];
     }
 }

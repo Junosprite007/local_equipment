@@ -3936,7 +3936,7 @@ function local_equipment_generate_family_notification(string $familyname, stdCla
 
     // Build content.
     $html .= html_writer::start_div('collapse local-equipment-notification-content', ['id' => $notificationid]);
-    $html .= html_writer::start_div('content-wrapper p-3 border-left border-right border-bottom rounded-bottom');
+    $html .= html_writer::start_div('content-wrapper p-3 border-end border-right border-bottom rounded-bottom');
 
     // Add messages.
     foreach (['successes', 'warnings', 'errors'] as $type) {
