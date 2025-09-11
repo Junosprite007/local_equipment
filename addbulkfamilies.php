@@ -142,7 +142,13 @@ if ($mform->is_cancelled()) {
 
                 $parent->username = clean_param($parent->username, PARAM_USERNAME);
 
-                $user = $DB->get_record('user', ['email' => $parent->email]);
+                // $user = $DB->get_record('user', ['email' => $parent->email]);
+                $user = $DB->get_record_select(
+                    'user',
+                    $DB->sql_compare_text('email') . " = :email",
+                    ['email' => $parent->email]
+                );
+                $password = null;
                 $password = null;
 
                 // If the parent doesn't exist based on their email, we'll create a new user. If they do exist, we'll override the
@@ -163,11 +169,15 @@ if ($mform->is_cancelled()) {
                     $parent->id = $userid;
 
                     // Force passord update for the parent's on next login.
-                    if ($newparent_preferenceupdate = $DB->get_record('user_preferences', [
-                        'userid' => $userid,
-                        'name' => 'auth_forcepasswordchange',
-                        'value' => 0
-                    ])) {
+                    $newparent_preferenceupdate = $DB->get_record_select(
+                        'user_preferences',
+                        "userid = :userid AND " .
+                            $DB->sql_compare_text('name') . " = :name AND " .
+                            $DB->sql_compare_text('value') . " = :value",
+                        ['userid' => $userid, 'name' => 'auth_forcepasswordchange', 'value' => 0]
+                    );
+
+                    if ($newparent_preferenceupdate) {
                         $newparent_preferenceupdate->value = 1;
                         $DB->update_record('user_preferences', $newparent_preferenceupdate);
                     } else {
@@ -308,12 +318,25 @@ if ($mform->is_cancelled()) {
                 // extremely rare case, but I wanted to mention it in case anyone has a solution to such an edge case. I mean,
                 // manually entering a version of the generated email, like parent1+child1@example.com and
                 // parent1+child2@example.com for each student is a solution, so admins can just do that I guess.
-                $user = $DB->get_record('user', ['email' => $student->email]);
+                // $user = $DB->get_record('user', ['email' => $student->email]);
+                $user = $DB->get_record_select(
+                    'user',
+                    $DB->sql_compare_text('email') . " = :email",
+                    ['email' => $student->email],
+                    IGNORE_MULTIPLE
+                );
+                $password = null;
                 $password = null;
                 if (!$user) {
                     foreach ($allstudentsofallparents as $sofp) {
                         if (strcasecmp($student->firstname, $sofp->firstname) === 0 && strcasecmp($student->lastname, $sofp->lastname) === 0) {
-                            $user = $DB->get_record('user', ['email' => $sofp->email]);
+                            // $user = $DB->get_record('user', ['email' => $sofp->email]);
+                            $user = $DB->get_record_select(
+                                'user',
+                                $DB->sql_compare_text('email') . " = :email",
+                                ['email' => $sofp->email]
+                            );
+                            $password = null;
                             $student = $user;
                             break;
                         }
@@ -333,7 +356,15 @@ if ($mform->is_cancelled()) {
                     $student->id = $userid;
 
                     // Force passord update for the student's on next login.
-                    if ($newstudent_preferenceupdate = $DB->get_record('user_preferences', ['userid' => $userid, 'name' => 'auth_forcepasswordchange', 'value' => 0])) {
+                    $newstudent_preferenceupdate = $DB->get_record_select(
+                        'user_preferences',
+                        "userid = :userid AND " .
+                            $DB->sql_compare_text('name') . " = :name AND " .
+                            $DB->sql_compare_text('value') . " = :value",
+                        ['userid' => $userid, 'name' => 'auth_forcepasswordchange', 'value' => 0]
+                    );
+
+                    if ($newstudent_preferenceupdate) {
                         $newstudent_preferenceupdate->value = 1;
                         $DB->update_record('user_preferences', $newstudent_preferenceupdate);
                     } else {
@@ -343,6 +374,7 @@ if ($mform->is_cancelled()) {
                         $newstudent_preferenceupdate->value = 1;
                         $newstudent_preferenceupdate_id = $DB->insert_record('user_preferences', $newstudent_preferenceupdate);
                     }
+
                     $created_users[] = $student;
                     $messages->successes[] = get_string('accountcreatedsuccessfully', 'local_equipment', $student);
 
