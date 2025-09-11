@@ -420,7 +420,7 @@ if ($hassiteconfig) {
         new admin_externalpage(
             "{$component}_vccsubmissions",
             new lang_string('managevccsubmissions', 'local_equipment'),
-            new moodle_url('/local/equipment/vccsubmissions.php'),
+            new moodle_url('/local/equipment/vccsubmissions/view.php'),
             'local/equipment:managevccsubmissions'
         )
     );

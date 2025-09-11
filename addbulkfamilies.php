@@ -317,6 +317,8 @@ if ($mform->is_cancelled()) {
                 // extremely rare case, but I wanted to mention it in case anyone has a solution to such an edge case. I mean,
                 // manually entering a version of the generated email, like parent1+child1@example.com and
                 // parent1+child2@example.com for each student is a solution, so admins can just do that I guess.
+
+
                 // $user = $DB->get_record('user', ['email' => $student->email]);
                 $user = $DB->get_record_select(
                     'user',
@@ -334,7 +336,6 @@ if ($mform->is_cancelled()) {
                                 $DB->sql_compare_text('email') . " = :email",
                                 ['email' => $sofp->email]
                             );
-                            $password = null;
                             $student = $user;
                             break;
                         }

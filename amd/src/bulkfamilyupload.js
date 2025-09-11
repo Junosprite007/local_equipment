@@ -442,7 +442,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
             parsedPhoneNumber = '+' + parsedPhoneNumber;
         } else {
             return (
-                '<span class="pl-2 pr-2 alert-danger">' +
+                '<span class="ps-2 pe-2 alert-danger">' +
                 (await getString(
                     'invalidphonenumber',
                     'local_equipment',
@@ -477,7 +477,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                 if (names.length === 1) {
                     // Only one name provided.
                     nameHTML =
-                        '<span class="pl-2 pr-2 alert-danger">' +
+                        '<span class="ps-2 pe-2 alert-danger">' +
                         (await getString(
                             'onlyonenameprovided',
                             'local_equipment',
@@ -502,13 +502,13 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
             }
             case 'email':
                 parent[textType].html =
-                    '<span class="pl-4 pr-4">' + line + '</span>';
+                    '<span class="ps-4 pe-4">' + line + '</span>';
                 break;
             case 'phone': {
                 let formattedPhone = await parsePhoneNumber(line);
                 parent[textType].data = formattedPhone;
                 parent[textType].html =
-                    '<span class="pl-4 pr-4">' + formattedPhone + '</span>';
+                    '<span class="ps-4 pe-4">' + formattedPhone + '</span>';
                 break;
             }
             default:
@@ -535,7 +535,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
             partnership = {
                 data: id,
                 html:
-                    '<span class="pl-2 pr-2 alert-danger">' +
+                    '<span class="ps-2 pe-2 alert-danger">' +
                     (await getString(
                         'partnershipnumbernotfound',
                         'local_equipment',
@@ -593,12 +593,12 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                     name =
                         name +
                         ' ' +
-                        '<span class="pl-1 pr-1 alert-warning">' +
+                        '<span class="ps-1 pe-1 alert-warning">' +
                         parents[0]?.name?.data?.lastName +
                         '</span>';
                 } else if (names.length === 1 && !parentExists) {
                     name =
-                        '<span class="pl-2 pr-2 alert-danger">' +
+                        '<span class="ps-2 pe-2 alert-danger">' +
                         (await getString(
                             'onlyonenameprovided',
                             'local_equipment',
@@ -623,13 +623,13 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
             case 'email':
                 student[textType].data = line;
                 student[textType].html =
-                    '<span class="pl-4 pr-4">' + line + '</span>';
+                    '<span class="ps-4 pe-4">' + line + '</span>';
                 break;
             case 'phone': {
                 let formattedPhone = await parsePhoneNumber(line);
                 student[textType].data = formattedPhone;
                 student[textType].html =
-                    '<span class="pl-4 pr-4">' + formattedPhone + '</span>';
+                    '<span class="ps-4 pe-4">' + formattedPhone + '</span>';
                 break;
             }
             case 'courses': {
@@ -707,7 +707,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                                 'local_equipment',
                                 msg.c_id
                             );
-                            courseName = `<span class="pl-2 pr-2 alert-danger">${errorMessage}</span>`;
+                            courseName = `<span class="ps-2 pe-2 alert-danger">${errorMessage}</span>`;
                         } else if (
                             courses[id] &&
                             partnershipAdded &&
@@ -718,14 +718,14 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                                 'local_equipment',
                                 msg
                             );
-                            courseName = `<span class="pl-2 pr-2 alert-danger">${errorMessage}</span>`;
+                            courseName = `<span class="ps-2 pe-2 alert-danger">${errorMessage}</span>`;
                         } else {
                             const errorMessage = await getString(
                                 'courseidnotfound',
                                 'local_equipment',
                                 msg.c_id
                             );
-                            courseName = `<span class="pl-2 pr-2 alert-danger">${errorMessage}</span>`;
+                            courseName = `<span class="ps-2 pe-2 alert-danger">${errorMessage}</span>`;
                         }
 
                         return courseName;
@@ -734,7 +734,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
 
                 student[textType].data = coursesData;
                 student[textType].html =
-                    '<span class="pl-4 pr-4">' +
+                    '<span class="ps-4 pe-4">' +
                     coursesHTML.join(', ') +
                     '</span>';
                 break;
@@ -786,7 +786,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             line
                         );
                         familyHTML.push(
-                            `<span class="pl-2 alert-danger">${errorString}</span>`
+                            `<span class="ps-2 alert-danger">${errorString}</span>`
                         );
                         continue;
                     }
@@ -798,7 +798,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                             line
                         );
                         familyHTML.push(
-                            `<span class="pl-2 alert-danger">${errorString}</span>`
+                            `<span class="ps-2 alert-danger">${errorString}</span>`
                         );
                         continue;
                     }
@@ -820,7 +820,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                                     line
                                 );
                                 familyHTML.push(
-                                    `<span class="pl-2 alert-danger">${errorMessage}</span>`
+                                    `<span class="ps-2 alert-danger">${errorMessage}</span>`
                                 );
                                 break;
                             }
@@ -875,7 +875,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                                         studentName
                                     );
                                     familyHTML.push(
-                                        `<span class="pl-2 alert-danger">${errorMessage}</span>`
+                                        `<span class="ps-2 alert-danger">${errorMessage}</span>`
                                     );
                                 }
 
@@ -896,7 +896,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                         line
                     );
                     familyHTML.push(
-                        `<span class="pl-2 alert-danger">${errorString}</span>`
+                        `<span class="ps-2 alert-danger">${errorString}</span>`
                     );
                 }
             }
@@ -915,7 +915,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                     );
                     Log.debug(errorMessage);
                     familyHTML.unshift(
-                        `<span class="pl-2 alert-danger">${errorMessage}</span>`
+                        `<span class="ps-2 alert-danger">${errorMessage}</span>`
                     );
                 }
             }
@@ -926,7 +926,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                     'local_equipment'
                 );
                 familyHTML.unshift(
-                    `<span class="pl-2 alert-danger">${errorMessage}</span>`
+                    `<span class="ps-2 alert-danger">${errorMessage}</span>`
                 );
             }
 
@@ -936,7 +936,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
                     'local_equipment'
                 );
                 familyHTML.unshift(
-                    `<span class="pl-2 alert-danger">${errorMessage}</span>`
+                    `<span class="ps-2 alert-danger">${errorMessage}</span>`
                 );
             }
 
@@ -987,7 +987,7 @@ export const validateFamilyData = async ({ input, partnerships, courses }) => {
             );
             return {
                 data: {},
-                html: `<div class="bg-light border p-3"><span class="pl-2 alert-danger">${errorString}</span></div>`,
+                html: `<div class="bg-light border p-3"><span class="ps-2 alert-danger">${errorString}</span></div>`,
             };
         }
     };

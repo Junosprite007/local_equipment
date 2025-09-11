@@ -1,0 +1,46 @@
+{{!
+    This file is part of FLIP Plugins for Moodle
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_equipment/vcc_students_cell
+
+    Template for the VCC summary page.
+
+    Context variables:
+    * students -
+    * last -
+    * name -
+    * courses -
+}}
+
+<div class="vcc-students-cell" role="region" aria-label="{{#str}}students_info, local_equipment{{/str}}">
+    {{#students}}
+    <div class="student-item {{^@last}}border-bottom pb-2 mb-2{{/@last}}" role="article" aria-labelledby="student-{{@index}}-name">
+        <div id="student-{{@index}}-name" class="student-name fw-bold" role="heading" aria-level="4">{{name}}</div>
+        <div class="student-courses" role="group" aria-label="{{#str}}coursesfor, local_equipment{{/str}} {{name}}">
+            {{#courses}}
+            <span class="badge text-bg-light me-1 mb-1" role="text" aria-label="{{#str}}course, local_equipment{{/str}}: {{name}}">{{name}}</span>
+            {{/courses}}
+            {{^courses}}
+            <small class="text-muted" role="text">{{#str}}nocourses, local_equipment{{/str}}</small>
+            {{/courses}}
+        </div>
+    </div>
+    {{/students}}
+    {{^students}}
+    <span class="text-muted" role="text" aria-label="{{#str}}nostudents, local_equipment{{/str}}">-</span>
+    {{/students}}
+</div>

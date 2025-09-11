@@ -1236,5 +1236,23 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025081601, 'local', 'equipment');
     }
 
+    // Add exchangesubmissionid field for direct VCC-Exchange relationship
+    if ($oldversion < 2025081902) {
+        // Add exchangesubmissionid field to local_equipment_vccsubmission table
+        $table = new xmldb_table('local_equipment_vccsubmission');
+        $field = new xmldb_field('exchangesubmissionid', XMLDB_TYPE_INTEGER, '10', null, false, null, null, 'exchange_partnershipid');
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add foreign key for exchangesubmissionid
+        $key = new xmldb_key('exchangesubmissionid', XMLDB_KEY_FOREIGN, ['exchangesubmissionid'], 'local_equipment_exchange_submission', ['id']);
+        $dbman->add_key($table, $key);
+
+        // Equipment exchangesubmissionid field savepoint reached
+        upgrade_plugin_savepoint(true, 2025081902, 'local', 'equipment');
+    }
+
     return true;
 }

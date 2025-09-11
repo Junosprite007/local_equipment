@@ -1,0 +1,40 @@
+{{!
+    This file is part of FLIP Plugins for Moodle
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_equipment/vcc_actions_cell
+
+    Template for the VCC summary page.
+
+    Context variables:
+    * edit_url -
+    * delete_url -
+    * confirm_delete -
+}}
+
+<div class="vcc-actions-cell">
+    <div class="btn-group btn-group-sm" role="group" aria-label="{{#str}}actions, local_equipment{{/str}}">
+        <a href="{{edit_url}}" class="btn btn-outline-primary btn-sm"
+           title="{{#str}}edit{{/str}}" aria-label="{{#str}}edit{{/str}}">
+            <i class="fa fa-edit" aria-hidden="true"></i>
+        </a>
+        <a href="{{delete_url}}" class="btn btn-outline-danger btn-sm"
+           title="{{#str}}delete{{/str}}" aria-label="{{#str}}delete{{/str}}"
+           onclick="return confirm('{{confirm_delete}}');">
+            <i class="fa fa-trash" aria-hidden="true"></i>
+        </a>
+    </div>
+</div>

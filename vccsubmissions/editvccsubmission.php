@@ -34,7 +34,7 @@ require_login();
 
 $context = \core\context\system::instance();
 $url = new moodle_url('/local/equipment/vccsubmissions/editvccsubmission.php', ['id' => $id]);
-$redirecturl = new moodle_url('/local/equipment/vccsubmissions.php');
+$redirecturl = new moodle_url('/local/equipment/vccsubmissions/view.php');
 
 // Set up the page.
 $PAGE->set_context($context);

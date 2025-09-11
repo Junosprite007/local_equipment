@@ -1,0 +1,60 @@
+{{!
+    This file is part of FLIP Plugins for Moodle
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_equipment/vcc_status_cell
+
+    Template for the VCC summary page.
+
+    Context variables:
+    * email_confirmed -
+    * phone_confirmed -
+    * is_expired -
+}}
+
+<div class="vcc-status-cell text-center" role="region" aria-label="{{#str}}status_info, local_equipment{{/str}}">
+    <div class="status-badges" role="list" aria-label="{{#str}}verification_status, local_equipment{{/str}}">
+        {{#email_confirmed}}
+        <span class="badge text-bg-success mb-1" role="listitem" aria-label="{{#str}}email_verified, local_equipment{{/str}}">
+            <i class="fa fa-check" aria-hidden="true"></i> {{#str}}email{{/str}}
+        </span>
+        {{/email_confirmed}}
+        {{^email_confirmed}}
+        <span class="badge text-bg-danger mb-1" role="listitem" aria-label="{{#str}}email_not_verified, local_equipment{{/str}}">
+            <i class="fa fa-times" aria-hidden="true"></i> {{#str}}email{{/str}}
+        </span>
+        {{/email_confirmed}}
+
+        {{#phone_confirmed}}
+        <span class="badge text-bg-success mb-1" role="listitem" aria-label="{{#str}}phone_verified, local_equipment{{/str}}">
+            <i class="fa fa-check" aria-hidden="true"></i> {{#str}}phone, local_equipment{{/str}}
+        </span>
+        {{/phone_confirmed}}
+        {{^phone_confirmed}}
+        <span class="badge text-bg-warning mb-1" role="listitem" aria-label="{{#str}}phone_not_verified, local_equipment{{/str}}">
+            <i class="fa fa-times" aria-hidden="true"></i> {{#str}}phone, local_equipment{{/str}}
+        </span>
+        {{/phone_confirmed}}
+    </div>
+
+    {{#is_expired}}
+    <div class="mt-1" role="alert" aria-live="polite">
+        <span class="badge text-bg-danger" aria-label="{{#str}}submission_expired, local_equipment{{/str}}">
+            <i class="fa fa-exclamation-triangle" aria-hidden="true"></i> {{#str}}expired, local_equipment{{/str}}
+        </span>
+    </div>
+    {{/is_expired}}
+</div>

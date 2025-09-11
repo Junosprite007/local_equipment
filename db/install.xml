@@ -198,6 +198,7 @@
                 <FIELD NAME="partnershipid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID of the selected partnership"/>
                 <FIELD NAME="pickupid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="ID of the selected pickup time"/>
                 <FIELD NAME="exchange_partnershipid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="ID of the selected exchange location partnership"/>
+                <FIELD NAME="exchangesubmissionid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="ID of the related exchange submission for pickup details"/>
                 <FIELD NAME="studentids" TYPE="text" NOTNULL="false"/>
                 <FIELD NAME="agreementids" TYPE="text" NOTNULL="false"/>
                 <FIELD NAME="confirmationid" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="A confirmation id, which should just be a hash of this table's 'id' field. This is intended for easy and secure lookups."/>
@@ -246,6 +247,7 @@
                 <KEY NAME="partnershipid" TYPE="foreign" FIELDS="partnershipid" REFTABLE="local_equipment_partnership" REFFIELDS="id"/>
                 <KEY NAME="pickupid" TYPE="foreign" FIELDS="pickupid" REFTABLE="local_equipment_pickup" REFFIELDS="id"/>
                 <KEY NAME="exchange_partnershipid" TYPE="foreign" FIELDS="exchange_partnershipid" REFTABLE="local_equipment_partnership" REFFIELDS="id"/>
+                <KEY NAME="exchangesubmissionid" TYPE="foreign" FIELDS="exchangesubmissionid" REFTABLE="local_equipment_exchange_submission" REFFIELDS="id"/>
             </KEYS>
             <INDEXES>
                 <INDEX NAME="confirmationid" UNIQUE="false" FIELDS="confirmationid"/>
