@@ -149,7 +149,6 @@ if ($mform->is_cancelled()) {
                     ['email' => $parent->email]
                 );
                 $password = null;
-                $password = null;
 
                 // If the parent doesn't exist based on their email, we'll create a new user. If they do exist, we'll override the
                 // $parent user we made above to the matching user found in the DB.
@@ -325,7 +324,6 @@ if ($mform->is_cancelled()) {
                     ['email' => $student->email],
                     IGNORE_MULTIPLE
                 );
-                $password = null;
                 $password = null;
                 if (!$user) {
                     foreach ($allstudentsofallparents as $sofp) {
