@@ -3918,7 +3918,7 @@ function local_equipment_generate_family_notification(string $familyname, stdCla
     // Header attributes.
     $headerattrs = [
         'class' => "local-equipment-notification-header $status d-flex justify-content-between align-items-center p-3 rounded",
-        'data-toggle' => 'collapse',
+        'data-bs-toggle' => 'collapse',
         'href' => "#$notificationid",
         'role' => 'button',
         'aria-expanded' => 'false',
@@ -3936,7 +3936,7 @@ function local_equipment_generate_family_notification(string $familyname, stdCla
 
     // Build content.
     $html .= html_writer::start_div('collapse local-equipment-notification-content', ['id' => $notificationid]);
-    $html .= html_writer::start_div('content-wrapper p-3 border-left border-right border-bottom rounded-bottom');
+    $html .= html_writer::start_div('content-wrapper p-3 border-start border-end border-bottom rounded-bottom');
 
     // Add messages.
     foreach (['successes', 'warnings', 'errors'] as $type) {
