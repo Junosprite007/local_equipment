@@ -3918,7 +3918,7 @@ function local_equipment_generate_family_notification(string $familyname, stdCla
     // Header attributes.
     $headerattrs = [
         'class' => "local-equipment-notification-header $status d-flex justify-content-between align-items-center p-3 rounded",
-        'data-toggle' => 'collapse',
+        'data-bs-toggle' => 'collapse',
         'href' => "#$notificationid",
         'role' => 'button',
         'aria-expanded' => 'false',
