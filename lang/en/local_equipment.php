@@ -400,7 +400,21 @@ $string['timelastmodified'] = 'Time last modified';
 $string['toeditprofile'] = 'To edit your email or name, go to {$a}.';
 $string['user'] = 'User';
 $string['vccsubmissiondeleted'] = 'VCC submission deleted successfully';
+$string['vccsubmissionstable'] = 'Virtual Course Consent submissions table';
 $string['vccsubmissionupdated'] = 'VCC submission updated successfully';
+$string['showingsubmissions'] = 'Showing {$a} submissions';
+$string['pagesize'] = 'Page size';
+$string['selectpagesize'] = 'Select number of items per page';
+$string['managecolumns'] = 'Manage table columns';
+$string['columns'] = 'Columns';
+$string['status_info'] = 'Status information';
+$string['verification_status'] = 'Verification status';
+$string['email_verified'] = 'Email address has been verified';
+$string['email_not_verified'] = 'Email address has not been verified';
+$string['phone_verified'] = 'Phone number has been verified';
+$string['phone_not_verified'] = 'Phone number has not been verified';
+$string['submission_expired'] = 'This submission has expired';
+$string['expired'] = 'Expired';
 $string['viewnotes'] = 'View notes';
 $string['virtualcourseconsent'] = 'Virtual Course Consent (VCC)';
 $string['virtualcourseconsentsubmission'] = 'Virtual course consent submission';
@@ -906,6 +920,14 @@ $string['clientinitializationerror'] = 'Failed to initialize SMS client';
 $string['unsupportedgateway'] = 'Unsupported SMS gateway type: {$a}';
 $string['phonevalidationerror'] = 'Phone number validation failed: {$a}';
 $string['messageidmissing'] = 'SMS service did not return a message ID';
+
+// Phase 3.2: Course enrollment status strings for enhanced display
+$string['courseended'] = 'Course has ended';
+$string['enrollmentsuspended'] = 'Enrollment is suspended';
+$string['enrollmentdisabled'] = 'Enrollment method is disabled';
+$string['enrollmentactive'] = 'Active enrollment';
+$string['nolongerenrolled'] = 'No longer enrolled';
+$string['historicalenrollment'] = 'Historical enrollment data';
 
 // AWS specific error messages (if not already present)
 $string['awsquotaexceeded'] = 'AWS SMS quota exceeded. Please check your AWS account limits and usage.';
@@ -2052,6 +2074,9 @@ $string['status'] = 'Status';
 $string['apt'] = 'Apt';
 $string['filters'] = 'Filters';
 $string['filtersapplied'] = 'Filters Applied';
+$string['togglefilters'] = 'Toggle Filters';
+$string['filtersactive'] = 'filters active';
+$string['nofiltersapplied'] = 'No filters applied';
 $string['showingsubmissions'] = 'Showing submissions';
 $string['filtered'] = 'Filtered';
 $string['nocourses'] = 'No courses';
@@ -2067,6 +2092,16 @@ $string['searchplaceholder'] = 'Name, email, phone...';
 $string['dateendbeforestart'] = 'End date must be after start date';
 $string['searchtooshort'] = 'Search must be at least 2 characters';
 $string['submissionnotfound'] = 'VCC submission not found';
+
+// Phase 4.2: Quick filter preset strings
+$string['selectquickfilter'] = 'Select quick filter';
+$string['quickfilters'] = 'Quick filters';
+$string['today'] = 'Today';
+$string['thisweek'] = 'This week';
+$string['thismonth'] = 'This month';
+$string['thisyear'] = 'This year';
+$string['last7days'] = 'Last 7 days';
+$string['last30days'] = 'Last 30 days';
 
 // Exchange column strings for VCC submissions table
 $string['exchangepartnership'] = 'Exchange Partnership';
@@ -2110,6 +2145,16 @@ $string['submissionexpired'] = 'Submission expired';
 // Pagination strings
 $string['showingrecords'] = 'Showing {$a->start} to {$a->end} of {$a->total} records';
 $string['recordsperpage'] = 'Records per page';
+$string['pagination'] = 'Pagination';
+$string['currentpage'] = 'Current page';
+$string['current'] = 'current';
+$string['gotopage'] = 'Go to page {$a}';
+$string['page'] = 'Page {$a}';
+$string['first'] = 'First';
+$string['previous'] = 'Previous';
+$string['next'] = 'Next';
+$string['last'] = 'Last';
+$string['loading'] = 'Loading...';
 
 // Error strings
 $string['errorloadingdata'] = 'Error loading data';
@@ -2130,6 +2175,15 @@ $string['thisweek'] = 'This Week';
 $string['thismonth'] = 'This Month';
 $string['thisyear'] = 'This Year';
 
+// Exchange pickup consolidation strings
+$string['exchange_pickup_info'] = 'Exchange pickup information';
+$string['no_pickup_info'] = 'No pickup information available';
+$string['source'] = 'Source';
+$string['exchange_data'] = 'Exchange data';
+$string['vcc_data'] = 'VCC data';
+$string['pickup_person'] = 'Pickup person';
+$string['details'] = 'Details';
+
 // Help strings
 $string['vccfiltershelp'] = 'Use these filters to narrow down the VCC submissions shown in the table below.';
 $string['vccexporthelp'] = 'Export the filtered data to Excel or CSV format for external analysis.';
@@ -2147,3 +2201,31 @@ $string['email_not_verified'] = 'Email address has not been verified';
 $string['phone_verified'] = 'Phone number has been verified';
 $string['phone_not_verified'] = 'Phone number has not been verified';
 $string['submission_expired'] = 'This submission has expired';
+
+// Column management strings
+$string['managecolumns'] = 'Manage columns';
+$string['columns'] = 'Columns';
+$string['showcolumns'] = 'Show/hide columns';
+$string['resetcolumns'] = 'Reset columns';
+$string['columnvisibility'] = 'Column visibility';
+$string['requiredcolumn'] = 'Required column';
+$string['requiredcolumnhelp'] = 'This column cannot be hidden';
+$string['columnpreferencessaved'] = 'Column preferences are saved automatically';
+$string['showallcolumns'] = 'Show all columns';
+$string['showall'] = 'Show all';
+$string['hideoptionalcolumns'] = 'Hide optional columns';
+$string['minimal'] = 'Minimal';
+$string['confirmresetcolumns'] = 'Are you sure you want to reset all column preferences to defaults?';
+$string['resetallpreferences'] = 'Reset all preferences';
+$string['columnlayoutreset'] = 'Column layout has been reset to defaults';
+
+// Empty state template strings
+$string['no_submissions_found'] = 'No VCC submissions found';
+$string['no_submissions_with_filters'] = 'No submissions match your current filters';
+$string['no_submissions_found_desc'] = 'There are currently no VCC submissions in the system. Check back later or adjust your search criteria.';
+$string['no_submissions_with_filters_desc'] = 'Try adjusting your filters or clearing them to see more results.';
+$string['reset_filters'] = 'Reset filters';
+$string['create_submission'] = 'Create submission';
+
+// Phase 11: Missing capability and essential strings only
+$string['equipment:viewvccsubmissions'] = 'View VCC submissions';

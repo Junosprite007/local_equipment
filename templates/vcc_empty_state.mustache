@@ -1,0 +1,68 @@
+{{!
+    @template local_equipment/vcc_empty_state
+
+    Empty state display for VCC submissions table when no data is found.
+
+    Context variables:
+    * title - Custom title for empty state (optional)
+    * description - Custom description (optional)
+    * show_actions - Whether to show action buttons (optional)
+    * create_url - URL for creating new submission (optional)
+    * reset_filters_url - URL to reset filters (optional)
+    * has_filters - Whether filters are currently applied (optional)
+}}
+<div class="vcc-table-empty">
+    <div class="empty-icon">
+        <i class="fa fa-inbox" aria-hidden="true"></i>
+    </div>
+
+    <h3 class="empty-title">
+        {{#title}}{{title}}{{/title}}
+        {{^title}}
+            {{#has_filters}}
+                {{#str}}no_submissions_with_filters, local_equipment{{/str}}
+            {{/has_filters}}
+            {{^has_filters}}
+                {{#str}}no_submissions_found, local_equipment{{/str}}
+            {{/has_filters}}
+        {{/title}}
+    </h3>
+
+    <p class="empty-description">
+        {{#description}}{{description}}{{/description}}
+        {{^description}}
+            {{#has_filters}}
+                {{#str}}no_submissions_with_filters_desc, local_equipment{{/str}}
+            {{/has_filters}}
+            {{^has_filters}}
+                {{#str}}no_submissions_found_desc, local_equipment{{/str}}
+            {{/has_filters}}
+        {{/description}}
+    </p>
+
+    {{#show_actions}}
+    <div class="empty-actions">
+        {{#has_filters}}
+            {{#reset_filters_url}}
+            <a href="{{reset_filters_url}}" class="btn btn-outline-primary">
+                <i class="fa fa-filter-circle-xmark me-1" aria-hidden="true"></i>
+                {{#str}}reset_filters, local_equipment{{/str}}
+            </a>
+            {{/reset_filters_url}}
+            {{^reset_filters_url}}
+            <button type="button" class="btn btn-outline-primary" onclick="window.location.reload()">
+                <i class="fa fa-filter-circle-xmark me-1" aria-hidden="true"></i>
+                {{#str}}reset_filters, local_equipment{{/str}}
+            </button>
+            {{/reset_filters_url}}
+        {{/has_filters}}
+
+        {{#create_url}}
+        <a href="{{create_url}}" class="btn btn-primary">
+            <i class="fa fa-plus me-1" aria-hidden="true"></i>
+            {{#str}}create_submission, local_equipment{{/str}}
+        </a>
+        {{/create_url}}
+    </div>
+    {{/show_actions}}
+</div>

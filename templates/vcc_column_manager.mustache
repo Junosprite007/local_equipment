@@ -1,0 +1,131 @@
+{{!
+    @template local_equipment/vcc_column_manager
+
+    VCC submissions table column manager interface.
+
+    Provides controls for showing/hiding table columns and managing column preferences.
+    Used in conjunction with JavaScript for column visibility management.
+
+    RTL LANGUAGE SUPPORT CONSIDERATIONS:
+    * Dropdown positioning (dropdown-menu-end) will need RTL equivalent (dropdown-menu-start)
+    * Drag handles for column reordering should be positioned appropriately for RTL
+    * Icon positioning in dropdown items may need RTL-specific margins
+    * Checkbox alignment and text direction should be tested with RTL content
+
+    Context variables:
+    * columns - Array of column objects with properties:
+      - id: Column identifier
+      - name: Display name for column
+      - visible: Boolean indicating if column is currently visible
+      - essential: Boolean indicating if column cannot be hidden
+    * show_reset - Boolean indicating if reset button should be shown
+    * reset_url - URL for resetting column preferences
+}}
+<div class="vcc-column-manager" id="vcc-column-manager">
+    <div class="dropdown">
+        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button"
+                id="columnManagerDropdown" data-bs-toggle="dropdown" aria-expanded="false"
+                aria-label="{{#str}}managecolumns, local_equipment{{/str}}">
+            <i class="fa fa-columns me-1" aria-hidden="true"></i>
+            <span class="d-none d-sm-inline">{{#str}}columns, local_equipment{{/str}}</span>
+        </button>
+
+        <div class="dropdown-menu dropdown-menu-end p-3 vcc-dropdown-sizing" aria-labelledby="columnManagerDropdown">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">{{#str}}showcolumns, local_equipment{{/str}}</h6>
+                {{#show_reset}}
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        data-action="reset-columns"
+                        title="{{#str}}resetcolumns, local_equipment{{/str}}">
+                    <i class="fa fa-refresh" aria-hidden="true"></i>
+                    <span class="visually-hidden">{{#str}}resetcolumns, local_equipment{{/str}}</span>
+                </button>
+                {{/show_reset}}
+            </div>
+
+            <hr class="my-2">
+
+            <div class="vcc-column-list" role="group" aria-label="{{#str}}columnvisibility, local_equipment{{/str}}">
+                {{#columns}}
+                <div class="form-check mb-2">
+                    <input class="form-check-input column-visibility-toggle"
+                           type="checkbox"
+                           id="column-{{id}}"
+                           data-column="{{id}}"
+                           {{#visible}}checked{{/visible}}
+                           {{#essential}}disabled{{/essential}}
+                           aria-describedby="{{#essential}}column-{{id}}-help{{/essential}}">
+                    <label class="form-check-label d-flex justify-content-between align-items-center"
+                           for="column-{{id}}">
+                        <span class="flex-grow-1">{{name}}</span>
+                        {{#essential}}
+                        <small class="text-muted ms-2">
+                            <i class="fa fa-lock" aria-hidden="true" title="{{#str}}requiredcolumn, local_equipment{{/str}}"></i>
+                        </small>
+                        {{/essential}}
+                    </label>
+                    {{#essential}}
+                    <div id="column-{{id}}-help" class="form-text small">
+                        {{#str}}requiredcolumnhelp, local_equipment{{/str}}
+                    </div>
+                    {{/essential}}
+                </div>
+                {{/columns}}
+            </div>
+
+            <hr class="my-3">
+
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">
+                    {{#str}}columnpreferencessaved, local_equipment{{/str}}
+                </small>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-success"
+                            data-action="show-all-columns"
+                            title="{{#str}}showallcolumns, local_equipment{{/str}}">
+                        <i class="fa fa-eye" aria-hidden="true"></i>
+                        <span class="d-none d-md-inline ms-1">{{#str}}showall, local_equipment{{/str}}</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-warning"
+                            data-action="hide-optional-columns"
+                            title="{{#str}}hideoptionalcolumns, local_equipment{{/str}}">
+                        <i class="fa fa-eye-slash" aria-hidden="true"></i>
+                        <span class="d-none d-md-inline ms-1">{{#str}}minimal, local_equipment{{/str}}</span>
+                    </button>
+                </div>
+            </div>
+
+            {{#show_reset}}
+            <div class="mt-3 pt-2 border-top">
+                <button type="button" class="btn btn-sm btn-outline-danger w-100"
+                        data-action="reset-all-preferences"
+                        onclick="confirm('{{#str}}confirmresetcolumns, local_equipment{{/str}}') && this.form.submit();">
+                    <i class="fa fa-undo me-1" aria-hidden="true"></i>
+                    {{#str}}resetallpreferences, local_equipment{{/str}}
+                </button>
+            </div>
+            {{/show_reset}}
+        </div>
+    </div>
+</div>
+
+{{! JavaScript data attributes for column management }}
+<script type="application/json" id="vcc-column-data">
+{
+    "columns": [
+        {{#columns}}
+        {
+            "id": "{{id}}",
+            "name": "{{name}}",
+            "visible": {{visible}},
+            "essential": {{essential}}
+        }{{^last}},{{/last}}
+        {{/columns}}
+    ],
+    "sesskey": "{{sesskey}}",
+    "ajaxUrl": "{{ajax_url}}"
+}
+</script>
+
+{{! Screen reader announcements }}
+<div class="visually-hidden" aria-live="polite" id="column-status-announcer"></div>

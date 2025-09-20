@@ -32,7 +32,7 @@
         <div id="student-{{@index}}-name" class="student-name fw-bold" role="heading" aria-level="4">{{name}}</div>
         <div class="student-courses" role="group" aria-label="{{#str}}coursesfor, local_equipment{{/str}} {{name}}">
             {{#courses}}
-            <span class="badge text-bg-light me-1 mb-1" role="text" aria-label="{{#str}}course, local_equipment{{/str}}: {{name}}">{{name}}</span>
+            <span class="{{badge_class}} me-1 mb-1" role="text" aria-label="{{#str}}course, local_equipment{{/str}}: {{name}}" title="{{tooltip}}">{{name}}</span>
             {{/courses}}
             {{^courses}}
             <small class="text-muted" role="text">{{#str}}nocourses, local_equipment{{/str}}</small>

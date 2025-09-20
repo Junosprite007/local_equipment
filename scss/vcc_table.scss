@@ -1,5 +1,14 @@
 /* Enhanced VCC Submissions Table Styles - Bootstrap 5 Compliant */
 
+/*
+ * RTL LANGUAGE SUPPORT CONSIDERATIONS:
+ * - Column resize handles positioned with 'right' property will need 'left' equivalents for RTL
+ * - Text alignment in column headers should use logical properties (start/end vs left/right)
+ * - Dropdown arrow positioning in column controls may need RTL-specific adjustments
+ * - Horizontal scrolling direction behavior should be tested with RTL content
+ * - Sort indicators and column management icons may need RTL-specific positioning
+ */
+
 // Filter card styling
 .vcc-filters-card {
     border: 1px solid var(--bs-border-color);
@@ -77,79 +86,82 @@
         font-size: 0.7rem;
         line-height: 1.2;
 
-        // Column-specific widths for better layout
+        // Phase 6.1: Column-specific widths for better layout and proper constraints
         &:nth-child(1) {
-            min-width: 100px;
+            min-width: 110px;
+            max-width: 130px;
         } // Time created
         &:nth-child(2) {
-            min-width: 80px;
+            min-width: 90px;
+            max-width: 120px;
         } // First name
         &:nth-child(3) {
-            min-width: 80px;
+            min-width: 90px;
+            max-width: 120px;
         } // Last name
         &:nth-child(4) {
-            min-width: 120px;
+            min-width: 140px;
+            max-width: 180px;
         } // Email
         &:nth-child(5) {
-            min-width: 90px;
+            min-width: 100px;
+            max-width: 130px;
         } // Phone
         &:nth-child(6) {
-            min-width: 150px;
+            min-width: 120px;
+            max-width: 180px;
         } // Partnership
         &:nth-child(7) {
-            min-width: 200px;
+            min-width: 180px;
+            max-width: 250px;
         } // Students
         &:nth-child(8) {
-            min-width: 150px;
+            min-width: 140px;
+            max-width: 200px;
         } // Mailing
         &:nth-child(9) {
-            min-width: 150px;
+            min-width: 140px;
+            max-width: 200px;
         } // Billing
         &:nth-child(10) {
             min-width: 120px;
+            max-width: 160px;
         } // Pickup
-
-        // Exchange columns (new)
         &:nth-child(11) {
-            min-width: 140px;
+            min-width: 120px;
+            max-width: 180px;
         } // Exchange partnership
         &:nth-child(12) {
-            min-width: 120px;
+            min-width: 130px;
+            max-width: 170px;
         } // Exchange timeframe
         &:nth-child(13) {
-            min-width: 100px;
-        } // Exchange method
+            min-width: 160px;
+            max-width: 220px;
+        } // Exchange pickup info (consolidated)
         &:nth-child(14) {
             min-width: 100px;
-        } // Exchange person
+            max-width: 140px;
+        } // User notes
         &:nth-child(15) {
-            min-width: 90px;
-        } // Exchange phone
+            min-width: 100px;
+            max-width: 140px;
+        } // Admin notes
         &:nth-child(16) {
             min-width: 120px;
-        } // Exchange details
-        &:nth-child(17) {
-            min-width: 140px;
-        } // Exchange address
-
-        // Other columns
-        &:nth-child(18) {
-            min-width: 100px;
+            max-width: 160px;
         } // Electronic signature
+        &:nth-child(17) {
+            min-width: 100px;
+            max-width: 130px;
+        } // Confirmation ID
+        &:nth-child(18) {
+            min-width: 90px;
+            max-width: 110px;
+        } // Status
         &:nth-child(19) {
             min-width: 100px;
-        } // Confirmation ID
-        &:nth-child(20) {
-            min-width: 100px;
-        } // User notes
-        &:nth-child(21) {
-            min-width: 100px;
-        } // Admin notes
-        &:nth-child(22) {
-            min-width: 80px;
-        } // Status
-        &:nth-child(23) {
-            min-width: 90px;
+            max-width: 120px;
         } // Actions
 
         &.sortable {
@@ -224,6 +236,10 @@
                 font-size: 0.65rem;
                 line-height: 1.2;
                 color: var(--bs-gray-700);
+                max-width: 180px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             &.pickup_info {
@@ -262,9 +278,10 @@
             &.adminnotes {
                 font-size: 0.65rem;
                 line-height: 1.2;
-                max-width: 100px;
+                max-width: 120px;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             &.status_info {
@@ -603,12 +620,466 @@
     }
 }
 
+// Loading states
+.vcc-table-loading {
+    position: relative;
+    min-height: 200px;
+
+    &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.8);
+        z-index: 100;
+        border-radius: var(--bs-border-radius);
+    }
+
+    .loading-spinner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 101;
+
+        .spinner-border {
+            color: var(--bs-primary);
+        }
+
+        .loading-text {
+            margin-top: 0.5rem;
+            color: var(--bs-body-color);
+            font-size: 0.875rem;
+        }
+    }
+
+    // Skeleton loading for table rows
+    .skeleton-row {
+        animation: skeleton-loading 1.5s infinite linear;
+
+        td {
+            background: linear-gradient(90deg, var(--bs-gray-200) 25%, var(--bs-gray-100) 50%, var(--bs-gray-200) 75%);
+            background-size: 200% 100%;
+            color: transparent;
+        }
+    }
+
+    @keyframes skeleton-loading {
+        0% {
+            background-position: 200% 0;
+        }
+        100% {
+            background-position: -200% 0;
+        }
+    }
+}
+
+// Empty states
+.vcc-table-empty {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--bs-gray-600);
+
+    .empty-icon {
+        font-size: 3rem;
+        color: var(--bs-gray-400);
+        margin-bottom: 1rem;
+    }
+
+    .empty-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--bs-body-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-description {
+        font-size: 0.875rem;
+        margin-bottom: 1.5rem;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.5;
+    }
+
+    .empty-actions {
+        .btn {
+            margin: 0 0.25rem;
+        }
+    }
+}
+
+// Enhanced status indicators
+.status-indicator {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+
+    &.status-verified {
+        color: var(--bs-success);
+
+        &::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            background-color: var(--bs-success);
+            border-radius: 50%;
+            animation: pulse-success 2s infinite;
+        }
+    }
+
+    &.status-unverified {
+        color: var(--bs-warning);
+
+        &::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            background-color: var(--bs-warning);
+            border-radius: 50%;
+        }
+    }
+
+    &.status-error {
+        color: var(--bs-danger);
+
+        &::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            background-color: var(--bs-danger);
+            border-radius: 50%;
+            animation: pulse-danger 1s infinite;
+        }
+    }
+
+    &.status-expired {
+        color: var(--bs-gray-500);
+
+        &::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            background-color: var(--bs-gray-400);
+            border-radius: 50%;
+        }
+    }
+}
+
+// Status pulse animations
+@keyframes pulse-success {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes pulse-danger {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+}
+
+// Enhanced accessibility features
+.vcc-submissions-table {
+    // Focus management for keyboard navigation
+    thead th.sortable {
+        &:focus {
+            outline: 2px solid var(--bs-primary);
+            outline-offset: 2px;
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--bs-primary);
+            outline-offset: 2px;
+        }
+    }
+
+    // Screen reader improvements
+    .sr-only {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+    }
+
+    // High contrast mode support
+    @media (prefers-contrast: high) {
+        thead th {
+            border-bottom: 3px solid currentColor;
+        }
+
+        tbody td {
+            border-bottom: 2px solid currentColor;
+        }
+
+        .badge {
+            border: 2px solid currentColor;
+        }
+    }
+
+    // Reduced motion support
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+}
+
+// Error states
+.vcc-table-error {
+    background-color: var(--bs-danger-bg-subtle);
+    border: 1px solid var(--bs-danger-border-subtle);
+    border-radius: var(--bs-border-radius);
+    padding: 2rem;
+    text-align: center;
+
+    .error-icon {
+        font-size: 2.5rem;
+        color: var(--bs-danger);
+        margin-bottom: 1rem;
+    }
+
+    .error-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--bs-danger-text-emphasis);
+        margin-bottom: 0.5rem;
+    }
+
+    .error-message {
+        color: var(--bs-body-color);
+        margin-bottom: 1.5rem;
+    }
+
+    .error-actions {
+        .btn {
+            margin: 0 0.25rem;
+        }
+    }
+}
+
+// Improved tooltips for truncated content
+.text-truncate-tooltip {
+    cursor: help;
+
+    &:hover {
+        text-decoration: underline dotted;
+    }
+}
+
+// Table actions improvements
+.table-actions-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--bs-border-color);
+    margin-bottom: 1rem;
+
+    .actions-left {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .actions-right {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .table-info {
+        font-size: 0.875rem;
+        color: var(--bs-gray-600);
+        margin: 0;
+    }
+}
+
+// VCC Filters specific styles (extracted from template)
+.vcc-filters-card {
+    .collapse-icon {
+        transition: transform 0.2s ease;
+    }
+
+    [aria-expanded="true"] .collapse-icon {
+        transform: rotate(180deg);
+    }
+
+    .btn-link {
+        color: inherit !important;
+
+        &:hover {
+            color: var(--bs-primary) !important;
+        }
+    }
+
+    .vcc-filter-form-container {
+        position: relative;
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .card-header .d-flex {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            align-self: flex-end;
+        }
+    }
+}
+
+// VCC Column Manager specific styles (extracted from template)
+.vcc-column-manager {
+    .dropdown-menu {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(0, 0, 0, 0.125);
+        min-width: 280px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .form-check-input:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+
+        + .form-check-label {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+    }
+
+    .form-check-label {
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .vcc-column-list {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    @media (max-width: 576px) {
+        .dropdown-menu {
+            min-width: 260px;
+            max-width: calc(100vw - 2rem);
+        }
+    }
+}
+
+// VCC AJAX Pagination specific styles (extracted from template)
+.vcc-pagination-wrapper {
+    position: relative;
+}
+
+.vcc-loading-overlay {
+    z-index: 1050;
+    border-radius: 0.375rem;
+}
+
+.ajax-page-link {
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+        text-decoration: none;
+    }
+}
+
+.vcc-submissions-table {
+    position: relative;
+}
+
+.pagination-size-selector select {
+    min-width: 80px;
+}
+
+.sort-indicators {
+    font-size: 0.8em;
+}
+
+.sortable {
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+}
+
+.sorted-asc .fa-sort::before {
+    content: "\f0de"; // fa-sort-up
+}
+
+.sorted-desc .fa-sort::before {
+    content: "\f0dd"; // fa-sort-down
+}
+
+@media (max-width: 768px) {
+    .vcc-pagination-wrapper {
+        flex-direction: column;
+        gap: 1rem;
+
+        .pagination-info,
+        .pagination-size-selector {
+            text-align: center;
+        }
+    }
+
+    .vcc-export-controls {
+        justify-content: center !important;
+    }
+}
+
+// CSS classes to replace inline style attributes
+.vcc-width-auto {
+    width: auto;
+}
+
+.vcc-dropdown-sizing {
+    min-width: 280px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.vcc-loading-hidden {
+    display: none !important;
+}
+
+.vcc-pagination-width-auto {
+    width: auto;
+}
+
 // Print styles
 @media print {
     .vcc-filters-card,
     .table-download-buttons,
     .pagination,
-    .vcc-actions-cell {
+    .vcc-actions-cell,
+    .table-actions-toolbar {
         display: none !important;
     }
 
@@ -618,5 +1089,21 @@
         td {
             padding: 0.25rem;
         }
+
+        // Ensure important content is visible in print
+        .status-indicator::before {
+            display: none;
+        }
+
+        .badge {
+            border: 1px solid currentColor !important;
+            background: transparent !important;
+            color: black !important;
+        }
+    }
+
+    .vcc-table-loading::before,
+    .loading-spinner {
+        display: none !important;
     }
 }

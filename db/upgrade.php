@@ -1254,5 +1254,134 @@ function xmldb_local_equipment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2025081902, 'local', 'equipment');
     }
 
+    /*
+     * PHASE 10: VCC SUBMISSION TABLE ENHANCEMENTS AND PREFERENCE MIGRATION
+     *
+     * This upgrade step implements comprehensive data migration and validation for Phase 10
+     * enhancements to the VCC submission system. The migration addresses three critical areas:
+     * user column preferences, column width preferences, and malformed course ID data.
+     *
+     * The upgrade is designed with robust error handling to ensure that data corruption or
+     * unexpected JSON formats do not prevent the upgrade from completing successfully. Each
+     * migration operation is wrapped in defensive programming practices that detect and repair
+     * malformed data while preserving the overall upgrade process integrity.
+     *
+     * This approach ensures backward compatibility and provides a clean migration path for
+     * existing installations while preparing the system for the enhanced Phase 10 functionality.
+     */
+    if ($oldversion < 2025091401) {
+        /*
+         * COMPREHENSIVE DATA MIGRATION WITH ERROR RECOVERY
+         *
+         * This migration process handles three distinct types of data that may have become
+         * corrupted or malformed in previous versions. The entire migration is wrapped in
+         * a try-catch block to ensure that any unexpected errors during the migration process
+         * do not prevent the plugin upgrade from completing successfully. This defensive
+         * approach prioritizes system stability while still attempting to clean up any
+         * problematic data that could affect the new Phase 10 functionality.
+         */
+        try {
+            /*
+             * COLUMN PREFERENCE MIGRATION AND VALIDATION
+             *
+             * This section migrates existing column visibility preferences to ensure they
+             * conform to the expected JSON format required by Phase 10 enhancements. The
+             * migration examines each user's column preference data and validates that it
+             * can be properly decoded as JSON. Any preferences that contain malformed JSON
+             * are reset to a safe default state with an empty hidden_columns array.
+             *
+             * This approach ensures that users with corrupted preference data can still
+             * use the enhanced table functionality without encountering JavaScript errors
+             * or interface malfunctions.
+             */
+            $preferences = $DB->get_records('user_preferences', ['name' => 'local_equipment_vcc_table_columns']);
+            foreach ($preferences as $pref) {
+                // Validate and fix malformed JSON preference data
+                $decoded = json_decode($pref->value, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    // Reset malformed preferences to empty state to ensure Phase 10 compatibility
+                    $DB->update_record('user_preferences', [
+                        'id' => $pref->id,
+                        'value' => json_encode(['hidden_columns' => []])
+                    ]);
+                }
+            }
+
+            /*
+             * COLUMN WIDTH PREFERENCE MIGRATION AND CLEANUP
+             *
+             * Similar to column visibility preferences, this section validates and repairs
+             * column width preferences that may contain malformed JSON data. Column width
+             * preferences store user-customized column dimensions for the enhanced table
+             * interface. Any preferences with invalid JSON are reset to an empty object,
+             * which allows the interface to use default column widths while preserving
+             * the user's ability to customize column dimensions going forward.
+             */
+            $widthprefs = $DB->get_records('user_preferences', ['name' => 'local_equipment_vcc_table_column_widths']);
+            foreach ($widthprefs as $pref) {
+                $decoded = json_decode($pref->value, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    // Reset malformed width preferences to ensure proper Phase 10 functionality
+                    $DB->update_record('user_preferences', [
+                        'id' => $pref->id,
+                        'value' => json_encode([])
+                    ]);
+                }
+            }
+
+            /*
+             * COURSE ID DATA VALIDATION AND REPAIR
+             *
+             * This section addresses a critical data integrity issue where course ID information
+             * stored in the VCC submission system may contain malformed JSON. The courseids field
+             * is essential for displaying which courses a student was enrolled in when their
+             * parent submitted the VCC form. Malformed JSON in this field can cause the course
+             * display functionality to fail, resulting in missing or incorrect course information.
+             *
+             * The migration queries all VCC submissions that have non-empty courseids data and
+             * validates that each entry can be properly decoded as JSON. Any submissions with
+             * malformed courseids are reset to an empty array, which displays as "No courses"
+             * rather than causing interface errors.
+             */
+            $malformedsubmissions = $DB->get_records_sql("
+                SELECT vs.id, vs.courseids
+                FROM {local_equipment_vccsubmission_student} vs
+                WHERE vs.courseids IS NOT NULL
+                AND vs.courseids != ''
+                AND vs.courseids != '[]'
+            ");
+
+            foreach ($malformedsubmissions as $submission) {
+                $courseids = json_decode($submission->courseids, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    // Reset malformed courseids to empty array to prevent display errors
+                    $DB->update_record('local_equipment_vccsubmission_student', [
+                        'id' => $submission->id,
+                        'courseids' => '[]'
+                    ]);
+                }
+            }
+
+        } catch (Exception $e) {
+            /*
+             * ERROR HANDLING AND GRACEFUL DEGRADATION
+             *
+             * If any part of the migration process encounters an unexpected error, this catch
+             * block ensures that the error is logged (if the logging function is available)
+             * but does not prevent the overall plugin upgrade from completing successfully.
+             * This approach prioritizes system stability and ensures that administrators can
+             * still upgrade their plugin even if some data migration operations encounter
+             * issues. The upgrade process continues, and any remaining data issues can be
+             * addressed manually if necessary.
+             */
+            if (function_exists('local_equipment_debug_log')) {
+                local_equipment_debug_log("Phase 10 preference migration error: " . $e->getMessage());
+            }
+        }
+
+        // Phase 10 VCC table enhancements savepoint reached
+        upgrade_plugin_savepoint(true, 2025091401, 'local', 'equipment');
+    }
+
     return true;
 }
