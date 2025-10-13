@@ -104,19 +104,45 @@ echo $OUTPUT->render_from_template('local_equipment/vcc_filters', $filter_contex
 
 // Create and configure table
 $table = new vcc_submissions_table('vccsubmissions', $vcc_service);
+$table->define_baseurl($PAGE->url);
 $table->set_filters($filter_data);
-$table->define_baseurl($current_url);
 
-// Display summary
-$total_count = $vcc_service->count_submissions($filter_data);
-$summary_context = [
-    'total_count' => $total_count,
-    'filters_applied' => !empty(array_filter((array)$filter_data))
+// Phase 1.2: Implement proper page state management and user-selectable page sizes
+$pagesize = optional_param('pagesize', 25, PARAM_INT);
+$allowed_page_sizes = [10, 25, 50, 100];
+if (!in_array($pagesize, $allowed_page_sizes)) {
+    $pagesize = 25;
+}
+
+// Add pagesize to URL parameters for state management
+$current_url->param('pagesize', $pagesize);
+
+// Prepare toolbar data
+$toolbar_data = [
+    'total_rows' => 0, // Will be updated after table setup
+    'current_pagesize' => $pagesize,
+    'pagesize_options' => array_map(function($size) use ($pagesize) {
+        return ['value' => $size, 'selected' => ($size == $pagesize)];
+    }, $allowed_page_sizes),
+    'pagesize_url' => $current_url->out(false),
+    'show_column_manager' => true
 ];
 
-echo $OUTPUT->render_from_template('local_equipment/vcc_summary', $summary_context);
+// Render table toolbar
+echo $OUTPUT->render_from_template('local_equipment/vcc_table_toolbar', $toolbar_data);
 
-// Display table
-$table->out(25, true);
+// Capture table output using proper Moodle output methods
+ob_start();
+$table->out($pagesize, true);
+$table_html = ob_get_clean();
+
+// Render through proper Moodle output system
+echo $OUTPUT->container($table_html, 'table-responsive vcc-table-wrapper');
+
+// Phase 5: Initialize VCC Table Column Management System
+$PAGE->requires->js_call_amd('local_equipment/vcc_table_columns', 'init', ['#region-main table.generaltable']);
+
+// Phase 6.2: Initialize enhanced table functionality
+$PAGE->requires->js_call_amd('local_equipment/vcc_table_enhanced', 'init', ['#vcc-submissions-table']);
 
 echo $OUTPUT->footer();

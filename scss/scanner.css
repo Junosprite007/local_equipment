@@ -86,6 +86,7 @@
   border-right: none;
   border-top: none;
 }
+
 .scanner-overlay .scan-target .scan-corners .corner.bottom-right {
   bottom: -3px;
   right: -3px;

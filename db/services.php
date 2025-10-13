@@ -66,6 +66,27 @@ $functions = [
         'capabilities' => 'local/equipment:manageinventory',
         'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
     ],
+    // Phase 8.2 & 8.3: VCC Table AJAX Services
+    'local_equipment_get_table_data' => [
+        'classname' => 'local_equipment\external\get_table_data',
+        'methodname' => 'execute',
+        'classpath' => '',
+        'description' => 'Get VCC submissions table data for AJAX pagination',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'local/equipment:viewvccsubmissions',
+        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ],
+    'local_equipment_save_column_preferences' => [
+        'classname' => 'local_equipment\external\save_column_preferences',
+        'methodname' => 'execute',
+        'classpath' => '',
+        'description' => 'Save VCC table column preferences for user',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'local/equipment:viewvccsubmissions',
+        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ],
 ];
 
 $services = [
@@ -75,6 +96,8 @@ $services = [
             'local_equipment_process_scan',
             'local_equipment_lookup_equipment',
             'local_equipment_validate_removal',
+            'local_equipment_get_table_data',
+            'local_equipment_save_column_preferences',
         ],
         'restrictedusers' => 0,
         'enabled' => 1,

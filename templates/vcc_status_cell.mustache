@@ -29,12 +29,12 @@
     <div class="status-badges" role="list" aria-label="{{#str}}verification_status, local_equipment{{/str}}">
         {{#email_confirmed}}
         <span class="badge text-bg-success mb-1" role="listitem" aria-label="{{#str}}email_verified, local_equipment{{/str}}">
-            <i class="fa fa-check" aria-hidden="true"></i> {{#str}}email{{/str}}
+            <i class="fa fa-check" aria-hidden="true"></i> {{#str}}email, core{{/str}}
         </span>
         {{/email_confirmed}}
         {{^email_confirmed}}
         <span class="badge text-bg-danger mb-1" role="listitem" aria-label="{{#str}}email_not_verified, local_equipment{{/str}}">
-            <i class="fa fa-times" aria-hidden="true"></i> {{#str}}email{{/str}}
+            <i class="fa fa-times" aria-hidden="true"></i> {{#str}}email, core{{/str}}
         </span>
         {{/email_confirmed}}
 

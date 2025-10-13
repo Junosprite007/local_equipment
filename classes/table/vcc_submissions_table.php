@@ -23,6 +23,13 @@ use moodle_url;
 use stdClass;
 use local_equipment\service\vcc_submission_service;
 
+// Ensure Moodle core classes are properly imported
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->libdir . '/tablelib.php');
+require_once($CFG->dirroot . '/lib/weblib.php');
+require_once($CFG->libdir . '/classes/url.php');
+
 /**
  * Table for displaying VCC submissions with proper Moodle 5.0 conventions
  *
@@ -57,7 +64,7 @@ class vcc_submissions_table extends table_sql {
      * Set up table configuration
      */
     private function setup_table(): void {
-        // Define columns with proper type safety - ALL VCC submission fields for admin visibility
+        // Define columns with proper type safety - Consolidating exchange pickup columns per Phase 2A
         $columns = [
             'timecreated',
             'firstname',
@@ -69,10 +76,13 @@ class vcc_submissions_table extends table_sql {
             'mailing_address',
             'billing_address',
             'pickup_info',
-            'electronicsignature',
-            'confirmationid',
+            'exchange_partnership',
+            'exchange_timeframe',
+            'exchange_pickup_info',
             'usernotes',
             'adminnotes',
+            'electronicsignature',
+            'confirmationid',
             'status_info',
             'actions'
         ];
@@ -88,10 +98,13 @@ class vcc_submissions_table extends table_sql {
             get_string('mailingaddress', 'local_equipment'),
             get_string('billingaddress', 'local_equipment'),
             get_string('pickup', 'local_equipment'),
-            get_string('electronicsignature', 'local_equipment'),
-            get_string('confirmationid', 'local_equipment'),
+            get_string('exchangepartnership', 'local_equipment'),
+            get_string('exchangetimeframe', 'local_equipment'),
+            get_string('exchange_pickup_info', 'local_equipment'),
             get_string('usernotes', 'local_equipment'),
             get_string('adminnotes', 'local_equipment'),
+            get_string('electronicsignature', 'local_equipment'),
+            get_string('confirmationid', 'local_equipment'),
             get_string('status', 'local_equipment'),
             get_string('actions', 'local_equipment')
         ];
@@ -105,6 +118,7 @@ class vcc_submissions_table extends table_sql {
         $this->no_sorting('mailing_address');
         $this->no_sorting('billing_address');
         $this->no_sorting('pickup_info');
+        $this->no_sorting('exchange_pickup_info');
         $this->no_sorting('usernotes');
         $this->no_sorting('adminnotes');
         $this->no_sorting('status_info');
@@ -112,17 +126,16 @@ class vcc_submissions_table extends table_sql {
 
         $this->collapsible(false);
         $this->is_downloadable(true);
-        $this->show_download_buttons_at([TABLE_P_BOTTOM]);
+        $this->show_download_buttons_at([TABLE_P_TOP]);
+        
+        // Apply proper Bootstrap 5 table classes
+        $this->set_attribute('class', 'table table-sm table-hover table-striped vcc-submissions-table');
+        $this->set_attribute('id', 'vcc-submissions-table');
+        $this->set_attribute('role', 'table');
+        $this->set_attribute('aria-label', get_string('vccsubmissionstable', 'local_equipment'));
 
-        // Set Bootstrap 5 compatible classes
-        $this->set_attribute('class', 'table table-striped table-hover vcc-submissions-table');
-        $this->set_attribute('id', 'vccsubmissions');
-
-        // Column styling with Bootstrap 5
-        $this->column_class('timecreated', 'text-nowrap');
-        $this->column_class('partnership_name', 'text-nowrap');
-        $this->column_class('actions', 'text-nowrap text-center');
-        $this->column_class('status_info', 'text-center');
+        // Phase 1.2: Add user-selectable page sizes with default of 25
+        // Note: pagesize will be handled in the view.php file with table->out() method
     }
 
     /**
@@ -177,38 +190,6 @@ class vcc_submissions_table extends table_sql {
     }
 
     /**
-     * Format the mailing address column
-     */
-    public function col_mailing_address(stdClass $row): string {
-        $address_parts = array_filter([
-            $row->mailing_streetaddress ?? '',
-            $row->mailing_apartment ? get_string('apt', 'local_equipment') . ' ' . $row->mailing_apartment : '',
-            $row->mailing_city ?? '',
-            $row->mailing_state ?? '',
-            $row->mailing_zipcode ?? ''
-        ]);
-        return empty($address_parts) ? '-' : implode(', ', $address_parts);
-    }
-
-    /**
-     * Format the billing address column
-     */
-    public function col_billing_address(stdClass $row): string {
-        if ($row->billing_sameasmailing) {
-            return get_string('sameasmailing', 'local_equipment');
-        }
-
-        $address_parts = array_filter([
-            $row->billing_streetaddress ?? '',
-            $row->billing_apartment ? get_string('apt', 'local_equipment') . ' ' . $row->billing_apartment : '',
-            $row->billing_city ?? '',
-            $row->billing_state ?? '',
-            $row->billing_zipcode ?? ''
-        ]);
-        return empty($address_parts) ? '-' : implode(', ', $address_parts);
-    }
-
-    /**
      * Format the electronic signature column
      */
     public function col_electronicsignature(stdClass $row): string {
@@ -223,25 +204,33 @@ class vcc_submissions_table extends table_sql {
     }
 
     /**
-     * Format the user notes column
+     * Format the user notes column with tooltip for full content
      */
     public function col_usernotes(stdClass $row): string {
         if (empty($row->usernotes)) {
             return '-';
         }
         $notes = s($row->usernotes);
-        return strlen($notes) > 50 ? substr($notes, 0, 50) . '...' : $notes;
+        if (strlen($notes) > 50) {
+            $display_text = substr($notes, 0, 50) . '...';
+            return '<span title="' . $notes . '" class="text-truncate d-inline-block" style="max-width: 120px;">' . $display_text . '</span>';
+        }
+        return $notes;
     }
 
     /**
-     * Format the admin notes column
+     * Format the admin notes column with tooltip for full content
      */
     public function col_adminnotes(stdClass $row): string {
         if (empty($row->adminnotes)) {
             return '-';
         }
         $notes = s($row->adminnotes);
-        return strlen($notes) > 50 ? substr($notes, 0, 50) . '...' : $notes;
+        if (strlen($notes) > 50) {
+            $display_text = substr($notes, 0, 50) . '...';
+            return '<span title="' . $notes . '" class="text-truncate d-inline-block" style="max-width: 120px;">' . $display_text . '</span>';
+        }
+        return $notes;
     }
 
     /**
@@ -271,6 +260,98 @@ class vcc_submissions_table extends table_sql {
     }
 
     /**
+     * Format the mailing address column with tooltip for full address
+     */
+    public function col_mailing_address(stdClass $row): string {
+        $address_parts = array_filter([
+            $row->mailing_streetaddress ?? '',
+            $row->mailing_apartment ? get_string('apt', 'local_equipment') . ' ' . $row->mailing_apartment : '',
+            $row->mailing_city ?? '',
+            $row->mailing_state ?? '',
+            $row->mailing_zipcode ?? ''
+        ]);
+
+        if (empty($address_parts)) {
+            return '-';
+        }
+
+        $full_address = implode(', ', $address_parts);
+        if (strlen($full_address) > 40) {
+            $display_text = substr($full_address, 0, 40) . '...';
+            return '<span title="' . s($full_address) . '" class="text-truncate d-inline-block" style="max-width: 180px;">' . s($display_text) . '</span>';
+        }
+        return s($full_address);
+    }
+
+    /**
+     * Format the billing address column with tooltip for full address
+     */
+    public function col_billing_address(stdClass $row): string {
+        if ($row->billing_sameasmailing) {
+            return get_string('sameasmailing', 'local_equipment');
+        }
+
+        $address_parts = array_filter([
+            $row->billing_streetaddress ?? '',
+            $row->billing_apartment ? get_string('apt', 'local_equipment') . ' ' . $row->billing_apartment : '',
+            $row->billing_city ?? '',
+            $row->billing_state ?? '',
+            $row->billing_zipcode ?? ''
+        ]);
+
+        if (empty($address_parts)) {
+            return '-';
+        }
+
+        $full_address = implode(', ', $address_parts);
+        if (strlen($full_address) > 40) {
+            $display_text = substr($full_address, 0, 40) . '...';
+            return '<span title="' . s($full_address) . '" class="text-truncate d-inline-block" style="max-width: 180px;">' . s($display_text) . '</span>';
+        }
+        return s($full_address);
+    }
+
+    /**
+     * Format the consolidated exchange pickup info column using template - Phase 2A implementation
+     */
+    public function col_exchange_pickup_info(stdClass $row): string {
+        global $OUTPUT;
+
+        // Get exchange data using service method
+        $exchange_data = $this->vcc_service->get_exchange_data($row);
+
+        // Prepare template data for consolidated display
+        $pickup_data = [
+            'method' => $exchange_data['pickup_method'],
+            'person_name' => $exchange_data['pickup_person_name'],
+            'person_phone' => $exchange_data['pickup_person_phone'],
+            'person_details' => $exchange_data['pickup_person_details'],
+            'partnership_name' => $row->exchange_partnership ?? $exchange_data['partnership']['name'],
+            'partnership_address' => $exchange_data['partnership']['pickup_address'],
+            'timeframe' => $row->exchange_timeframe ?? $exchange_data['timeframe'],
+            'source' => 'exchange'
+        ];
+
+        // If no exchange data, fallback to VCC data
+        if (empty($pickup_data['method']) && empty($pickup_data['person_name']) && empty($pickup_data['partnership_name'])) {
+            $pickup_data = $this->vcc_service->get_pickup_display_data($row);
+            // Ensure source is always set for template
+            $pickup_data['source'] = 'vcc';
+        }
+
+        // Final safety check - ensure source is never empty
+        if (empty($pickup_data['source'])) {
+            $pickup_data['source'] = 'exchange';
+        }
+
+        // Add boolean flags for template safety
+        $pickup_data['source_is_exchange'] = ($pickup_data['source'] === 'exchange');
+        $pickup_data['source_is_vcc'] = ($pickup_data['source'] === 'vcc');
+
+        return $OUTPUT->render_from_template('local_equipment/vcc_exchange_pickup_cell', $pickup_data);
+    }
+
+    /**
      * Format the actions column with proper Bootstrap 5 button groups
      */
     public function col_actions(stdClass $row): string {
@@ -291,35 +372,6 @@ class vcc_submissions_table extends table_sql {
         return $OUTPUT->render_from_template('local_equipment/vcc_actions_cell', $actions_data);
     }
 
-    /**
-     * Override download method for custom export with proper data formatting - ALL fields included
-     */
-    public function download(): void {
-        // Get all filtered data for export
-        $export_data = $this->vcc_service->get_export_data($this->filters);
-
-        foreach ($export_data as $record) {
-            $row = [
-                userdate($record->timecreated, '%Y-%m-%d %H:%M'),
-                $record->firstname ?? $record->u_firstname ?? '',
-                $record->lastname ?? $record->u_lastname ?? '',
-                $record->email ?? $record->u_email ?? '',
-                $record->phone ?? $record->u_phone2 ?? $record->u_phone1 ?? '',
-                $record->partnership_name ?? $record->p_name ?? '',
-                $this->vcc_service->get_students_text_for_export($record),
-                $this->get_mailing_address_text_for_export($record),
-                $this->get_billing_address_text_for_export($record),
-                $this->vcc_service->get_pickup_text_for_export($record),
-                $record->electronicsignature ?? '-',
-                $record->confirmationid ?? '-',
-                $record->usernotes ?? '-',
-                $record->adminnotes ?? '-',
-                $this->get_status_text_for_export($record)
-            ];
-
-            $this->add_data_keyed($row);
-        }
-    }
 
     /**
      * Get mailing address text for export

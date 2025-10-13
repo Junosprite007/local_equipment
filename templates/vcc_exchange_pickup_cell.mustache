@@ -1,0 +1,112 @@
+{{!
+    This file is part of FLIP Plugins for Moodle
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_equipment/vcc_exchange_pickup_cell
+
+    Template for consolidating exchange pickup information into a single table cell.
+    This template combines pickup method, person details, and address information.
+
+    RTL LANGUAGE SUPPORT CONSIDERATIONS:
+    * Icon positioning (fa-clock-o, fa-phone, fa-info-circle) may need RTL-specific margins
+    * Text alignment in address and detail sections should use logical properties
+    * Badge positioning and text direction should be tested with RTL content
+    * Multi-line content alignment may need RTL-specific handling
+
+    Context variables:
+    * method - Pickup method (e.g., 'pickup', 'delivery')
+    * person_name - Name of person picking up equipment
+    * person_phone - Phone number of pickup person
+    * person_details - Additional details about pickup person
+    * partnership_name - Name of partnership/location
+    * partnership_address - Address of pickup location
+    * timeframe - Pickup timeframe/schedule
+    * source - Data source ('exchange' or 'vcc')
+}}
+
+<div class="vcc-exchange-pickup-cell" role="region" aria-label="{{#str}}exchange_pickup_info, local_equipment{{/str}}">
+    {{#partnership_name}}
+    <div class="pickup-partnership mb-1" role="group" aria-labelledby="partnership-label">
+        <strong class="text-primary" id="partnership-label">{{partnership_name}}</strong>
+        {{#partnership_address}}
+        <br><small class="text-muted">{{partnership_address}}</small>
+        {{/partnership_address}}
+    </div>
+    {{/partnership_name}}
+
+    {{#timeframe}}
+    <div class="pickup-timeframe mb-1" role="group" aria-labelledby="timeframe-label">
+        <span class="badge text-bg-info" id="timeframe-label">
+            <i class="fa fa-clock-o me-1" aria-hidden="true"></i>
+            {{timeframe}}
+        </span>
+    </div>
+    {{/timeframe}}
+
+    {{#method}}
+    <div class="pickup-method mb-1" role="group" aria-labelledby="method-label">
+        <strong id="method-label">{{#str}}method, local_equipment{{/str}}:</strong>
+        <span class="text-capitalize">{{method}}</span>
+    </div>
+    {{/method}}
+
+    {{#person_name}}
+    <div class="pickup-person mb-1" role="group" aria-labelledby="person-label">
+        <strong id="person-label">{{#str}}pickup_person, local_equipment{{/str}}:</strong>
+        {{person_name}}
+        {{#person_phone}}
+        <br><small class="text-muted">
+            <i class="fa fa-phone me-1" aria-hidden="true"></i>
+            {{person_phone}}
+        </small>
+        {{/person_phone}}
+    </div>
+    {{/person_name}}
+
+    {{#person_details}}
+    <div class="pickup-details mb-1" role="group" aria-labelledby="details-label">
+        <strong id="details-label">{{#str}}details, local_equipment{{/str}}:</strong>
+        <span class="text-muted">{{person_details}}</span>
+    </div>
+    {{/person_details}}
+
+    {{#source}}
+    {{#source_is_exchange}}
+    <div class="pickup-source mt-2" role="group" aria-labelledby="source-label">
+        <small class="text-muted fst-italic" id="source-label">
+            <i class="fa fa-info-circle me-1" aria-hidden="true"></i>
+            {{#str}}source, local_equipment{{/str}}: {{#str}}exchange_data, local_equipment{{/str}}
+        </small>
+    </div>
+    {{/source_is_exchange}}
+    {{#source_is_vcc}}
+    <div class="pickup-source mt-2" role="group" aria-labelledby="source-label">
+        <small class="text-muted fst-italic" id="source-label">
+            <i class="fa fa-info-circle me-1" aria-hidden="true"></i>
+            {{#str}}source, local_equipment{{/str}}: {{#str}}vcc_data, local_equipment{{/str}}
+        </small>
+    </div>
+    {{/source_is_vcc}}
+    {{/source}}
+
+    {{^partnership_name}}
+    {{^method}}
+    {{^person_name}}
+    <span class="text-muted" role="text" aria-label="{{#str}}no_pickup_info, local_equipment{{/str}}">-</span>
+    {{/person_name}}
+    {{/method}}
+    {{/partnership_name}}
+</div>

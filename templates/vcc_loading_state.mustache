@@ -1,0 +1,66 @@
+{{!
+    @template local_equipment/vcc_loading_state
+
+    Loading state for VCC submissions table with skeleton animation.
+
+    Context variables:
+    * message - Loading message to display (optional)
+    * show_skeleton - Whether to show skeleton rows (optional)
+    * skeleton_rows - Number of skeleton rows to show (default 5)
+}}
+<div class="vcc-table-loading">
+    <div class="loading-spinner d-flex flex-column align-items-center">
+        <div class="spinner-border" role="status" aria-hidden="true"></div>
+        <div class="loading-text mt-2">
+            {{#message}}{{message}}{{/message}}
+            {{^message}}{{#str}}loading, core{{/str}}{{/message}}
+        </div>
+    </div>
+
+    {{#show_skeleton}}
+    <div class="table-responsive" aria-hidden="true">
+        <table class="table table-striped vcc-submissions-table">
+            <thead>
+                <tr>
+                    <th>{{#str}}timecreated, local_equipment{{/str}}</th>
+                    <th>{{#str}}firstname, core{{/str}}</th>
+                    <th>{{#str}}lastname, core{{/str}}</th>
+                    <th>{{#str}}email, core{{/str}}</th>
+                    <th>{{#str}}phone, local_equipment{{/str}}</th>
+                    <th>{{#str}}partnership, local_equipment{{/str}}</th>
+                    <th>{{#str}}students, local_equipment{{/str}}</th>
+                    <th>{{#str}}actions, core{{/str}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#skeleton_rows}}
+                <tr class="skeleton-row">
+                    <td>Loading...</td>
+                    <td>Loading...</td>
+                    <td>Loading...</td>
+                    <td>Loading...</td>
+                    <td>Loading...</td>
+                    <td>Loading...</td>
+                    <td>Loading...</td>
+                    <td>Loading...</td>
+                </tr>
+                {{/skeleton_rows}}
+                {{^skeleton_rows}}
+                {{#range}}{{#from}}1{{/from}}{{#to}}5{{/to}}{{#step}}1{{/step}}
+                <tr class="skeleton-row">
+                    <td>Loading...</td>
+                    <td>Loading...</td>
+                    <td>Loading...</td>
+                    <td>Loading...</td>
+                    <td>Loading...</td>
+                    <td>Loading...</td>
+                    <td>Loading...</td>
+                    <td>Loading...</td>
+                </tr>
+                {{/range}}
+                {{/skeleton_rows}}
+            </tbody>
+        </table>
+    </div>
+    {{/show_skeleton}}
+</div>

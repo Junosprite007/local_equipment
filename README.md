@@ -477,6 +477,11 @@ If I want to add menu items via "Custom menu items" under advanced theme setting
 -Settings|/admin/category.php?category=local_equipment{/ifadmin}
 
 
+### Error I got on dev environment
+
+`Comparisons of text column conditions are not allowed. Please use sql_compare_text() in your query.`
+
+Here's how I fixed this:
 
 
 
@@ -484,4 +489,16 @@ If I want to add menu items via "Custom menu items" under advanced theme setting
 
 
 
+Dev Moodle Env:
+Moodle 5.0
+MariaDB Ver 15.1 Distrib 10.11.14-MariaDB
+PHP 8.4
+ES6
+Bootstrap 5
 
+Local Moodle Env:
+Moodle 5.0
+mariadb from 11.4.2-MariaDB, client 15.2
+PHP 8.4
+ES6
+Bootstrap 5
