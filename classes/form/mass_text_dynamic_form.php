@@ -36,12 +36,15 @@ defined('MOODLE_INTERNAL') || die();
  * @package     local_equipment
  * @copyright   2025 onwards Joshua Kirby <josh@funlearningcompany.com>
  */
-class mass_text_dynamic_form extends dynamic_form {
+class mass_text_dynamic_form extends dynamic_form
+{
 
     /**
      * Define the form elements.
      */
-    public function definition() {
+    public function definition()
+    {
+        global $DB;
         $mform = $this->_form;
 
         // Hidden field for form identification
@@ -53,6 +56,17 @@ class mass_text_dynamic_form extends dynamic_form {
         $mform->setExpanded('formtitle', true);
 
         $description = $this->get_form_description();
+
+
+        // Adding a drop down list for course selection
+        $manager = new \local_equipment\mass_text_manager();
+        $courses = $manager->get_active_courses();
+        $options = [0 => get_string('allstudents', 'local_equipment')] + $courses;
+        $mform->addElement('select', 'courseid', get_string('selectcourse', 'local_equipment'), $options);
+        $mform->setDefault('courseid', 0);
+        // $mform->addHelpButton('courseid', 'selectcourse', 'local_equipment');
+
+
         $mform->addElement('html', $description);
 
         // Message textarea with enhanced attributes for accessibility
@@ -123,7 +137,8 @@ class mass_text_dynamic_form extends dynamic_form {
      *
      * @return string HTML content for form description
      */
-    private function get_form_description(): string {
+    private function get_form_description(): string
+    {
         return '<div class="alert alert-primary d-flex align-items-start mb-4" role="region" aria-labelledby="form-desc-title">' .
             '<i class="fa fa-info-circle me-3 mt-1 flex-shrink-0" aria-hidden="true"></i>' .
             '<div>' .
@@ -137,7 +152,8 @@ class mass_text_dynamic_form extends dynamic_form {
     /**
      * Add JavaScript for dynamic form functionality.
      */
-    protected function add_dynamic_form_js() {
+    protected function add_dynamic_form_js()
+    {
         global $PAGE;
 
         // Load the AMD module for dynamic form functionality
@@ -151,7 +167,8 @@ class mass_text_dynamic_form extends dynamic_form {
      * @param array $files Form files
      * @return array Array of errors
      */
-    public function validation($data, $files) {
+    public function validation($data, $files)
+    {
         $errors = parent::validation($data, $files);
 
         // Validate message length
@@ -176,7 +193,8 @@ class mass_text_dynamic_form extends dynamic_form {
      * @return void
      * @throws \required_capability_exception
      */
-    protected function check_access_for_dynamic_submission(): void {
+    protected function check_access_for_dynamic_submission(): void
+    {
         require_capability('local/equipment:sendmasstextmessages', context_system::instance());
     }
 
@@ -185,7 +203,8 @@ class mass_text_dynamic_form extends dynamic_form {
      *
      * @return array Result data
      */
-    public function process_dynamic_submission() {
+    public function process_dynamic_submission()
+    {
         global $USER;
 
         $data = $this->get_data();
@@ -194,11 +213,17 @@ class mass_text_dynamic_form extends dynamic_form {
             throw new \moodle_exception('invalidformdata');
         }
 
-        // Process the mass text message
-        $manager = new \local_equipment\mass_text_manager();
 
-        // Get students in active courses
-        $studentids = $manager->get_students_in_courses_with_end_dates();
+        // Determine which students to target based on course selection
+        $manager = new \local_equipment\mass_text_manager();
+        if (!empty($data->courseid) && $data->courseid != 0) {
+            // Get students in a specific course
+            $studentids = $manager->get_students_in_course($data->courseid);
+        } else {
+            // Get students across all active courses 
+            $studentids = $manager->get_students_in_courses_with_end_dates();
+        }
+
 
         if (empty($studentids)) {
             return [
@@ -254,7 +279,8 @@ class mass_text_dynamic_form extends dynamic_form {
      *
      * @return void
      */
-    public function set_data_for_dynamic_submission(): void {
+    public function set_data_for_dynamic_submission(): void
+    {
         // No default data needed for this form
     }
 
@@ -263,7 +289,8 @@ class mass_text_dynamic_form extends dynamic_form {
      *
      * @return \context
      */
-    protected function get_context_for_dynamic_submission(): \context {
+    protected function get_context_for_dynamic_submission(): \context
+    {
         return context_system::instance();
     }
 
@@ -272,7 +299,8 @@ class mass_text_dynamic_form extends dynamic_form {
      *
      * @return \moodle_url
      */
-    protected function get_page_url_for_dynamic_submission(): \moodle_url {
+    protected function get_page_url_for_dynamic_submission(): \moodle_url
+    {
         return new moodle_url('/local/equipment/mass_text_message.php');
     }
 }

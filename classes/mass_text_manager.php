@@ -33,7 +33,8 @@ defined('MOODLE_INTERNAL') || die();
  * @package     local_equipment
  * @copyright   2025 onwards Joshua Kirby <josh@funlearningcompany.com>
  */
-class mass_text_manager {
+class mass_text_manager
+{
     /** @var \moodle_database Database instance */
     protected $db;
 
@@ -46,7 +47,8 @@ class mass_text_manager {
     /**
      * Constructor
      */
-    public function __construct() {
+    public function __construct()
+    {
         global $DB;
         $this->db = $DB;
         $this->clock = \core\di::get(\core\clock::class);
@@ -54,11 +56,55 @@ class mass_text_manager {
     }
 
     /**
+     * Get active courses with instructors
+     *
+     * @return array Array of course id => "Course Name : Course Info (Instructor1, Instructor2)"
+     */
+    public function get_active_courses(): array
+    {
+        $currenttime = $this->clock->now()->getTimestamp();
+
+        # get course names, shortnames, and instructors for active courses
+        $sql = "SELECT c.id,
+                   c.fullname AS course_name,
+                   c.shortname AS course_info,
+                   GROUP_CONCAT(CONCAT(u.firstname, ' ', u.lastname) SEPARATOR ', ') AS instructors
+            FROM {course} c
+            LEFT JOIN {context} ctx ON ctx.instanceid = c.id AND ctx.contextlevel = :contextlevel
+            LEFT JOIN {role_assignments} ra ON ra.contextid = ctx.id
+            LEFT JOIN {role} r ON r.id = ra.roleid AND r.shortname IN ('teacher','editingteacher')
+            LEFT JOIN {user} u ON u.id = ra.userid
+            WHERE (c.enddate = 0 OR c.enddate > :currenttime)
+              AND c.visible = 1
+            GROUP BY c.id, c.fullname, c.shortname
+            ORDER BY c.fullname ASC";
+
+        $params = [
+            'contextlevel' => CONTEXT_COURSE,
+            'currenttime' => $currenttime
+        ];
+
+        $records = $this->db->get_records_sql($sql, $params);
+
+        // Build course list in readable format
+        $courses = [];
+        foreach ($records as $record) {
+            $instructors = $record->instructors ?: 'No instructor';
+            $courseInfo = $record->course_info ?: 'No description';
+            $courses[$record->id] = "{$record->course_name} : {$courseInfo} ({$instructors})";
+        }
+
+        return $courses;
+    }
+
+
+    /**
      * Get students enrolled in courses with end dates.
      *
      * @return array Array of unique student user IDs
      */
-    public function get_students_in_courses_with_end_dates(): array {
+    public function get_students_in_courses_with_end_dates(): array
+    {
         $currenttime = $this->clock->now()->getTimestamp();
 
         $sql = "SELECT DISTINCT u.id as studentid
@@ -83,7 +129,8 @@ class mass_text_manager {
      *
      * @return array Array of unique student user IDs
      */
-    public function get_students_in_courses_with_future_end_dates(): array {
+    public function get_students_in_courses_with_future_end_dates(): array
+    {
         $currenttime = $this->clock->now()->getTimestamp();
 
         $sql = "SELECT DISTINCT u.id as studentid
@@ -111,13 +158,48 @@ class mass_text_manager {
         return array_keys($records);
     }
 
+
+    /**
+     * Get students enrolled in a specific course
+     *     
+     * @param int $courseid Course ID
+     * @return array Array of unique student user IDs
+     */
+    public function get_students_in_course(int $courseid): array
+    {
+        $currenttime = $this->clock->now()->getTimestamp();
+
+        $sql = "SELECT DISTINCT u.id as studentid
+            FROM {user} u
+            JOIN {user_enrolments} ue ON ue.userid = u.id
+            JOIN {enrol} e ON e.id = ue.enrolid
+            JOIN {course} c ON c.id = e.courseid
+            WHERE c.id = :courseid
+            AND c.enddate > :currenttime
+            AND c.enddate IS NOT NULL
+            AND ue.status = 0
+            AND u.deleted = 0
+            ORDER BY u.id";
+
+        $params = [
+            'courseid' => $courseid,
+            'currenttime' => $currenttime
+        ];
+
+        $records = $this->db->get_records_sql($sql, $params);
+
+        return array_keys($records);
+    }
+
+
     /**
      * Get verified parents for a list of students (first verified parent per student).
      *
      * @param array $studentids Array of student user IDs
      * @return array Array of parent records with phone numbers
      */
-    public function get_verified_parents_for_students(array $studentids): array {
+    public function get_verified_parents_for_students(array $studentids): array
+    {
         if (empty($studentids)) {
             return [];
         }
@@ -167,7 +249,8 @@ class mass_text_manager {
      * @param int $userid User ID
      * @return bool True if phone is verified
      */
-    public function is_phone_verified(int $userid): bool {
+    public function is_phone_verified(int $userid): bool
+    {
         return $this->db->record_exists('local_equipment_phonecommunication_otp', [
             'userid' => $userid,
             'phoneisverified' => 1
@@ -180,7 +263,8 @@ class mass_text_manager {
      * @param int $userid User ID
      * @return string|false Verified phone number or false if not found
      */
-    public function get_verified_phone_number(int $userid) {
+    public function get_verified_phone_number(int $userid)
+    {
         $record = $this->db->get_record('local_equipment_phonecommunication_otp', [
             'userid' => $userid,
             'phoneisverified' => 1
@@ -197,7 +281,8 @@ class mass_text_manager {
      * @param int $adminuserid Admin user ID for confirmation
      * @return object Results object with success/failure counts and messages
      */
-    public function send_mass_messages(string $message, array $recipients, int $adminuserid): object {
+    public function send_mass_messages(string $message, array $recipients, int $adminuserid): object
+    {
         $results = (object)[
             'success_count' => 0,
             'failure_count' => 0,
@@ -281,7 +366,8 @@ class mass_text_manager {
      * @param object $results Results object
      * @param int $gatewayid SMS gateway ID
      */
-    protected function send_admin_confirmation(int $adminuserid, string $originalmessage, object $results, int $gatewayid): void {
+    protected function send_admin_confirmation(int $adminuserid, string $originalmessage, object $results, int $gatewayid): void
+    {
         $admin = $this->db->get_record('user', ['id' => $adminuserid]);
         if (!$admin) {
             return;
@@ -313,7 +399,8 @@ class mass_text_manager {
      *
      * @return object|false Gateway record or false if not found
      */
-    protected function get_default_sms_gateway() {
+    protected function get_default_sms_gateway()
+    {
         return $this->db->get_record('sms_gateways', ['enabled' => 1], '*', IGNORE_MULTIPLE);
     }
     /**
@@ -323,7 +410,8 @@ class mass_text_manager {
      * @param string $message Message sent
      * @param object $results Results object
      */
-    protected function log_mass_text_operation(int $adminuserid, string $message, object $results): void {
+    protected function log_mass_text_operation(int $adminuserid, string $message, object $results): void
+    {
         // Use Moodle's modern event system for proper logging
         $event = \local_equipment\event\mass_text_sent::create_from_results(
             $adminuserid,

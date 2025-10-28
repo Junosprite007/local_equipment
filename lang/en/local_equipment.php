@@ -896,6 +896,9 @@ $string['masstextinstructions_title'] = 'Mass Text Messaging Instructions';
 $string['masstextinstructions'] = 'Use this form to send a text message to all parents with verified phone numbers who have students enrolled in courses with future end dates. Messages are limited to 250 characters and will be sent immediately upon submission.';
 $string['event_mass_text_sent'] = 'Mass text message sent';
 $string['event_mass_text_description'] = 'The user with id \'{$a->userid}\' sent a mass text message to {$a->total} recipients. Success: {$a->success}, Failed: {$a->failed}. Message: "{$a->message}"';
+$string['selectcourse'] = 'Select course';
+$string['allstudents'] = 'All students';
+
 
 // Enhanced AWS error messages
 $string['awssmssendfailed'] = 'AWS SMS sending failed';
