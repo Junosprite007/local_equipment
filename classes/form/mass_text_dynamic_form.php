@@ -301,6 +301,6 @@ class mass_text_dynamic_form extends dynamic_form
      */
     protected function get_page_url_for_dynamic_submission(): \moodle_url
     {
-        return new moodle_url('/local/equipment/mass_text_message.php');
+        return new \moodle_url('/local/equipment/mass_text_message.php');
     }
 }
