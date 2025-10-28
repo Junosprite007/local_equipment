@@ -1484,7 +1484,7 @@ function local_equipment_generate_course_table($partnershipid) {
 
     // Add each course row
     foreach ($courseids as $courseid) {
-        $courseurl = new moodle_url('/course/view.php', ['id' => $courseid]);
+        $courseurl = new \moodle_url('/course/view.php', ['id' => $courseid]);
         $html .= html_writer::start_div('local-equipment_course-row d-flex');
         $html .= html_writer::div($courseid, 'local-equipment_course-id-col');
         $html .= html_writer::div(
