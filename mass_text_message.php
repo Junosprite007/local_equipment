@@ -37,7 +37,7 @@ $PAGE->set_heading(get_string('masstextmessaging', 'local_equipment'));
 // Add container class for styling
 $PAGE->add_body_class('local_equipment_mass_text');
 
-// Output the page
+// Output the page n  
 echo $OUTPUT->header();
 
 // Add a container div for the form and results

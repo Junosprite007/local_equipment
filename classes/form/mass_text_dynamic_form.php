@@ -58,14 +58,23 @@ class mass_text_dynamic_form extends dynamic_form
         $description = $this->get_form_description();
 
 
-        // Adding a drop down list for course selection
+        // Give the user an option to select specific classes
         $manager = new \local_equipment\mass_text_manager();
         $courses = $manager->get_active_courses();
         $options = [0 => get_string('allstudents', 'local_equipment')] + $courses;
-        $mform->addElement('select', 'courseid', get_string('selectcourse', 'local_equipment'), $options);
-        $mform->setDefault('courseid', 0);
+        // we're using moodle's built in autocomplete element 
+        $mform->addElement(
+            'autocomplete',
+            'courseids',
+            get_string('selectcourse', 'local_equipment'),
+            $options,
+            [
+                'multiple' => true,
+            ]
+        );
+        $mform->setType('courseids', PARAM_RAW);
+        $mform->setDefault('courseids', 0);
         // $mform->addHelpButton('courseid', 'selectcourse', 'local_equipment');
-
 
         $mform->addElement('html', $description);
 
@@ -178,9 +187,9 @@ class mass_text_dynamic_form extends dynamic_form
             if (empty($message)) {
                 $errors['message'] = get_string('required');
             } else if (strlen($message) > 250) {
-                $errors['message'] = get_string('maximumchars', '', 250);
+                $errors['message'] = get_string('maximumchars', 'local_equipment', 250);
             } else if (strlen($message) < 10) {
-                $errors['message'] = get_string('minimumchars', '', 10);
+                $errors['message'] = get_string('minimumchars', 'local_equipment', 10);
             }
         }
 
@@ -216,9 +225,9 @@ class mass_text_dynamic_form extends dynamic_form
 
         // Determine which students to target based on course selection
         $manager = new \local_equipment\mass_text_manager();
-        if (!empty($data->courseid) && $data->courseid != 0) {
-            // Get students in a specific course
-            $studentids = $manager->get_students_in_course($data->courseid);
+        if (!empty($data->courseids)) {
+            // Get students in specific courses
+            $studentids = $manager->get_students_in_course($data->courseids);
         } else {
             // Get students across all active courses 
             $studentids = $manager->get_students_in_courses_with_end_dates();

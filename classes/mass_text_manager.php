@@ -159,37 +159,41 @@ class mass_text_manager
     }
 
 
-    /**
-     * Get students enrolled in a specific course
-     *     
-     * @param int $courseid Course ID
-     * @return array Array of unique student user IDs
-     */
-    public function get_students_in_course(int $courseid): array
-    {
-        $currenttime = $this->clock->now()->getTimestamp();
+/**
+ * Get students enrolled in one or more courses.
+ *
+ * @param int|array $courseids A single course ID or an array of course IDs.
+ * @return array Array of unique student user IDs
+ */
+public function get_students_in_course($courseids): array
+{
+    // Normalize to an array
+    if (!is_array($courseids)) {
+        $courseids = [$courseids];
+    }
 
-        $sql = "SELECT DISTINCT u.id as studentid
+    $currenttime = $this->clock->now()->getTimestamp();
+
+    // Build the SQL IN() clause
+    list($inSql, $params) = $this->db->get_in_or_equal($courseids, SQL_PARAMS_NAMED, 'cid');
+    $params['currenttime'] = $currenttime;
+
+    $sql = "SELECT DISTINCT u.id AS studentid
             FROM {user} u
             JOIN {user_enrolments} ue ON ue.userid = u.id
             JOIN {enrol} e ON e.id = ue.enrolid
             JOIN {course} c ON c.id = e.courseid
-            WHERE c.id = :courseid
-            AND c.enddate > :currenttime
-            AND c.enddate IS NOT NULL
-            AND ue.status = 0
-            AND u.deleted = 0
+            WHERE c.id {$inSql}
+              AND c.enddate > :currenttime
+              AND c.enddate IS NOT NULL
+              AND ue.status = 0
+              AND u.deleted = 0
             ORDER BY u.id";
 
-        $params = [
-            'courseid' => $courseid,
-            'currenttime' => $currenttime
-        ];
+    $records = $this->db->get_records_sql($sql, $params);
 
-        $records = $this->db->get_records_sql($sql, $params);
-
-        return array_keys($records);
-    }
+    return array_keys($records); // returns array of user IDs
+}
 
 
     /**
