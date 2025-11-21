@@ -66,16 +66,16 @@ class mass_text_manager
 
         # get course names, shortnames, and instructors for active courses
         $sql = "SELECT c.id,
-                   c.fullname AS course_name,
-                   c.shortname AS course_info,
-                   GROUP_CONCAT(CONCAT(u.firstname, ' ', u.lastname) SEPARATOR ', ') AS instructors
+               c.fullname AS course_name,
+               c.shortname AS course_info,
+               GROUP_CONCAT(CONCAT(u.firstname, ' ', u.lastname) SEPARATOR ', ') AS instructors
             FROM {course} c
             LEFT JOIN {context} ctx ON ctx.instanceid = c.id AND ctx.contextlevel = :contextlevel
-            LEFT JOIN {role_assignments} ra ON ra.contextid = ctx.id
-            LEFT JOIN {role} r ON r.id = ra.roleid AND r.shortname IN ('teacher','editingteacher')
+            LEFT JOIN {role_assignments} ra ON ra.contextid = ctx.id AND ra.roleid IN (2, 3, 4)
+            LEFT JOIN {role} r ON r.id = ra.roleid
             LEFT JOIN {user} u ON u.id = ra.userid
-            WHERE (c.enddate = 0 OR c.enddate > :currenttime)
-              AND c.visible = 1
+            WHERE (c.enddate = 0 OR c.enddate > :currenttime) 
+                AND c.visible = 1
             GROUP BY c.id, c.fullname, c.shortname
             ORDER BY c.fullname ASC";
 
@@ -159,26 +159,26 @@ class mass_text_manager
     }
 
 
-/**
- * Get students enrolled in one or more courses.
- *
- * @param int|array $courseids A single course ID or an array of course IDs.
- * @return array Array of unique student user IDs
- */
-public function get_students_in_course($courseids): array
-{
-    // Normalize to an array
-    if (!is_array($courseids)) {
-        $courseids = [$courseids];
-    }
+    /**
+     * Get students enrolled in one or more courses.
+     *
+     * @param int|array $courseids A single course ID or an array of course IDs.
+     * @return array Array of unique student user IDs
+     */
+    public function get_students_in_course($courseids): array
+    {
+        // Normalize to an array
+        if (!is_array($courseids)) {
+            $courseids = [$courseids];
+        }
 
-    $currenttime = $this->clock->now()->getTimestamp();
+        $currenttime = $this->clock->now()->getTimestamp();
 
-    // Build the SQL IN() clause
-    list($inSql, $params) = $this->db->get_in_or_equal($courseids, SQL_PARAMS_NAMED, 'cid');
-    $params['currenttime'] = $currenttime;
+        // Build the SQL IN() clause
+        list($inSql, $params) = $this->db->get_in_or_equal($courseids, SQL_PARAMS_NAMED, 'cid');
+        $params['currenttime'] = $currenttime;
 
-    $sql = "SELECT DISTINCT u.id AS studentid
+        $sql = "SELECT DISTINCT u.id AS studentid
             FROM {user} u
             JOIN {user_enrolments} ue ON ue.userid = u.id
             JOIN {enrol} e ON e.id = ue.enrolid
@@ -190,10 +190,10 @@ public function get_students_in_course($courseids): array
               AND u.deleted = 0
             ORDER BY u.id";
 
-    $records = $this->db->get_records_sql($sql, $params);
+        $records = $this->db->get_records_sql($sql, $params);
 
-    return array_keys($records); // returns array of user IDs
-}
+        return array_keys($records); // returns array of user IDs
+    }
 
 
     /**

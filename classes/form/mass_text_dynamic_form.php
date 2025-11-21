@@ -61,19 +61,20 @@ class mass_text_dynamic_form extends dynamic_form
         // Give the user an option to select specific classes
         $manager = new \local_equipment\mass_text_manager();
         $courses = $manager->get_active_courses();
-        $options = [0 => get_string('allstudents', 'local_equipment')] + $courses;
+        $mform->addElement('select', 'targettype', 'Send to', [
+            0 => 'All students',
+            1 => 'Students in selected courses'
+        ]);
+        $mform->setDefault('targettype', 0);
+
         // we're using moodle's built in autocomplete element 
-        $mform->addElement(
-            'autocomplete',
-            'courseids',
-            get_string('selectcourse', 'local_equipment'),
-            $options,
-            [
-                'multiple' => true,
-            ]
-        );
+        // only show the form when all students isn't selected
+        $mform->hideIf('courseids', 'targettype', 'eq', 0);
+        $mform->addElement('autocomplete', 'courseids', 'Select courses', $courses, [
+            'multiple' => true
+        ]);
         $mform->setType('courseids', PARAM_RAW);
-        $mform->setDefault('courseids', 0);
+
         // $mform->addHelpButton('courseid', 'selectcourse', 'local_equipment');
 
         $mform->addElement('html', $description);
@@ -225,12 +226,10 @@ class mass_text_dynamic_form extends dynamic_form
 
         // Determine which students to target based on course selection
         $manager = new \local_equipment\mass_text_manager();
-        if (!empty($data->courseids)) {
-            // Get students in specific courses
-            $studentids = $manager->get_students_in_course($data->courseids);
-        } else {
-            // Get students across all active courses 
+        if ($data->targettype == 0) {
             $studentids = $manager->get_students_in_courses_with_end_dates();
+        } else {
+            $studentids = $manager->get_students_in_course($data->courseids);
         }
 
 
