@@ -571,11 +571,17 @@ $string['strftimetime12'] = '%I:%M %p';
 $string['strftimetime24'] = '%H:%M';
 
 
-
 // Bulk family upload and enroll strings
 
 $string['addbulkfamilies'] = 'Add bulk families';
 $string['bulkfamilyupload'] = 'Bulk family upload and enroll';
+$string['bulk_enrolment_settings'] = 'Bulk family enrollment settings';
+$string['bulk_enrolment_settings_desc'] = 'Settings for Add & enroll bulk users feature';
+$string['enrol_parents'] = 'Enroll parents in courses?';
+$string['enrol_parents_desc'] = 'When enabled, parents will be enrolled in courses with the Parent role';
+
+
+
 
 $string['familiesinputdata'] = 'Families data';
 $string['familiesinputdata_help'] = 'Be sure to format your text input to match the format of the template below:<br /><br />
@@ -585,7 +591,7 @@ parent1email@domain.com <br />
 Parent 2 Name <br />
 555-555-5555 <br />
 parent2email@domain.com <br />
-1
+1 <br />
 * Student 1 Name <br />
 555-555-5555 <br />
 student1email@domain.com <br />

@@ -262,6 +262,24 @@ $templatedata = [
                     'title' => get_string('equipmentpluginsettings', 'local_equipment'),
                     'class' => 'btn-secondary',
                     'gridclass' => 'col-md-12'
+                ],
+                [
+                    'url' => (new \moodle_url('/admin/settings.php', ['section' => 'local_equipment_notifications']))->out(false),
+                    'title' => get_string('notificationsettings', 'local_equipment'),
+                    'class' => 'btn-secondary',
+                    'gridclass' => 'col-md-12'
+                ],
+                [
+                    'url' => (new \moodle_url('/admin/settings.php', ['section' => 'local_equipment_phoneprovider']))->out(false),
+                    'title' => get_string('phonesettings', 'local_equipment'),
+                    'class' => 'btn-secondary',
+                    'gridclass' => 'col-md-12'
+                ],
+                [
+                    'url' => (new \moodle_url('/admin/settings.php', ['section' => 'local_equipment_bulkenrolment']))->out(false),
+                    'title' => get_string('bulk_enrolment_settings', 'local_equipment'),
+                    'class' => 'btn-secondary',
+                    'gridclass' => 'col-md-12'
                 ]
             ]
         ],
@@ -274,8 +292,8 @@ $isdeveloper = ($CFG->debug >= DEBUG_DEVELOPER);
 if ($isdeveloper) {
     // Development and Testing Tools Section
     $devandtestingtools = [
-            'title' => get_string('developmenttestingtools', 'local_equipment'),
-            'items' => [
+        'title' => get_string('developmenttestingtools', 'local_equipment'),
+        'items' => [
             // CLI usage only
             // [
             //     'url' => (new \moodle_url('/local/equipment/test_inventory_basic.php'))->out(false),

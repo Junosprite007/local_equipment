@@ -496,42 +496,47 @@ if ($mform->is_cancelled()) {
             $family->students = $students;
             $family->all_courses = array_unique($allcourses);
 
+            // IF ENABLED
             // Enroll all the parents into each course with the role of "parent". This is so they can see the grades of their
             // students, as well as the courses in which their students are enrolled.
-            foreach ($family->parents as $p) {
-                $coursenames = [];
-                foreach ($family->all_courses as $c) {
-                    $p->courses_results[$c] = local_equipment_enrol_user_in_course(
-                        $p,
-                        $c,
-                        $roleid_parent
-                    );
-                    array_push($messages->successes, ...$p->courses_results[$c]->successes);
-                    array_push($messages->warnings, ...$p->courses_results[$c]->warnings);
-                    array_push($messages->errors, ...$p->courses_results[$c]->errors);
+            $enrolparents = get_config('local_equipment', 'enrolparents');
 
-                    if (!empty($p->courses_results[$c]->successes)) {
-                        // Create links for each course to be included in the email.
-                        $courseurl = new moodle_url('/course/view.php', ['id' => $c]);
-                        $courselink = html_writer::link($courseurl, $p->courses_results[$c]->coursename);
-                        $coursenames[] = $courselink;
+            if (!empty($enrolparents)) {
+                foreach ($family->parents as $p) {
+                    $coursenames = [];
+                    foreach ($family->all_courses as $c) {
+                        $p->courses_results[$c] = local_equipment_enrol_user_in_course(
+                            $p,
+                            $c,
+                            $roleid_parent
+                        );
+                        array_push($messages->successes, ...$p->courses_results[$c]->successes);
+                        array_push($messages->warnings, ...$p->courses_results[$c]->warnings);
+                        array_push($messages->errors, ...$p->courses_results[$c]->errors);
+
+                        if (!empty($p->courses_results[$c]->successes)) {
+                            // Create links for each course to be included in the email.
+                            $courseurl = new moodle_url('/course/view.php', ['id' => $c]);
+                            $courselink = html_writer::link($courseurl, $p->courses_results[$c]->coursename);
+                            $coursenames[] = $courselink;
+                        }
                     }
-                }
 
 
-                if ($notifyenabled_parents) {
-                    // If courses_results->successes is NOT empty, then we should include that course in the email. Those errors are
-                    // handled in the enrollment email function, though.
-                    $emailsentstatus = local_equipment_send_enrollment_message(
-                        $p,
-                        $coursenames,
-                        'parent',
-                        $family->partnership,
-                        $studentfirstnames
-                    );
-                    array_push($messages->successes, ...$emailsentstatus->successes);
-                    array_push($messages->warnings, ...$emailsentstatus->warnings);
-                    array_push($messages->errors, ...$emailsentstatus->errors);
+                    if ($notifyenabled_parents) {
+                        // If courses_results->successes is NOT empty, then we should include that course in the email. Those errors are
+                        // handled in the enrollment email function, though.
+                        $emailsentstatus = local_equipment_send_enrollment_message(
+                            $p,
+                            $coursenames,
+                            'parent',
+                            $family->partnership,
+                            $studentfirstnames
+                        );
+                        array_push($messages->successes, ...$emailsentstatus->successes);
+                        array_push($messages->warnings, ...$emailsentstatus->warnings);
+                        array_push($messages->errors, ...$emailsentstatus->errors);
+                    }
                 }
             }
 

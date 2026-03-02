@@ -216,6 +216,32 @@ if ($hassiteconfig) {
     $ADMIN->add($component, $notificationsettings);
 
     // ========================================
+    // #. BULK ENROLLMENT SETTINGS PAGE (added later, by taylor)
+    // ========================================
+    $bulkenrolmentsettings = new admin_settingpage(
+        "{$component}_bulkenrolment",
+        get_string('bulk_enrolment_settings', 'local_equipment')
+    );
+
+    // Section heading
+    $bulkenrolmentsettings->add(new admin_setting_heading(
+        "{$component}/bulkenrolmentsettings",
+        get_string('bulk_enrolment_settings', 'local_equipment'),
+        get_string('bulk_enrolment_settings_desc', 'local_equipment')
+    ));
+
+    // Enrol parents toggle
+    $bulkenrolmentsettings->add(new admin_setting_configcheckbox(
+        "{$component}/enrolparents",
+        get_string('enrol_parents', 'local_equipment'),
+        get_string('enrol_parents_desc', 'local_equipment'),
+        0 // Default disabled
+    ));
+
+    // Add page to Equipment category
+    $ADMIN->add($component, $bulkenrolmentsettings);
+
+    // ========================================
     // 4. CREATE SUBCATEGORIES
     // ========================================
     $ADMIN->add(

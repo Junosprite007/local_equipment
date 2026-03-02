@@ -37,7 +37,8 @@ defined('MOODLE_INTERNAL') || die();
  *
  * @param \core\hook\output\before_standard_head_html_generation $hook
  */
-function local_equipment_before_standard_head_html_generation(\core\hook\output\before_standard_head_html_generation $hook) {
+function local_equipment_before_standard_head_html_generation(\core\hook\output\before_standard_head_html_generation $hook)
+{
     global $PAGE;
 
     $PAGE->requires->css('/local/equipment/styles.css');
@@ -48,7 +49,8 @@ function local_equipment_before_standard_head_html_generation(\core\hook\output\
  *
  * @return array An array of countries.
  */
-function local_equipment_get_countries() {
+function local_equipment_get_countries()
+{
     return [
         '' => get_string('selectcountry', 'local_equipment'),
         'USA' => get_string('USA', 'local_equipment'),
@@ -63,7 +65,8 @@ function local_equipment_get_countries() {
  * @param string $country The country code for which to get states or provinces.
  * @return array An array of states or provinces.
  */
-function local_equipment_get_states($country = 'USA') {
+function local_equipment_get_states($country = 'USA')
+{
     $states = [];
 
     switch ($country) {
@@ -141,7 +144,8 @@ function local_equipment_get_states($country = 'USA') {
  * @param array $options additional options affecting the file serving
  * @return bool false if the file not found, just send the file otherwise and do not return anything
  */
-function local_equipment_pluginfile($course, $cm, $context, $filearea, array $args, $forcedownload, array $options = []) {
+function local_equipment_pluginfile($course, $cm, $context, $filearea, array $args, $forcedownload, array $options = [])
+{
     global $DB, $USER;
 
     // Check the contextlevel is as expected.
@@ -197,7 +201,8 @@ function local_equipment_pluginfile($course, $cm, $context, $filearea, array $ar
  * @param int $userid The user ID to check for
  * @return array Array of available exchange pickup objects
  */
-function local_equipment_get_available_exchanges($userid) {
+function local_equipment_get_available_exchanges($userid)
+{
     global $DB;
 
     // Get the current time using Moodle 5.0 approach
@@ -226,7 +231,8 @@ function local_equipment_get_available_exchanges($userid) {
  * @param int $exchangeid The exchange/pickup ID
  * @return object|false The existing submission record or false if none exists
  */
-function local_equipment_get_existing_exchange_submission($userid, $exchangeid) {
+function local_equipment_get_existing_exchange_submission($userid, $exchangeid)
+{
     global $DB;
 
     $clock = \core\di::get(\core\clock::class);
@@ -256,7 +262,8 @@ function local_equipment_get_existing_exchange_submission($userid, $exchangeid) 
  * @param int $userid The user ID
  * @return int The submission ID
  */
-function local_equipment_save_exchange_submission($data, $userid) {
+function local_equipment_save_exchange_submission($data, $userid)
+{
     global $DB;
 
     // Get the current time using Moodle 5.0 approach
@@ -347,7 +354,8 @@ function local_equipment_save_exchange_submission($data, $userid) {
  * @param string $identifier The string identifier.
  * @return bool True if the string exists, false otherwise.
  */
-function local_equipment_lang_string_exists($identifier) {
+function local_equipment_lang_string_exists($identifier)
+{
     $langfile = file_get_contents(__DIR__ . '/lang/en/local_equipment.php');
     if (file_exists($langfile)) {
         $strings = include($langfile);
@@ -362,7 +370,8 @@ function local_equipment_lang_string_exists($identifier) {
  * @param stdClass $dbrecord A database record that contains multiple types of addresses.
  * @return string Each addresses type, plus the actual address, joined by a <br /> tag.
  */
-function local_equipment_get_addresses($dbrecord) {
+function local_equipment_get_addresses($dbrecord)
+{
     $address = [];
     $addresstypes = [
         'physical',
@@ -384,7 +393,8 @@ function local_equipment_get_addresses($dbrecord) {
  *
  * @return array An array with the proper parameters for a user select field with autocomplete.
  */
-function local_equipment_auto_complete_users() {
+function local_equipment_auto_complete_users()
+{
     return [
         'ajax' => 'core_user/form_user_selector',
         'multiple' => true,
@@ -398,7 +408,8 @@ function local_equipment_auto_complete_users() {
  *
  * @return array An array with the proper parameters for a user select field with autocomplete.
  */
-function local_equipment_auto_complete_users_single() {
+function local_equipment_auto_complete_users_single()
+{
     return [
         'ajax' => 'core_user/form_user_selector',
         'multiple' => false,
@@ -413,7 +424,8 @@ function local_equipment_auto_complete_users_single() {
  * @param int $id User ID.
  * @return string HTML for user selector.
  */
-function local_equipment_user_selector_callback($id) {
+function local_equipment_user_selector_callback($id)
+{
     global $OUTPUT;
     if (!$id || $id == 'qfforcemultiselectsubmission') {
         return ''; // Return empty for invalid or placeholder IDs
@@ -442,7 +454,8 @@ function local_equipment_user_selector_callback($id) {
  * @param stdClass $partnership A database record that contains multiple types of addresses.
  * @return string Imploded array of all liaisons with there required information.
  */
-function local_equipment_get_liaison_info($partnership) {
+function local_equipment_get_liaison_info($partnership)
+{
     // $liaisons = user_get_users_by_id(json_decode($partnership->liaisonids));
     $liaisonids = json_decode($partnership->liaisonids);
     $userlinks = [];
@@ -481,7 +494,8 @@ function local_equipment_get_liaison_info($partnership) {
  * @param int $id The user ID of the coordinator, taken from the Moodle's core user table. MUST be a valid user ID.
  * @return string $liasonhtml An HTML string containing the FLC coordinator's name, email, and phone number.
  */
-function local_equipment_get_coordinator_info($id) {
+function local_equipment_get_coordinator_info($id)
+{
     if (!$id) {
         return get_string('nocoordinatoradded', 'local_equipment');
     }
@@ -528,7 +542,8 @@ function local_equipment_get_coordinator_info($id) {
  * @param string $categoryname A database record that contains multiple types of addresses.
  * @return object $courses_formatted returns whatever the first category is to match give category name.
  */
-function local_equipment_get_master_courses($categoryname = 'ALL_COURSES_CURRENT') {
+function local_equipment_get_master_courses($categoryname = 'ALL_COURSES_CURRENT')
+{
     global $DB;
 
     // Set variables to be used for error checking in ./partnerships/addpartnerships.php.
@@ -578,7 +593,8 @@ function local_equipment_get_master_courses($categoryname = 'ALL_COURSES_CURRENT
  * @param stdClass $partnership A database record that contains multiple types of addresses.
  * @return string The HTML links for the courses, false otherwise.
  */
-function local_equipment_get_courses($partnership) {
+function local_equipment_get_courses($partnership)
+{
     $courseids = json_decode($partnership->courseids);
     $courseinfo = [];
 
@@ -598,7 +614,8 @@ function local_equipment_get_courses($partnership) {
  * @param string $country The country code to use.
  * @return object $parsedphonedata An object containing the parsed phone number, may or may not return errors.
  */
-function local_equipment_parse_phone_number($phonenumber, $country = 'US') {
+function local_equipment_parse_phone_number($phonenumber, $country = 'US')
+{
     $parsedphoneobj = new stdClass();
     $parsedphoneobj->errors = [];
     $parsedphoneobj->phone = '';
@@ -651,7 +668,8 @@ function local_equipment_parse_phone_number($phonenumber, $country = 'US') {
  * @param string $parsedphonenumber The already parsed phone number. This must follow the exact form as follows: +12345678910
  * @return string
  */
-function local_equipment_format_phone_number($parsedphonenumber) {
+function local_equipment_format_phone_number($parsedphonenumber)
+{
     $formattedphonenumber = preg_replace("/^\+(\d{1})(\d{3})(\d{3})(\d{4})$/", "+$1 ($2) $3-$4", $parsedphonenumber);
     // try {
     //     if ($parsedphonenumber == $formattedphonenumber) {
@@ -671,7 +689,8 @@ function local_equipment_format_phone_number($parsedphonenumber) {
  * @param string $country The country code to use.
  * @return object $parsedphonedata An object containing the parsed phone number, the country code, whether or not the phone number is valid, and may or may not return errors.
  */
-function local_equipment_phone_number_is_valid($phonenumber, $country = 'USA') {
+function local_equipment_phone_number_is_valid($phonenumber, $country = 'USA')
+{
     // Remove commonly used characters from the phone number that are not numbers: ().-+ and the white space char.
     $parsedphonedata = new stdClass();
     $parsedphonedata->number = preg_replace("/[\(\)\-\s+\.]/", "", $phonenumber);
@@ -718,7 +737,8 @@ function local_equipment_phone_number_is_valid($phonenumber, $country = 'USA') {
  * @param string $groupname the name of the group to add.
  * @param string $label the label for the group.
  */
-function local_equipment_add_address_group($mform, $addresstype, $label) {
+function local_equipment_add_address_group($mform, $addresstype, $label)
+{
 
     $group = [];
     $types = [];
@@ -787,7 +807,8 @@ function local_equipment_add_address_group($mform, $addresstype, $label) {
  * @param object $element the element to add.
  * @return object $block a block of elements and their options to be added to the form.
  */
-function local_equipment_address_group_view($mform, $fieldname, $element) {
+function local_equipment_address_group_view($mform, $fieldname, $element)
+{
     return [
         "{$fieldname}_before" => $mform->createElement('html', '<div class="col-md-0">'),
         $fieldname => $element,
@@ -935,7 +956,8 @@ function local_equipment_add_address_block(
  * @param bool $showsameasphysical whether or not to show the 'sameasphysical' checkbox and string.
  * @return object $block a block of elements to be added to the form.
  */
-function local_equipment_add_edit_address_block($mform, $addresstype, $data, $showsameasphysical = true, $requireaddress = false) {
+function local_equipment_add_edit_address_block($mform, $addresstype, $data, $showsameasphysical = true, $requireaddress = false)
+{
     // $block = new stdClass();
 
     $mform->addElement('static', $addresstype . 'address', \html_writer::tag('label', get_string($addresstype . 'address', 'local_equipment'), ['class' => 'form-input-group-labels']));
@@ -1025,7 +1047,8 @@ function local_equipment_add_edit_address_block($mform, $addresstype, $data, $sh
  * @param string $defaultendtime The existing minutes to populate the minute dropdown menu with.
  * @return object $block a block of elements to be added to the form.
  */
-function local_equipment_create_time_selector($mform, $name, $label, $defaulttime = null) {
+function local_equipment_create_time_selector($mform, $name, $label, $defaulttime = null)
+{
     $hours = array_combine(range(0, 23), range(0, 23));
     $minutes = array_combine(range(0, 59, 5), range(0, 59, 5)); // 5-minute intervals
 
@@ -1070,7 +1093,8 @@ function local_equipment_create_time_selector($mform, $name, $label, $defaulttim
  * @param int $agreementid The ID of the agreement
  * @return object|false The latest version of the agreement, or false if not found
  */
-function local_equipment_get_latest_agreement_version($agreementid) {
+function local_equipment_get_latest_agreement_version($agreementid)
+{
     global $DB;
 
     $sql = "SELECT a.*
@@ -1089,7 +1113,8 @@ function local_equipment_get_latest_agreement_version($agreementid) {
  * @param int $userid The ID of the user
  * @return bool True if the user has signed the agreement, false otherwise
  */
-function local_equipment_user_has_signed_agreement($agreementid, $userid) {
+function local_equipment_user_has_signed_agreement($agreementid, $userid)
+{
     global $DB;
 
     $sql = "SELECT 1
@@ -1108,7 +1133,8 @@ function local_equipment_user_has_signed_agreement($agreementid, $userid) {
  * @param object $agreement The agreement object
  * @return bool True if the agreement is active, false otherwise
  */
-function local_equipment_agreement_get_status($agreement) {
+function local_equipment_agreement_get_status($agreement)
+{
     $status = 'unknown';
     $currenttime = time();
     if ($currenttime < $agreement->activestarttime) {
@@ -1127,7 +1153,8 @@ function local_equipment_agreement_get_status($agreement) {
  * @param string $id The partnership ID
  * @return bool True if all rows for the partnership were deleted, false otherwise
  */
-function local_equipment_remove_partnership_course_entries($id) {
+function local_equipment_remove_partnership_course_entries($id)
+{
     global $DB;
 
     return $DB->delete_records('local_equipment_partnership_course', ['partnershipid' => $id]);
@@ -1139,7 +1166,8 @@ function local_equipment_remove_partnership_course_entries($id) {
  * @param string $id The partnership ID
  * @return bool True if at least one relationship was added, false otherwise
  */
-function local_equipment_add_partnership_course_entries($id, $courseids) {
+function local_equipment_add_partnership_course_entries($id, $courseids)
+{
     global $DB;
 
     $success = false;
@@ -1163,7 +1191,8 @@ function local_equipment_add_partnership_course_entries($id, $courseids) {
  *
  * @return array An associative array of active partnerships, with partnership ID as the key and partnership name as the value.
  */
-function local_equipment_get_active_partnerships() {
+function local_equipment_get_active_partnerships()
+{
     global $DB;
     return $DB->get_records_menu('local_equipment_partnership', ['active' => 1], 'name', 'id, name');
 }
@@ -1175,7 +1204,8 @@ function local_equipment_get_active_partnerships() {
  * @param int $id The partnership's ID.
  * @return object An associative array of the partnership, with with all it's information.
  */
-function local_equipment_get_partnership_by_id($id) {
+function local_equipment_get_partnership_by_id($id)
+{
     global $DB;
     return $DB->get_record('local_equipment_partnership', ['id' => $id]);
 }
@@ -1186,7 +1216,8 @@ function local_equipment_get_partnership_by_id($id) {
  *
  * @return array An associative array of partnership courses, with course ID as the key and course fullname as the value.
  */
-function local_equipment_get_partnerships_with_courses() {
+function local_equipment_get_partnerships_with_courses()
+{
     global $DB;
 
     $partnerships = $DB->get_records('local_equipment_partnership', ['active' => 1]);
@@ -1222,7 +1253,8 @@ function local_equipment_get_partnerships_with_courses() {
  *
  * @return array An associative array of partnership courses, with course ID as the key and course fullname as the value.
  */
-function local_equipment_get_partnerships_with_pickuptimes() {
+function local_equipment_get_partnerships_with_pickuptimes()
+{
     global $DB;
 
     $partnerships = $DB->get_records('local_equipment_partnership', ['active' => 1]);
@@ -1254,7 +1286,8 @@ function local_equipment_get_partnerships_with_pickuptimes() {
  *
  * @return array An associative array of partnership courses, with course ID as the key and course fullname as the value.
  */
-function local_equipment_get_all_active_pickup_times() {
+function local_equipment_get_all_active_pickup_times()
+{
     global $DB;
 
     $partnerships = $DB->get_records('local_equipment_pickup', ['status' => 'confirmed']);
@@ -1287,7 +1320,8 @@ function local_equipment_get_all_active_pickup_times() {
  * @param int $partnershipid The ID of the partnership.
  * @return array An associative array of partnership courses, with course ID as the key and course fullname as the value.
  */
-function local_equipment_get_partnership_courses($partnershipid) {
+function local_equipment_get_partnership_courses($partnershipid)
+{
     global $DB;
     $partnership = $DB->get_record('local_equipment_partnership', ['id' => $partnershipid]);
     $courseids = json_decode($partnership->courseids);
@@ -1309,7 +1343,8 @@ function local_equipment_get_partnership_courses($partnershipid) {
  * to get listings using 'listid' from local_equipment_partnership.
  * @return stdClass An object containing the courses, or an error message if no courses are found.
  */
-function local_equipment_get_partnership_courses_this_year($partnershipid) {
+function local_equipment_get_partnership_courses_this_year($partnershipid)
+{
     global $DB;
 
     $responseobject = new stdClass();
@@ -1359,7 +1394,8 @@ function local_equipment_get_partnership_courses_this_year($partnershipid) {
  * @return stdClass An object containing the partnership categories to choose from, or an error message if no partnership categories
  * are found.
  */
-function local_equipment_get_partnership_categories_for_school_year($schoolyearrange = null, $defualttoselection = false, $showidnumber = false) {
+function local_equipment_get_partnership_categories_for_school_year($schoolyearrange = null, $defualttoselection = false, $showidnumber = false)
+{
     global $DB;
 
     // Default to the current school year if no $schoolyearrange argument is given.
@@ -1443,7 +1479,8 @@ function local_equipment_get_partnership_categories_for_school_year($schoolyearr
  * @param       int $partnershipid The partnership ID
  * @return      string HTML for the course table
  */
-function local_equipment_generate_course_table($partnershipid) {
+function local_equipment_generate_course_table($partnershipid)
+{
     global $OUTPUT;
 
     $coursesthisyear = local_equipment_get_partnership_courses_this_year($partnershipid);
@@ -1515,7 +1552,8 @@ function local_equipment_generate_course_table($partnershipid) {
  * @param int $timestamp The timestamp to get the school year for.
  * @return string The school year string.
  */
-function local_equipment_get_school_year($timestamp = null) {
+function local_equipment_get_school_year($timestamp = null)
+{
     $timestamp ?: time();
     $year = date('Y', $timestamp);
     $month = date('n', $timestamp);
@@ -1537,7 +1575,8 @@ function local_equipment_get_school_year($timestamp = null) {
  * @param int $partnershipid The ID of the partnership.
  * @return array An associative array of pickup times, with pickup ID as the key and formatted pickup time as the value.
  */
-function local_equipment_get_pickup_times($partnershipid) {
+function local_equipment_get_pickup_times($partnershipid)
+{
     global $DB;
     $pickups = $DB->get_records('local_equipment_pickup', ['partnershipid' => $partnershipid]);
     $times = [0 => get_string('notimesforme', 'local_equipment')];
@@ -1552,7 +1591,8 @@ function local_equipment_get_pickup_times($partnershipid) {
  *
  * @return array An array of active agreements.
  */
-function local_equipment_get_active_agreements() {
+function local_equipment_get_active_agreements()
+{
     global $DB;
     $now = time();
     return $DB->get_records_sql(
@@ -1569,7 +1609,8 @@ function local_equipment_get_active_agreements() {
  * @param array $agreements An array of agreements.
  * @return bool True if at least one agreement requires an electronic signature, false otherwise.
  */
-function local_equipment_requires_signature($agreements) {
+function local_equipment_requires_signature($agreements)
+{
     foreach ($agreements as $agreement) {
         if ($agreement->requireelectronicsignature) {
             return true;
@@ -1585,7 +1626,8 @@ function local_equipment_requires_signature($agreements) {
  * @param string $studentfirstname The student's first name.
  * @return string The generated student email address.
  */
-function local_equipment_generate_student_email($parentemail, $studentfirstname) {
+function local_equipment_generate_student_email($parentemail, $studentfirstname)
+{
     $parts = explode('@', $parentemail);
     $newemail = $parts[0] . '+' . strtolower($studentfirstname) . '@' . $parts[1];
     return $newemail;
@@ -1597,7 +1639,8 @@ function local_equipment_generate_student_email($parentemail, $studentfirstname)
  * @param object $data The consent form data.
  * @return bool True if the consent form is successfully saved, false otherwise.
  */
-function local_equipment_save_vcc_form($data) {
+function local_equipment_save_vcc_form($data)
+{
     global $DB, $USER;
 
     // Start transaction.
@@ -1777,7 +1820,8 @@ function local_equipment_save_vcc_form($data) {
  * Not user ids from core user table, but from local_equipment_vccsubmission_student.
  * @return string * @return string Imploded array of all liaisons with there required information.
  */
-function local_equipment_get_vcc_students($submission) {
+function local_equipment_get_vcc_students($submission)
+{
     global $DB;
 
     $studentids = json_decode($submission->studentids);
@@ -1809,7 +1853,8 @@ function local_equipment_get_vcc_students($submission) {
  * @param \core\event\user_loggedin $event The event.
  * @return bool True if the user's phone number has been verified; false otherwise.
  */
-function local_equipment_vcc_phone_verified(\core\event\user_loggedin $event) {
+function local_equipment_vcc_phone_verified(\core\event\user_loggedin $event)
+{
     global $DB, $USER, $SESSION;
     $phone_verified = $DB->get_field('local_equipment_user', 'phone_verified', ['userid' => $USER->id], IGNORE_MULTIPLE);
     $redirecturl = new moodle_url('/local/equipment/phonecommunication/verifyphone.php');
@@ -1833,7 +1878,8 @@ function local_equipment_vcc_phone_verified(\core\event\user_loggedin $event) {
  * @param $userid A user id.
  * @return string The phone number, if it exists; false otherwise.
  */
-function local_equipment_vccsubmission_phone_exists($userid) {
+function local_equipment_vccsubmission_phone_exists($userid)
+{
     global $DB;
 
     // Construct the SQL WHERE clause
@@ -1855,7 +1901,8 @@ function local_equipment_vccsubmission_phone_exists($userid) {
  * @param $userid A user id.
  * @return string The phone number, if it exists; false otherwise.
  */
-function local_equipment_user_phone_exists($userid) {
+function local_equipment_user_phone_exists($userid)
+{
     global $DB;
 
     // Construct the SQL WHERE clause
@@ -1875,7 +1922,8 @@ function local_equipment_user_phone_exists($userid) {
  * Get all current equipment pickup methods for parents to select.
  * @return array An associative array of pickup methods.
  */
-function local_equipment_get_pickup_methods() {
+function local_equipment_get_pickup_methods()
+{
     return [
         'self' => get_string('pickupself', 'local_equipment'),
         'other' => get_string('pickupother', 'local_equipment'),
@@ -1889,7 +1937,8 @@ function local_equipment_get_pickup_methods() {
  * @param string $enabledonly Whether or not to get disabled SMS gateway providers in addition to the enabled providers.
  * @return array Array of phone providers.
  */
-function local_equipment_get_sms_gateways($enabledonly = true) {
+function local_equipment_get_sms_gateways($enabledonly = true)
+{
     global $DB;
     $gatewayoptions = [];
 
@@ -1917,7 +1966,8 @@ function local_equipment_get_sms_gateways($enabledonly = true) {
  * @param string $originationnumber Fallback origination number
  * @return object Enhanced response object
  */
-function local_equipment_handle_aws_gateway_with_pool($gatewayobj, $tonumber, $message, $messagetype = 'Transactional', $poolid = '', $originationnumber = '') {
+function local_equipment_handle_aws_gateway_with_pool($gatewayobj, $tonumber, $message, $messagetype = 'Transactional', $poolid = '', $originationnumber = '')
+{
     global $SITE;
 
     $responseobject = new stdClass();
@@ -2107,7 +2157,8 @@ function local_equipment_handle_aws_gateway_with_pool($gatewayobj, $tonumber, $m
  * @param string $smsmessagetype AWS message type ('Transactional' or 'Promotional') - will be converted to ALL CAPS
  * @return object Response object with success status and details
  */
-function local_equipment_send_sms_auto_pool($gatewayid, $tonumber, $message, $messagetype = 'info', $smsmessagetype = 'Transactional') {
+function local_equipment_send_sms_auto_pool($gatewayid, $tonumber, $message, $messagetype = 'info', $smsmessagetype = 'Transactional')
+{
     $poolid = local_equipment_get_pool_id_for_message_type($messagetype);
     $originationnumber = local_equipment_get_origination_phone_for_message_type($messagetype);
 
@@ -2132,7 +2183,8 @@ function local_equipment_send_sms_auto_pool($gatewayid, $tonumber, $message, $me
  * @param string $originationnumber Origination phone number
  * @return object Enhanced response object
  */
-function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $messagetype = 'Transactional', $originationnumber = '') {
+function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $messagetype = 'Transactional', $originationnumber = '')
+{
     // For backward compatibility, call the new pool-enabled function without a pool ID
     return local_equipment_handle_aws_gateway_with_pool(
         $gatewayobj,
@@ -2297,7 +2349,8 @@ function local_equipment_handle_aws_gateway($gatewayobj, $tonumber, $message, $m
  * @param string $originationnumber Optional origination phone number (fallback if pool doesn't work).
  * @return object Enhanced response object with detailed error information and pool usage.
  */
-function local_equipment_send_sms_with_pool($gatewayid, $tonumber, $message, $messagetype, $poolid, $originationnumber = '') {
+function local_equipment_send_sms_with_pool($gatewayid, $tonumber, $message, $messagetype, $poolid, $originationnumber = '')
+{
     global $DB;
 
     // Initialize comprehensive response object
@@ -2373,7 +2426,8 @@ function local_equipment_send_sms_with_pool($gatewayid, $tonumber, $message, $me
  * @param string $messagetype Type of message ('info', 'otp', 'transactional', 'promotional')
  * @return string Pool ID or empty string if not found
  */
-function local_equipment_get_pool_id_for_message_type($messagetype) {
+function local_equipment_get_pool_id_for_message_type($messagetype)
+{
     $messagetype = strtolower($messagetype);
 
     switch ($messagetype) {
@@ -2399,7 +2453,8 @@ function local_equipment_get_pool_id_for_message_type($messagetype) {
  * @param string $messagetype Type of message ('info', 'otp', 'transactional', 'promotional')
  * @return string Origination phone number or empty string if not found
  */
-function local_equipment_get_origination_phone_for_message_type($messagetype) {
+function local_equipment_get_origination_phone_for_message_type($messagetype)
+{
     $messagetype = strtolower($messagetype);
 
     switch ($messagetype) {
@@ -2422,7 +2477,8 @@ function local_equipment_get_origination_phone_for_message_type($messagetype) {
  * Updated SMS message service function that uses pool-based messaging.
  * This updates the existing send_message function in sms_message_service.php
  */
-function local_equipment_enhanced_sms_send_message($recipient, $message, $options = []) {
+function local_equipment_enhanced_sms_send_message($recipient, $message, $options = [])
+{
     // Format phone number (remove non-numeric chars except +)
     $phonenumber = preg_replace('/[^0-9+]/', '', $recipient);
 
@@ -2466,7 +2522,8 @@ function local_equipment_enhanced_sms_send_message($recipient, $message, $option
  * @param bool $isatest Whether or not this is a test OTP or a real one.
  * @return object
  */
-function local_equipment_send_secure_otp($gatewayid, $tophonenumber, $ttl = 600, $isatest = 0) {
+function local_equipment_send_secure_otp($gatewayid, $tophonenumber, $ttl = 600, $isatest = 0)
+{
     global $USER, $DB, $SESSION, $SITE;
 
     $responseobject = new stdClass();
@@ -2645,7 +2702,8 @@ function local_equipment_send_secure_otp($gatewayid, $tophonenumber, $ttl = 600,
  * @param bool $isatest Is this a test OTP or a real one?.
  * @return object
  */
-function local_equipment_verify_otp($otp, $isatest = false) {
+function local_equipment_verify_otp($otp, $isatest = false)
+{
     global $DB, $USER, $SESSION;
 
     $responseobject = new stdClass();
@@ -2747,7 +2805,8 @@ function local_equipment_verify_otp($otp, $isatest = false) {
  * @param int $level Debug level (optional)
  */
 
-function local_equipment_debug_log($message) {
+function local_equipment_debug_log($message)
+{
     if (defined('CLI_SCRIPT') && CLI_SCRIPT) {
         global $options;
         if (isset($options['verbose']) && $options['verbose']) {
@@ -2764,7 +2823,8 @@ function local_equipment_debug_log($message) {
  * @return object The combined user record as an stdClass object.
  */
 
-function local_equipment_combine_user_records_by_userid($userid) {
+function local_equipment_combine_user_records_by_userid($userid)
+{
     global $DB;
     $userrecord = new stdClass();
     $userrecord->errors = [];
@@ -2814,7 +2874,8 @@ function local_equipment_combine_user_records_by_userid($userid) {
  * @return array An array of non-duplicate userids that have the specified role assigned to them.
  */
 
-function local_equipment_get_users_by_role($role) {
+function local_equipment_get_users_by_role($role)
+{
     global $DB;
     // $context = context_system::instance();
 
@@ -2849,7 +2910,8 @@ function local_equipment_get_users_by_role($role) {
  * Returns false if no students are found.
  */
 
-function local_equipment_get_students_of_user_as($asrole, $userid) {
+function local_equipment_get_students_of_user_as($asrole, $userid)
+{
     // Get my students as a 'parent'; get them as a 'mentor'; etc.
     global $DB;
     $users = [];
@@ -2906,7 +2968,8 @@ function local_equipment_get_students_of_user_as($asrole, $userid) {
  * Returns false if no one is assigned to this user via specified role.
  */
 
-function local_equipment_get_users_assigned_to_user($role, $userid) {
+function local_equipment_get_users_assigned_to_user($role, $userid)
+{
     // i.e get my parents; get my mentors; etc.
     global $DB;
     $users = [];
@@ -2954,7 +3017,8 @@ function local_equipment_get_users_assigned_to_user($role, $userid) {
  * @param string $role The 'shortname' of the role to assign
  * @return stdClass returns an object of success, warning, and error messages.
  */
-function local_equipment_assign_role_relative_to_user(object $user, object $relativeuser, string $role): stdClass {
+function local_equipment_assign_role_relative_to_user(object $user, object $relativeuser, string $role): stdClass
+{
     global $DB;
 
     $result = new stdClass();
@@ -3010,7 +3074,8 @@ function local_equipment_assign_role_relative_to_user(object $user, object $rela
  * @param int $studentid The ID of the student whose parents we want to find
  * @return array Array of parent user objects, or empty array if none found
  */
-function local_equipment_get_parents_of_student(int $studentid): array {
+function local_equipment_get_parents_of_student(int $studentid): array
+{
     global $DB;
 
     // Get the parent role ID
@@ -3041,7 +3106,8 @@ function local_equipment_get_parents_of_student(int $studentid): array {
  * @param int $parentid The ID of the parent whose students we want to find
  * @return array Array of student user objects, or empty array if none found
  */
-function local_equipment_get_students_of_parent(int $parentid): array {
+function local_equipment_get_students_of_parent(int $parentid): array
+{
     global $DB;
 
     // Get the parent role ID
@@ -3073,7 +3139,8 @@ function local_equipment_get_students_of_parent(int $parentid): array {
  * @param int $studentid The ID of the student
  * @return bool True if parent relationship exists, false otherwise
  */
-function local_equipment_is_parent_of_student(int $parentid, int $studentid): bool {
+function local_equipment_is_parent_of_student(int $parentid, int $studentid): bool
+{
     global $DB;
 
     // Get the parent role ID
@@ -3113,7 +3180,8 @@ function local_equipment_is_parent_of_student(int $parentid, int $studentid): bo
  * @param stdClass $user The user object.
  * @return string The generated username.
  */
-function local_equipment_generate_username($user) {
+function local_equipment_generate_username($user)
+{
     global $DB;
 
     // $firstname = transliterator_transliterate('Any-Latin; Latin-ASCII; Lower()', $user->firstname);
@@ -3167,7 +3235,8 @@ function local_equipment_generate_username($user) {
  * @param array $family Array containing parent and student users
  * @return array Results of role assignments
  */
-function local_equipment_assign_family_roles($family) {
+function local_equipment_assign_family_roles($family)
+{
     global $DB;
 
     $results = [
@@ -3238,7 +3307,8 @@ function local_equipment_assign_family_roles($family) {
  * @param array $families Array of processed family data
  * @return array Results of all role assignments
  */
-function local_equipment_process_family_roles($families) {
+function local_equipment_process_family_roles($families)
+{
     $all_results = [
         'success' => [],
         'errors' => []
@@ -3410,7 +3480,8 @@ function local_equipment_enrol_user_in_course(
  * @param settings_navigation $settingsnav The settings navigation object
  * @param context $context The current context
  */
-function local_equipment_extend_settings_navigation(settings_navigation $settingsnav, context $context) {
+function local_equipment_extend_settings_navigation(settings_navigation $settingsnav, context $context)
+{
     global $PAGE;
 
     // Only show for users with the manage equipment capability or site admins
@@ -3435,7 +3506,8 @@ function local_equipment_extend_settings_navigation(settings_navigation $setting
  * @param settings_navigation $settingsnav The settings navigation object
  * @param context $context The current context
  */
-function local_equipment_extend_site_settings(settings_navigation $settingsnav, context $context) {
+function local_equipment_extend_site_settings(settings_navigation $settingsnav, context $context)
+{
     // Find site administration node
     if ($siteadmin = $settingsnav->find('siteadministration', navigation_node::TYPE_SITE_ADMIN)) {
 
@@ -3554,7 +3626,8 @@ function local_equipment_extend_site_settings(settings_navigation $settingsnav, 
  * @param context $context The current context
  * @param stdClass $course The course object
  */
-function local_equipment_extend_course_settings(settings_navigation $settingsnav, context $context, stdClass $course) {
+function local_equipment_extend_course_settings(settings_navigation $settingsnav, context $context, stdClass $course)
+{
     // Find course administration node
     if ($courseadmin = $settingsnav->find('courseadmin', navigation_node::TYPE_COURSE)) {
 
@@ -3595,7 +3668,8 @@ function local_equipment_extend_course_settings(settings_navigation $settingsnav
  *
  * @param global_navigation $navigation The global navigation object
  */
-function local_equipment_extend_navigation(global_navigation $navigation) {
+function local_equipment_extend_navigation(global_navigation $navigation)
+{
     global $PAGE;
 
     // Only show for logged-in users with appropriate capabilities
@@ -3629,7 +3703,8 @@ function local_equipment_extend_navigation(global_navigation $navigation) {
  * @param stdClass $course The course object
  * @param context_course $context The course context
  */
-function local_equipment_extend_navigation_course(navigation_node $parentnode, stdClass $course, context_course $context) {
+function local_equipment_extend_navigation_course(navigation_node $parentnode, stdClass $course, context_course $context)
+{
     if (!has_capability('local/equipment:manageequipment', $context) && !is_siteadmin()) {
         return;
     }
@@ -3690,7 +3765,8 @@ function local_equipment_extend_navigation_course(navigation_node $parentnode, s
  * @param array $courseids Array of course IDs
  * @return array Array of enrollment results
  */
-function local_equipment_bulk_enrol_student(stdClass $user, array $courseids): array {
+function local_equipment_bulk_enrol_student(stdClass $user, array $courseids): array
+{
     $results = [
         'success' => [],
         'failed' => [],
@@ -3723,7 +3799,8 @@ function local_equipment_bulk_enrol_student(stdClass $user, array $courseids): a
  * @param bool $notifyuser Whether to send notification (from plugin settings)
  * @return object Object containing success/error information
  */
-function local_equipment_send_enrollment_message($user, $coursenames, $roletype = 'generic', $partnershipid = null, $usersofuser = null, $notifyuser = true) {
+function local_equipment_send_enrollment_message($user, $coursenames, $roletype = 'generic', $partnershipid = null, $usersofuser = null, $notifyuser = true)
+{
     global $SITE, $DB;
 
     $result = new stdClass();
@@ -3835,7 +3912,8 @@ function local_equipment_send_enrollment_message($user, $coursenames, $roletype 
  * @param array $list A list of text to be turned into a written list.
  * @return string The contact user object
  */
-function local_equipment_convert_list_string($list) {
+function local_equipment_convert_list_string($list)
+{
     global $USER;
 
     if (sizeof($list) <= 1) {
@@ -3864,7 +3942,8 @@ function local_equipment_convert_list_string($list) {
  * @param stdClass $course The course object
  * @return stdClass The contact user object
  */
-function local_equipment_get_course_contact($course) {
+function local_equipment_get_course_contact($course)
+{
     global $DB;
 
     // Try to get the primary course contact
@@ -3887,7 +3966,8 @@ function local_equipment_get_course_contact($course) {
  * @param string $status Overall status (success, warning, or error)
  * @return string HTML for the notification
  */
-function local_equipment_generate_family_notification(string $familyname, stdClass $messages, string $status): string {
+function local_equipment_generate_family_notification(string $familyname, stdClass $messages, string $status): string
+{
     global $OUTPUT;
 
     $notificationid = html_writer::random_id('family_notification_');
@@ -3970,7 +4050,8 @@ function local_equipment_generate_family_notification(string $familyname, stdCla
  *
  * @return array Array of unique student user IDs
  */
-function local_equipment_get_students_in_courses_with_end_dates() {
+function local_equipment_get_students_in_courses_with_end_dates()
+{
     $manager = new \local_equipment\mass_text_manager();
     return $manager->get_students_in_courses_with_end_dates();
 }
@@ -3980,7 +4061,8 @@ function local_equipment_get_students_in_courses_with_end_dates() {
  *
  * @return array Array of unique student user IDs
  */
-function local_equipment_get_students_in_courses_with_future_end_dates() {
+function local_equipment_get_students_in_courses_with_future_end_dates()
+{
     $manager = new \local_equipment\mass_text_manager();
     return $manager->get_students_in_courses_with_future_end_dates();
 }
@@ -3991,7 +4073,8 @@ function local_equipment_get_students_in_courses_with_future_end_dates() {
  * @param int $userid The student's ID
  * @return array Array of unique course IDs
  */
-function local_equipment_get_student_courses_with_future_end_dates($userid) {
+function local_equipment_get_student_courses_with_future_end_dates($userid)
+{
     global $DB;
 
     $currenttime = \core\di::get(\core\clock::class)->now()->getTimestamp();
@@ -4030,7 +4113,8 @@ function local_equipment_get_student_courses_with_future_end_dates($userid) {
  * @param int $userid User ID
  * @return bool True if phone is verified
  */
-function local_equipment_is_phone_verified($userid) {
+function local_equipment_is_phone_verified($userid)
+{
     $manager = new \local_equipment\mass_text_manager();
     return $manager->is_phone_verified($userid);
 }
@@ -4041,7 +4125,8 @@ function local_equipment_is_phone_verified($userid) {
  * @param array $array Array to convert
  * @return array Array with integer values
  */
-function local_equipment_convert_array_values_to_int($array) {
+function local_equipment_convert_array_values_to_int($array)
+{
     return array_map('intval', $array);
 }
 
@@ -4055,7 +4140,8 @@ function local_equipment_convert_array_values_to_int($array) {
  * @param string $messagetype_eq Equipment message type
  * @return object Response object
  */
-function local_equipment_send_sms($gatewayid, $tonumber, $message, $messagetype = 'Transactional', $messagetype_eq = 'info') {
+function local_equipment_send_sms($gatewayid, $tonumber, $message, $messagetype = 'Transactional', $messagetype_eq = 'info')
+{
     return local_equipment_send_sms_auto_pool($gatewayid, $tonumber, $message, $messagetype_eq, $messagetype);
 }
 
@@ -4066,7 +4152,8 @@ function local_equipment_send_sms($gatewayid, $tonumber, $message, $messagetype 
  * @param int $adminuserid Admin user ID for confirmation
  * @return object Results object with success/failure counts and messages
  */
-function local_equipment_send_mass_text_to_parents($message, $adminuserid) {
+function local_equipment_send_mass_text_to_parents($message, $adminuserid)
+{
     $manager = new \local_equipment\mass_text_manager();
 
     // Get students in active courses

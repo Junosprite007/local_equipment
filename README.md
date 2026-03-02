@@ -483,5 +483,3 @@ If I want to add menu items via "Custom menu items" under advanced theme setting
 
 
 
-
-
